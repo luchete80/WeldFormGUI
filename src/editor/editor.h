@@ -14,8 +14,7 @@
 #include "ogldev_basic_lighting.h"
 
 // PHYSCIS
-#include "Plane.h"
-#include "Structure.h"
+
 #include "Contact.h"
 
 #define COLOR_TEXTURE_UNIT_INDEX        0
@@ -102,8 +101,6 @@ private:
   std::vector <myMesh *> m_nodemesh;
   bool mesh_loaded;
   TextRenderer *m_Text;
-  Plane  *m_plane;
-  Structure *st;
 
   Camera *camera;
   PersProjInfo m_persProjInfo;

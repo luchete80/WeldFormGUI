@@ -68,26 +68,6 @@ void Editor::drawGui() {
             mesh_loaded = true;
           }
       } else if (filePathName.find(".str") !=string::npos) {
-        cout << "Opening structure..."<<endl;
-        st = new Structure();
-        //First create the structure, then the inside members
-        st->LoadFromFile(filePathName);
-        is_struct = true;
-        cout << "Nodes "<<st->GetNodeCount()<<endl;
-        for (int i=0;i<st->GetNodeCount();i++) {
-          myMesh *mesh = new myMesh();
-            if (!mesh->LoadMesh(
-              "Sphere.dae"
-              )) {
-              std::cout<<"Mesh load failed"<<endl;
-              printf("Mesh load failed\n");
-
-            }
-            else {
-              m_nodemesh.push_back(mesh);
-              mesh_loaded = true;
-            }
-        }//For nodes
       
       }
     }
@@ -173,35 +153,10 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         double x,y;
         glfwGetCursorPos(window, &x, &y);
         m_left_button_pressed = true;
-        PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
+        //PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
         
         if (Pixel.ObjectID != 0){
-          Vector3f vel(0.,0.,0.);
-          m_sel_node = Pixel.ObjectID-1;
-          float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
-          //We have to transform coordinates!
-          vel = Vector3f( (x-last_mouse_x)/dt,
-                          (y-last_mouse_y)/dt,
-                          0.);
-          //if (!m_is_node_sel) { //recently pressed, reset node velocity
-            m_last_mouse_dragtime = GetCurrentTimeMillis();
-            last_mouse_x = x; last_mouse_y = y;
-            vel = Vector3f(0.,20.,0.);
-            Vector3f f(0.,100.,0.);
-            Vector3f force(0.,10,0.);
-            st->GetNode(m_sel_node)->SetForce(force);
-            //st->GetNode(m_sel_node)->SetVel(vel);
-            //st->GetNode(m_sel_node)->SetAsConstrained();
-          //}
-          m_is_node_sel = true;
 
-
-          st->GetNode(m_sel_node)->SetVel(vel);
-          cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
-          
-          last_mouse_x = x;
-          last_mouse_y = y;
-          m_last_mouse_dragtime = GetCurrentTimeMillis();
         } else {m_is_node_sel = false;}
         cout << "x,y: "<<x<<" , "<<y<<endl;
         cout << "Obj ID "<<int(Pixel.ObjectID)<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
@@ -462,36 +417,24 @@ int Editor::Init(){
   
   st = new Structure();
   //First create the structure, then the inside members
-  st->LoadFromFile("struct.str");
-  
-  for (int i=0;i<st->GetNodeCount();i++){
-    st->GetNode(i)->m_mass = 1.0;
-  }
-  for (int t =0; t<st->GetTrussCount();t++){
-    st->GetTruss(t)->m_K = 1.e3;
-    st->GetTruss(t)->m_C = 1.e-1;
-    st->GetTruss(t)->m_max_negtress = 250.;
-  }
 
   
-  is_struct = true;
-  cout << "Nodes "<<st->GetNodeCount()<<endl;
-  for (int i=0;i<st->GetNodeCount();i++) {
-    myMesh *mesh = new myMesh();
-      if (!mesh->LoadMesh(
-        "Sphere.dae"
-        )) {
-        std::cout<<"Mesh load failed"<<endl;
-        printf("Mesh load failed\n");
+  // cout << "Nodes "<<st->GetNodeCount()<<endl;
+  // for (int i=0;i<st->GetNodeCount();i++) {
+    // myMesh *mesh = new myMesh();
+      // if (!mesh->LoadMesh(
+        // "Sphere.dae"
+        // )) {
+        // std::cout<<"Mesh load failed"<<endl;
+        // printf("Mesh load failed\n");
 
-      }
-      else {
-        m_nodemesh.push_back(mesh);
-        mesh_loaded = true;
-      }
-  }
-    st->ApplyVel(Vector3f(0.,0.,0.));
-    st->ResetForces();  //Crucial
+      // }
+      // else {
+        // m_nodemesh.push_back(mesh);
+        // mesh_loaded = true;
+      // }
+  // }
+
   
   
   
@@ -728,12 +671,8 @@ void Editor::Run(){
   float dt = 1./60.;
   while (!glfwWindowShouldClose(window)) {
       CalcFPS();
-
-      //MoveNode(); //BEFORE SOLVE TRUSS!      
-      SolveStruct(dt);
       
 
-      
       camera->OnRender();
       
       processInput(window);
@@ -748,13 +687,9 @@ void Editor::Run(){
   
   
       //"FPS: " + to_string(m_fps)
-      m_Text->RenderText("Max Kin Energy: " + to_string_with_precision(kin_energy,1) + " J" , 
+      m_Text->RenderText("Test", 
                     20.f, 400.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
-                    
-      m_Text->RenderText("Impact Force: " + to_string_with_precision(m_impact_force,1) + " N", 
-                    20.f, 350.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
-      m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
-                    20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
+
       glDisable(GL_BLEND);
         
       // Poll and handle events (inputs, window resize, etc.)
@@ -775,60 +710,6 @@ void Editor::Run(){
     }
 }
 
-void Editor::SolveStruct(float &dt){
-    float c_dot;
-    Vector3f vold;
-    float vnew [4];
-    bool impact = false;
-    
-      
-  //FIRST PHYSICS!
-  if(!m_pause) {
-    st->Solve(dt);
-  }
-
-  for (int n=0;n <st->GetNodeCount();n++){
-    Vector3f pos =st->GetNode(n)->GetPos();
-    //cout << "Node "<< n <<" pos"<<pos.x<<", "<<pos.y <<", " <<pos.z <<endl;
-    
-    float dist = DistPointPlane(pos, *m_plane);
-    //cout << "Distance to plane " <<dist<<endl;
-    glClearColor(0.55f, 0.8f, 1.f, 1.0f);
-    
-    float beta = 0.5;
-    vold = st->GetNode(n)->GetVel();
-    
-
-                      //This is assuming center of mass aligned (vertical force)  
-    //cout << "dist "<<dist <<endl;
-    if ( dist < 0 ) { //First Try of Impulse constraint solver 
-    
-      //cout <<"--------------------- CONTACT --------------------------"<<endl;
-      dist = DistPointPlane(pos, *m_plane);
-      c_dot = abs(st->GetNode(n)->GetVel().y);   //Because ground is fix
-      vnew[n] = - beta * dist/dt;     //Erin catto, and MTamis Eqn 5.3.1
-     
-      
-      Vector3f f = (vnew[n] - vold)/dt;     //For Solving Beams, since node is integrated by euler with force 
-      //cout << "supported node force "<<f[0]<<", "<<f[1]<<f[2]<<endl;
-
-      st->GetNode(n)->SetVel(Vector3f(0.,vnew[n],0.));      
-      //If force is applied, body remains there 
-      //st->GetNode(n)->SetForce(f);    //Or add
-      //IF THIS IS APPLIED; STRUCT DOUES NOT RETURN
-      //st->GetNode(n)->SetAsConstrained(); //REDUNTANT Only for this step, set tbis m_is_supp_const
-      if (!impact){
-        impact = true;
-        m_impact_force = sqrt (f.x*f.x+ f.y*f.y+ f.z*f.z);
-        //cout << "Node "<<n<<", Impact force: " << impact_force << endl;
-      }
-    }
-  }//Check Contact 
-
-  if (!impact)
-    kin_energy = st->CalcKinEnergy();
-  
-}
 
 int Editor::Terminate(){
 
