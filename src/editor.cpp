@@ -684,7 +684,7 @@ void Editor::RenderPhase(){
       // ImGui::End();
   // }
   
-  //drawGui();
+  drawGui();
 
 
   //// IMGUI Rendering
