@@ -14,12 +14,16 @@
 #include "ogldev_basic_lighting.h"
 
 // PHYSCIS
-
+#include "Plane.h"
+#include "Structure.h"
 #include "Contact.h"
 
 #define COLOR_TEXTURE_UNIT_INDEX        0
 
 #include <iostream>
+
+#include "picking_texture.h"
+#include "picking_technique.h"
 
 #include "ogldev_util.h"
 #include "ogldev_callbacks.h"
@@ -65,14 +69,14 @@ public:
   void Run();
   int Terminate();
   
-  void PickingPhase();
-  void RenderPhase();
+  virtual void PickingPhase();
+  virtual void RenderPhase();
   
   void RenderBeams();
   
-  void scroll(double xoffset, double yoffset);
-  void Mouse(int Button, int Action, int Mode);
-  void Key(int key, int scancode, int action, int mods);
+  virtual void scroll(double xoffset, double yoffset);
+  virtual void Mouse(int Button, int Action, int Mode);
+  virtual void Key(int key, int scancode, int action, int mods);
   bool LoadGround(myMesh *m_fieldmesh);
   void SolveStruct(float &dt);
   void MoveNode();
@@ -80,10 +84,11 @@ public:
   void processInput(GLFWwindow *window);
   void CursorPos(double x, double y);
   void drawGui();
+  virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   
   void CalcFPS();
   
-private:
+protected:
   PickingTexture m_pickingTexture;
   PickingTechnique m_pickingEffect;
 
@@ -101,6 +106,8 @@ private:
   std::vector <myMesh *> m_nodemesh;
   bool mesh_loaded;
   TextRenderer *m_Text;
+  Plane  *m_plane;
+  Structure *st;
 
   Camera *camera;
   PersProjInfo m_persProjInfo;
