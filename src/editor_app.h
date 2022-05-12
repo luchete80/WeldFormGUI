@@ -8,10 +8,10 @@
 #include "ogldev_util.h"
 #include "ogldev_pipeline.h"
 #include "ogldev_camera.h"
-#include "assimp/texture.h"
-#include "skinning_technique.h"
+//#include "assimp/texture.h"
+//#include "skinning_technique.h"
 #include "ogldev_glfw_backend.h"
-#include "ogldev_skinned_mesh.h"
+//#include "ogldev_skinned_mesh.h"
 
 #include "ogldev_basic_lighting.h"
 
@@ -69,7 +69,7 @@ private:
   PersProjInfo 								m_persProjInfo;
 	myMesh 											m_fieldmesh;
   BasicLightingTechnique* 		m_plightEffect;	
-	std::vector<SkinnedMesh*> 	m_playermesh;
+	//std::vector<SkinnedMesh*> 	m_playermesh;
 	myMesh*											m_ballmesh;
 	
 	myMesh*											m_goalmesh[2];

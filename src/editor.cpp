@@ -14,6 +14,7 @@
 #endif
 
 #include "Editor.h"
+#include <sstream>
 
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 
@@ -69,25 +70,22 @@ void Editor::drawGui() {
           }
       } else if (filePathName.find(".str") !=string::npos) {
         cout << "Opening structure..."<<endl;
-        st = new Structure();
-        //First create the structure, then the inside members
-        st->LoadFromFile(filePathName);
-        is_struct = true;
-        cout << "Nodes "<<st->GetNodeCount()<<endl;
-        for (int i=0;i<st->GetNodeCount();i++) {
-          myMesh *mesh = new myMesh();
-            if (!mesh->LoadMesh(
-              "Sphere.dae"
-              )) {
-              std::cout<<"Mesh load failed"<<endl;
-              printf("Mesh load failed\n");
 
-            }
-            else {
-              m_nodemesh.push_back(mesh);
-              mesh_loaded = true;
-            }
-        }//For nodes
+        // cout << "Nodes "<<st->GetNodeCount()<<endl;
+        // for (int i=0;i<st->GetNodeCount();i++) {
+          // myMesh *mesh = new myMesh();
+            // if (!mesh->LoadMesh(
+              // "Sphere.dae"
+              // )) {
+              // std::cout<<"Mesh load failed"<<endl;
+              // printf("Mesh load failed\n");
+
+            // }
+            // else {
+              // m_nodemesh.push_back(mesh);
+              // mesh_loaded = true;
+            // }
+        // }//For nodes
       
       }
     }
@@ -189,14 +187,14 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             vel = Vector3f(0.,20.,0.);
             Vector3f f(0.,100.,0.);
             Vector3f force(0.,10,0.);
-            st->GetNode(m_sel_node)->SetForce(force);
+
             //st->GetNode(m_sel_node)->SetVel(vel);
             //st->GetNode(m_sel_node)->SetAsConstrained();
           //}
           m_is_node_sel = true;
 
 
-          st->GetNode(m_sel_node)->SetVel(vel);
+
           cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
           
           last_mouse_x = x;
@@ -226,8 +224,7 @@ void Editor::MoveNode(){
                         (y-last_mouse_y)/dt,
                         0.);
 
-        st->GetNode(m_sel_node)->SetVel(vel);
-        st->GetNode(m_sel_node)->SetAsConstrained();
+
         cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
         
         last_mouse_x = x;
@@ -387,12 +384,7 @@ int Editor::Init(){
   //Point and normal
   Vector3f point(1.,0.,1.);
   Vector3f normal(0.,1.,0.);
-  m_plane = new Plane(point,normal);
 
-  Node* n0 = new Node(Vector3f(0.,2.,0.));  
-  Node* n1 = new Node(Vector3f(0.,5.,0.));
-  Node* n2 = new Node(Vector3f(1.,5.,1.));
-  Node* n3 = new Node(Vector3f(-1.,5.,1.));
 
 
 
@@ -460,39 +452,24 @@ int Editor::Init(){
   }
   
   
-  st = new Structure();
-  //First create the structure, then the inside members
-  st->LoadFromFile("struct.str");
-  
-  for (int i=0;i<st->GetNodeCount();i++){
-    st->GetNode(i)->m_mass = 1.0;
-  }
-  for (int t =0; t<st->GetTrussCount();t++){
-    st->GetTruss(t)->m_K = 1.e3;
-    st->GetTruss(t)->m_C = 1.e-1;
-    st->GetTruss(t)->m_max_negtress = 250.;
-  }
 
-  
-  is_struct = true;
-  cout << "Nodes "<<st->GetNodeCount()<<endl;
-  for (int i=0;i<st->GetNodeCount();i++) {
-    myMesh *mesh = new myMesh();
-      if (!mesh->LoadMesh(
-        "Sphere.dae"
-        )) {
-        std::cout<<"Mesh load failed"<<endl;
-        printf("Mesh load failed\n");
+  // is_struct = true;
+  // cout << "Nodes "<<st->GetNodeCount()<<endl;
+  // for (int i=0;i<st->GetNodeCount();i++) {
+    // myMesh *mesh = new myMesh();
+      // if (!mesh->LoadMesh(
+        // "Sphere.dae"
+        // )) {
+        // std::cout<<"Mesh load failed"<<endl;
+        // printf("Mesh load failed\n");
 
-      }
-      else {
-        m_nodemesh.push_back(mesh);
-        mesh_loaded = true;
-      }
-  }
-    st->ApplyVel(Vector3f(0.,0.,0.));
-    st->ResetForces();  //Crucial
-  
+      // }
+      // else {
+        // m_nodemesh.push_back(mesh);
+        // mesh_loaded = true;
+      // }
+  // }
+
   
   
   //FOR RENDER LINES
@@ -572,7 +549,7 @@ void Editor::PickingPhase() {
   //cout << "size"<< m_nodemesh.size()<<endl;
   for (uint i = 0 ; i < m_nodemesh.size() ; i++) {
       m_pickingEffect.Enable();
-      Vector3f pos= st->GetNode(i)->GetPos();
+      Vector3f pos(0.,0.,0.);//= st->GetNode(i)->GetPos();
       p.WorldPos(pos);
       m_pickingEffect.SetObjectIndex((i+1));
       m_pickingEffect.SetWVP(p.GetWVPTrans());    
@@ -586,13 +563,13 @@ void Editor::PickingPhase() {
 
 void Editor::RenderBeams(){
   
-  for (int n=0;n <st->GetNodeCount();n++){
-    Vector3f pos = st->GetNode(n)->GetPos();
-    vertices[3*n  ] = pos.x;
-    vertices[3*n+1] = pos.y;
-    vertices[3*n+2] = pos.z;
+  // for (int n=0;n <st->GetNodeCount();n++){
+    // Vector3f pos = st->GetNode(n)->GetPos();
+    // vertices[3*n  ] = pos.x;
+    // vertices[3*n+1] = pos.y;
+    // vertices[3*n+2] = pos.z;
     
-  }
+  // }
       
   Pipeline p;
   p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
@@ -612,10 +589,8 @@ void Editor::RenderBeams(){
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
   glUseProgram(shaderProgram);
-  //glDisable(GL_DEPTH_TEST);
-  //glDrawArrays(GL_TRIANGLES, 0, 6);
-  //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-  glDrawElements(GL_LINES, 2 * st->GetTrussCount(), GL_UNSIGNED_INT, 0);
+ 
+  //glDrawElements(GL_LINES, 2 * st->GetTrussCount(), GL_UNSIGNED_INT, 0);
 
   //glEnable(GL_DEPTH_TEST);
 
@@ -666,24 +641,24 @@ void Editor::RenderPhase(){
       // // This crashes
       m_plightEffect->Enable();
       Pipeline pn;
-      if (is_struct)
-        for (int n=0;n<st->GetNodeCount();n++){
-          //cout << "rendering"<<endl;
-          //Vector3f pos(0.,0.,0.);
-          Vector3f pos= st->GetNode(n)->GetPos();
-          ///// cout << "Node pos: "<<pos.x<<", "<<pos.y<<", "<<pos.z<<endl;
-          pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-          pn.SetPerspectiveProj(m_persProjInfo);
-          pn.WorldPos(pos);   
-          m_plightEffect->SetEyeWorldPos(camera->GetPos());
-          pn.Scale(1.0f, 1.0f, 1.0f);
+//      if (is_struct)
+        // for (int n=0;n<st->GetNodeCount();n++){
+          // //cout << "rendering"<<endl;
+          // //Vector3f pos(0.,0.,0.);
+          // Vector3f pos= st->GetNode(n)->GetPos();
+          // ///// cout << "Node pos: "<<pos.x<<", "<<pos.y<<", "<<pos.z<<endl;
+          // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+          // pn.SetPerspectiveProj(m_persProjInfo);
+          // pn.WorldPos(pos);   
+          // m_plightEffect->SetEyeWorldPos(camera->GetPos());
+          // pn.Scale(1.0f, 1.0f, 1.0f);
 
-          // cout <<"Matrix"<<endl;
-          // cout << pn.GetWVPTrans()[0][0]<< ", "<<pn.GetWVPTrans()[0][1]<< ", "<<pn.GetWVPTrans()[0][2]<<endl;
+          // // cout <<"Matrix"<<endl;
+          // // cout << pn.GetWVPTrans()[0][0]<< ", "<<pn.GetWVPTrans()[0][1]<< ", "<<pn.GetWVPTrans()[0][2]<<endl;
         
-          m_plightEffect->SetWVP(pn.GetWVPTrans());   
-          m_nodemesh[n]->Render();
-        }    
+          // m_plightEffect->SetWVP(pn.GetWVPTrans());   
+          // m_nodemesh[n]->Render();
+        // }    
     }
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
@@ -729,8 +704,6 @@ void Editor::Run(){
   while (!glfwWindowShouldClose(window)) {
       CalcFPS();
 
-      //MoveNode(); //BEFORE SOLVE TRUSS!      
-      SolveStruct(dt);
       
 
       
@@ -753,8 +726,8 @@ void Editor::Run(){
                     
       m_Text->RenderText("Impact Force: " + to_string_with_precision(m_impact_force,1) + " N", 
                     20.f, 350.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
-      m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
-                    20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
+      // m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
+                    // 20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
       glDisable(GL_BLEND);
         
       // Poll and handle events (inputs, window resize, etc.)
@@ -775,60 +748,6 @@ void Editor::Run(){
     }
 }
 
-void Editor::SolveStruct(float &dt){
-    float c_dot;
-    Vector3f vold;
-    float vnew [4];
-    bool impact = false;
-    
-      
-  //FIRST PHYSICS!
-  if(!m_pause) {
-    st->Solve(dt);
-  }
-
-  for (int n=0;n <st->GetNodeCount();n++){
-    Vector3f pos =st->GetNode(n)->GetPos();
-    //cout << "Node "<< n <<" pos"<<pos.x<<", "<<pos.y <<", " <<pos.z <<endl;
-    
-    float dist = DistPointPlane(pos, *m_plane);
-    //cout << "Distance to plane " <<dist<<endl;
-    glClearColor(0.55f, 0.8f, 1.f, 1.0f);
-    
-    float beta = 0.5;
-    vold = st->GetNode(n)->GetVel();
-    
-
-                      //This is assuming center of mass aligned (vertical force)  
-    //cout << "dist "<<dist <<endl;
-    if ( dist < 0 ) { //First Try of Impulse constraint solver 
-    
-      //cout <<"--------------------- CONTACT --------------------------"<<endl;
-      dist = DistPointPlane(pos, *m_plane);
-      c_dot = abs(st->GetNode(n)->GetVel().y);   //Because ground is fix
-      vnew[n] = - beta * dist/dt;     //Erin catto, and MTamis Eqn 5.3.1
-     
-      
-      Vector3f f = (vnew[n] - vold)/dt;     //For Solving Beams, since node is integrated by euler with force 
-      //cout << "supported node force "<<f[0]<<", "<<f[1]<<f[2]<<endl;
-
-      st->GetNode(n)->SetVel(Vector3f(0.,vnew[n],0.));      
-      //If force is applied, body remains there 
-      //st->GetNode(n)->SetForce(f);    //Or add
-      //IF THIS IS APPLIED; STRUCT DOUES NOT RETURN
-      //st->GetNode(n)->SetAsConstrained(); //REDUNTANT Only for this step, set tbis m_is_supp_const
-      if (!impact){
-        impact = true;
-        m_impact_force = sqrt (f.x*f.x+ f.y*f.y+ f.z*f.z);
-        //cout << "Node "<<n<<", Impact force: " << impact_force << endl;
-      }
-    }
-  }//Check Contact 
-
-  if (!impact)
-    kin_energy = st->CalcKinEnergy();
-  
-}
 
 int Editor::Terminate(){
 

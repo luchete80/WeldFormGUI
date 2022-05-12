@@ -18,5 +18,4 @@ add_subdirectory("src")
 #renderer
 #add_subdirectory("OpenGLWindow")
 add_subdirectory("libs")
-add_subdirectory("examples")
 #add_subdirectory("tests")

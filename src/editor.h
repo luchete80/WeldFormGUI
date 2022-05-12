@@ -10,13 +10,9 @@
 
 #include "myMesh.h"
 
-#include "Renderer.h"
 #include "ogldev_basic_lighting.h"
 
-// PHYSCIS
-#include "Plane.h"
-#include "Structure.h"
-#include "Contact.h"
+
 
 #define COLOR_TEXTURE_UNIT_INDEX        0
 
@@ -78,7 +74,7 @@ public:
   virtual void Mouse(int Button, int Action, int Mode);
   virtual void Key(int key, int scancode, int action, int mods);
   bool LoadGround(myMesh *m_fieldmesh);
-  void SolveStruct(float &dt);
+ 
   void MoveNode();
   
   void processInput(GLFWwindow *window);
@@ -106,8 +102,7 @@ protected:
   std::vector <myMesh *> m_nodemesh;
   bool mesh_loaded;
   TextRenderer *m_Text;
-  Plane  *m_plane;
-  Structure *st;
+
 
   Camera *camera;
   PersProjInfo m_persProjInfo;
