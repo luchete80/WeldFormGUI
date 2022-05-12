@@ -12,10 +12,11 @@ include_directories("${CMAKE_SOURCE_DIR}/configuration")
 
 #libs
 # ########### GAME ########
+add_subdirectory("libs")
 add_subdirectory("src")
 
 
 #renderer
 #add_subdirectory("OpenGLWindow")
-add_subdirectory("libs")
+
 #add_subdirectory("tests")

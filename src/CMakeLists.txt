@@ -25,7 +25,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/common")
 # link_directories ("D:/Luciano/Libs/freetype-2.10.4_bin")
 link_directories ("${GLFW_BINARY_DIR}/src")
 
-
+add_subdirectory("graphics")
 
 # add_executable(editor 	
 							# #camera_system.cpp
@@ -97,19 +97,16 @@ add_executable(editor
 								) 
 
 target_link_libraries(editor 
-            physics
-						freetype
-						#skinned_mesh
-						basic_mesh
+
+						#freetype
 						basic_lighting
-						#assimp
 						pipeline
 						technique
 						camera
 						shadow_map_fbo
                       # util
-					  shapes
-            app
+					  #shapes
+            #app
 					  backend
 					  glfw3
 					  common

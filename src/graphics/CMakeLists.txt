@@ -55,7 +55,7 @@ add_library(basic_lighting ogldev_basic_lighting.cpp
 							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
 			)
       
-add_library (shapes shapes.cpp)
+#add_library (shapes shapes.cpp)
 
 add_library(shadow_map_fbo #SHARED 
 							ogldev_shadow_map_fbo.cpp)
@@ -80,23 +80,6 @@ ${GL}
 add_library(camera  camera.cpp)
 target_link_libraries(camera math_3d)
 
-add_library(basic_mesh #SHARED 
-					ogldev_basic_mesh.cpp)
-target_link_libraries(basic_mesh texture
-									assimp)						
-
-								
-# add_library(skinned_mesh skinned_mesh.cpp
-
-								# ${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-								# )
-# target_link_libraries(skinned_mesh 
-# assimp
-# math_3d
-# texture
-# ${GL}
-# # texture
-# )
 
 add_library(technique technique.cpp
 							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
