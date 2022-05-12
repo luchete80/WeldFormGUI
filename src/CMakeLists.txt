@@ -78,7 +78,9 @@ add_executable(editor
 							${CMAKE_SOURCE_DIR}/src/mymesh.cpp
 							#skinning_technique.cpp
 							#game.cpp
+              texture.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
+              ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
               
@@ -98,7 +100,7 @@ add_executable(editor
 
 target_link_libraries(editor 
 
-						#freetype
+						freetype
 						basic_lighting
 						pipeline
 						technique
@@ -109,56 +111,57 @@ target_link_libraries(editor
             #app
 					  backend
 					  glfw3
-					  common
+					  #common
 					  winmm
 )
 
 
 
-add_executable(editor_app
-              main.cpp
-							#camera_system.cpp
-							editor_app.cpp
-							${CMAKE_SOURCE_DIR}/src/mymesh.cpp
-							#skinning_technique.cpp
-							#game.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
+# add_executable(editor_app
+              # main.cpp
+							# #camera_system.cpp
+							# editor_app.cpp
+							# ${CMAKE_SOURCE_DIR}/src/mymesh.cpp
+							# #skinning_technique.cpp
+							# #game.cpp
+              # ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
+              # ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
+              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
+              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
               
-              ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
-							${CMAKE_SOURCE_DIR}/src/shader.cpp
-							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
+              # ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
+							# ${CMAKE_SOURCE_DIR}/src/shader.cpp
+							# ${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
               
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
-              ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-								) 
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
+              # ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
+								# ) 
 
-target_link_libraries(editor_app 
-            physics
-						freetype
-						#skinned_mesh
-						basic_mesh
-						basic_lighting
-						#assimp
-						pipeline
-						technique
-						camera
-						shadow_map_fbo
-                      # util
-					  shapes
-            app
-					  backend
-					  glfw3
-					  common
-					  winmm
-)
+# target_link_libraries(editor_app 
+            # physics
+						# freetype
+						# #skinned_mesh
+						# basic_mesh
+						# basic_lighting
+						# #assimp
+						# pipeline
+						# technique
+						# camera
+						# shadow_map_fbo
+                      # # util
+					  # shapes
+            # app
+					  # backend
+					  # glfw3
+					  # common
+					  # winmm
+# )
 
 # add_executable(game_no_bckend main_no_bckend.cpp
 							# # camera_system.cpp
