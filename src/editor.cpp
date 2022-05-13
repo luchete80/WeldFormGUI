@@ -792,26 +792,26 @@ void Editor::RenderPhase(){
     m_plightEffect->Enable();
     m_plightEffect->SetEyeWorldPos(camera->GetPos());
     m_plightEffect->SetWVP(p.GetWVPTrans());
-    ground_mesh.Render();
+    //ground_mesh.Render();
     
 
-    //for (int p=0;p<m_domain.Particles.size();p++){
-      // m_plightEffect->Enable();
-      // Pipeline pn;
-      // //Vec3_t v = m_domain.Particles[p]->x;
-      // //Vector3f pos(v(0),v(1),v(2));
-      // //cout << "vert " <<v(0)<<", "<<endl;
-      // Vector3f pos(0.,0.,0.);
+    for (int p=0;p<m_domain.Particles.size();p++){
+      m_plightEffect->Enable();
+      Pipeline pn;
+      //Vec3_t v = m_domain.Particles[p]->x;
+      //Vector3f pos(v(0),v(1),v(2));
+      //cout << "vert " <<v(0)<<", "<<endl;
+      Vector3f pos(0.,0.,0.);
       
-      // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-      // pn.SetPerspectiveProj(m_persProjInfo);
-      // pn.WorldPos(pos);   
-      // m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      // //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
-      // pn.Scale(0.1, 0.1,0.1);
-      // m_plightEffect->SetWVP(pn.GetWVPTrans());   
-      // m_sphere_mesh.Render();
-    //}
+      pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+      pn.SetPerspectiveProj(m_persProjInfo);
+      pn.WorldPos(pos);   
+      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
+      pn.Scale(0.1, 0.1,0.1);
+      m_plightEffect->SetWVP(pn.GetWVPTrans());   
+      m_sphere_mesh.Render();
+    }
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
   // {
