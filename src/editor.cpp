@@ -356,6 +356,7 @@ int Editor::Init(){
   
   cout << "Loading ground"<<endl;
   LoadGround(&ground_mesh);
+  LoadSphere();
 
   /// NOW LIGHT TECHNIQUE
   m_plightEffect = new BasicLightingTechnique();
@@ -637,29 +638,29 @@ void Editor::RenderPhase(){
     ground_mesh.Render();
 
 
-    if (mesh_loaded){
+    //if (mesh_loaded){
       // // This crashes
       m_plightEffect->Enable();
       Pipeline pn;
 //      if (is_struct)
         // for (int n=0;n<st->GetNodeCount();n++){
-          // //cout << "rendering"<<endl;
-          // //Vector3f pos(0.,0.,0.);
-          // Vector3f pos= st->GetNode(n)->GetPos();
-          // ///// cout << "Node pos: "<<pos.x<<", "<<pos.y<<", "<<pos.z<<endl;
-          // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-          // pn.SetPerspectiveProj(m_persProjInfo);
-          // pn.WorldPos(pos);   
-          // m_plightEffect->SetEyeWorldPos(camera->GetPos());
-          // pn.Scale(1.0f, 1.0f, 1.0f);
+          //cout << "rendering"<<endl;
+          Vector3f pos(0.,1.,0.);
+          //Vector3f pos= st->GetNode(n)->GetPos();
+          ///// cout << "Node pos: "<<pos.x<<", "<<pos.y<<", "<<pos.z<<endl;
+          pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+          pn.SetPerspectiveProj(m_persProjInfo);
+          pn.WorldPos(pos);   
+          m_plightEffect->SetEyeWorldPos(camera->GetPos());
+          pn.Scale(0.5f, 0.5f, 0.5f);
 
-          // // cout <<"Matrix"<<endl;
-          // // cout << pn.GetWVPTrans()[0][0]<< ", "<<pn.GetWVPTrans()[0][1]<< ", "<<pn.GetWVPTrans()[0][2]<<endl;
+          // cout <<"Matrix"<<endl;
+          // cout << pn.GetWVPTrans()[0][0]<< ", "<<pn.GetWVPTrans()[0][1]<< ", "<<pn.GetWVPTrans()[0][2]<<endl;
         
-          // m_plightEffect->SetWVP(pn.GetWVPTrans());   
-          // m_nodemesh[n]->Render();
+          m_plightEffect->SetWVP(pn.GetWVPTrans());   
+          m_sphere_mesh.Render();
         // }    
-    }
+    //}
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
   // {
@@ -839,6 +840,63 @@ bool Editor::LoadGround(myMesh *m_fieldmesh){
 	string file = "checker_blue.png";
 	
 	if (!m_fieldmesh->LoadMesh(vpos, vnorm, vtex,vind,file)){
+		std::cout<<"Mesh load failed"<<endl;
+		printf("Mesh load failed\n");
+		return false;        			
+		
+	}
+  return true;
+}
+
+#include "graphics/sphere_low.h"
+
+bool Editor::LoadSphere(){
+
+  
+  	//// VERTICES 
+	//// 2 3
+	//// 0 1
+	/////////
+	Vector3f apos[4] ={	
+						Vector3f(-PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
+						Vector3f(-PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.),
+						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
+						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
+						
+	Vector3f norm=Vector3f(0.,1.,0.);	
+
+	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
+                      Vector2f(1.0f, 0.0f),
+                      Vector2f(0.0f, 1.0f),
+						Vector2f(1.0f, 1.0f)};
+
+	unsigned int aind[] = { 0, 1, 2,
+							1, 3, 2};
+							   
+	int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
+  int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+  cout << "Vertex count " << vcount << endl;
+  cout << "Index  count " << indcount << endl;
+  
+	vector <Vector3f> vpos(vcount), vnorm(vcount);
+	vector <Vector2f> vtex(vcount);
+	vector <unsigned int > vind(indcount); //2 triangles
+  
+	for (int i=0;i<vcount;i++){
+    Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+		vpos[i]	= vert;
+    Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]);
+		vnorm[i]=vn;
+		vtex[i]	=atex[i];
+	}
+  for (int i=0;i<indcount;i++){
+    vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  }
+	 
+	for (int i=0;i<6;i++) vind[i] = aind[i];
+	string file = "checker_blue.png";
+	
+	if (!m_sphere_mesh.LoadMesh(vpos, vnorm, vtex,vind,file)){
 		std::cout<<"Mesh load failed"<<endl;
 		printf("Mesh load failed\n");
 		return false;        			

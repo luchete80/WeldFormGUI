@@ -74,7 +74,9 @@ public:
   virtual void Mouse(int Button, int Action, int Mode);
   virtual void Key(int key, int scancode, int action, int mods);
   bool LoadGround(myMesh *m_fieldmesh);
- 
+  
+  bool LoadSphere();
+  
   void MoveNode();
   
   void processInput(GLFWwindow *window);
@@ -110,6 +112,7 @@ protected:
   GLuint gWVPLocation;
 
   myMesh ground_mesh;
+  myMesh m_sphere_mesh;
 
   long long m_start_time;
 
