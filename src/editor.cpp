@@ -577,6 +577,15 @@ int Editor::Init(){
   // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
+  double L = 0.05;
+  double H = 0.005;
+  m_dx = 0.00085;
+  double rho = 1.;
+  double h = 1.2*m_dx;
+  cout << "Generating domain "<<endl;
+  m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
+  cout << "Done. "<<endl;
+  
 
   float kin_energy;
 
@@ -657,14 +666,6 @@ int Editor::Init(){
   
   m_impact_force = 0.;
   
-  double L = 0.05;
-  double H = 0.005;
-  m_dx = 0.00085;
-  double rho = 1.;
-  double h = 1.2*m_dx;
-  cout << "Generating domain "<<endl;
-  m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
-  cout << "Done. "<<endl;
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }
 
