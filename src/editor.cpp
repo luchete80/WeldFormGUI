@@ -662,8 +662,9 @@ int Editor::Init(){
   m_dx = 0.00085;
   double rho = 1.;
   double h = 1.2*m_dx;
+  cout << "Generating domain "<<endl;
   m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
-            
+  cout << "Done. "<<endl;
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }
 
