@@ -384,7 +384,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void Editor::scroll(double xoffset, double yoffset)
 {
 
-  camera->MoveFwd(yoffset);
+  camera->MoveFwd(yoffset*0.1);
 }
 
 
@@ -489,8 +489,8 @@ int Editor::Init(){
   m_persProjInfo.FOV    = 60.0f;
   m_persProjInfo.Height = SCR_HEIGHT;
   m_persProjInfo.Width  = SCR_WIDTH;
-  m_persProjInfo.zNear  = 0.002f;
-  m_persProjInfo.zFar   = 100.0f;  
+  m_persProjInfo.zNear  = 1.0e-4f;
+  m_persProjInfo.zFar   = 10.0f;  
   
   
   cout << "Loading ground"<<endl;
@@ -583,6 +583,7 @@ int Editor::Init(){
   double rho = 1.;
   double h = 1.2*m_dx;
   cout << "Generating domain "<<endl;
+  m_domain.Dimension = 3;
   m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
   cout << "Done. "<<endl;
   
@@ -799,14 +800,14 @@ void Editor::RenderPhase(){
       Pipeline pn;
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
-      cout << "vert " <<v(0)<<", "<<endl;
+      //cout << "vert " <<v(0)<<", "<<endl;
       //Vector3f pos(0.,0.,0.);
       
       pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
       pn.SetPerspectiveProj(m_persProjInfo);
       pn.WorldPos(pos);   
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      pn.Scale(m_dx, m_dx, m_dx);
+      pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
       //pn.Scale(0.1, 0.1,0.1);
       m_plightEffect->SetWVP(pn.GetWVPTrans());   
       m_sphere_mesh.Render();
