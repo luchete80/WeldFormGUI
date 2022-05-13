@@ -79,6 +79,7 @@ add_executable(editor
 							#skinning_technique.cpp
 							#game.cpp
               texture.cpp
+              Domain.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp

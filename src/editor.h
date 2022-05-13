@@ -26,31 +26,47 @@
 #include "ogldev_app.h"
 
 float vertices[] = {
-     0.5f, 1.5f, 0.0f,  // top right
-     0.5f, 0.5f, 0.0f,  // bottom right
-    -0.5f, 0.5f, 1.0f,  // bottom left
-    -0.5f, 1.5f, 1.0f   // top left 
-    
-    // -10.f, 0.f, -10.f,   // GROUND START! bottom left
-     // 10.f, 0.f, -10.f,   // 
-     // 10.f, 0.f,  10.f,   // t 
-    // -10.f, 0.f,  10.0f,   // 
-    
-};
-
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left 
+    // second triangle
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left
+}; 
+  // unsigned int indices[] = {  // note that we start from 0!
+      // 0, 1, 
+      // 0, 2,  // first Triangle
+      // 0, 3,
+      // 1, 2,
+      // 2, 3,
+      // 3, 1
+      // // 4, 5,
+      // // 5, 6,
+      // // 6, 7,
+      // // 7, 4  
+      // // GROUND
+  // };
+  
   unsigned int indices[] = {  // note that we start from 0!
-      0, 1, 
-      0, 2,  // first Triangle
-      0, 3,
-      1, 2,
-      2, 3,
-      3, 1
-      // 4, 5,
-      // 5, 6,
-      // 6, 7,
-      // 7, 4  
-      // GROUND
-  };
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+  };  
+  
+    // unsigned int indices[] = {  // note that we start from 0!
+      // 0, 1, 
+      // 0, 2,  // first Triangle
+      // 0, 3,
+      // 1, 2,
+      // 2, 3,
+      // 3, 1
+      // // 4, 5,
+      // // 5, 6,
+      // // 6, 7,
+      // // 7, 4  
+      // // GROUND
+  // };
   
 
 class Editor 
@@ -113,6 +129,8 @@ protected:
 
   myMesh ground_mesh;
   myMesh m_sphere_mesh;
+
+  DirectionalLight 					m_directionalLight;
 
   long long m_start_time;
 

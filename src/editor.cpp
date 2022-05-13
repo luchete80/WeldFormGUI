@@ -16,6 +16,8 @@
 #include "Editor.h"
 #include <sstream>
 
+#include "graphics/sphere_low.h"
+
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -368,8 +370,8 @@ int Editor::Init(){
 
   m_plightEffect->Enable();
 
-  DirectionalLight 					m_directionalLight;
-  m_directionalLight.Color = Vector3f(1.0f, 1.0f, 1.0f);
+  
+  m_directionalLight.Color = Vector3f(0.5f, 0.5f, 0.0f);
   m_directionalLight.AmbientIntensity = 0.55f;
   m_directionalLight.DiffuseIntensity = 0.9f;
   m_directionalLight.Direction = Vector3f(1.0f, 0.0, 0.0);
@@ -592,6 +594,13 @@ void Editor::RenderBeams(){
   glUseProgram(shaderProgram);
  
   //glDrawElements(GL_LINES, 2 * st->GetTrussCount(), GL_UNSIGNED_INT, 0);
+  //The first argument specifies the mode we want to draw in, similar to glDrawArrays. 
+  //The second argument is the count or number of elements we'd like to draw. 
+  //The third argument is the type of the indices which is of type GL_UNSIGNED_INT. 
+  //The last argument allows us to specify an offset in the EBO (or pass in an index array, but that is when you're not using element buffer objects), but we're just going to leave this at 0.
+  //glDrawElements(GL_TRIANGLES, 20, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 2, GL_UNSIGNED_INT, 0);
+  //glDrawArrays(GL_TRIANGLES, 0, 10);
 
   //glEnable(GL_DEPTH_TEST);
 
@@ -622,7 +631,7 @@ void Editor::RenderPhase(){
   
   // render
   // ------
-	glClearColor(0.5f, 0.85f, 1.f, 1.0f);
+	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // draw our first triangle
@@ -632,35 +641,26 @@ void Editor::RenderPhase(){
   
   
   //RENDERING FIRST IT WORKS; AFTER DOESn'T
+
     m_plightEffect->Enable();
     m_plightEffect->SetEyeWorldPos(camera->GetPos());
     m_plightEffect->SetWVP(p.GetWVPTrans());
-    ground_mesh.Render();
+    //ground_mesh.Render();
+    
 
 
-    //if (mesh_loaded){
-      // // This crashes
-      m_plightEffect->Enable();
-      Pipeline pn;
-//      if (is_struct)
-        // for (int n=0;n<st->GetNodeCount();n++){
-          //cout << "rendering"<<endl;
-          Vector3f pos(0.,1.,0.);
-          //Vector3f pos= st->GetNode(n)->GetPos();
-          ///// cout << "Node pos: "<<pos.x<<", "<<pos.y<<", "<<pos.z<<endl;
-          pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-          pn.SetPerspectiveProj(m_persProjInfo);
-          pn.WorldPos(pos);   
-          m_plightEffect->SetEyeWorldPos(camera->GetPos());
-          pn.Scale(0.5f, 0.5f, 0.5f);
+    m_plightEffect->Enable();
+    Pipeline pn;
+    Vector3f pos(0.,1.,0.);
 
-          // cout <<"Matrix"<<endl;
-          // cout << pn.GetWVPTrans()[0][0]<< ", "<<pn.GetWVPTrans()[0][1]<< ", "<<pn.GetWVPTrans()[0][2]<<endl;
-        
-          m_plightEffect->SetWVP(pn.GetWVPTrans());   
-          m_sphere_mesh.Render();
-        // }    
-    //}
+    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+    pn.SetPerspectiveProj(m_persProjInfo);
+    pn.WorldPos(pos);   
+    m_plightEffect->SetEyeWorldPos(camera->GetPos());
+    pn.Scale(1.0f, 1.0f, 1.0f);
+    m_plightEffect->SetWVP(pn.GetWVPTrans());   
+    m_sphere_mesh.Render();
+
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
   // {
@@ -712,24 +712,24 @@ void Editor::Run(){
       
       processInput(window);
       
-      PickingPhase();
+      //PickingPhase();
       RenderPhase();
       //RenderBeams();
 
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      // ///
+      // glEnable(GL_BLEND);
+      // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      // // ///
   
   
-      //"FPS: " + to_string(m_fps)
-      m_Text->RenderText("Max Kin Energy: " + to_string_with_precision(kin_energy,1) + " J" , 
-                    20.f, 400.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
+      // //"FPS: " + to_string(m_fps)
+      // m_Text->RenderText("Max Kin Energy: " + to_string_with_precision(kin_energy,1) + " J" , 
+                    // 20.f, 400.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
                     
-      m_Text->RenderText("Impact Force: " + to_string_with_precision(m_impact_force,1) + " N", 
-                    20.f, 350.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
-      // m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
-                    // 20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
-      glDisable(GL_BLEND);
+      // m_Text->RenderText("Impact Force: " + to_string_with_precision(m_impact_force,1) + " N", 
+                    // 20.f, 350.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
+      // // m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
+                    // // 20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
+      // glDisable(GL_BLEND);
         
       // Poll and handle events (inputs, window resize, etc.)
       // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -848,7 +848,6 @@ bool Editor::LoadGround(myMesh *m_fieldmesh){
   return true;
 }
 
-#include "graphics/sphere_low.h"
 
 bool Editor::LoadSphere(){
 
@@ -875,6 +874,8 @@ bool Editor::LoadSphere(){
 							   
 	int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
   int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+	// int vcount    = sizeof(vertices)/(3*sizeof(float));
+  // int indcount  = sizeof(indices)/sizeof(unsigned int);
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
   
@@ -887,13 +888,23 @@ bool Editor::LoadSphere(){
 		vpos[i]	= vert;
     Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]);
 		vnorm[i]=vn;
-		vtex[i]	=atex[i];
+		//vtex[i]	=atex[i];
 	}
   for (int i=0;i<indcount;i++){
     vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
-	 
-	for (int i=0;i<6;i++) vind[i] = aind[i];
+
+	// for (int i=0;i<vcount;i++){
+    // Vector3f vert(vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
+		// vpos[i]	= vert;
+    // Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]);
+		// vnorm[i]=vn;
+		// //vtex[i]	=atex[i];
+	// }
+  // for (int i=0;i<indcount;i++){
+    // vind[i] = indices[i];  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  // }
+  
 	string file = "checker_blue.png";
 	
 	if (!m_sphere_mesh.LoadMesh(vpos, vnorm, vtex,vind,file)){

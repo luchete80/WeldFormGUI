@@ -52,7 +52,7 @@ bool BasicLightingTechnique::Init()
 
     m_WVPLocation = GetUniformLocation("gWVP");
     m_WorldMatrixLocation = GetUniformLocation("gWorld");
-    m_colorTextureLocation = GetUniformLocation("gColorMap");
+    //m_colorTextureLocation = GetUniformLocation("gColorMap");
     m_eyeWorldPosLocation = GetUniformLocation("gEyeWorldPos");
     m_dirLightLocation.Color = GetUniformLocation("gDirectionalLight.Base.Color");
     m_dirLightLocation.AmbientIntensity = GetUniformLocation("gDirectionalLight.Base.AmbientIntensity");
