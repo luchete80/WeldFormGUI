@@ -32,6 +32,9 @@ class Vec3_t {
 class Particle{
 public:
   Vec3_t x;
+  Particle						(int Tag, Vec3_t const & x0, Vec3_t const & v0, double Mass0, double Density0, double h0, bool Fixed=false){x=Vec3_t(x0);}
+private:
+ // friend Domain;
 };
 
 class Domain
@@ -123,13 +126,13 @@ public:
     double 					InitialDist;	///< Initial distance of particles for Inflow BC
 
     double					AvgVelocity;	///< Average velocity of the last two column for x periodic constant velocity
-	double 					getCellfac(){return Cellfac;}
+	//double 					getCellfac(){return Cellfac;}
 
 
 
 
 
-	double 	& getTime (){return Time;}		//LUCIANO
+	//double 	& getTime (){return Time;}		//LUCIANO
 		bool 									update_contact_surface;
 
   std::vector <std::pair<size_t,size_t> >		Initial;
@@ -137,7 +140,7 @@ public:
 
 	double T_inf;			//LUCIANO: IN CASE OF ONLY ONE CONVECTION TEMPERAURE
 	
-	iKernel m_kernel;
+
 	bool					m_isNbDataCleared;
 	bool						auto_ts;				//LUCIANO: Auto Time Stepping
 	

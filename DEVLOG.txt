@@ -1,1 +1,3 @@
 20220512 - First compiling code. Setting up things. 
+20220513 - Added a Domain and particle Dummy class, only for domain and particles generator.
+           Added json reader.

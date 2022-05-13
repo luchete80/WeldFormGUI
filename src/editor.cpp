@@ -18,6 +18,8 @@
 
 #include "graphics/sphere_low.h"
 
+using namespace SPH;
+
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -38,8 +40,143 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 #define PITCH_WIDTH 20.
 #define PITCH_LENGTH 20.
 
+// Helper to wire demo markers located in code to a interactive browser
+typedef void (*ImGuiDemoMarkerCallback)(const char* file, int line, const char* section, void* user_data);
+extern ImGuiDemoMarkerCallback  GImGuiDemoMarkerCallback;
+extern void*                    GImGuiDemoMarkerCallbackUserData;
+ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = NULL;
+void*                           GImGuiDemoMarkerCallbackUserData = NULL;
+#define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
+
+// Note that shortcuts are currently provided for display only
+// (future version will add explicit flags to BeginMenu() to request processing shortcuts)
+static void ShowExampleMenuFile()
+{
+    IMGUI_DEMO_MARKER("Examples/Menu");
+    ImGui::MenuItem("(demo menu)", NULL, false, false);
+    if (ImGui::MenuItem("New")) {}
+    if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+    if (ImGui::BeginMenu("Open Recent"))
+    {
+        ImGui::MenuItem("fish_hat.c");
+        ImGui::MenuItem("fish_hat.inl");
+        ImGui::MenuItem("fish_hat.h");
+        if (ImGui::BeginMenu("More.."))
+        {
+            ImGui::MenuItem("Hello");
+            ImGui::MenuItem("Sailor");
+            if (ImGui::BeginMenu("Recurse.."))
+            {
+                ShowExampleMenuFile();
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+    if (ImGui::MenuItem("Save As..")) {}
+
+    ImGui::Separator();
+    IMGUI_DEMO_MARKER("Examples/Menu/Options");
+    if (ImGui::BeginMenu("Options"))
+    {
+        static bool enabled = true;
+        ImGui::MenuItem("Enabled", "", &enabled);
+        ImGui::BeginChild("child", ImVec2(0, 60), true);
+        for (int i = 0; i < 10; i++)
+            ImGui::Text("Scrolling Text %d", i);
+        ImGui::EndChild();
+        static float f = 0.5f;
+        static int n = 0;
+        ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
+        ImGui::InputFloat("Input", &f, 0.1f);
+        ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
+        ImGui::EndMenu();
+    }
+
+    IMGUI_DEMO_MARKER("Examples/Menu/Colors");
+    if (ImGui::BeginMenu("Colors"))
+    {
+        float sz = ImGui::GetTextLineHeight();
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
+            ImGui::Dummy(ImVec2(sz, sz));
+            ImGui::SameLine();
+            ImGui::MenuItem(name);
+        }
+        ImGui::EndMenu();
+    }
+
+    // Here we demonstrate appending again to the "Options" menu (which we already created above)
+    // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
+    // In a real code-base using it would make senses to use this feature from very different code locations.
+    if (ImGui::BeginMenu("Options")) // <-- Append!
+    {
+        IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
+        static bool b = true;
+        ImGui::Checkbox("SomeOption", &b);
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Disabled", false)) // Disabled
+    {
+        IM_ASSERT(0);
+    }
+    if (ImGui::MenuItem("Checked", NULL, true)) {}
+    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+}
 
 void Editor::drawGui() { 
+
+
+  // Menu Bar
+  if (ImGui::BeginMenuBar())
+  {
+      if (ImGui::BeginMenu("Menu"))
+      {
+          IMGUI_DEMO_MARKER("Menu/File");
+          ShowExampleMenuFile();
+          ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Examples"))
+      {
+          IMGUI_DEMO_MARKER("Menu/Examples");
+          //ImGui::MenuItem("Main menu bar", NULL, &show_app_main_menu_bar);
+          // ImGui::MenuItem("Console", NULL, &show_app_console);
+          // ImGui::MenuItem("Log", NULL, &show_app_log);
+          // ImGui::MenuItem("Simple layout", NULL, &show_app_layout);
+          // ImGui::MenuItem("Property editor", NULL, &show_app_property_editor);
+          // ImGui::MenuItem("Long text display", NULL, &show_app_long_text);
+          // ImGui::MenuItem("Auto-resizing window", NULL, &show_app_auto_resize);
+          // ImGui::MenuItem("Constrained-resizing window", NULL, &show_app_constrained_resize);
+          // ImGui::MenuItem("Simple overlay", NULL, &show_app_simple_overlay);
+          // ImGui::MenuItem("Fullscreen window", NULL, &show_app_fullscreen);
+          // ImGui::MenuItem("Manipulating window titles", NULL, &show_app_window_titles);
+          // ImGui::MenuItem("Custom rendering", NULL, &show_app_custom_rendering);
+          // ImGui::MenuItem("Documents", NULL, &show_app_documents);
+          ImGui::EndMenu();
+      }
+      // ////if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
+      // if (ImGui::BeginMenu("Tools"))
+      // {
+          // IMGUI_DEMO_MARKER("Menu/Tools");
+  // #ifndef IMGUI_DISABLE_METRICS_WINDOW
+          // ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics);
+          // ImGui::MenuItem("Stack Tool", NULL, &show_app_stack_tool);
+  // #endif
+          // ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
+          // ImGui::MenuItem("About Dear ImGui", NULL, &show_app_about);
+          // ImGui::EndMenu();
+      // }
+      ImGui::EndMenuBar();
+  }
+
+
+
   ////// open Dialog Simple
   if (ImGui::Button("Open File Dialog"))
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
@@ -352,7 +489,7 @@ int Editor::Init(){
   m_persProjInfo.FOV    = 60.0f;
   m_persProjInfo.Height = SCR_HEIGHT;
   m_persProjInfo.Width  = SCR_WIDTH;
-  m_persProjInfo.zNear  = 0.02f;
+  m_persProjInfo.zNear  = 0.002f;
   m_persProjInfo.zFar   = 100.0f;  
   
   
@@ -371,7 +508,7 @@ int Editor::Init(){
   m_plightEffect->Enable();
 
   
-  m_directionalLight.Color = Vector3f(0.5f, 0.5f, 0.0f);
+  m_directionalLight.Color = Vector3f(0.5f, 1.f, 0.0f);
   m_directionalLight.AmbientIntensity = 0.55f;
   m_directionalLight.DiffuseIntensity = 0.9f;
   m_directionalLight.Direction = Vector3f(1.0f, 0.0, 0.0);
@@ -519,6 +656,13 @@ int Editor::Init(){
   m_frameTime = m_startTime = GetCurrentTimeMillis();
   
   m_impact_force = 0.;
+  
+  double L = 0.05;
+  double H = 0.005;
+  m_dx = 0.00085;
+  double rho = 1.;
+  double h = 1.2*m_dx;
+  m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
             
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }
@@ -648,19 +792,23 @@ void Editor::RenderPhase(){
     //ground_mesh.Render();
     
 
-
-    m_plightEffect->Enable();
-    Pipeline pn;
-    Vector3f pos(0.,1.,0.);
-
-    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-    pn.SetPerspectiveProj(m_persProjInfo);
-    pn.WorldPos(pos);   
-    m_plightEffect->SetEyeWorldPos(camera->GetPos());
-    pn.Scale(1.0f, 1.0f, 1.0f);
-    m_plightEffect->SetWVP(pn.GetWVPTrans());   
-    m_sphere_mesh.Render();
-
+    for (int p=0;p<m_domain.Particles.size();p++){
+      m_plightEffect->Enable();
+      Pipeline pn;
+      Vec3_t v = m_domain.Particles[p]->x;
+      Vector3f pos(v(0),v(1),v(2));
+      cout << "vert " <<v(0)<<", "<<endl;
+      //Vector3f pos(0.,0.,0.);
+      
+      pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+      pn.SetPerspectiveProj(m_persProjInfo);
+      pn.WorldPos(pos);   
+      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      pn.Scale(m_dx, m_dx, m_dx);
+      //pn.Scale(0.1, 0.1,0.1);
+      m_plightEffect->SetWVP(pn.GetWVPTrans());   
+      m_sphere_mesh.Render();
+    }
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
   // {

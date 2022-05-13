@@ -90,7 +90,7 @@ add_executable(editor
 							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
               
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
+              #${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp

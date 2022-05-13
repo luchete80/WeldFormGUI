@@ -44,8 +44,8 @@ Domain::Domain ()
 
 Domain::~Domain ()
 {
-	size_t Max = Particles.Size();
-	for (size_t i=1; i<=Max; i++)  Particles.DelItem(Max-i);
+	// size_t Max = Particles.size();
+	// for (size_t i=1; i<=Max; i++)  Particles.DelItem(Max-i);
 }
 
 void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, double Lz, 
@@ -76,7 +76,7 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
 //	Util::Stopwatch stopwatch;
     std::cout << "\n--------------Generating particles by AddBoxLength with defined length of particles-----------" << std::endl;
 
-    size_t PrePS = Particles.Size();
+    size_t PrePS = Particles.size();
 
     double x,y,xp,yp;
     size_t i,j;
@@ -158,43 +158,43 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
 
         //Calculate particles' mass in 3D
         Vec3_t temp, Max=V;
-		for (size_t i=PrePS; i<Particles.Size(); i++) {
-			if (Particles[i]->x(0) > Max(0)) Max(0) = Particles[i]->x(0);
-			if (Particles[i]->x(1) > Max(1)) Max(1) = Particles[i]->x(1);
-			if (Particles[i]->x(2) > Max(2)) Max(2) = Particles[i]->x(2);
-		}
-		Max +=r;
-		temp = Max-V;
+		// for (size_t i=PrePS; i<Particles.size(); i++) {
+			// if (Particles[i]->x(0) > Max(0)) Max(0) = Particles[i]->x(0);
+			// if (Particles[i]->x(1) > Max(1)) Max(1) = Particles[i]->x(1);
+			// if (Particles[i]->x(2) > Max(2)) Max(2) = Particles[i]->x(2);
+		// }
+		// Max +=r;
+		// temp = Max-V;
 		cout << "BoxDimensions: "<<temp(0)<<", "<<temp(1)<<", "<<temp(2)<<", "<<endl;
-		double Mass = temp(0)*temp(1)*temp(2)*Density/(Particles.Size()-PrePS);
+		double Mass = temp(0)*temp(1)*temp(2)*Density/(Particles.size()-PrePS);
 		
 		cout << "Particle mass: " << Mass <<endl;
 		
 		// New SOA members
 		cout << "Allocating "<<endl;
-		// Initiate (&m_x,Particles.Size());
-		// Initiate (&m_h,Particles.Size());
-		// Initiate (&m_kT,Particles.Size());
-		// Initiate (&m_cpT,Particles.Size());
-		// Initiate (&m_hcT,Particles.Size());
-		// Initiate (&m_qconvT,Particles.Size());
-		// Initiate (&m_T,Particles.Size());		
-		// Initiate (&m_Tinf,Particles.Size());
-		// Initiate (&m_dTdt,Particles.Size());
-		// Initiate (&m_rho,Particles.Size());
-		// Initiate (&m_mass,Particles.Size());
+		// Initiate (&m_x,Particles.size());
+		// Initiate (&m_h,Particles.size());
+		// Initiate (&m_kT,Particles.size());
+		// Initiate (&m_cpT,Particles.size());
+		// Initiate (&m_hcT,Particles.size());
+		// Initiate (&m_qconvT,Particles.size());
+		// Initiate (&m_T,Particles.size());		
+		// Initiate (&m_Tinf,Particles.size());
+		// Initiate (&m_dTdt,Particles.size());
+		// Initiate (&m_rho,Particles.size());
+		// Initiate (&m_mass,Particles.size());
 		cout << "Done."<<endl;
 
 
-		#pragma omp parallel for num_threads(Nproc)
-		#ifdef __GNUC__
-		for (size_t i=0; i<Particles.Size(); i++)	//Like in Domain::Move
-		#else
-		for (int i=0; i<Particles.Size(); i++)//Like in Domain::Move
-		#endif
-		{
-			Particles[i]->Mass = Mass;
-		}
+		// #pragma omp parallel for num_threads(Nproc)
+		// #ifdef __GNUC__
+		// for (size_t i=0; i<Particles.size(); i++)	//Like in Domain::Move
+		// #else
+		// for (int i=0; i<Particles.size(); i++)//Like in Domain::Move
+		// #endif
+		// {
+			// Particles[i]->Mass = Mass;
+		// }
     } else if (Dimension==2) {
     	if (type==0)
     	{
@@ -270,7 +270,7 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
     	}
     }
 		
-		cout << "Particle Count: "<<Particles.Size()<< endl;
+		cout << "Particle Count: "<<Particles.size()<< endl;
 
 	R = r;
 }

@@ -25,6 +25,8 @@
 #include "ogldev_callbacks.h"
 #include "ogldev_app.h"
 
+#include "Domain.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -133,6 +135,8 @@ protected:
   DirectionalLight 					m_directionalLight;
 
   long long m_start_time;
+  SPH::Domain m_domain;
+  double m_dx;
 
   bool rotatecam;
   
