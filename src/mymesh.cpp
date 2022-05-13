@@ -331,17 +331,17 @@ void myMesh::Render() {
             m_Textures[MaterialIndex]->Bind(COLOR_TEXTURE_UNIT);
         }
 
-        glDrawElementsBaseVertex(GL_TRIANGLES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         m_Entries[i].BaseVertex);
-        // glDrawElements(GL_TRIANGLES, 
+        // glDrawElementsBaseVertex(GL_TRIANGLES, 
                          // m_Entries[i].NumIndices, 
                          // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
-                         // //,m_Entries[i].BaseVertex
-                         // );
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         // m_Entries[i].BaseVertex);
+        glDrawElements(GL_TRIANGLES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         //,m_Entries[i].BaseVertex
+                         );
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
