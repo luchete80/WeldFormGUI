@@ -968,9 +968,9 @@ bool Editor::LoadGround(myMesh *m_fieldmesh){
 						Vector3f(-PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.),
 						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
 						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
-						
-	Vector3f norm=Vector3f(0.,1.,0.);	
-
+	Vector3f norm[4]= {Vector3f(0.,1.,0.), Vector3f(0.,1.,0.),
+                      Vector3f(1.,1.,1.),Vector3f(1.,1.,1.)};
+                      
 	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
                       Vector2f(1.0f, 0.0f),
                       Vector2f(0.0f, 1.0f),
@@ -982,7 +982,7 @@ bool Editor::LoadGround(myMesh *m_fieldmesh){
 	
 	for (int i=0;i<4;i++){
 		vpos[i]	=apos[i];
-		vnorm[i]=norm;
+		vnorm[i]=norm[i];
 		vtex[i]	=atex[i];
 	}
 	
@@ -1013,7 +1013,6 @@ bool Editor::LoadSphere(){
 						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
 						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
 						
-	Vector3f norm=Vector3f(0.,1.,0.);	
 
 	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
                       Vector2f(1.0f, 0.0f),
