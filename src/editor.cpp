@@ -795,23 +795,23 @@ void Editor::RenderPhase(){
     //ground_mesh.Render();
     
 
-    for (int p=0;p<m_domain.Particles.size();p++){
+    //for (int p=0;p<m_domain.Particles.size();p++){
       m_plightEffect->Enable();
       Pipeline pn;
-      Vec3_t v = m_domain.Particles[p]->x;
-      Vector3f pos(v(0),v(1),v(2));
+      //Vec3_t v = m_domain.Particles[p]->x;
+      //Vector3f pos(v(0),v(1),v(2));
       //cout << "vert " <<v(0)<<", "<<endl;
-      //Vector3f pos(0.,0.,0.);
+      Vector3f pos(0.,0.,0.);
       
       pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
       pn.SetPerspectiveProj(m_persProjInfo);
       pn.WorldPos(pos);   
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
-      //pn.Scale(0.1, 0.1,0.1);
+      //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
+      pn.Scale(0.1, 0.1,0.1);
       m_plightEffect->SetWVP(pn.GetWVPTrans());   
       m_sphere_mesh.Render();
-    }
+    //}
 
   // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
   // {
@@ -865,7 +865,7 @@ void Editor::Run(){
       
       //PickingPhase();
       RenderPhase();
-      //RenderBeams();
+      RenderBeams();
 
       // glEnable(GL_BLEND);
       // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
