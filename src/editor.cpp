@@ -1057,7 +1057,7 @@ bool Editor::LoadSphere(){
     Vector3f v1 = r1-r0;
     Vector3f v2 = r2-r0;
     Vector3f vnn = (v1.Cross(v2)).Normalize();
-    for (int l=0;l<3;l++) {vnprom[l]+=vnn;}
+    for (int l=0;l<3;l++) {vnprom[vind[3*e+l]]+=vnn;}
   }
   
   for (int i=0;i<vcount;i++)vnprom[i].Normalize();
