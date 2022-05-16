@@ -1060,7 +1060,11 @@ bool Editor::LoadSphere(){
     for (int l=0;l<3;l++) {vnprom[vind[3*e+l]]+=vnn;}
   }
   
-  for (int i=0;i<vcount;i++)vnprom[i].Normalize();
+  cout << "Normals"<<endl;
+  for (int i=0;i<vcount;i++){
+    vnprom[i].Normalize();
+    cout << vnprom[i].x<< ", "<<vnprom[i].y<<", "<<vnprom[i].z<<endl;
+  }
 
 	// for (int i=0;i<vcount;i++){
     // Vector3f vert(vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
