@@ -71,7 +71,7 @@ void PickingTechnique::DrawStartCB(uint DrawIndex)
 
 void PickingTechnique::SetObjectIndex(uint ObjectIndex)
 {
-    GLExitIfError;
+    //GLExitIfError;
     glUniform1ui(m_objectIndexLocation, ObjectIndex);
 //    GLExitIfError;
 }

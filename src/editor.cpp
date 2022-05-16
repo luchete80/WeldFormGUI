@@ -477,6 +477,8 @@ int Editor::Init(){
   }
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
+  
+  printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 
   Vector3f Pos(0.5f, 0.5f, -0.5f);
@@ -577,9 +579,9 @@ int Editor::Init(){
   // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-  double L = 0.05;
-  double H = 0.005;
-  m_dx = 0.00085;
+  double L = 0.5;
+  double H = 0.05;
+  m_dx = 0.0085;
   double rho = 1.;
   double h = 1.2*m_dx;
   cout << "Generating domain "<<endl;
@@ -593,13 +595,6 @@ int Editor::Init(){
   
   mesh_loaded = false;
 
-  if (!m_pickingTexture.Init(SCR_WIDTH, SCR_HEIGHT)) {
-      return false;
-  }
-
-  if (!m_pickingEffect.Init()) {
-      return false;
-  }
   
   
 
@@ -666,6 +661,17 @@ int Editor::Init(){
   m_frameTime = m_startTime = GetCurrentTimeMillis();
   
   m_impact_force = 0.;
+
+
+  if (!m_pickingTexture.Init(SCR_WIDTH, SCR_HEIGHT)) {
+      cout << "Error generating picking texture"<<endl;
+      return false;
+  }
+
+  if (!m_pickingEffect.Init()) {
+    cout << "Error initilizing m_pickingEffect"<<endl;
+      return false;
+  }
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }
@@ -709,9 +715,9 @@ void Editor::PickingPhase() {
   // }
 
     
-     m_pickingEffect.Enable();
+    //m_pickingEffect.Enable();
     for (int p=0;p<m_domain.Particles.size();p++){
-      m_plightEffect->Enable();
+      m_pickingEffect.Enable();
       Pipeline pn;
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
@@ -726,9 +732,11 @@ void Editor::PickingPhase() {
       float h = m_domain.Particles[p]->h/2.;
       pn.Scale(h, h,h);
       //m_plightEffect->SetWVP(pn.GetWVPTrans());   
+      if (p<10){
       m_pickingEffect.SetObjectIndex((p+1));
       m_pickingEffect.SetWVP(pn.GetWVPTrans());    
       m_sphere_mesh.Render();
+      }
     }
 
   m_pickingTexture.DisableWriting();
@@ -888,7 +896,7 @@ void Editor::Run(){
       
       processInput(window);
       
-      //PickingPhase();
+      PickingPhase();
       RenderPhase();
       RenderBeams();
 

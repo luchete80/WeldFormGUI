@@ -47,22 +47,22 @@ PickingTexture::~PickingTexture()
 
 bool PickingTexture::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 {
-    // Create the FBO
-    glGenFramebuffers(1, &m_fbo);    
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+  // Create the FBO
+  glGenFramebuffers(1, &m_fbo);    
+  glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    // Create the texture object for the primitive information buffer
-    glGenTextures(1, &m_pickingTexture);
-    glBindTexture(GL_TEXTURE_2D, m_pickingTexture);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WindowWidth, WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingTexture, 0);    
+  // Create the texture object for the primitive information buffer
+  glGenTextures(1, &m_pickingTexture);
+  glBindTexture(GL_TEXTURE_2D, m_pickingTexture);
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WindowWidth, WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingTexture, 0);    
 
-    // Create the texture object for the depth buffer
-    glGenTextures(1, &m_depthTexture);
-    glBindTexture(GL_TEXTURE_2D, m_depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);    
+  // Create the texture object for the depth buffer
+  glGenTextures(1, &m_depthTexture);
+  glBindTexture(GL_TEXTURE_2D, m_depthTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);    
 
 	glReadBuffer(GL_NONE);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
