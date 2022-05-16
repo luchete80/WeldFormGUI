@@ -32,7 +32,8 @@ class Vec3_t {
 class Particle{
 public:
   Vec3_t x;
-  Particle						(int Tag, Vec3_t const & x0, Vec3_t const & v0, double Mass0, double Density0, double h0, bool Fixed=false){x=Vec3_t(x0);}
+  Particle						(int Tag, Vec3_t const & x0, Vec3_t const & v0, double Mass0, double Density0, double h0, bool Fixed=false){x=Vec3_t(x0);h=h0;}
+  double h;
 private:
  // friend Domain;
 };

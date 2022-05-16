@@ -479,7 +479,7 @@ int Editor::Init(){
   glDeleteShader(fragmentShader);
 
 
-  Vector3f Pos(1.0f, 3.0f, -5.0f);
+  Vector3f Pos(0.5f, 0.5f, -0.5f);
   Vector3f Target(-0.5f, -0.5f, 1.0f);
   Vector3f Up(0.0, 1.0f, 0.0f);
 
@@ -508,10 +508,10 @@ int Editor::Init(){
   m_plightEffect->Enable();
 
   
-  m_directionalLight.Color = Vector3f(0.5f, 1.f, 0.0f);
+  m_directionalLight.Color = Vector3f(0.5f, 1.f, 1.0f);
   m_directionalLight.AmbientIntensity = 0.55f;
-  m_directionalLight.DiffuseIntensity = 0.9f;
-  m_directionalLight.Direction = Vector3f(1.0f, 0.0, 0.0);
+  m_directionalLight.DiffuseIntensity = 1.0f;
+  m_directionalLight.Direction = Vector3f(1.0f, 1.0, 0.0);
 
 
   m_plightEffect->SetColorTextureUnit(COLOR_TEXTURE_UNIT_INDEX);
@@ -697,16 +697,40 @@ void Editor::PickingPhase() {
 
   
   //cout << "size"<< m_nodemesh.size()<<endl;
-  for (uint i = 0 ; i < m_nodemesh.size() ; i++) {
-      m_pickingEffect.Enable();
-      Vector3f pos(0.,0.,0.);//= st->GetNode(i)->GetPos();
-      p.WorldPos(pos);
-      m_pickingEffect.SetObjectIndex((i+1));
-      m_pickingEffect.SetWVP(p.GetWVPTrans());    
-      //Matrix4f m = p.GetWVPTrans();
-      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);     
-      m_nodemesh[i]->Render(/*&m_pickingEffect*/); //TODO: Is necessary to add this??  
-  }
+  // for (uint i = 0 ; i < m_nodemesh.size() ; i++) {
+      // m_pickingEffect.Enable();
+      // Vector3f pos(0.,0.,0.);//= st->GetNode(i)->GetPos();
+      // p.WorldPos(pos);
+      // m_pickingEffect.SetObjectIndex((i+1));
+      // m_pickingEffect.SetWVP(p.GetWVPTrans());    
+      // //Matrix4f m = p.GetWVPTrans();
+      // //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);     
+      // m_nodemesh[i]->Render(/*&m_pickingEffect*/); //TODO: Is necessary to add this??  
+  // }
+
+    
+     m_pickingEffect.Enable();
+    for (int p=0;p<m_domain.Particles.size();p++){
+      m_plightEffect->Enable();
+      Pipeline pn;
+      Vec3_t v = m_domain.Particles[p]->x;
+      Vector3f pos(v(0),v(1),v(2));
+      //cout << "vert " <<v(0)<<", "<<endl;
+      //Vector3f pos(0.,0.,0.);
+      
+      pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+      pn.SetPerspectiveProj(m_persProjInfo);
+      pn.WorldPos(pos);   
+      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
+      float h = m_domain.Particles[p]->h/2.;
+      pn.Scale(h, h,h);
+      //m_plightEffect->SetWVP(pn.GetWVPTrans());   
+      m_pickingEffect.SetObjectIndex((p+1));
+      m_pickingEffect.SetWVP(pn.GetWVPTrans());    
+      m_sphere_mesh.Render();
+    }
+
   m_pickingTexture.DisableWriting();
 
 }
@@ -798,17 +822,18 @@ void Editor::RenderPhase(){
     for (int p=0;p<m_domain.Particles.size();p++){
       m_plightEffect->Enable();
       Pipeline pn;
-      //Vec3_t v = m_domain.Particles[p]->x;
-      //Vector3f pos(v(0),v(1),v(2));
+      Vec3_t v = m_domain.Particles[p]->x;
+      Vector3f pos(v(0),v(1),v(2));
       //cout << "vert " <<v(0)<<", "<<endl;
-      Vector3f pos(0.,0.,0.);
+      //Vector3f pos(0.,0.,0.);
       
       pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
       pn.SetPerspectiveProj(m_persProjInfo);
       pn.WorldPos(pos);   
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
       //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
-      pn.Scale(0.1, 0.1,0.1);
+      float h = m_domain.Particles[p]->h/2.;
+      pn.Scale(h, h,h);
       m_plightEffect->SetWVP(pn.GetWVPTrans());   
       m_sphere_mesh.Render();
     }
@@ -1036,8 +1061,8 @@ bool Editor::LoadSphere(){
 	for (int i=0;i<vcount;i++){
     Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
 		vpos[i]	= vert;
-    Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
-		vnorm[i]=vn;
+    //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
+		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
 	}
   for (int i=0;i<indcount;i++){
@@ -1048,7 +1073,7 @@ bool Editor::LoadSphere(){
   std::vector<Vector3f> vnprom(vcount);
 
   for (int e=0;e<elemcount;e++){
-    int i = vind[3*e];
+    int i = vind[3*e]; //Element First node
     int j = vind[3*e+1];
     int k = vind[3*e+2];
     Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
