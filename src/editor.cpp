@@ -511,8 +511,8 @@ int Editor::Init(){
 
   
   m_directionalLight.Color = Vector3f(0.5f, 1.f, 1.0f);
-  m_directionalLight.AmbientIntensity = 0.55f;
-  m_directionalLight.DiffuseIntensity = 1.0f;
+  m_directionalLight.AmbientIntensity = 0.15f;
+  m_directionalLight.DiffuseIntensity = 0.5f;
   m_directionalLight.Direction = Vector3f(1.0f, 1.0, 0.0);
 
 
@@ -811,12 +811,11 @@ void Editor::RenderPhase(){
   // render
   // ------
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // draw our first triangle
   glUseProgram(shaderProgram);
   gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
-  glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
   
   
   //RENDERING FIRST IT WORKS; AFTER DOESn'T
@@ -824,51 +823,31 @@ void Editor::RenderPhase(){
     m_plightEffect->Enable();
     m_plightEffect->SetEyeWorldPos(camera->GetPos());
     m_plightEffect->SetWVP(p.GetWVPTrans());
-    //ground_mesh.Render();
-    
+
+  
+ 
 
     for (int p=0;p<m_domain.Particles.size();p++){
-      m_plightEffect->Enable();
+     
       Pipeline pn;
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
-      //cout << "vert " <<v(0)<<", "<<endl;
-      //Vector3f pos(0.,0.,0.);
       
       pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
       pn.SetPerspectiveProj(m_persProjInfo);
       pn.WorldPos(pos);   
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
       float h = m_domain.Particles[p]->h/2.;
       pn.Scale(h, h,h);
-      m_plightEffect->SetWVP(pn.GetWVPTrans());   
+      
+      m_plightEffect->SetWVP(pn.GetWVPTrans());
+      //If personalized shader
+      // m = pn.GetWVPTrans();
+      // glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
       m_sphere_mesh.Render();
     }
 
-  // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-  // {
-      // static float f = 0.0f;
-      // static int counter = 0;
-
-      // ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-      // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-      // // ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-      // // ImGui::Checkbox("Another Window", &show_another_window);
-
-      // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-      // //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-      // if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-          // counter++;
-      // ImGui::SameLine();
-      // ImGui::Text("counter = %d", counter);
-
-      // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      // ImGui::End();
-  // }
-  
+  glUseProgram(0);
   drawGui();
 
 
