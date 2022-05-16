@@ -1036,13 +1036,31 @@ bool Editor::LoadSphere(){
 	for (int i=0;i<vcount;i++){
     Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
 		vpos[i]	= vert;
-    Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]);
+    Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		vnorm[i]=vn;
 		//vtex[i]	=atex[i];
 	}
   for (int i=0;i<indcount;i++){
     vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
+  
+  int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
+  std::vector<Vector3f> vnprom(vcount);
+
+  for (int e=0;e<elemcount;e++){
+    int i = vind[3*e];
+    int j = vind[3*e+1];
+    int k = vind[3*e+2];
+    Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+    Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
+    Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+    Vector3f v1 = r1-r0;
+    Vector3f v2 = r2-r0;
+    Vector3f vnn = (v1.Cross(v2)).Normalize();
+    for (int l=0;l<3;l++) {vnprom[l]+=vnn;}
+  }
+  
+  for (int i=0;i<vcount;i++)vnprom[i].Normalize();
 
 	// for (int i=0;i<vcount;i++){
     // Vector3f vert(vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
@@ -1057,7 +1075,7 @@ bool Editor::LoadSphere(){
   
 	string file = "checker_blue.png";
 	
-	if (!m_sphere_mesh.LoadMesh(vpos, vnorm, vtex,vind,file)){
+	if (!m_sphere_mesh.LoadMesh(vpos, vnprom, vtex,vind,file)){
 		std::cout<<"Mesh load failed"<<endl;
 		printf("Mesh load failed\n");
 		return false;        			
