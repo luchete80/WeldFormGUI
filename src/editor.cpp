@@ -237,19 +237,58 @@ void Editor::drawGui() {
 }
 
 const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 gWVP;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   //gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
+    // "layout (location = 0) in vec3 aPos;\n"
+    // "uniform mat4 gWVP;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "   //gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "}\0";
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 2) in vec3 aNormal;\n"
+"out vec3 FragPos;\n"
+"uniform mat4 gWVP;\n"
+"out vec3 Normal;\n"
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 projection;\n"
+"void main()\n"
+"{\n"
+"    FragPos = vec3(model * vec4(aPos, 1.0));\n"
+"    Normal = aNormal;     \n"
+"    //gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+"   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
 const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n\0";
+
+"out vec4 FragColor;\n"
+"in vec3 Normal;  \n"
+"in vec3 FragPos;  \n" 
+"uniform vec3 lightPos; \n"
+"uniform vec3 lightColor;\n"
+"uniform vec3 objectColor;\n"
+"void main()\n"
+"{ \n"
+"    // ambient\n"
+"    float ambientStrength = 0.2;\n"
+"    vec3 ambient = ambientStrength * lightColor;\n"
+"  	\n"
+"    // diffuse \n"
+"    vec3 norm = normalize(Normal);\n"
+"    vec3 lightDir = normalize(lightPos - FragPos);\n"
+"    float diff = max(dot(norm, lightDir), 0.0);\n"
+"    vec3 diffuse = diff * lightColor;\n"           
+"    vec3 result = (ambient + diffuse) * objectColor;\n"
+"    FragColor = vec4(result, 1.0);\n"
+"}\0";
+
+// ORIGINAL
+    // "out vec4 FragColor;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    // "}\n\0";
     
 //3D THINGS
 
@@ -643,9 +682,10 @@ int Editor::Init(){
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0);   
 
-    glFrontFace(GL_CW);
+    glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST); //DO NOT FORGET!
     
     
   ///////////////// TEXT ////
@@ -820,13 +860,26 @@ void Editor::RenderPhase(){
   
   //RENDERING FIRST IT WORKS; AFTER DOESn'T
 
-    m_plightEffect->Enable();
-    m_plightEffect->SetEyeWorldPos(camera->GetPos());
-    m_plightEffect->SetWVP(p.GetWVPTrans());
-
+    // m_plightEffect->Enable();
+    // m_plightEffect->SetEyeWorldPos(camera->GetPos());
+    // m_plightEffect->SetWVP(p.GetWVPTrans());
   
- 
+    Vector3f lightPos(1.2f, 1.0f, 2.0f);
+    Vector3f lightColor(1.0f, 1.0f, 1.0f);
+    Vector3f objectColor(1.0f, 0.5f, 0.31f);
+    
+    
 
+    
+   glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &lightPos[0]); 
+   glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, &lightColor[0]); 
+   glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &objectColor[0]); 
+   
+         // lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        // lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        // lightingShader.setVec3("lightPos", lightPos);
+
+    glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
     for (int p=0;p<m_domain.Particles.size();p++){
      
       Pipeline pn;
@@ -842,8 +895,8 @@ void Editor::RenderPhase(){
       
       m_plightEffect->SetWVP(pn.GetWVPTrans());
       //If personalized shader
-      // m = pn.GetWVPTrans();
-      // glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
+      m = pn.GetWVPTrans();
+      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
       m_sphere_mesh.Render();
     }
 
@@ -875,9 +928,9 @@ void Editor::Run(){
       
       processInput(window);
       
-      PickingPhase();
+      //PickingPhase();
       RenderPhase();
-      RenderBeams();
+      //RenderBeams();
 
       // glEnable(GL_BLEND);
       // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
