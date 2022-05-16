@@ -580,8 +580,8 @@ int Editor::Init(){
 
 
   double L = 0.5;
-  double H = 0.05;
-  m_dx = 0.0085;
+  double H = 0.5;
+  m_dx = 0.05;
   double rho = 1.;
   double h = 1.2*m_dx;
   cout << "Generating domain "<<endl;
@@ -732,7 +732,7 @@ void Editor::PickingPhase() {
       float h = m_domain.Particles[p]->h/2.;
       pn.Scale(h, h,h);
       //m_plightEffect->SetWVP(pn.GetWVPTrans());   
-      if (p<10){
+      if (p<255){
       m_pickingEffect.SetObjectIndex((p+1));
       m_pickingEffect.SetWVP(pn.GetWVPTrans());    
       m_sphere_mesh.Render();
