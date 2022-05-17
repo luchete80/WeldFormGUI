@@ -1,3 +1,5 @@
 20220512 - First compiling code. Setting up things. 
 20220513 - Added a Domain and particle Dummy class, only for domain and particles generator.
            Added json reader.
+20220516 - Working on Particle rendering. Ok. Ready. Changed lighting shader. Is a problem
+           with particle color. 
