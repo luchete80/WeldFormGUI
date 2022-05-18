@@ -279,7 +279,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
 "    vec3 lightDir = normalize(lightPos - FragPos);\n"
 "    float diff = max(dot(norm, lightDir), 0.0);\n"
 "    vec3 diffuse = diff * lightColor;\n"           
-//"    vec3 result = (ambient + diffuse) * objectColor;\n"
+//"    vec3 result = (ambient + diffuse) * objectColor;\n" //THIS IS THE ORIGINAL
 "    vec3 result = diffuse ;\n"
 "    FragColor = vec4(result, 1.0);\n"
 "}\0";
