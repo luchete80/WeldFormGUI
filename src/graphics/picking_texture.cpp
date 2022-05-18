@@ -106,10 +106,14 @@ PickingTexture::PixelInfo PickingTexture::ReadPixel(unsigned int x, unsigned int
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     
     // ORIGINAL
-    ////glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &Pixel);
-    
     //glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &Pixel);
-    glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &Pixel);
+    //NEW, Convert to int 
+    glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &res);
+    m_pickedID = 
+    res[0] + 
+    res[1] * 256 +
+    res[2] * 256*256;
+    
     //cout <<"color picked "<<int (res[0])<<endl;  
     glReadBuffer(GL_NONE);
     
@@ -127,4 +131,40 @@ PickingTexture::PixelInfo PickingTexture::ReadPixel(unsigned int x, unsigned int
     
 
     return Pixel;
+}
+
+int PickingTexture::ReadPixelToInt(unsigned int x, unsigned int y)
+{
+  PixelInfo Pixel;
+  unsigned char res[3];
+  
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    
+    // ORIGINAL
+    //glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &Pixel);
+    //NEW, Convert to int 
+    glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &res);
+    m_pickedID = 
+    res[0] + 
+    res[1] * 256 +
+    res[2] * 256*256;
+    
+    //cout <<"color picked "<<int (res[0])<<endl;  
+    glReadBuffer(GL_NONE);
+    
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+  //////If i want to see it from the screen
+	// GLint viewport[4];
+	// glGetIntegerv(GL_VIEWPORT, viewport);
+	// //glReadPixels(xx, viewport[3] - yy, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &res);
+  // glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &res);
+  // cout <<"color picked "<<int (res[0])<<endl;  
+  // //glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &Pixel);
+  
+  
+    
+
+    return m_pickedID;
 }

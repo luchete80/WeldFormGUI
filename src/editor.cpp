@@ -381,7 +381,8 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           m_last_mouse_dragtime = GetCurrentTimeMillis();
         } else {m_is_node_sel = false;}
         cout << "x,y: "<<x<<" , "<<y<<endl;
-        cout << "Obj ID "<<int(Pixel.ObjectID)<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
+        int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
+        cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
         cout << "Pressed"<<endl;
       }
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
@@ -655,7 +656,15 @@ int Editor::Init(){
       // }
   // }
 
-  
+   if (!m_pickingTexture.Init(SCR_WIDTH, SCR_HEIGHT)) {
+      cout << "Error generating picking texture"<<endl;
+      //return false;
+  }
+
+  if (!m_pickingEffect.Init()) {
+    cout << "Error initializing picking shader"<<endl;
+      return false;
+  } 
   
   //FOR RENDER LINES
     glGenVertexArrays(1, &VAO);
@@ -704,15 +713,7 @@ int Editor::Init(){
   m_impact_force = 0.;
 
 
-  if (!m_pickingTexture.Init(SCR_WIDTH, SCR_HEIGHT)) {
-      cout << "Error generating picking texture"<<endl;
-      return false;
-  }
 
-  if (!m_pickingEffect.Init()) {
-    cout << "Error initilizing m_pickingEffect"<<endl;
-      return false;
-  }
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }
@@ -729,56 +730,44 @@ void Editor::PickingPhase() {
   // render
   // ------
 	glClearColor(0.0f, 0.0f, 0.f, 1.0f);  //DO NOT CHANGE THIS!!! BECAUSE OBJECT ID !=0 MEANS SOMETHING SELECTED
-  glClear(GL_COLOR_BUFFER_BIT);
 
   // draw our first triangle
   
-  //gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
+  gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
   
   m_pickingTexture.EnableWriting();
   
   
   //glUseProgram(shaderProgram);
-
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   
-  //cout << "size"<< m_nodemesh.size()<<endl;
-  // for (uint i = 0 ; i < m_nodemesh.size() ; i++) {
-      // m_pickingEffect.Enable();
-      // Vector3f pos(0.,0.,0.);//= st->GetNode(i)->GetPos();
-      // p.WorldPos(pos);
-      // m_pickingEffect.SetObjectIndex((i+1));
-      // m_pickingEffect.SetWVP(p.GetWVPTrans());    
-      // //Matrix4f m = p.GetWVPTrans();
-      // //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);     
-      // m_nodemesh[i]->Render(/*&m_pickingEffect*/); //TODO: Is necessary to add this??  
-  // }
-
+  //THis can be done once, even scale
+  Pipeline pn;
+  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pn.SetPerspectiveProj(m_persProjInfo);
+   float h = m_domain.Particles[0]->h/2.;
+  pn.Scale(h, h,h);  
+      
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //m_pickingEffect.Enable();
     for (int p=0;p<m_domain.Particles.size();p++){
       m_pickingEffect.Enable();
-      Pipeline pn;
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
       //cout << "vert " <<v(0)<<", "<<endl;
       //Vector3f pos(0.,0.,0.);
       
-      pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-      pn.SetPerspectiveProj(m_persProjInfo);
       pn.WorldPos(pos);   
-      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      //pn.Scale(m_dx*0.5, m_dx*0.5, m_dx*0.5);
-      float h = m_domain.Particles[p]->h/2.;
-      pn.Scale(h, h,h);
-      //m_plightEffect->SetWVP(pn.GetWVPTrans());   
-      if (p<255){
+      Matrix4f m = pn.GetWVPTrans();
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
+      //if (p<255){
       m_pickingEffect.SetObjectIndex((p+1));
       m_pickingEffect.SetWVP(pn.GetWVPTrans());    
       m_sphere_mesh.Render();
-      }
+      //}
     }
+    
+    //glUseProgram(0);
 
   m_pickingTexture.DisableWriting();
 
@@ -881,20 +870,21 @@ void Editor::RenderPhase(){
         // lightingShader.setVec3("lightPos", lightPos);
 
     glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
-    for (int p=0;p<m_domain.Particles.size();p++){
-     
-      Pipeline pn;
+
+    Pipeline pn;
+    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+    pn.SetPerspectiveProj(m_persProjInfo);
+    float h = m_domain.Particles[0]->h/2.;
+    pn.Scale(h, h,h);  
+      
+    for (int p=0;p<m_domain.Particles.size();p++){    
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
       
-      pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-      pn.SetPerspectiveProj(m_persProjInfo);
-      pn.WorldPos(pos);   
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      float h = m_domain.Particles[p]->h/2.;
-      pn.Scale(h, h,h);
-      
-      m_plightEffect->SetWVP(pn.GetWVPTrans());
+
+      pn.WorldPos(pos);      
+      //m_plightEffect->SetWVP(pn.GetWVPTrans());
       //If personalized shader
       m = pn.GetWVPTrans();
       glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
@@ -929,7 +919,7 @@ void Editor::Run(){
       
       processInput(window);
       
-      //PickingPhase();
+      PickingPhase();
       RenderPhase();
       //RenderBeams();
 

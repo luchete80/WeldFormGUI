@@ -44,7 +44,7 @@ bool PickingTechnique::Init()
     }
 
     m_WVPLocation = GetUniformLocation("gWVP");
-    m_objectIndexLocation = GetUniformLocation("gObjectIndex");
+    m_objectIndexLocation = GetUniformLocation("gPickingColor");
     //m_drawIndexLocation = GetUniformLocation("gDrawIndex");
 
     if (m_WVPLocation == INVALID_UNIFORM_LOCATION ||
@@ -72,6 +72,14 @@ void PickingTechnique::DrawStartCB(uint DrawIndex)
 void PickingTechnique::SetObjectIndex(uint ObjectIndex)
 {
     //GLExitIfError;
-    glUniform1ui(m_objectIndexLocation, ObjectIndex);
+    //glUniform1ui(m_objectIndexLocation, ObjectIndex);
+    
+      // Convert "i", the integer mesh ID, into an RGB color
+  int r = (ObjectIndex & 0x000000FF) >>  0;
+  int g = (ObjectIndex & 0x0000FF00) >>  8;
+  int b = (ObjectIndex & 0x00FF0000) >> 16;
+
+  // OpenGL expects colors to be in [0,1], so divide by 255.
+  glUniform4f(m_objectIndexLocation, r/255.0f, g/255.0f, b/255.0f, 1.0f);
 //    GLExitIfError;
 }

@@ -44,20 +44,23 @@ public:
         unsigned char DrawID;
         unsigned char PrimID;
         
-        PixelInfo()
+        PixelInfo() //NOT USED
         {
             ObjectID = 0.0f;
             DrawID = 0.0f;
             PrimID = 0.0f;
         }
     };
-
+    
+    int m_pickedID;
     PixelInfo ReadPixel(unsigned int x, unsigned int y);
+    int ReadPixelToInt(unsigned int x, unsigned int y);
     
 private:
     GLuint m_fbo;
     GLuint m_pickingTexture;
     GLuint m_depthTexture;
+    
 
 };
 
