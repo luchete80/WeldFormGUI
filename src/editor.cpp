@@ -761,7 +761,7 @@ void Editor::PickingPhase() {
       Matrix4f m = pn.GetWVPTrans();
       //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
       //if (p<255){
-      m_pickingEffect.SetObjectIndex((p+1));
+      m_pickingEffect.SetObjectIndex((p));
       m_pickingEffect.SetWVP(pn.GetWVPTrans());    
       m_sphere_mesh.Render();
       //}
