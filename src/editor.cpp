@@ -48,6 +48,37 @@ ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = NULL;
 void*                           GImGuiDemoMarkerCallbackUserData = NULL;
 #define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
 
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+// Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
+// Here we use the simplified Combo() api that packs items into a single literal string.
+// Useful for quick combo boxes where the choices are known locally.
+bool ImGui::ShowStyleSelector(const char* label)
+{
+    static int style_idx = -1;
+    if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
+    {
+        switch (style_idx)
+        {
+        case 0: ImGui::StyleColorsDark(); break;
+        case 1: ImGui::StyleColorsLight(); break;
+        case 2: ImGui::StyleColorsClassic(); break;
+        }
+        return true;
+    }
+    return false;
+}
+
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
 static void ShowExampleMenuFile()
@@ -130,6 +161,33 @@ static void ShowExampleMenuFile()
     if (ImGui::MenuItem("Quit", "Alt+F4")) {}
 }
 
+// Demonstrate creating a "main" fullscreen menu bar and populating it.
+// Note the difference between BeginMainMenuBar() and BeginMenuBar():
+// - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
+// - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
+static void ShowExampleAppMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            ShowExampleMenuFile();
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+            ImGui::Separator();
+            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
 void Editor::drawGui() { 
 
 
@@ -145,8 +203,8 @@ void Editor::drawGui() {
       if (ImGui::BeginMenu("Examples"))
       {
           IMGUI_DEMO_MARKER("Menu/Examples");
-          //ImGui::MenuItem("Main menu bar", NULL, &show_app_main_menu_bar);
-          // ImGui::MenuItem("Console", NULL, &show_app_console);
+          ImGui::MenuItem("Main menu bar", NULL, &m_show_app_main_menu_bar);
+          ImGui::MenuItem("Console", NULL, &m_show_app_console);
           // ImGui::MenuItem("Log", NULL, &show_app_log);
           // ImGui::MenuItem("Simple layout", NULL, &show_app_layout);
           // ImGui::MenuItem("Property editor", NULL, &show_app_property_editor);
@@ -160,6 +218,7 @@ void Editor::drawGui() {
           // ImGui::MenuItem("Documents", NULL, &show_app_documents);
           ImGui::EndMenu();
       }
+  
       // ////if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
       // if (ImGui::BeginMenu("Tools"))
       // {
@@ -174,7 +233,95 @@ void Editor::drawGui() {
       // }
       ImGui::EndMenuBar();
   }
+IMGUI_DEMO_MARKER("Configuration");
+    if (ImGui::CollapsingHeader("Configuration"))
+    {
+        ImGuiIO& io = ImGui::GetIO();
 
+        if (ImGui::TreeNode("Configuration##2"))
+        {
+            ImGui::CheckboxFlags("io.ConfigFlags: NavEnableKeyboard",    &io.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard);
+            ImGui::SameLine(); HelpMarker("Enable keyboard controls.");
+            ImGui::CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad);
+            ImGui::SameLine(); HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.");
+            ImGui::CheckboxFlags("io.ConfigFlags: NavEnableSetMousePos", &io.ConfigFlags, ImGuiConfigFlags_NavEnableSetMousePos);
+            ImGui::SameLine(); HelpMarker("Instruct navigation to move the mouse cursor. See comment for ImGuiConfigFlags_NavEnableSetMousePos.");
+            ImGui::CheckboxFlags("io.ConfigFlags: NoMouse",              &io.ConfigFlags, ImGuiConfigFlags_NoMouse);
+            if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)
+            {
+                // The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
+                if (fmodf((float)ImGui::GetTime(), 0.40f) < 0.20f)
+                {
+                    ImGui::SameLine();
+                    ImGui::Text("<<PRESS SPACE TO DISABLE>>");
+                }
+                if (ImGui::IsKeyPressed(ImGuiKey_Space))
+                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+            }
+            ImGui::CheckboxFlags("io.ConfigFlags: NoMouseCursorChange", &io.ConfigFlags, ImGuiConfigFlags_NoMouseCursorChange);
+            ImGui::SameLine(); HelpMarker("Instruct backend to not alter mouse cursor shape and visibility.");
+            ImGui::Checkbox("io.ConfigInputTrickleEventQueue", &io.ConfigInputTrickleEventQueue);
+            ImGui::SameLine(); HelpMarker("Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
+            ImGui::Checkbox("io.ConfigInputTextCursorBlink", &io.ConfigInputTextCursorBlink);
+            ImGui::SameLine(); HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting).");
+            ImGui::Checkbox("io.ConfigDragClickToInputText", &io.ConfigDragClickToInputText);
+            ImGui::SameLine(); HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).");
+            ImGui::Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges);
+            ImGui::SameLine(); HelpMarker("Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.");
+            ImGui::Checkbox("io.ConfigWindowsMoveFromTitleBarOnly", &io.ConfigWindowsMoveFromTitleBarOnly);
+            ImGui::Checkbox("io.MouseDrawCursor", &io.MouseDrawCursor);
+            ImGui::SameLine(); HelpMarker("Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).");
+            ImGui::Text("Also see Style->Rendering for rendering options.");
+            ImGui::TreePop();
+            ImGui::Separator();
+        }
+
+        IMGUI_DEMO_MARKER("Configuration/Backend Flags");
+        if (ImGui::TreeNode("Backend Flags"))
+        {
+            HelpMarker(
+                "Those flags are set by the backends (imgui_impl_xxx files) to specify their capabilities.\n"
+                "Here we expose them as read-only fields to avoid breaking interactions with your backend.");
+
+            // Make a local copy to avoid modifying actual backend flags.
+            // FIXME: We don't use BeginDisabled() to keep label bright, maybe we need a BeginReadonly() equivalent..
+            ImGuiBackendFlags backend_flags = io.BackendFlags;
+            ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",           &backend_flags, ImGuiBackendFlags_HasGamepad);
+            ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",      &backend_flags, ImGuiBackendFlags_HasMouseCursors);
+            ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",       &backend_flags, ImGuiBackendFlags_HasSetMousePos);
+            ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset", &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
+            ImGui::TreePop();
+            ImGui::Separator();
+        }
+
+        IMGUI_DEMO_MARKER("Configuration/Style");
+        if (ImGui::TreeNode("Style"))
+        {
+            HelpMarker("The same contents can be accessed in 'Tools->Style Editor' or by calling the ShowStyleEditor() function.");
+            //ImGui::ShowStyleEditor();
+            ImGui::TreePop();
+            ImGui::Separator();
+        }
+
+        IMGUI_DEMO_MARKER("Configuration/Capture, Logging");
+        if (ImGui::TreeNode("Capture/Logging"))
+        {
+            HelpMarker(
+                "The logging API redirects all text output so you can easily capture the content of "
+                "a window or a block. Tree nodes can be automatically expanded.\n"
+                "Try opening any of the contents below in this window and then click one of the \"Log To\" button.");
+            ImGui::LogButtons();
+
+            HelpMarker("You can also call ImGui::LogText() to output directly to the log without a visual output.");
+            if (ImGui::Button("Copy \"Hello, world!\" to clipboard"))
+            {
+                ImGui::LogToClipboard();
+                ImGui::LogText("Hello, world!");
+                ImGui::LogFinish();
+            }
+            ImGui::TreePop();
+        }
+    }
 
 
   ////// open Dialog Simple
@@ -234,7 +381,11 @@ void Editor::drawGui() {
     // close
     ImGuiFileDialog::Instance()->Close();
   }
+  
+  ShowExampleAppMainMenuBar();
 }
+
+//THESE SHADERS ARE FROM LEARNOPENGL
 
 const char *vertexShaderSource = "#version 330 core\n"
     // "layout (location = 0) in vec3 aPos;\n"
@@ -279,8 +430,8 @@ const char *fragmentShaderSource = "#version 330 core\n"
 "    vec3 lightDir = normalize(lightPos - FragPos);\n"
 "    float diff = max(dot(norm, lightDir), 0.0);\n"
 "    vec3 diffuse = diff * lightColor;\n"           
-//"    vec3 result = (ambient + diffuse) * objectColor;\n" //THIS IS THE ORIGINAL
-"    vec3 result = diffuse ;\n"
+"    vec3 result = (ambient + diffuse) * objectColor;\n" //THIS IS THE ORIGINAL
+//"    vec3 result = diffuse ;\n"
 "    FragColor = vec4(result, 1.0);\n"
 "}\0";
 
@@ -383,6 +534,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         cout << "x,y: "<<x<<" , "<<y<<endl;
         int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
+        m_sel_particles = test;
         cout << "Pressed"<<endl;
       }
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
@@ -712,7 +864,7 @@ int Editor::Init(){
   
   m_impact_force = 0.;
 
-
+  m_sel_particles = -1;
 
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
@@ -863,7 +1015,6 @@ void Editor::RenderPhase(){
     
    glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &lightPos[0]); 
    glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, &lightColor[0]); 
-   glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &objectColor[0]); 
    
          // lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         // lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
@@ -886,6 +1037,10 @@ void Editor::RenderPhase(){
       pn.WorldPos(pos);      
       //m_plightEffect->SetWVP(pn.GetWVPTrans());
       //If personalized shader
+      if (p==m_sel_particles) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+      else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+   
       m = pn.GetWVPTrans();
       glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
       m_sphere_mesh.Render();

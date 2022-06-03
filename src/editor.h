@@ -141,6 +141,7 @@ protected:
   bool rotatecam;
   
   unsigned int VBO, VAO, EBO; //TODO: THIS SHOULD BE MOVED TO 
+  /*std::vector < */int /*>*/ m_sel_particles;
 
   
   // PHysics Things
@@ -160,6 +161,10 @@ protected:
 	long long m_startTime;
 	int m_frameCount;
   int m_fps;
+  
+  
+  bool m_show_app_main_menu_bar;
+  bool m_show_app_console;
   
 };
 
