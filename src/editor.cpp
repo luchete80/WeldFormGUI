@@ -323,6 +323,9 @@ IMGUI_DEMO_MARKER("Configuration");
         }
     }
 
+    if (ImGui::CollapsingHeader("New Domain")){
+      
+    }
 
   ////// open Dialog Simple
   if (ImGui::Button("Open File Dialog"))
