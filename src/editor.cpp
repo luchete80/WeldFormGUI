@@ -325,8 +325,33 @@ IMGUI_DEMO_MARKER("Configuration");
 
     if (ImGui::CollapsingHeader("New Domain")){
       if (ImGui::Button("Box")){
-        
       }
+              ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("WantTextInput: %d", io.WantTextInput);
+            // static char buf[32] = "0.";
+            // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
+            ImGui::Text("Origin");
+            static double d0 = 0.0;
+            ImGui::InputDouble("x ", &d0, 0.01f, 1.0f, "%.4f");
+            static double d1 = 0.0;
+            ImGui::InputDouble("y ", &d1, 0.01f, 1.0f, "%.4f");
+            static double d2   = 0.0;
+            ImGui::InputDouble("z ", &d2, 0.01f, 1.0f, "%.4f");
+            ImGui::Text("Size");
+            //Vec3_t size;
+            double size[3];
+            ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
+            
+            if (ImGui::Button("Create")){
+              double L = 0.5;
+              double H = 0.5;
+              m_dx = 0.05;
+              double rho = 1.;
+              double h = 1.2*m_dx;
+              m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );              
+            }
     }
 
   ////// open Dialog Simple
@@ -784,7 +809,7 @@ int Editor::Init(){
   double h = 1.2*m_dx;
   cout << "Generating domain "<<endl;
   m_domain.Dimension = 3;
-  m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );
+
   cout << "Done. "<<endl;
   
 
@@ -901,13 +926,14 @@ void Editor::PickingPhase() {
   Pipeline pn;
   pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
   pn.SetPerspectiveProj(m_persProjInfo);
-   float h = m_domain.Particles[0]->h/2.;
-  pn.Scale(h, h,h);  
+
       
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //m_pickingEffect.Enable();
     for (int p=0;p<m_domain.Particles.size();p++){
+   float h = m_domain.Particles[0]->h/2.;
+  pn.Scale(h, h,h);  
       m_pickingEffect.Enable();
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
@@ -1029,11 +1055,13 @@ void Editor::RenderPhase(){
 
     Pipeline pn;
     pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-    pn.SetPerspectiveProj(m_persProjInfo);
-    float h = m_domain.Particles[0]->h/2.;
-    pn.Scale(h, h,h);  
+    pn.SetPerspectiveProj(m_persProjInfo);    
+    // float h = m_domain.Particles[0]->h/2.;
+    // pn.Scale(h, h,h);  
       
     for (int p=0;p<m_domain.Particles.size();p++){    
+    float h = m_domain.Particles[0]->h/2.;
+    pn.Scale(h, h,h);  
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
       
