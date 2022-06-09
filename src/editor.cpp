@@ -324,7 +324,9 @@ IMGUI_DEMO_MARKER("Configuration");
     }
 
     if (ImGui::CollapsingHeader("New Domain")){
-      
+      if (ImGui::Button("Box")){
+        
+      }
     }
 
   ////// open Dialog Simple
