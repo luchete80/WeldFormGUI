@@ -339,18 +339,20 @@ IMGUI_DEMO_MARKER("Configuration");
             ImGui::InputDouble("z ", &d2, 0.01f, 1.0f, "%.4f");
             ImGui::Text("Size");
             //Vec3_t size;
-            double size[3];
+            double size[] = {0.1,0.1,0.1};
             ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
             ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
             ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
             
+            double radius = 0.01;
+            ImGui::InputDouble("Particle Radius",&radius);
             if (ImGui::Button("Create")){
               double L = 0.5;
               double H = 0.5;
               m_dx = 0.05;
               double rho = 1.;
-              double h = 1.2*m_dx;
-              m_domain.AddBoxLength(0 ,Vec3_t ( -L/2.0-L/20.0 , -H, -L/2.0-L/20.0 ), L + L/10.0 + m_dx/10.0 , H ,  L + L/10. , m_dx/2.0 ,rho, h, 1 , 0 , false, false );              
+              double h = 1.2*radius;
+              m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );              
             }
     }
 
