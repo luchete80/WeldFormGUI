@@ -162,6 +162,8 @@ protected:
 	int m_frameCount;
   int m_fps;
   
+  float m_rotation;
+  
   
   bool m_show_app_main_menu_bar;
   bool m_show_app_console;

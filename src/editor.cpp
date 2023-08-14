@@ -494,16 +494,24 @@ static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
     editor->CursorPos(x,  y);
 }
 
+
+///
 void Editor:: CursorPos(double x, double y) {
      if (mouse_pressed){
       camera->SetLastMousePos(x,y);
       mouse_pressed = false;
     }
-    if (rotatecam)
+    if (rotatecam){
       camera->OnMouse((int)x, (int)y);
+      //cout << "ROT; x, y "<<x <<", "<< y<< endl;
 
-
-    
+    double x,y;
+    glfwGetCursorPos(window, &x, &y);
+    m_rotation = x-last_mouse_x;
+    cout << "rotation " <<m_rotation<<endl;
+      
+        
+    }
     // if (m_left_button_pressed){
       // PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
       // cout << "x,y: "<<x<<" , "<<y<<endl;
@@ -572,6 +580,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
         m_left_button_pressed = false;
       }
+      
 
 }
 
@@ -636,7 +645,7 @@ int Editor::Init(){
   // --------------------
   bool isFullScreen = false;
    GLFWmonitor* pMonitor = isFullScreen ? glfwGetPrimaryMonitor() : NULL;
-  window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+  window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "WeldFormGUI", NULL, NULL);
   if (window == NULL)
   {
       std::cout << "Failed to create GLFW window" << std::endl;
@@ -1039,9 +1048,9 @@ void Editor::RenderPhase(){
     // m_plightEffect->SetEyeWorldPos(camera->GetPos());
     // m_plightEffect->SetWVP(p.GetWVPTrans());
   
-    Vector3f lightPos(1.2f, 1.0f, 2.0f);
-    Vector3f lightColor(1.0f, 1.0f, 1.0f);
-    Vector3f objectColor(1.0f, 0.5f, 0.31f);
+  Vector3f lightPos(1.2f, 1.0f, 2.0f);
+  Vector3f lightColor(1.0f, 1.0f, 1.0f);
+  Vector3f objectColor(1.0f, 0.5f, 0.31f);
     
     
 
@@ -1060,6 +1069,13 @@ void Editor::RenderPhase(){
     pn.SetPerspectiveProj(m_persProjInfo);    
     // float h = m_domain.Particles[0]->h/2.;
     // pn.Scale(h, h,h);  
+    
+    
+    		// pm.Rotate(270.0f, - 90.0f + (rotation*180./3.14159), 0.0f);       
+				// pm.WorldPos(mpos); 				
+				// m_pEffect->SetWVP(pm.GetWVPTrans());
+				// m_pEffect->SetWorldMatrix(pm.GetWorldTrans());    
+				// m_playermesh[TeamSize*j + i]->Render();
       
     for (int p=0;p<m_domain.Particles.size();p++){    
     float h = m_domain.Particles[0]->h/2.;
@@ -1068,7 +1084,8 @@ void Editor::RenderPhase(){
       Vector3f pos(v(0),v(1),v(2));
       
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
-
+      
+      pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);      
       //m_plightEffect->SetWVP(pn.GetWVPTrans());
       //If personalized shader
