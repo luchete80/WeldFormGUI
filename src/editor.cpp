@@ -355,6 +355,14 @@ IMGUI_DEMO_MARKER("Configuration");
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );              
             }
     }
+    
+    if (ImGui::CollapsingHeader("BCs")){
+      
+      if (ImGui::Button("Create")){
+        
+      }
+      
+    }
 
   ////// open Dialog Simple
   if (ImGui::Button("Open File Dialog"))
