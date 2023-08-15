@@ -17,6 +17,8 @@
 #include <sstream>
 
 #include "graphics/sphere_low.h"
+#include <glm/gtc/matrix_transform.hpp>
+
 
 using namespace SPH;
 
@@ -500,6 +502,7 @@ static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
     // // //If callbacks are set AFTER, THEN THIS NEEDS TO BE CALLED
     // // //ImGui_ImplGlfw_CursorPosCallback(pWindow,x,y);//THIS IS IN ORDER 
     editor->CursorPos(x,  y);
+    editor->ArcCamera().mouse_pos_callback(pWindow, x,y);
 }
 
 
@@ -511,7 +514,15 @@ void Editor:: CursorPos(double x, double y) {
     }
     if (rotatecam){
       camera->OnMouse((int)x, (int)y);
-      //cout << "ROT; x, y "<<x <<", "<< y<< endl;
+      cout << "ROT; x, y "<<x <<", "<< y<< endl;
+
+// and gluLookAt is equivalent to
+// glMultMatrixf(M);
+// glTranslated(-eyex, -eyey, -eyez);
+// gluLookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez, GLdouble centerx,
+      // GLdouble centery, GLdouble centerz, GLdouble upx, GLdouble upy,
+      // GLdouble upz)
+
 
     double x,y;
     glfwGetCursorPos(window, &x, &y);
@@ -530,6 +541,7 @@ void Editor:: CursorPos(double x, double y) {
 static void MouseCallback(GLFWwindow* pWindow, int Button, int Action, int Mode){
   
   editor->Mouse(Button, Action, Mode);
+  editor->ArcCamera().mouse_button_callback(pWindow, Button, Action, Mode);
 }
 
 void Editor::Mouse(int Button, int Action, int Mode) {
@@ -1030,14 +1042,35 @@ void Editor::RenderPhase(){
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   
-
-  Pipeline p;
+  
+  /////////////////////////////////////// CAMERA THINGS
+  Pipeline pip;
   /// SHAPE 
   //p.WorldPos(Pos);        
   //p.Rotate(0.,0.,0.);  
-  p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  p.SetPerspectiveProj(m_persProjInfo);
-  Matrix4f m = p.GetWVPTrans();
+  pip.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pip.SetPerspectiveProj(m_persProjInfo);
+  Matrix4f m = pip.GetWVPTrans();
+
+  //ORIGINAL FROM FREECAMERA
+  //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+    view = glm::translate(view, arcCamera.position);// this, too.  
+    view = glm::rotate(view, glm::radians(arcCamera.angle), arcCamera.rotationalAxis);
+    
+    glm::mat4 mat = projection * view;
+    glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+  
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "view"),  1, GL_FALSE, glm::value_ptr(view));
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "model"),  1, GL_FALSE, glm::value_ptr(model));
+
+
+
 
   
   // render
@@ -1069,11 +1102,12 @@ void Editor::RenderPhase(){
          // lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         // lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         // lightingShader.setVec3("lightPos", lightPos);
-
-    glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
+        
+    
+    
 
     Pipeline pn;
-    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp()); //equalling pipeline m_camera values
     pn.SetPerspectiveProj(m_persProjInfo);    
     // float h = m_domain.Particles[0]->h/2.;
     // pn.Scale(h, h,h);  
@@ -1095,14 +1129,14 @@ void Editor::RenderPhase(){
       
       pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);      
-      //m_plightEffect->SetWVP(pn.GetWVPTrans());
+      //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
       //If personalized shader
       if (p==m_sel_particles) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
       else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
    
       m = pn.GetWVPTrans();
-      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
+      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
       m_sphere_mesh.Render();
     }
 
@@ -1206,6 +1240,12 @@ void Editor::processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       cout << "Pressed A"<<endl;
 
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+      rotatecam = true;
+    else
+      //(if !MIDDLE BUTTON)
+      rotatecam = false;
+    
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
       //cout << "pause: "<<endl;
       m_pause = !m_pause;

@@ -206,10 +206,43 @@ void Camera::OnRender()
     // }
 }
 
+///// ORIGINAL, FREE CAM, LIKE VIDEO GAME ///
+///// m_target and m_up
+// void Camera::Update()
+// {
+    // const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
+    
+    // // Rotate the view vector by the horizontal angle around the vertical axis
+    // Vector3f View(1.0f, 0.0f, 0.0f);
+    // View.Rotate(m_AngleH, Vaxis);
+    // View.Normalize();
+
+    // // Rotate the view vector by the vertical angle around the horizontal axis
+    // Vector3f Haxis = Vaxis.Cross(View);
+    // Haxis.Normalize();
+    // View.Rotate(m_AngleV, Haxis);
+       
+    // m_target = View;
+    // m_target.Normalize();
+
+    // m_up = m_target.Cross(Haxis);
+    // m_up.Normalize();
+// }
+
+///// NEW, POINTING OBJECT //////////
+///// m_target and m_up
 void Camera::Update()
 {
+  
+  // gluLookAt(
+        // eye_x, eye_y, eye_z,
+        // center_x, center_y, center_z,   
+        // up_x, up_y, up_z
+    // );
+    
     const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
-
+    
+    
     // Rotate the view vector by the horizontal angle around the vertical axis
     Vector3f View(1.0f, 0.0f, 0.0f);
     View.Rotate(m_AngleH, Vaxis);
@@ -226,3 +259,4 @@ void Camera::Update()
     m_up = m_target.Cross(Haxis);
     m_up.Normalize();
 }
+

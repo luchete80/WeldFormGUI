@@ -27,6 +27,8 @@
 
 #include "Domain.h"
 
+#include "arcball_camera.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -104,6 +106,8 @@ public:
   
   void CalcFPS();
   
+  ArcballCamera & ArcCamera(){return arcCamera;}
+  
 protected:
   PickingTexture m_pickingTexture;
   PickingTechnique m_pickingEffect;
@@ -141,6 +145,8 @@ protected:
   bool rotatecam;
   
   unsigned int VBO, VAO, EBO; //TODO: THIS SHOULD BE MOVED TO 
+  
+  ArcballCamera arcCamera;
   /*std::vector < */int /*>*/ m_sel_particles;
 
   

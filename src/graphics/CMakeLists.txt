@@ -77,7 +77,7 @@ target_link_libraries(texture
 ${GL}
 )
 
-add_library(camera  camera.cpp)
+add_library(camera  camera.cpp arcball_camera.cpp) #TODO: delete camera.cpp
 target_link_libraries(camera math_3d)
 
 
