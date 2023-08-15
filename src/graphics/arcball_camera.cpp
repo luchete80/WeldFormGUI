@@ -70,7 +70,7 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
 
         currentPos.z = z_axis(currentPos.x, currentPos.y);
         rotation();
-        cout << "FLAG TRUE "<<endl;
+        //cout << "FLAG TRUE "<<endl;
     }
 }
 
@@ -91,7 +91,7 @@ void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int ac
      else if(action == GLFW_RELEASE){
         replace();
         flag = false;
-        cout << "Flag false "<<endl;
+        //cout << "Flag false "<<endl;
 
         }
 }

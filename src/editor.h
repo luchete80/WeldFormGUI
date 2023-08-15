@@ -29,6 +29,8 @@
 
 #include "arcball_camera.h"
 
+#include "selector.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -125,6 +127,7 @@ protected:
   bool m_left_button_pressed;
   std::vector <myMesh *> m_nodemesh;
   bool mesh_loaded;
+  bool box_select_mode;
   TextRenderer *m_Text;
 
 
@@ -147,6 +150,7 @@ protected:
   unsigned int VBO, VAO, EBO; //TODO: THIS SHOULD BE MOVED TO 
   
   ArcballCamera *arcCamera;
+  Selector m_selector;
   /*std::vector < */int /*>*/ m_sel_particles;
 
   

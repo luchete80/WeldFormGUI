@@ -19,6 +19,7 @@
 #include "graphics/sphere_low.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+Matrix4f trans_mat[1000]; //test
 
 using namespace SPH;
 
@@ -582,45 +583,92 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         double x,y;
         glfwGetCursorPos(window, &x, &y);
         m_left_button_pressed = true;
+
         PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
         
-        if (Pixel.ObjectID != 0){
-          Vector3f vel(0.,0.,0.);
-          m_sel_node = Pixel.ObjectID-1;
-          float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
-          //We have to transform coordinates!
-          vel = Vector3f( (x-last_mouse_x)/dt,
-                          (y-last_mouse_y)/dt,
-                          0.);
-          //if (!m_is_node_sel) { //recently pressed, reset node velocity
+        if (!box_select_mode)  { //SINGLE SELECT
+        
+          if (Pixel.ObjectID != 0){
+            Vector3f vel(0.,0.,0.);
+            m_sel_node = Pixel.ObjectID-1;
+            float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
+            //We have to transform coordinates!
+            vel = Vector3f( (x-last_mouse_x)/dt,
+                            (y-last_mouse_y)/dt,
+                            0.);
+            //if (!m_is_node_sel) { //recently pressed, reset node velocity
+              m_last_mouse_dragtime = GetCurrentTimeMillis();
+              vel = Vector3f(0.,20.,0.);
+              Vector3f f(0.,100.,0.);
+              Vector3f force(0.,10,0.);
+
+              m_is_node_sel = true;
+
+
+
+            cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
+            
             m_last_mouse_dragtime = GetCurrentTimeMillis();
-            last_mouse_x = x; last_mouse_y = y;
-            vel = Vector3f(0.,20.,0.);
-            Vector3f f(0.,100.,0.);
-            Vector3f force(0.,10,0.);
+          } else {m_is_node_sel = false;}
+        
+        } else {
+          m_selector.setStartPoint(x,y);
+        }
 
-            //st->GetNode(m_sel_node)->SetVel(vel);
-            //st->GetNode(m_sel_node)->SetAsConstrained();
-          //}
-          m_is_node_sel = true;
-
-
-
-          cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
-          
-          last_mouse_x = x;
-          last_mouse_y = y;
-          m_last_mouse_dragtime = GetCurrentTimeMillis();
-        } else {m_is_node_sel = false;}
+        last_mouse_x = x;
+        last_mouse_y = y;        
         cout << "x,y: "<<x<<" , "<<y<<endl;
         int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
         m_sel_particles = test;
         cout << "Pressed"<<endl;
-      }
+      }// if press
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
         m_left_button_pressed = false;
-      }
+        
+        if (box_select_mode) {
+          double x,y;
+          glfwGetCursorPos(window, &x, &y);
+          cout << "xy current "<<x<< "; "<<y<<endl;
+          cout << "xy initial "<<last_mouse_x<<", "<<last_mouse_y<<endl;
+          
+          double xd_curr,yd_curr;
+          xd_curr = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          yd_curr = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          double xd_last,yd_last;
+          xd_last = ((last_mouse_x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          yd_last = (((SCR_HEIGHT/2) - last_mouse_y) / (SCR_HEIGHT/2));
+
+          cout << "xy current int "<<xd_curr<< "; "<<yd_curr<<endl;
+          cout << "xy initial int "<<xd_last<<", "<<yd_last<<endl;
+          
+          //Loop through texture
+          for (int p=0;p<m_domain.Particles.size();p++){    
+            Vec3_t v = m_domain.Particles[p]->x;
+            Vector3f pos(v(0),v(1),v(2));
+
+        
+            Vector3f res = trans_mat[p] * pos;
+            cout << "particle " << p<< "pos on screen "<< res.x << "; "<<res.y<<"; "<<res.z<<endl;
+            //if (res.x > xd_curr && res.x > xd_curr && )
+          }
+            
+          // for (int i=(int)last_mouse_x;i<=(int)x;i++){
+            // for (int j=(int)last_mouse_y;j<=(int)y;j++) {
+            // PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(i, SCR_HEIGHT - j - 1);
+            // /// THIS SHOULD BE DONE ONLY WITH THE CENTERS 
+            // cout << "obj id " << Pixel.ObjectID<<endl;
+              // if (Pixel.ObjectID != 0){
+                // Vector3f vel(0.,0.,0.);
+                // m_sel_node = Pixel.ObjectID-1;
+                // int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
+                // cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;          
+              // }
+            // }
+          // }
+
+        }//Box select
+      }//release button
       
 
 }
@@ -670,6 +718,8 @@ Editor::Editor(){
   is_struct = false;
   
   arcCamera = new ArcballCamera;
+  
+  box_select_mode = false;
 }
 
 int Editor::Init(){
@@ -1108,8 +1158,9 @@ void Editor::RenderPhase(){
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
    
       m = pn.GetWVPTrans();
-      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
-      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+      trans_mat [p]= m;
+      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
       m_sphere_mesh.Render();
     }
 
@@ -1211,6 +1262,14 @@ void Editor::processInput(GLFWwindow *window)
       
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       cout << "Pressed A"<<endl;
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+      cout << "Pressed A"<<endl;
+      if (box_select_mode ) cout << "Box Select Mode ON"<<endl;
+      else                 cout << "Box Select Mode OFF"<<endl;
+      box_select_mode = !box_select_mode;
+      
+    }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
       rotatecam = true;
