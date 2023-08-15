@@ -14,6 +14,8 @@ public:
     Quaternion currentQuaternion;
     Quaternion lastQuaternion;
     
+    bool flag; //Rotation is active
+    
     float cosValue, cosValue_2;
     float theta;
     float angle = 180.0f;
@@ -25,7 +27,7 @@ public:
     
     void OnMouse(float x, float y);
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-    void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos);
+    void mouse_pos_callback(GLFWwindow* window, int xpos, int ypos);
     
     float dotProduct();
     void rotation();

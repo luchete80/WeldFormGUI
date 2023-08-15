@@ -16,7 +16,10 @@
 
 #include "arcball_camera.h"
 
+#define SCR_WIDTH 800
+#define SCR_HEIGHT 600
 
+using namespace std;
 // class ArcballCamera{
 // public:
     
@@ -43,36 +46,36 @@
 
     
 // };
-const float RADIUS = 0.1f; //radius of the sphere
+const float RADIUS = 1.0f; //radius of the sphere
 
 ArcballCamera::ArcballCamera(){
     
-    glm::vec3 position = glm::vec3(0.0f, 0.0f, -3.0f);
-    glm::vec3 currentPos = startPos;
+    position = glm::vec3(0.0f, 0.0f, -1.0f);
+    currentPos = startPos;
     lastQuaternion = {0.0f, glm::vec3(1.0f, 0.0f, 0.0f)};
     
     angle = 180.0f;
     rotationalAxis = glm::vec3(1.0f, 0.0f, 0.0f);                       
-
+    flag = false;
     
 };
 
 //ArcballCamera arcCamera;
-void ArcballCamera::mouse_pos_callback(GLFWwindow* window, double xpos, double ypos){
-  bool flag = false;
+void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
+
     if(flag == true){
         //Get the screen coordinates when mouse clicks.
-        // currentPos.x = ((xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
-        // currentPos.y = (((SCR_HEIGHT/2) - ypos) / (SCR_HEIGHT/2)) * RADIUS;
-        currentPos.x = xpos * RADIUS;
-        currentPos.x = ypos * RADIUS;
+        currentPos.x = ((xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
+        currentPos.y = (((SCR_HEIGHT/2) - ypos) / (SCR_HEIGHT/2)) * RADIUS;
+
         currentPos.z = z_axis(currentPos.x, currentPos.y);
         rotation();
+        cout << "FLAG TRUE "<<endl;
     }
 }
 
 void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-    bool flag = false;
+
     //action == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
         
@@ -88,6 +91,7 @@ void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int ac
      else if(action == GLFW_RELEASE){
         replace();
         flag = false;
+        cout << "Flag false "<<endl;
 
         }
 }

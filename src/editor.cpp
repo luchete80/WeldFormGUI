@@ -366,6 +366,7 @@ IMGUI_DEMO_MARKER("Configuration");
               m_dx = 0.05;
               double rho = 1.;
               double h = 1.2*radius;
+              cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );              
             }
     }
@@ -516,7 +517,8 @@ static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
     // // //If callbacks are set AFTER, THEN THIS NEEDS TO BE CALLED
     // // //ImGui_ImplGlfw_CursorPosCallback(pWindow,x,y);//THIS IS IN ORDER 
     editor->CursorPos(x,  y);
-    editor->ArcCamera().mouse_pos_callback(pWindow, x,y);
+    //cout << "cursor pos "<<x<<", "<<endl;
+    editor->ArcCamera()->mouse_pos_callback(pWindow, x,y);
 }
 
 
@@ -528,8 +530,13 @@ void Editor:: CursorPos(double x, double y) {
     }
     if (rotatecam){
       camera->OnMouse((int)x, (int)y);
-      cout << "ROT; x, y "<<x <<", "<< y<< endl;
-
+      //cout << "ROT; x, y "<<x <<", "<< y<< endl;
+      cout << "ArcBall Camera pos: "<< arcCamera->currentPos[0] <<", " 
+                                  << arcCamera->currentPos.y <<", "  
+                                  << arcCamera->currentPos.z <<", "<<endl;
+      cout << "ArcBall Camera rot: "<< arcCamera->rotationalAxis.x <<", " 
+                                  << arcCamera->rotationalAxis.y <<", "  
+                                  << arcCamera->rotationalAxis.z <<", "<<endl;
 // and gluLookAt is equivalent to
 // glMultMatrixf(M);
 // glTranslated(-eyex, -eyey, -eyez);
@@ -555,7 +562,7 @@ void Editor:: CursorPos(double x, double y) {
 static void MouseCallback(GLFWwindow* pWindow, int Button, int Action, int Mode){
   
   editor->Mouse(Button, Action, Mode);
-  editor->ArcCamera().mouse_button_callback(pWindow, Button, Action, Mode);
+  editor->ArcCamera()->mouse_button_callback(pWindow, Button, Action, Mode);
 }
 
 void Editor::Mouse(int Button, int Action, int Mode) {
@@ -661,6 +668,8 @@ Editor::Editor(){
   SCR_WIDTH = 800;
   SCR_HEIGHT = 600;
   is_struct = false;
+  
+  arcCamera = new ArcballCamera;
 }
 
 int Editor::Init(){
@@ -947,13 +956,6 @@ int Editor::Init(){
 
 
 void Editor::PickingPhase() {
-  Pipeline p;
-
-  p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  p.SetPerspectiveProj(m_persProjInfo);
-
- 
- 
   // render
   // ------
 	glClearColor(0.0f, 0.0f, 0.f, 1.0f);  //DO NOT CHANGE THIS!!! BECAUSE OBJECT ID !=0 MEANS SOMETHING SELECTED
@@ -1083,12 +1085,13 @@ void Editor::RenderPhase(){
       Vector3f pos(v(0),v(1),v(2));
 
       glm::mat4 model = glm::mat4(1.0f);
-      model[0][3] = pos.x; model[1][3] = pos.y; model[2][3] = pos.z;
+      model[0][0]=model[1][1]=model[2][2]=h;
+      //model[0][3] = pos.x; model[1][3] = pos.y; model[2][3] = pos.z;
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-      view = glm::translate(view, arcCamera.position);// this, too.  
-      view = glm::rotate(view, glm::radians(arcCamera.angle), arcCamera.rotationalAxis);
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
       glm::mat4 mat = projection * view * model;
       // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);

@@ -106,7 +106,7 @@ public:
   
   void CalcFPS();
   
-  ArcballCamera & ArcCamera(){return arcCamera;}
+  ArcballCamera * ArcCamera(){return arcCamera;}
   
 protected:
   PickingTexture m_pickingTexture;
@@ -146,7 +146,7 @@ protected:
   
   unsigned int VBO, VAO, EBO; //TODO: THIS SHOULD BE MOVED TO 
   
-  ArcballCamera arcCamera;
+  ArcballCamera *arcCamera;
   /*std::vector < */int /*>*/ m_sel_particles;
 
   
