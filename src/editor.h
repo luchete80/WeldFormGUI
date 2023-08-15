@@ -151,8 +151,9 @@ protected:
   
   ArcballCamera *arcCamera;
   Selector m_selector;
-  /*std::vector < */int /*>*/ m_sel_particles;
-
+  
+  std::vector < int > m_sel_particles; //TODO: MOVE TO SELECTOR
+  int m_sel_count;
   
   // PHysics Things
   int   m_sel_node;

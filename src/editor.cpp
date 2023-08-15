@@ -589,6 +589,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         if (!box_select_mode)  { //SINGLE SELECT
         
           if (Pixel.ObjectID != 0){
+           
             Vector3f vel(0.,0.,0.);
             m_sel_node = Pixel.ObjectID-1;
             float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
@@ -611,22 +612,30 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             m_last_mouse_dragtime = GetCurrentTimeMillis();
           } else {m_is_node_sel = false;}
         
-        } else {
-          m_selector.setStartPoint(x,y);
-        }
-
         last_mouse_x = x;
         last_mouse_y = y;        
         cout << "x,y: "<<x<<" , "<<y<<endl;
         int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
-        m_sel_particles = test;
+        //if (m_is_node_sel){
+           m_sel_count = 1;
+           //cout << " m_sel_count = 1; "<<endl;
+          m_sel_particles.clear();
+          m_sel_particles.push_back(test);
+        //}//If is sel
         cout << "Pressed"<<endl;
+        } else {
+          m_selector.setStartPoint(x,y);
+        }
+
+
       }// if press
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
         m_left_button_pressed = false;
         
         if (box_select_mode) {
+          m_sel_particles.clear();
+          m_sel_count = 0;
           double x,y;
           glfwGetCursorPos(window, &x, &y);
           cout << "xy current "<<x<< "; "<<y<<endl;
@@ -650,7 +659,10 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         
             Vector3f res = trans_mat[p] * pos;
             cout << "particle " << p<< "pos on screen "<< res.x << "; "<<res.y<<"; "<<res.z<<endl;
-            //if (res.x > xd_curr && res.x > xd_curr && )
+            if (res.x > xd_last && res.x < xd_curr && res.y > yd_last && res.y < yd_curr){
+              cout << "SELECTED"<<endl;
+              m_sel_particles.push_back(p);
+            }
           }
             
           // for (int i=(int)last_mouse_x;i<=(int)x;i++){
@@ -720,6 +732,8 @@ Editor::Editor(){
   arcCamera = new ArcballCamera;
   
   box_select_mode = false;
+  
+  m_sel_particles.resize(1);
 }
 
 int Editor::Init(){
@@ -998,7 +1012,7 @@ int Editor::Init(){
   
   m_impact_force = 0.;
 
-  m_sel_particles = -1;
+  m_sel_particles[0] = -1;
 
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
@@ -1153,8 +1167,12 @@ void Editor::RenderPhase(){
       pn.WorldPos(pos);      
       //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
       //If personalized shader
-      if (p==m_sel_particles) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
-      else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      for (int s=0;s<m_sel_count;s++){
+        //cout << "sel_count"<<m_sel_count<<endl;
+        if (p==m_sel_particles[s]) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      }
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
    
       m = pn.GetWVPTrans();
