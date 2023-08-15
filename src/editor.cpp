@@ -326,6 +326,18 @@ IMGUI_DEMO_MARKER("Configuration");
     }
 
     if (ImGui::CollapsingHeader("New Domain")){
+
+      {
+          // Using the _simplified_ one-liner Combo() api here
+          // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+          IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
+          const char* items[] = { "Box", "Cylinder", "Plane"};
+          static int item_current = 0;
+          ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
+          ImGui::SameLine(); HelpMarker(
+              "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
+      }
+        
       if (ImGui::Button("Box")){
       }
               ImGuiIO& io = ImGui::GetIO();
@@ -357,6 +369,8 @@ IMGUI_DEMO_MARKER("Configuration");
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );              
             }
     }
+
+
     
     if (ImGui::CollapsingHeader("BCs")){
       
@@ -987,55 +1001,6 @@ void Editor::PickingPhase() {
 
 }
 
-void Editor::RenderBeams(){
-  
-  // for (int n=0;n <st->GetNodeCount();n++){
-    // Vector3f pos = st->GetNode(n)->GetPos();
-    // vertices[3*n  ] = pos.x;
-    // vertices[3*n+1] = pos.y;
-    // vertices[3*n+2] = pos.z;
-    
-  // }
-      
-  Pipeline p;
-  p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  p.SetPerspectiveProj(m_persProjInfo);
-  Matrix4f m = p.GetWVPTrans();
-        
-  glUseProgram(shaderProgram);
-  gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
-  glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
-        
-  glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-
-  //LUCIANO: ESTO ES NUEVO
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
-  glUseProgram(shaderProgram);
- 
-  //glDrawElements(GL_LINES, 2 * st->GetTrussCount(), GL_UNSIGNED_INT, 0);
-  //The first argument specifies the mode we want to draw in, similar to glDrawArrays. 
-  //The second argument is the count or number of elements we'd like to draw. 
-  //The third argument is the type of the indices which is of type GL_UNSIGNED_INT. 
-  //The last argument allows us to specify an offset in the EBO (or pass in an index array, but that is when you're not using element buffer objects), but we're just going to leave this at 0.
-  //glDrawElements(GL_TRIANGLES, 20, GL_UNSIGNED_INT, 0);
-  glDrawElements(GL_TRIANGLES, 2, GL_UNSIGNED_INT, 0);
-  //glDrawArrays(GL_TRIANGLES, 0, 10);
-
-  //glEnable(GL_DEPTH_TEST);
-
-  glBindVertexArray(0); // no need to unbind it every time 
-  glUseProgram(0);
-
-
-  // LUCIANO: ESTO ES NUEVO
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
 void Editor::RenderPhase(){
     // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -1055,15 +1020,6 @@ void Editor::RenderPhase(){
   //ORIGINAL FROM FREECAMERA
   //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-    view = glm::translate(view, arcCamera.position);// this, too.  
-    view = glm::rotate(view, glm::radians(arcCamera.angle), arcCamera.rotationalAxis);
-    
-    glm::mat4 mat = projection * view;
-    glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
   
     // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "view"),  1, GL_FALSE, glm::value_ptr(view));
@@ -1118,13 +1074,26 @@ void Editor::RenderPhase(){
 				// m_pEffect->SetWVP(pm.GetWVPTrans());
 				// m_pEffect->SetWorldMatrix(pm.GetWorldTrans());    
 				// m_playermesh[TeamSize*j + i]->Render();
-      
+
+    
     for (int p=0;p<m_domain.Particles.size();p++){    
     float h = m_domain.Particles[0]->h/2.;
     pn.Scale(h, h,h);  
       Vec3_t v = m_domain.Particles[p]->x;
       Vector3f pos(v(0),v(1),v(2));
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model[0][3] = pos.x; model[1][3] = pos.y; model[2][3] = pos.z;
+      glm::mat4 projection = glm::mat4(1.0f);
+      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera.position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera.angle), arcCamera.rotationalAxis);
       
+      glm::mat4 mat = projection * view * model;
+      // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
+      //glm::mat4 mat = view;
+    
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
       pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
@@ -1136,7 +1105,8 @@ void Editor::RenderPhase(){
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
    
       m = pn.GetWVPTrans();
-      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
+      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
       m_sphere_mesh.Render();
     }
 
@@ -1170,7 +1140,6 @@ void Editor::Run(){
       
       PickingPhase();
       RenderPhase();
-      //RenderBeams();
 
       // glEnable(GL_BLEND);
       // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

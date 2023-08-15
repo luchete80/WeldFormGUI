@@ -43,7 +43,7 @@
 
     
 // };
-const float RADIUS = 1.0f; //radius of the sphere
+const float RADIUS = 0.1f; //radius of the sphere
 
 ArcballCamera::ArcballCamera(){
     
