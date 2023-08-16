@@ -344,6 +344,17 @@ IMGUI_DEMO_MARKER("Configuration");
            ImGui::TreePop();
         }
 
+        bool open = ImGui::TreeNode("Materials");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+          ImGui::EndPopup();
+        }
+        if (open)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
 
         IMGUI_DEMO_MARKER("Widgets/Trees/Advanced, with Selectable nodes");
         if (ImGui::TreeNode("Advanced, with Selectable nodes"))
