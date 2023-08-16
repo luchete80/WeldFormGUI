@@ -332,6 +332,19 @@ IMGUI_DEMO_MARKER("Configuration");
     IMGUI_DEMO_MARKER("Widgets/Trees");
     if (ImGui::TreeNode("Model"))
     {
+        bool open = ImGui::TreeNode("Sets");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+          ImGui::EndPopup();
+        }
+        if (open)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
+
+
         IMGUI_DEMO_MARKER("Widgets/Trees/Advanced, with Selectable nodes");
         if (ImGui::TreeNode("Advanced, with Selectable nodes"))
         {
@@ -834,6 +847,8 @@ Editor::Editor(){
   arcCamera = new ArcballCamera;
   
   box_select_mode = false;
+  
+  m_currentaction = NULL;
   
   m_sel_particles.resize(1);
 }

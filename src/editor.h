@@ -31,6 +31,8 @@
 
 #include "selector.h"
 
+#include "action.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -175,6 +177,8 @@ protected:
   
   float m_rotation;
   
+  Action* m_currentaction;
+  bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
   
   bool m_show_app_main_menu_bar;
   bool m_show_app_console;
