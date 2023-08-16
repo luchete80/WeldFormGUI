@@ -93,7 +93,7 @@ bool ImGui::ShowStyleSelector(const char* label)
 
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
-static void ShowExampleMenuFile()
+void ShowExampleMenuFile(const Editor &editor)
 {
     IMGUI_DEMO_MARKER("Examples/Menu");
     ImGui::MenuItem("(demo menu)", NULL, false, false);
@@ -110,13 +110,15 @@ static void ShowExampleMenuFile()
             ImGui::MenuItem("Sailor");
             if (ImGui::BeginMenu("Recurse.."))
             {
-                ShowExampleMenuFile();
+                ShowExampleMenuFile(editor);
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }
         ImGui::EndMenu();
     }
+    //If open
+    if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {InputWriter writer("Input.json",editor.getDomain());}
     if (ImGui::MenuItem("Save", "Ctrl+S")) {}
     if (ImGui::MenuItem("Save As..")) {}
 
@@ -183,15 +185,11 @@ static void ShowExampleMenuFile()
     {
         if (ImGui::BeginMenu("File"))
         {
-            ShowExampleMenuFile();
+            ShowExampleMenuFile(editor);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Write Input", "CTRL+W")) {
-              //If open
-              InputWriter writer("Input.json",editor.getDomain());
-            }
             if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
             if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
             ImGui::Separator();
@@ -213,7 +211,7 @@ void Editor::drawGui() {
       if (ImGui::BeginMenu("Menu"))
       {
           IMGUI_DEMO_MARKER("Menu/File");
-          ShowExampleMenuFile();
+          ShowExampleMenuFile(*this);
           ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Examples"))
@@ -473,17 +471,20 @@ IMGUI_DEMO_MARKER("Configuration");
             // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
             ImGui::Text("Origin");
             static double d0 = 0.0;
-            ImGui::InputDouble("x ", &d0, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("ox ", &d0, 0.01f, 1.0f, "%.4f");
             static double d1 = 0.0;
-            ImGui::InputDouble("y ", &d1, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oy ", &d1, 0.01f, 1.0f, "%.4f");
             static double d2   = 0.0;
-            ImGui::InputDouble("z ", &d2, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oz ", &d2, 0.01f, 1.0f, "%.4f");
             ImGui::Text("Size");
             //Vec3_t size;
-            double size[] = {0.1,0.1,0.1};
+            static double size[] = {0.1,0.1,0.1};
             ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
             ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
             ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
+
+            static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
+            ImGui::InputFloat3("input float3", vec4a);
             
             double radius = 0.01;
             ImGui::InputDouble("Particle Radius",&radius);
@@ -799,14 +800,16 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             ybox[0] = std::min(y,last_mouse_y); ybox[1] = std::max(y,last_mouse_y);
             
             //cout << "particle " << p<< "pos on screen "<< res.x << "; "<<res.y<<"; "<<res.z<<endl;
-            cout << "particle " << p<< "pos on screen "<< resint_x << "; "<<resint_y<<endl;
+            //cout << "particle " << p<< "pos on screen "<< resint_x << "; "<<resint_y<<endl;
             //if (res.x > xd_last && res.x < xd_curr && res.y > yd_last && res.y < yd_curr){
             if (resint_x > xbox[0] && resint_x < xbox[1] && resint_y > ybox[0] && resint_y < ybox[1]){
-              cout << "SELECTED"<<endl;
+              //cout << "SELECTED"<<endl;
+              
               m_sel_count++;
               m_sel_particles.push_back(p);
             }
-          }
+          }// For particles
+          logtest.AddLog("Selected %d particles \n",m_sel_count);
             
           // for (int i=(int)last_mouse_x;i<=(int)x;i++){
             // for (int j=(int)last_mouse_y;j<=(int)y;j++) {
