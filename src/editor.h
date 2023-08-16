@@ -159,7 +159,7 @@ protected:
   int   m_sel_node;
   bool  m_is_node_sel;
   
-  float last_mouse_x,last_mouse_y;
+  double last_mouse_x,last_mouse_y;
   long long m_last_mouse_dragtime;
   
   bool m_pause;

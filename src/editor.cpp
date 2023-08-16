@@ -19,6 +19,8 @@
 #include "graphics/sphere_low.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <algorithm>
+
 Matrix4f trans_mat[1000]; //test
 
 using namespace SPH;
@@ -326,6 +328,95 @@ IMGUI_DEMO_MARKER("Configuration");
         }
     }
 
+    //if (ImGui::CollapsingHeader("New Domain")){
+    IMGUI_DEMO_MARKER("Widgets/Trees");
+    if (ImGui::TreeNode("Model"))
+    {
+        IMGUI_DEMO_MARKER("Widgets/Trees/Advanced, with Selectable nodes");
+        if (ImGui::TreeNode("Advanced, with Selectable nodes"))
+        {
+            HelpMarker(
+                "This is a more typical looking tree with selectable nodes.\n"
+                "Click to select, CTRL+Click to toggle, click on arrows or double-click to open.");
+            static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+            static bool align_label_with_current_x_position = false;
+            static bool test_drag_and_drop = false;
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_OpenOnArrow",       &base_flags, ImGuiTreeNodeFlags_OpenOnArrow);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_OpenOnDoubleClick", &base_flags, ImGuiTreeNodeFlags_OpenOnDoubleClick);
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanAvailWidth",    &base_flags, ImGuiTreeNodeFlags_SpanAvailWidth); ImGui::SameLine(); HelpMarker("Extend hit area to all available width instead of allowing more items to be laid out after the node.");
+            ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanFullWidth",     &base_flags, ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::Checkbox("Align label with current X position", &align_label_with_current_x_position);
+            ImGui::Checkbox("Test tree node as drag source", &test_drag_and_drop);
+            ImGui::Text("Hello!");
+            if (align_label_with_current_x_position)
+                ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
+
+            // 'selection_mask' is dumb representation of what may be user-side selection state.
+            //  You may retain selection state inside or outside your objects in whatever format you see fit.
+            // 'node_clicked' is temporary storage of what node we have clicked to process selection at the end
+            /// of the loop. May be a pointer to your own node type, etc.
+            static int selection_mask = (1 << 2);
+            int node_clicked = -1;
+            for (int i = 0; i < 6; i++)
+            {
+                // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+                // To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
+                ImGuiTreeNodeFlags node_flags = base_flags;
+                const bool is_selected = (selection_mask & (1 << i)) != 0;
+                if (is_selected)
+                    node_flags |= ImGuiTreeNodeFlags_Selected;
+                if (i < 3)
+                {
+                    // Items 0..2 are Tree Node
+                    bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Node %d", i);
+                    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                        node_clicked = i;
+                    if (test_drag_and_drop && ImGui::BeginDragDropSource())
+                    {
+                        ImGui::SetDragDropPayload("_TREENODE", NULL, 0);
+                        ImGui::Text("This is a drag and drop source");
+                        ImGui::EndDragDropSource();
+                    }
+                    if (node_open)
+                    {
+                        ImGui::BulletText("Blah blah\nBlah Blah");
+                        ImGui::TreePop();
+                    }
+                }
+                else
+                {
+                    // Items 3..5 are Tree Leaves
+                    // The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
+                    // use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
+                    node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+                    ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Leaf %d", i);
+                    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                        node_clicked = i;
+                    if (test_drag_and_drop && ImGui::BeginDragDropSource())
+                    {
+                        ImGui::SetDragDropPayload("_TREENODE", NULL, 0);
+                        ImGui::Text("This is a drag and drop source");
+                        ImGui::EndDragDropSource();
+                    }
+                }
+            }
+            if (node_clicked != -1)
+            {
+                // Update selection state
+                // (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
+                if (ImGui::GetIO().KeyCtrl)
+                    selection_mask ^= (1 << node_clicked);          // CTRL+click to toggle
+                else //if (!(selection_mask & (1 << node_clicked))) // Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
+                    selection_mask = (1 << node_clicked);           // Click to single-select
+            }
+            if (align_label_with_current_x_position)
+                ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());
+            ImGui::TreePop();
+        }
+        ImGui::TreePop();
+        
+    } //MODEL TREE
+    
     if (ImGui::CollapsingHeader("New Domain")){
 
       {
@@ -611,9 +702,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             
             m_last_mouse_dragtime = GetCurrentTimeMillis();
           } else {m_is_node_sel = false;}
-        
-        last_mouse_x = x;
-        last_mouse_y = y;        
+              
         cout << "x,y: "<<x<<" , "<<y<<endl;
         int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
@@ -627,7 +716,8 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         } else {
           m_selector.setStartPoint(x,y);
         }
-
+        last_mouse_x = x;
+        last_mouse_y = y;  
 
       }// if press
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
@@ -641,15 +731,16 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           cout << "xy current "<<x<< "; "<<y<<endl;
           cout << "xy initial "<<last_mouse_x<<", "<<last_mouse_y<<endl;
           
-          double xd_curr,yd_curr;
-          xd_curr = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          yd_curr = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
-          double xd_last,yd_last;
-          xd_last = ((last_mouse_x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          yd_last = (((SCR_HEIGHT/2) - last_mouse_y) / (SCR_HEIGHT/2));
+          // float xd_curr,yd_curr;
+          // xd_curr = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          // yd_curr = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          // float xd_last,yd_last;
+          // xd_last = ((last_mouse_x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          // yd_last = (((SCR_HEIGHT/2) - last_mouse_y) / (SCR_HEIGHT/2));
+          
 
-          cout << "xy current int "<<xd_curr<< "; "<<yd_curr<<endl;
-          cout << "xy initial int "<<xd_last<<", "<<yd_last<<endl;
+          // cout << "xy current int "<<xd_curr<< "; "<<yd_curr<<endl;
+          // cout << "xy initial int "<<xd_last<<", "<<yd_last<<endl;
           
           //Loop through texture
           for (int p=0;p<m_domain.Particles.size();p++){    
@@ -658,9 +749,20 @@ void Editor::Mouse(int Button, int Action, int Mode) {
 
         
             Vector3f res = trans_mat[p] * pos;
-            cout << "particle " << p<< "pos on screen "<< res.x << "; "<<res.y<<"; "<<res.z<<endl;
-            if (res.x > xd_last && res.x < xd_curr && res.y > yd_last && res.y < yd_curr){
+            int resint_x = res.x * (SCR_WIDTH/2) + (SCR_WIDTH/2); 
+            int resint_y = (SCR_HEIGHT/2) - res.y * (SCR_HEIGHT/2);
+            
+            //TODO: CHANGE TO AABBBOX
+            int xbox[2],ybox[2];
+            xbox[0] = std::min(x,last_mouse_x); xbox[1] = std::max(x,last_mouse_x);
+            ybox[0] = std::min(y,last_mouse_y); ybox[1] = std::max(y,last_mouse_y);
+            
+            //cout << "particle " << p<< "pos on screen "<< res.x << "; "<<res.y<<"; "<<res.z<<endl;
+            cout << "particle " << p<< "pos on screen "<< resint_x << "; "<<resint_y<<endl;
+            //if (res.x > xd_last && res.x < xd_curr && res.y > yd_last && res.y < yd_curr){
+            if (resint_x > xbox[0] && resint_x < xbox[1] && resint_y > ybox[0] && resint_y < ybox[1]){
               cout << "SELECTED"<<endl;
+              m_sel_count++;
               m_sel_particles.push_back(p);
             }
           }
