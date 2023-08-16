@@ -40,6 +40,7 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 }
 
 
+
 // settings
 
 #define PITCH_WIDTH 20.
@@ -52,6 +53,10 @@ extern void*                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = NULL;
 void*                           GImGuiDemoMarkerCallbackUserData = NULL;
 #define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
+
+
+static void ShowExampleAppLog(bool* p_open);
+
 
 static void HelpMarker(const char* desc)
 {
@@ -332,25 +337,25 @@ IMGUI_DEMO_MARKER("Configuration");
     IMGUI_DEMO_MARKER("Widgets/Trees");
     if (ImGui::TreeNode("Model"))
     {
-        bool open = ImGui::TreeNode("Sets");
+        bool open_ = ImGui::TreeNode("Sets");
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
           ImGui::EndPopup();
         }
-        if (open)
+        if (open_)
         {
            // your tree code stuff
            ImGui::TreePop();
         }
 
-        bool open = ImGui::TreeNode("Materials");
+        open_ = ImGui::TreeNode("Materials");
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
           ImGui::EndPopup();
         }
-        if (open)
+        if (open_)
         {
            // your tree code stuff
            ImGui::TreePop();
@@ -556,6 +561,12 @@ IMGUI_DEMO_MARKER("Configuration");
   }
   
   ShowExampleAppMainMenuBar();
+  
+  bool show_app_log = true;
+  //ShowExampleAppLog(&show_app_log);
+  
+  //ExampleAppLog logtest;
+  ShowExampleAppLog(&show_app_log, &logtest);
 }
 
 //THESE SHADERS ARE FROM LEARNOPENGL

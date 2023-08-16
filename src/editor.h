@@ -33,6 +33,8 @@
 
 #include "action.h"
 
+#include "log.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -76,6 +78,7 @@ float vertices[] = {
       // // GROUND
   // };
   
+class ExampleAppLog;
 
 class Editor 
 //: public ICallbacks, public OgldevApp
@@ -174,6 +177,8 @@ protected:
 	long long m_startTime;
 	int m_frameCount;
   int m_fps;
+  
+  ExampleAppLog logtest;
   
   float m_rotation;
   
