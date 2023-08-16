@@ -115,6 +115,8 @@ public:
   
   ArcballCamera * ArcCamera(){return arcCamera;}
   
+  const SPH::Domain & getDomain() const {return m_domain;}
+  
 protected:
   PickingTexture m_pickingTexture;
   PickingTechnique m_pickingEffect;

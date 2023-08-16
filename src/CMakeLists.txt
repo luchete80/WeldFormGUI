@@ -99,6 +99,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
               
               log.cpp
+              input_writer.cpp
 								) 
 
 target_link_libraries(editor 

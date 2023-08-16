@@ -8,3 +8,6 @@
 ------------------------------------------------------------------------------
 20230815 - Added trackball camera (not working yet)
 20230816 - Box Selection is working (render box limits is pending)
+         - Added Log Windows (now is dummy, and remains Docking)
+         - Begining to write Write Input
+         

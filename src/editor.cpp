@@ -21,6 +21,8 @@
 
 #include <algorithm>
 
+#include "input_writer.h"
+
 Matrix4f trans_mat[1000]; //test
 
 using namespace SPH;
@@ -175,7 +177,7 @@ static void ShowExampleMenuFile()
 // Note the difference between BeginMainMenuBar() and BeginMenuBar():
 // - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-static void ShowExampleAppMainMenuBar()
+/*static */void ShowExampleAppMainMenuBar(const Editor &editor)
 {
     if (ImGui::BeginMainMenuBar())
     {
@@ -186,6 +188,10 @@ static void ShowExampleAppMainMenuBar()
         }
         if (ImGui::BeginMenu("Edit"))
         {
+            if (ImGui::MenuItem("Write Input", "CTRL+W")) {
+              //If open
+              InputWriter writer("Input.json",editor.getDomain());
+            }
             if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
             if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
             ImGui::Separator();
@@ -560,7 +566,7 @@ IMGUI_DEMO_MARKER("Configuration");
     ImGuiFileDialog::Instance()->Close();
   }
   
-  ShowExampleAppMainMenuBar();
+  ShowExampleAppMainMenuBar(*this);
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
