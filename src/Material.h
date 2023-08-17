@@ -20,9 +20,6 @@ class Elastic_{
 
 class Material_{
 	
-	protected:
-	Elastic_ elastic_m;
-	double E_m, nu;	//TODO, move to elastic class
 	public:
 	Material_(){}
 	Material_(const Elastic_ el):elastic_m(el){}
@@ -33,7 +30,18 @@ class Material_{
 	virtual inline double CalcYieldStress(const double &strain){return 0.0;};
 	virtual inline double CalcYieldStress(const double &strain, const double &strain_rate, const double &temp){return 0.0;}
 	const Elastic_& Elastic()const{return elastic_m;}
-  //~Material_();
+  ~Material_(){};
+  
+  void setDensityConstant(const double &val){m_density = val;};
+  const double& getDensityConstant()const {return m_density;}; //COULD DEFINE IT AS TEMP 0 and 
+  
+
+  
+	protected:
+  double m_density;
+	Elastic_ elastic_m;
+	double E_m, nu;	//TODO, move to elastic class
+
 };
 
 class _Plastic{

@@ -36,6 +36,7 @@
 #include "log.h"
 #include "material_dialog.h"
 
+#include "Material.h"
 
 float vertices[] = {
     // first triangle
@@ -189,8 +190,11 @@ protected:
   
   MaterialDialog m_matdlg;
   bool m_show_mat_dlg;
+  bool create_new_mat;
   
   float m_rotation;
+  
+  std::vector <Material_ > m_mats;
   
   Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
