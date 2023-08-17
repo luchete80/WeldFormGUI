@@ -50,7 +50,7 @@ const float RADIUS = 1.0f; //radius of the sphere
 
 ArcballCamera::ArcballCamera(){
     
-    position = glm::vec3(0.0f, 0.0f, -1.0f);
+    position = glm::vec3(0.0f, 0.0f, -0.1f);
     currentPos = startPos;
     lastQuaternion = {0.0f, glm::vec3(1.0f, 0.0f, 0.0f)};
     
@@ -65,12 +65,14 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
 
     if(flag == true){
         //Get the screen coordinates when mouse clicks.
-        currentPos.x = ((xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
-        currentPos.y = (((SCR_HEIGHT/2) - ypos) / (SCR_HEIGHT/2)) * RADIUS;
+        currentPos.x = (((float)xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
+        currentPos.y = (((SCR_HEIGHT/2) - (float)ypos) / (SCR_HEIGHT/2)) * RADIUS;
 
         currentPos.z = z_axis(currentPos.x, currentPos.y);
         rotation();
-        //cout << "FLAG TRUE "<<endl;
+        cout << "FLAG TRUE "<<endl;
+        cout << "curr pos "<<currentPos.x<<", "<<xpos<<endl;
+        cout << "angle "<<endl;
     }
 }
 

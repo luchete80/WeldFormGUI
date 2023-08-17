@@ -34,6 +34,8 @@
 #include "action.h"
 
 #include "log.h"
+#include "material_dialog.h"
+
 
 float vertices[] = {
     // first triangle
@@ -117,6 +119,8 @@ public:
   
   const SPH::Domain & getDomain() const {return m_domain;}
   
+  void calcDomainCenter();
+  
 protected:
   PickingTexture m_pickingTexture;
   PickingTechnique m_pickingEffect;
@@ -150,6 +154,7 @@ protected:
 
   long long m_start_time;
   SPH::Domain m_domain;
+  Vector3f m_domain_center;
   double m_dx;
 
   bool rotatecam;
@@ -181,6 +186,9 @@ protected:
   int m_fps;
   
   ExampleAppLog logtest;
+  
+  MaterialDialog m_matdlg;
+  bool m_show_mat_dlg;
   
   float m_rotation;
   

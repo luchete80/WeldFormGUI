@@ -356,7 +356,10 @@ IMGUI_DEMO_MARKER("Configuration");
         open_ = ImGui::TreeNode("Materials");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New", "CTRL+Z")) {
+            m_show_mat_dlg = true;
+            
+          }
           ImGui::EndPopup();
         }
         if (open_)
@@ -495,7 +498,9 @@ IMGUI_DEMO_MARKER("Configuration");
               double rho = 1.;
               double h = 1.2*radius;
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
-              m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );              
+              m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+              calcDomainCenter();
+              cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
             }
     }
 
@@ -574,6 +579,7 @@ IMGUI_DEMO_MARKER("Configuration");
   
   //ExampleAppLog logtest;
   ShowExampleAppLog(&show_app_log, &logtest);
+  if (m_show_mat_dlg) ShowMaterialDialog(&m_show_mat_dlg, &m_matdlg);
 }
 
 //THESE SHADERS ARE FROM LEARNOPENGL
@@ -880,6 +886,7 @@ Editor::Editor(){
   box_select_mode = false;
   
   m_currentaction = NULL;
+  m_show_mat_dlg = false;
   
   m_sel_particles.resize(1);
 }
@@ -1297,21 +1304,24 @@ void Editor::RenderPhase(){
       Vector3f pos(v(0),v(1),v(2));
 
       glm::mat4 model = glm::mat4(1.0f);
-      model[0][0]=model[1][1]=model[2][2]=h;
-      //model[0][3] = pos.x; model[1][3] = pos.y; model[2][3] = pos.z;
+      model[0][0]=model[1][1]=model[2][2]=h/10.0;
+      //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+      model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
-      glm::mat4 mat = projection * view * model;
+      glm::mat4 transback = glm::mat4(1.0f);
+      transback[1][3] = pos.x; transback[2][3] = pos.y;transback[3][3] = pos.z;
+      glm::mat4 mat = projection * transback * view * model;
       // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
       //glm::mat4 mat = view;
     
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
-      pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
+      //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);      
       //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
       //If personalized shader
@@ -1608,4 +1618,17 @@ void Editor::CalcFPS()
         m_fps = m_frameCount;
         m_frameCount = 0;
     }
+}
+
+void Editor::calcDomainCenter(){
+  
+  m_domain_center = 0.0;
+  //Converting from Vec3_t to Vector3f
+  //SELECT IF DOMAIN IS SPH
+  for (int p=0;p<m_domain.Particles.size();p++)    {
+    m_domain_center.x += m_domain.Particles[p]->x(0);
+    m_domain_center.y += m_domain.Particles[p]->x(1);
+    m_domain_center.z += m_domain.Particles[p]->x(2);
+  }
+  m_domain_center = m_domain_center/m_domain.Particles.size();
 }
