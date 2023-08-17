@@ -189,7 +189,8 @@ protected:
   ExampleAppLog logtest;
   
   MaterialDialog m_matdlg;
-  bool m_show_mat_dlg;
+  bool m_show_mat_dlg; //create
+  bool m_show_mat_dlg_edit;
   bool create_new_mat;
   
   float m_rotation;

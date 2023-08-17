@@ -376,7 +376,7 @@ IMGUI_DEMO_MARKER("Configuration");
                   if (ImGui::BeginPopupContextItem())
                   {
                     if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                      m_show_mat_dlg = true;
+                      m_show_mat_dlg_edit = true;
                       
                     }
                     ImGui::EndPopup();
@@ -608,6 +608,7 @@ IMGUI_DEMO_MARKER("Configuration");
   create_new_mat = false;
   Material_ mat;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
+  else if (m_show_mat_dlg_edit) {/*ShowEditMaterialDialog;*/}
   if (create_new_mat) {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!

@@ -57,4 +57,7 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
   return ret;
 }
 
-bool ShowMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat);
+bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat){
+  
+  
+}
