@@ -13,7 +13,7 @@ struct MaterialDialog{
   
 };
 
-Material_ ShowMaterialDialog(bool* p_open, MaterialDialog *);
+Material_ ShowMaterialDialog(bool* p_open, MaterialDialog *, bool);
 
 
 #endif
