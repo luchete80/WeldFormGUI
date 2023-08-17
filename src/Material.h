@@ -15,6 +15,7 @@ class Elastic_{
 	Elastic_(){}
 	Elastic_(const double &e, const double &nu):E_m(e),nu_m(nu){}
 	const double& E()const{return E_m;}
+  const double& nu()const{return E_m;}
 	
 };
 
@@ -35,7 +36,6 @@ class Material_{
   void setDensityConstant(const double &val){m_density = val;};
   const double& getDensityConstant()const {return m_density;}; //COULD DEFINE IT AS TEMP 0 and 
   
-
   
 	protected:
   double m_density;

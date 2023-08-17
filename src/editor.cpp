@@ -579,20 +579,20 @@ IMGUI_DEMO_MARKER("Configuration");
   
   //ExampleAppLog logtest;
   ShowExampleAppLog(&show_app_log, &logtest);
-  
+  //cout << "log tst "<<logtest.test<<endl;
   create_new_mat = false;
   Material_ mat;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
   if (create_new_mat) {
     m_show_mat_dlg=false;
-    Material_ mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);
-    cout << "temp dens" <<m_matdlg.m_density_const<<endl;
+    //SHOULD NOT BE CALLED AGAIN!!!!!!
+    //cout << "temp dens" <<m_matdlg.m_density_const<<endl;
     m_mats.push_back(Material_(mat));
     
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
     cout << "Density:" <<m_mats[0].getDensityConstant()<<endl;
-    cout << "Density:" <<mat.getDensityConstant()<<endl;    
+
   }
 }
 

@@ -2,6 +2,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "log.h"
 //-----------------------------------------------------------------------------
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
 //-----------------------------------------------------------------------------
@@ -10,40 +11,42 @@
 //  static ExampleAppLog my_log;
 //  my_log.AddLog("Hello %d world\n", 123);
 //  my_log.Draw("title");
-struct ExampleAppLog
-{
-    ImGuiTextBuffer     Buf;
-    ImGuiTextFilter     Filter;
-    ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
-    bool                AutoScroll;  // Keep scrolling if already at the bottom.
+// struct ExampleAppLog
+// {
+    // ImGuiTextBuffer     Buf;
+    // ImGuiTextFilter     Filter;
+    // ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
+    // bool                AutoScroll;  // Keep scrolling if already at the bottom.
 
-    ExampleAppLog()
+    ExampleAppLog::ExampleAppLog()
     {
         AutoScroll = true;
         Clear();
     }
 
-    void    Clear()
+    void    ExampleAppLog::Clear()
     {
         Buf.clear();
         LineOffsets.clear();
         LineOffsets.push_back(0);
     }
 
-    void    AddLog(const char* fmt, ...) IM_FMTARGS(2)
-    {
-        int old_size = Buf.size();
-        va_list args;
-        va_start(args, fmt);
-        Buf.appendfv(fmt, args);
-        va_end(args);
-        for (int new_size = Buf.size(); old_size < new_size; old_size++)
-            if (Buf[old_size] == '\n')
-                LineOffsets.push_back(old_size + 1);
-    }
+    // void    ExampleAppLog::AddLog(const char* fmt, ...) IM_FMTARGS(2)
+    // {
+        // int old_size = Buf.size();
+        // va_list args;
+        // va_start(args, fmt);
+        // Buf.appendfv(fmt, args);
+        // va_end(args);
+        // for (int new_size = Buf.size(); old_size < new_size; old_size++)
+            // if (Buf[old_size] == '\n')
+                // LineOffsets.push_back(old_size + 1);
+    // }
 
-    void    Draw(const char* title, bool* p_open = NULL)
+    void    ExampleAppLog::Draw(const char* title, bool* p_open = NULL)
     {
+      double es = 2.0;
+        test = es;
         if (!ImGui::Begin(title, p_open))
         {
             ImGui::End();
@@ -131,7 +134,7 @@ struct ExampleAppLog
         ImGui::EndChild();
         ImGui::End();
     }
-};
+//};
 
 // Demonstrate creating a simple log window with basic filtering.
 /*static */void ShowExampleAppLog(bool* p_open)

@@ -10,7 +10,7 @@
 using namespace std;
 
 void  MaterialDialog::Draw(const char* title, bool* p_open){
-  
+
   create_material = false; 
   if (!ImGui::Begin(title, p_open))
   {
@@ -18,12 +18,10 @@ void  MaterialDialog::Draw(const char* title, bool* p_open){
       return;
   }
   //Vec3_t size;
-  double dens = 7850.0;
-  double young = 200.e9;
-  ImGui::InputDouble("Density ", &dens, 0.01f, 1.0f, "%.4f");  
-  cout << "dens "<< dens<<endl;
-  
-  ImGui::InputDouble("Elastic Mod", &young, 0.01f, 1.0f, "%.2e");  
+
+  ImGui::InputDouble("Density ", &m_density_const, 0.00f, 1.0f, "%.4f");  
+  ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
+  ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
 
   if (ImGui::Button("Create")) {create_material = true;}
   ImGui::SameLine();
@@ -32,7 +30,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open){
   }
   ImGui::End();
   
-  m_density_const = dens;
+  //m_density_const = dens;
 }
 
 Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create){
@@ -47,7 +45,14 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
   if (matdlg->isMaterialCreated()){
     *create =true;
     ret.setDensityConstant(matdlg->m_density_const);
-    }
+    
+    if (matdlg->m_elastic_const != 0.0 && matdlg->m_elastic_const != 0.0){
+      Elastic_ el(matdlg->m_elastic_const ,matdlg->m_elastic_const);
+      ret = Material_(el);
+    } else {
+      cout << "Material elastic constants should not be zero;"<<endl;
+    };
+  }
   //cout << "density "<<    ret.getDensityConstant()<<endl;
   return ret;
 }
