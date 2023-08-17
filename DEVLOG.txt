@@ -10,4 +10,5 @@
 20230816 - Box Selection is working (render box limits is pending)
          - Added Log Windows (now is dummy, and remains Docking)
          - Begining to write Write Input
+20230817 - Added material creation and begining to Edit
          

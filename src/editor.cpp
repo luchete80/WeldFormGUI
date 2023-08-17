@@ -362,6 +362,31 @@ IMGUI_DEMO_MARKER("Configuration");
           }
           ImGui::EndPopup();
         }
+
+            for (int i = 0; i < m_mats.size(); i++)
+            {
+                // Use SetNextItemOpen() so set the default state of a node to be open. We could
+                // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+                if (i == 0)
+                    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+                if (ImGui::TreeNode((void*)(intptr_t)i, "Material %d", i))
+                {
+
+                  if (ImGui::BeginPopupContextItem())
+                  {
+                    if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                      m_show_mat_dlg = true;
+                      
+                    }
+                    ImGui::EndPopup();
+                  }                    ImGui::Text("blah blah");
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("button")) {}
+                    ImGui::TreePop();
+                }
+            }
+            
         if (open_)
         {
            // your tree code stuff
