@@ -1380,6 +1380,38 @@ void Editor::RenderPhase(){
       m_sphere_mesh.Render();
     }
 
+
+
+    //////////////// RENDER TEST ///
+    //pn.Scale(h, h,);  
+      Vec3_t v = Vec3_t(0.0,0.0,0.0);
+      Vector3f pos(v(0),v(1),v(2));
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model[0][0]=model[1][1]=model[2][2]=0.001;
+      //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+      model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
+      glm::mat4 projection = glm::mat4(1.0f);
+      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      //transback[1][3] = pos.x; transback[2][3] = pos.y;transback[3][3] = pos.z;
+      glm::mat4 mat = projection * transback * view * model;
+      // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
+      //glm::mat4 mat = view;
+    
+      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      
+      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+   
+      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+      m_sphere_mesh.Render();
+    
+
   glUseProgram(0);
   drawGui();
 
