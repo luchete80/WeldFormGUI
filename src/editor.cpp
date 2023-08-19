@@ -635,7 +635,7 @@ const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 2) in vec3 aNormal;\n"
 "out vec3 FragPos;\n"
-"uniform mat4 gWVP;\n"
+"uniform mat4 gWVPLocation;\n"
 "out vec3 Normal;\n"
 "uniform mat4 model;\n"
 "uniform mat4 view;\n"
@@ -645,7 +645,8 @@ const char *vertexShaderSource = "#version 330 core\n"
 "    FragPos = vec3(model * vec4(aPos, 1.0));\n"
 "    Normal = aNormal;     \n"
 "    //gl_Position = projection * view * vec4(FragPos, 1.0);\n"
-"   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+"    //gl_Position = gWVPLocation * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
@@ -1376,19 +1377,20 @@ void Editor::RenderPhase(){
       m = pn.GetWVPTrans();
       trans_mat [p]= m;
       glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
+
       //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
       m_sphere_mesh.Render();
     }
 
 
-
+    glUseProgram(shaderProgram);
     //////////////// RENDER TEST ///
     //pn.Scale(h, h,);  
       Vec3_t v = Vec3_t(0.0,0.0,0.0);
       Vector3f pos(v(0),v(1),v(2));
 
       glm::mat4 model = glm::mat4(1.0f);
-      model[0][0]=model[1][1]=model[2][2]=0.001;
+      model[0][0]=model[1][1]=model[2][2]=0.01;
       //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
       //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
       glm::mat4 projection = glm::mat4(1.0f);
@@ -1408,7 +1410,11 @@ void Editor::RenderPhase(){
       objectColor = Vector3f(0.0f, 0.5f, 1.0f);
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
    
-      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),  1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),  1, GL_FALSE, &model[0][0]);
+        
       m_sphere_mesh.Render();
     
 
