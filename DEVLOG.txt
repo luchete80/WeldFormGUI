@@ -11,4 +11,6 @@
          - Added Log Windows (now is dummy, and remains Docking)
          - Begining to write Write Input
 20230817 - Added material creation and begining to Edit
+20230818 - Changed Camera from airplane useless one to trackball (Error with box select now)
+20230819 - Fixed single select  particles recognition now
          

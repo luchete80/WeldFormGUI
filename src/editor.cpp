@@ -768,40 +768,52 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
         
         if (!box_select_mode)  { //SINGLE SELECT
-        
-          if (Pixel.ObjectID != 0){
+        cout << "Pixel.ObjectID " << Pixel.ObjectID<<endl;
+          // if (Pixel.ObjectID != 0){
            
-            Vector3f vel(0.,0.,0.);
-            m_sel_node = Pixel.ObjectID-1;
-            float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
-            //We have to transform coordinates!
-            vel = Vector3f( (x-last_mouse_x)/dt,
-                            (y-last_mouse_y)/dt,
-                            0.);
-            //if (!m_is_node_sel) { //recently pressed, reset node velocity
-              m_last_mouse_dragtime = GetCurrentTimeMillis();
-              vel = Vector3f(0.,20.,0.);
-              Vector3f f(0.,100.,0.);
-              Vector3f force(0.,10,0.);
+            // Vector3f vel(0.,0.,0.);
+            // m_sel_node = Pixel.ObjectID-1;
+            // float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
+            // //We have to transform coordinates!
+            // vel = Vector3f( (x-last_mouse_x)/dt,
+                            // (y-last_mouse_y)/dt,
+                            // 0.);
+            // //if (!m_is_node_sel) { //recently pressed, reset node velocity
+              // m_last_mouse_dragtime = GetCurrentTimeMillis();
+              // vel = Vector3f(0.,20.,0.);
+              // Vector3f f(0.,100.,0.);
+              // Vector3f force(0.,10,0.);
 
-              m_is_node_sel = true;
+              // m_is_node_sel = true;
 
 
-
-            cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
+        
+        // int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
+        // cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
             
-            m_last_mouse_dragtime = GetCurrentTimeMillis();
-          } else {m_is_node_sel = false;}
+
+            //cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
+            
+            // m_last_mouse_dragtime = GetCurrentTimeMillis();
+          // } else {m_is_node_sel = false;
+                  // cout <<"not selected node" <<endl;}
               
         cout << "x,y: "<<x<<" , "<<y<<endl;
-        int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
-        cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
-            
+        int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1)-1;
+        if (test >=0 ) {
+          //cout<<"SELECTED!"<<endl;
         //CHECK
-        // Vec3_t v = m_domain.Particles[test]->x;        
-        // glm::vec4 pos(v(0),v(1),v(2),1.0);
-        // glm::vec3 res = trans_mat[test] * pos;
-        // cout << "particle center "<<res.x<<", "<<res.y<<endl;
+          Vec3_t v = m_domain.Particles[test]->x;        
+          glm::vec4 pos(v(0),v(1),v(2),1.0);
+          glm::vec4 res = trans_mat[test] * pos;
+          cout << "particle center "<<res.x<<", "<<res.y<<endl;
+
+          float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          cout << "x,y: "<<xx<<" , "<<yy<<endl;
+          }
+        else          {cout<<"NOT SELECTED"<<endl;}
+        cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
             
         //if (m_is_node_sel){
            m_sel_count = 1;
@@ -1279,7 +1291,7 @@ void Editor::PickingPhase() {
       
       //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
       //if (p<255){
-      m_pickingEffect.SetObjectIndex((p));
+      m_pickingEffect.SetObjectIndex((p+1));
       //m_pickingEffect.SetWVP(pn.GetWVPTrans());    
 
       m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
