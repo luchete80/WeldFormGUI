@@ -766,9 +766,9 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         glfwGetCursorPos(window, &x, &y);
         m_left_button_pressed = true;
         //cout << "screen x y" <<x << ", " <<y<<endl; 
-          // float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          // float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
-          // cout << "x,y: "<<xx<<" , "<<yy<<endl;        
+          float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+          float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          cout << "x,y: "<<xx<<" , "<<yy<<endl;        
         PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
         
         if (!box_select_mode)  { //SINGLE SELECT
