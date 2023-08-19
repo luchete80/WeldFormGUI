@@ -1252,7 +1252,7 @@ void Editor::PickingPhase() {
   m_pickingTexture.EnableWriting();
   
   
-  //glUseProgram(shaderProgram);
+  glUseProgram(shaderProgram);
   
   //THis can be done once, even scale
   Pipeline pn;
