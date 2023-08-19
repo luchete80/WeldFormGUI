@@ -808,6 +808,13 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           glm::vec4 res = trans_mat[test] * pos;
           cout << "particle center "<<res.x<<", "<<res.y<<endl;
 
+           m_sel_count = 1;
+           //cout << " m_sel_count = 1; "<<endl;
+          m_sel_particles.clear();
+          m_sel_particles.push_back(test);
+        //}//If is sel
+        cout << "Pressed"<<endl;
+        
           float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
           float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
           cout << "x,y: "<<xx<<" , "<<yy<<endl;
@@ -816,12 +823,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
             
         //if (m_is_node_sel){
-           m_sel_count = 1;
-           //cout << " m_sel_count = 1; "<<endl;
-          m_sel_particles.clear();
-          m_sel_particles.push_back(test);
-        //}//If is sel
-        cout << "Pressed"<<endl;
+
         } else {
           m_selector.setStartPoint(x,y);
         }
@@ -952,6 +954,7 @@ Editor::Editor(){
   m_show_mat_dlg = false;
   
   m_sel_particles.resize(1);
+  m_sel_count = 0;
 }
 
 int Editor::Init(){
@@ -1390,8 +1393,15 @@ void Editor::RenderPhase(){
       objectColor = Vector3f(0.0f, 0.5f, 1.0f);
       for (int s=0;s<m_sel_count;s++){
         //cout << "sel_count"<<m_sel_count<<endl;
-        if (p==m_sel_particles[s]) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        // cout <<"selected particle "<<p<<endl;
+        // cout << "m_sel_count "<<m_sel_count<<endl;
+        // glm::vec4 v(pos.x,pos.y,pos.z,1.0);
+        // glm::vec4 pp = mat * v;
+        // cout << "proj pos "<< pp.x<<", "<<pp.y<<", "<<pp.z<<endl;
+        }
         //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+
       }
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
