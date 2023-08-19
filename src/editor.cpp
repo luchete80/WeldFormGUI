@@ -1276,7 +1276,7 @@ void Editor::PickingPhase() {
       glm::mat4 model = glm::mat4(1.0f);
 
       model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-      model = glm::scale(model, glm::vec3(h,h,h));         
+      //model = glm::scale(model, glm::vec3(h,h,h));         
       
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -1371,7 +1371,7 @@ void Editor::RenderPhase(){
       ////FIRST TRANSLATE AND THEN SCALE!!!!!
 
       model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-      model = glm::scale(model, glm::vec3(h,h,h));         
+      //model = glm::scale(model, glm::vec3(h,h,h));         
       
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -1665,7 +1665,7 @@ bool Editor::LoadSphere(){
   
 	for (int i=0;i<vcount;i++){
     Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
-		vpos[i]	= vert;
+		vpos[i]	= vert * 0.01;
     //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
