@@ -50,7 +50,7 @@ const float RADIUS = 1.0f; //radius of the sphere
 
 ArcballCamera::ArcballCamera(){
     
-    position = glm::vec3(0.0f, 0.0f, -0.1f);
+    position = glm::vec3(0.0f, 0.0f, -0.5f);
     currentPos = startPos;
     lastQuaternion = {0.0f, glm::vec3(1.0f, 0.0f, 0.0f)};
     
