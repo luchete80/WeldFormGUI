@@ -50,7 +50,7 @@ const float RADIUS = 1.0f; //radius of the sphere
 
 ArcballCamera::ArcballCamera(){
     
-    position = glm::vec3(0.0f, 0.0f, -0.1f);
+    position = glm::vec3(0.25f, 0.0f, -0.5f);
     currentPos = startPos;
     lastQuaternion = {0.0f, glm::vec3(1.0f, 0.0f, 0.0f)};
     
@@ -78,8 +78,8 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
 
 void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 
-    //action == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+    //action == glfwGetMouseButton(window, GLFW_KEY_LEFT_CONTROL);
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
         
         double startXPos, startYPos; //screen coordinates when mouse clicks.
         glfwGetCursorPos(window, &startXPos, &startYPos);

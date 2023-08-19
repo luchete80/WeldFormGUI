@@ -23,7 +23,7 @@
 
 #include "input_writer.h"
 
-Matrix4f trans_mat[1000]; //test
+glm::mat4 trans_mat[1000]; //test
 
 using namespace SPH;
 
@@ -635,18 +635,19 @@ const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 2) in vec3 aNormal;\n"
 "out vec3 FragPos;\n"
-"uniform mat4 gWVPLocation;\n"
+"uniform mat4 gWVP;\n"
 "out vec3 Normal;\n"
 "uniform mat4 model;\n"
 "uniform mat4 view;\n"
 "uniform mat4 projection;\n"
+"uniform mat4 transback;\n"
 "void main()\n"
 "{\n"
 "    FragPos = vec3(model * vec4(aPos, 1.0));\n"
 "    Normal = aNormal;     \n"
 "    //gl_Position = projection * view * vec4(FragPos, 1.0);\n"
-"    //gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-"    gl_Position = gWVPLocation * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"    //gl_Position = projection * transback * view * model * vec4(aPos, 1.0);\n"
+"    gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
@@ -795,6 +796,13 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         cout << "x,y: "<<x<<" , "<<y<<endl;
         int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
         cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
+            
+        //CHECK
+        // Vec3_t v = m_domain.Particles[test]->x;        
+        // glm::vec4 pos(v(0),v(1),v(2),1.0);
+        // glm::vec3 res = trans_mat[test] * pos;
+        // cout << "particle center "<<res.x<<", "<<res.y<<endl;
+            
         //if (m_is_node_sel){
            m_sel_count = 1;
            //cout << " m_sel_count = 1; "<<endl;
@@ -834,10 +842,12 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           //Loop through texture
           for (int p=0;p<m_domain.Particles.size();p++){    
             Vec3_t v = m_domain.Particles[p]->x;
-            Vector3f pos(v(0),v(1),v(2));
+            //Vector3f pos(v(0),v(1),v(2));
+            
+            glm::vec4 pos(v(0),v(1),v(2),1.0);
 
         
-            Vector3f res = trans_mat[p] * pos;
+            glm::vec4 res = trans_mat[p] * pos;
             int resint_x = res.x * (SCR_WIDTH/2) + (SCR_WIDTH/2); 
             int resint_y = (SCR_HEIGHT/2) - res.y * (SCR_HEIGHT/2);
             
@@ -1246,13 +1256,34 @@ void Editor::PickingPhase() {
       Vector3f pos(v(0),v(1),v(2));
       //cout << "vert " <<v(0)<<", "<<endl;
       //Vector3f pos(0.,0.,0.);
+
+
+      glm::mat4 model = glm::mat4(1.0f);
+      
+      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+      model = glm::scale(model, glm::vec3(h,h,h));   
+      glm::mat4 projection = glm::mat4(1.0f);
+      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
+
+      glm::mat4 mat = projection * transback * view * model;
+     
       
       pn.WorldPos(pos);   
       Matrix4f m = pn.GetWVPTrans();
+      
       //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
       //if (p<255){
       m_pickingEffect.SetObjectIndex((p));
-      m_pickingEffect.SetWVP(pn.GetWVPTrans());    
+      //m_pickingEffect.SetWVP(pn.GetWVPTrans());    
+
+      m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
+
       m_sphere_mesh.Render();
       //}
     }
@@ -1272,25 +1303,7 @@ void Editor::RenderPhase(){
   
   /////////////////////////////////////// CAMERA THINGS
   Pipeline pip;
-  /// SHAPE 
-  //p.WorldPos(Pos);        
-  //p.Rotate(0.,0.,0.);  
-  pip.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  pip.SetPerspectiveProj(m_persProjInfo);
-  Matrix4f m = pip.GetWVPTrans();
 
-  //ORIGINAL FROM FREECAMERA
-  //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
-
-  
-    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "view"),  1, GL_FALSE, glm::value_ptr(view));
-    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "model"),  1, GL_FALSE, glm::value_ptr(model));
-
-
-
-
-  
   // render
   // ------
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
@@ -1327,27 +1340,22 @@ void Editor::RenderPhase(){
     Pipeline pn;
     pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp()); //equalling pipeline m_camera values
     pn.SetPerspectiveProj(m_persProjInfo);    
-    // float h = m_domain.Particles[0]->h/2.;
-    // pn.Scale(h, h,h);  
-    
-    
-    		// pm.Rotate(270.0f, - 90.0f + (rotation*180./3.14159), 0.0f);       
-				// pm.WorldPos(mpos); 				
-				// m_pEffect->SetWVP(pm.GetWVPTrans());
-				// m_pEffect->SetWorldMatrix(pm.GetWorldTrans());    
-				// m_playermesh[TeamSize*j + i]->Render();
 
     
     for (int p=0;p<m_domain.Particles.size();p++){    
     float h = m_domain.Particles[0]->h/2.;
     pn.Scale(h, h,h);  
-      Vec3_t v = m_domain.Particles[p]->x;
+      Vec3_t v = m_domain.Particles[p]->x ;
       Vector3f pos(v(0),v(1),v(2));
 
       glm::mat4 model = glm::mat4(1.0f);
-      model[0][0]=model[1][1]=model[2][2]=h/10.0;
+     // model[0][0]=model[1][1]=model[2][2]=h;
       //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
-      model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
+      //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
+      ////FIRST TRANSLATE AND THEN SCALE!!!!!
+      
+      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+      model = glm::scale(model, glm::vec3(h,h,h));   
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
@@ -1355,7 +1363,8 @@ void Editor::RenderPhase(){
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
       glm::mat4 transback = glm::mat4(1.0f);
-      transback[1][3] = pos.x; transback[2][3] = pos.y;transback[3][3] = pos.z;
+      transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
+      //transback[0][3] = pos.x; transback[1][3] = pos.y;transback[2][3] = pos.z;
       glm::mat4 mat = projection * transback * view * model;
       // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
       //glm::mat4 mat = view;
@@ -1373,18 +1382,17 @@ void Editor::RenderPhase(){
         //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
       }
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
-   
-      m = pn.GetWVPTrans();
-      trans_mat [p]= m;
-      glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
 
-      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+      trans_mat [p]= mat;
+      
+        
+      glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
       m_sphere_mesh.Render();
     }
 
 
     // glUseProgram(shaderProgram);
-    // //////////////// RENDER TEST ///
+    // // //////////////// RENDER TEST ///
     // //pn.Scale(h, h,);  
       // Vec3_t v = Vec3_t(0.0,0.0,0.0);
       // Vector3f pos(v(0),v(1),v(2));
@@ -1414,6 +1422,7 @@ void Editor::RenderPhase(){
         // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
         // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),  1, GL_FALSE, &view[0][0]);
         // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),  1, GL_FALSE, &model[0][0]);
+        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transback"),  1, GL_FALSE, &transback[0][0]);
         
       // m_sphere_mesh.Render();
     
@@ -1527,10 +1536,11 @@ void Editor::processInput(GLFWwindow *window)
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
       rotatecam = true;
+      //editor->ArcCamera()->setRotFlag(true);
     else
       //(if !MIDDLE BUTTON)
       rotatecam = false;
-    
+      //editor->ArcCamera()->setRotFlag(false);
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
       //cout << "pause: "<<endl;
       m_pause = !m_pause;

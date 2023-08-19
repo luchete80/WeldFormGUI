@@ -23,6 +23,12 @@
 //#include "render_callbacks.h"
 #include "ogldev_types.h"
 
+//NEW 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 class PickingTechnique : public Technique
 //, public IRenderCallbacks
 {
@@ -33,7 +39,8 @@ public:
     virtual bool Init();
 
     void SetWVP(const Matrix4f& WVP);
-
+    void SetWVP_glm(glm::mat4 WVP);
+    
     void SetObjectIndex(uint ObjectIndex);
     
     void DrawStartCB(uint DrawIndex);

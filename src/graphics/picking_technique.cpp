@@ -62,6 +62,10 @@ void PickingTechnique::SetWVP(const Matrix4f& WVP)
     glUniformMatrix4fv(m_WVPLocation, 1, GL_TRUE, (const GLfloat*)WVP.m);    
 }
 
+void PickingTechnique::SetWVP_glm(glm::mat4 WVP) /// DO NOT TRANSPOSE 
+{
+    glUniformMatrix4fv(m_WVPLocation, 1, GL_FALSE, &WVP[0][0]);    
+}
 
 void PickingTechnique::DrawStartCB(uint DrawIndex)
 {

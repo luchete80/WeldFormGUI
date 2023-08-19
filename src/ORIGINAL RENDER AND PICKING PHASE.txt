@@ -1,0 +1,281 @@
+/// AND ORIGINAL SHADER
+
+const char *vertexShaderSource = "#version 330 core\n"
+    // "layout (location = 0) in vec3 aPos;\n"
+    // "uniform mat4 gWVP;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "   //gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "}\0";
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 2) in vec3 aNormal;\n"
+"out vec3 FragPos;\n"
+"uniform mat4 gWVP;\n"
+"out vec3 Normal;\n"
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 projection;\n"
+"uniform mat4 transback;\n"
+"void main()\n"
+"{\n"
+"    FragPos = vec3(model * vec4(aPos, 1.0));\n"
+"    Normal = aNormal;     \n"
+"    //gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+"    gl_Position = projection * transback * view * model * vec4(aPos, 1.0);\n"
+"    //gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char *fragmentShaderSource = "#version 330 core\n"
+
+"out vec4 FragColor;\n"
+"in vec3 Normal;  \n"
+"in vec3 FragPos;  \n" 
+"uniform vec3 lightPos; \n"
+"uniform vec3 lightColor;\n"
+"uniform vec3 objectColor;\n"
+"void main()\n"
+"{ \n"
+"    // ambient\n"
+"    float ambientStrength = 0.2;\n"
+"    vec3 ambient = ambientStrength * lightColor;\n"
+"  	\n"
+"    // diffuse \n"
+"    vec3 norm = normalize(Normal);\n"
+"    vec3 lightDir = normalize(lightPos - FragPos);\n"
+"    float diff = max(dot(norm, lightDir), 0.0);\n"
+"    vec3 diffuse = diff * lightColor;\n"           
+"    vec3 result = (ambient + diffuse) * objectColor;\n" //THIS IS THE ORIGINAL
+//"    vec3 result = diffuse ;\n"
+"    FragColor = vec4(result, 1.0);\n"
+"}\0";
+
+
+void Editor::PickingPhase() {
+  // render
+  // ------
+	glClearColor(0.0f, 0.0f, 0.f, 1.0f);  //DO NOT CHANGE THIS!!! BECAUSE OBJECT ID !=0 MEANS SOMETHING SELECTED
+
+  // draw our first triangle
+  
+  gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
+  
+  m_pickingTexture.EnableWriting();
+  
+  
+  //glUseProgram(shaderProgram);
+  
+  //THis can be done once, even scale
+  Pipeline pn;
+  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pn.SetPerspectiveProj(m_persProjInfo);
+
+      
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    //m_pickingEffect.Enable();
+    for (int p=0;p<m_domain.Particles.size();p++){
+   float h = m_domain.Particles[0]->h/2.;
+  pn.Scale(h, h,h);  
+      m_pickingEffect.Enable();
+      Vec3_t v = m_domain.Particles[p]->x;
+      Vector3f pos(v(0),v(1),v(2));
+      //cout << "vert " <<v(0)<<", "<<endl;
+      //Vector3f pos(0.,0.,0.);
+      
+      pn.WorldPos(pos);   
+      Matrix4f m = pn.GetWVPTrans();
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
+      //if (p<255){
+      m_pickingEffect.SetObjectIndex((p));
+      m_pickingEffect.SetWVP(pn.GetWVPTrans());    
+      m_sphere_mesh.Render();
+      //}
+    }
+    
+    //glUseProgram(0);
+
+  m_pickingTexture.DisableWriting();
+
+}
+
+void Editor::RenderPhase(){
+    // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+  
+  
+  /////////////////////////////////////// CAMERA THINGS
+  Pipeline pip;
+  /// SHAPE 
+  //p.WorldPos(Pos);        
+  //p.Rotate(0.,0.,0.);  
+  pip.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pip.SetPerspectiveProj(m_persProjInfo);
+  Matrix4f m = pip.GetWVPTrans();
+
+  //ORIGINAL FROM FREECAMERA
+  //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);
+
+  
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "view"),  1, GL_FALSE, glm::value_ptr(view));
+    // glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "model"),  1, GL_FALSE, glm::value_ptr(model));
+
+
+
+
+  
+  // render
+  // ------
+	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // draw our first triangle
+  glUseProgram(shaderProgram);
+  gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
+  
+  
+  //RENDERING FIRST IT WORKS; AFTER DOESn'T
+
+    // m_plightEffect->Enable();
+    // m_plightEffect->SetEyeWorldPos(camera->GetPos());
+    // m_plightEffect->SetWVP(p.GetWVPTrans());
+  
+  Vector3f lightPos(1.2f, 1.0f, 2.0f);
+  Vector3f lightColor(1.0f, 1.0f, 1.0f);
+  Vector3f objectColor(1.0f, 0.5f, 0.31f);
+    
+    
+
+    
+   glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &lightPos[0]); 
+   glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, &lightColor[0]); 
+   
+         // lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        // lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        // lightingShader.setVec3("lightPos", lightPos);
+        
+    
+    
+
+    Pipeline pn;
+    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp()); //equalling pipeline m_camera values
+    pn.SetPerspectiveProj(m_persProjInfo);    
+    // float h = m_domain.Particles[0]->h/2.;
+    // pn.Scale(h, h,h);  
+    
+    
+    		// pm.Rotate(270.0f, - 90.0f + (rotation*180./3.14159), 0.0f);       
+				// pm.WorldPos(mpos); 				
+				// m_pEffect->SetWVP(pm.GetWVPTrans());
+				// m_pEffect->SetWorldMatrix(pm.GetWorldTrans());    
+				// m_playermesh[TeamSize*j + i]->Render();
+
+    
+    for (int p=0;p<m_domain.Particles.size();p++){    
+    float h = m_domain.Particles[0]->h/2.;
+    pn.Scale(h, h,h);  
+      Vec3_t v = m_domain.Particles[p]->x ;
+      Vector3f pos(v(0),v(1),v(2));
+
+      glm::mat4 model = glm::mat4(1.0f);
+     // model[0][0]=model[1][1]=model[2][2]=h;
+      //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+      //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
+      ////FIRST TRANSLATE AND THEN SCALE!!!!!
+      
+      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+      model = glm::scale(model, glm::vec3(h,h,h));   
+      glm::mat4 projection = glm::mat4(1.0f);
+      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
+      //transback[0][3] = pos.x; transback[1][3] = pos.y;transback[2][3] = pos.z;
+      glm::mat4 mat = projection * transback * view * model;
+      // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
+      //glm::mat4 mat = view;
+    
+      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      
+      //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
+      pn.WorldPos(pos);      
+      //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
+      //If personalized shader
+      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      for (int s=0;s<m_sel_count;s++){
+        //cout << "sel_count"<<m_sel_count<<endl;
+        if (p==m_sel_particles[s]) objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      }
+      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+   
+      m = pn.GetWVPTrans();
+      trans_mat [p]= m;
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING MATRIX
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),  1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),  1, GL_FALSE, &model[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transback"),  1, GL_FALSE, &transback[0][0]);
+        
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+      m_sphere_mesh.Render();
+    }
+
+
+    glUseProgram(shaderProgram);
+    // //////////////// RENDER TEST ///
+    //pn.Scale(h, h,);  
+      Vec3_t v = Vec3_t(0.0,0.0,0.0);
+      Vector3f pos(v(0),v(1),v(2));
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model[0][0]=model[1][1]=model[2][2]=0.01;
+      //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+      //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
+      glm::mat4 projection = glm::mat4(1.0f);
+      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      //transback[1][3] = pos.x; transback[2][3] = pos.y;transback[3][3] = pos.z;
+      glm::mat4 mat = projection * transback * view * model;
+      // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
+      //glm::mat4 mat = view;
+    
+      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      
+      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+   
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),  1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),  1, GL_FALSE, &model[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transback"),  1, GL_FALSE, &transback[0][0]);
+        
+      m_sphere_mesh.Render();
+    
+
+  glUseProgram(0);
+  drawGui();
+
+
+  //// IMGUI Rendering
+  ImGui::Render();
+  int display_w, display_h;
+  glfwGetFramebufferSize(window, &display_w, &display_h);
+  glViewport(0, 0, display_w, display_h);
+  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  // // // glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+  // // // glClear(GL_COLOR_BUFFER_BIT);
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}

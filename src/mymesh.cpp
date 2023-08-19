@@ -337,11 +337,11 @@ void myMesh::Render() {
                          (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
                          m_Entries[i].BaseVertex);
 
-        // glDrawElementsBaseVertex(GL_LINES, 
-                         // m_Entries[i].NumIndices, 
-                         // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         // m_Entries[i].BaseVertex);
+        glDrawElementsBaseVertex(GL_LINES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         m_Entries[i].BaseVertex);
 
         // glDrawElements(GL_TRIANGLES, 
                          // m_Entries[i].NumIndices, 

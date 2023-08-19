@@ -28,6 +28,7 @@ public:
     void OnMouse(float x, float y);
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     void mouse_pos_callback(GLFWwindow* window, int xpos, int ypos);
+    void setRotFlag(const bool &f){flag=f;}
     
     float dotProduct();
     void rotation();
