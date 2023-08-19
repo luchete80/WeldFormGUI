@@ -1390,7 +1390,7 @@ void Editor::RenderPhase(){
       glm::mat4 model = glm::mat4(1.0f);
       model[0][0]=model[1][1]=model[2][2]=0.001;
       //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
-      model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
+      //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
       glm::mat4 projection = glm::mat4(1.0f);
       projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    

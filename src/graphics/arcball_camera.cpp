@@ -83,10 +83,10 @@ void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int ac
         
         double startXPos, startYPos; //screen coordinates when mouse clicks.
         glfwGetCursorPos(window, &startXPos, &startYPos);
-        // arcCamera.startPos.x = ((startXPos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
-        // arcCamera.startPos.y = (((SCR_HEIGHT/2) - startYPos) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
-        startPos.x =  startXPos * RADIUS; //convert to NDC, then assign to startPos.
-        startPos.y =  startYPos * RADIUS;// ..same for y coordinate.
+        startPos.x = ((startXPos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
+        startPos.y = (((SCR_HEIGHT/2) - startYPos) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
+        //startPos.x =  startXPos * RADIUS; //convert to NDC, then assign to startPos.
+        //startPos.y =  startYPos * RADIUS;// ..same for y coordinate.
         startPos.z = z_axis(startPos.x, startPos.y);
         flag = true;
     }
