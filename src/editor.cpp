@@ -1293,8 +1293,8 @@ void Editor::PickingPhase() {
       //model = glm::scale(model, glm::vec3(h,h,h));         
       
       glm::mat4 projection = glm::mat4(1.0f);
-      projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
-      //projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
         // 600.0f / 2.0f, -(600.0f / 2.0f), 
       // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
@@ -1398,11 +1398,11 @@ void Editor::RenderPhase(){
       
       
       glm::mat4 projection = glm::mat4(1.0f);
-      //projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
         // 600.0f / 2.0f, 0.0f, 
       // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
-      projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
