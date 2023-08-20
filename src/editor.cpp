@@ -1292,7 +1292,7 @@ void Editor::PickingPhase() {
       model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
       //model = glm::scale(model, glm::vec3(h,h,h));         
       
-      glm::mat4 projection;
+      glm::mat4 projection(1.0);
       //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
       projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
@@ -1397,7 +1397,7 @@ void Editor::RenderPhase(){
       //model = glm::scale(model, glm::vec3(h,h,h));  
       
       
-      glm::mat4 projection;
+      glm::mat4 projection(1.0);
       projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
       // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
         // 600.0f / 2.0f, 0.0f, 
