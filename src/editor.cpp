@@ -1267,7 +1267,7 @@ void Editor::PickingPhase() {
   
   //THis can be done once, even scale
   Pipeline pn;
-  //pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
   pn.SetPerspectiveProj(m_persProjInfo);
   Matrix4f proj = pn.GetProjTrans();
   glm::mat4 ptest = Matrix4fToGLM(proj);
@@ -1281,7 +1281,8 @@ void Editor::PickingPhase() {
   pn.Scale(h, h,h);  
       m_pickingEffect.Enable();
       Vec3_t v = m_domain.Particles[p]->x;
-      Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0);
+      //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+      Vector3f pos(v(0)*1.0,v(1)*1.0,v(2)*1.0); //ORTHO
       //cout << "vert " <<v(0)<<", "<<endl;
       //Vector3f pos(0.,0.,0.);
 
@@ -1310,6 +1311,7 @@ void Editor::PickingPhase() {
       
       pn.WorldPos(pos);   
       Matrix4f m = pn.GetWVPTrans();
+
       
       //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
       //if (p<255){
@@ -1317,7 +1319,10 @@ void Editor::PickingPhase() {
       //m_pickingEffect.SetWVP(pn.GetWVPTrans());    
 
       m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
-
+      
+      //m_pickingEffect.SetWVP(pn.GetWVPTrans()); 
+      
+      
       m_sphere_mesh.Render();
       //}
     }
@@ -1339,7 +1344,7 @@ void Editor::RenderPhase(){
   Pipeline pip;
 
   Pipeline pn;
-  //pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
   pn.SetPerspectiveProj(m_persProjInfo);
   Matrix4f proj = pn.GetProjTrans();
   glm::mat4 ptest = Matrix4fToGLM(proj);
@@ -1380,8 +1385,8 @@ void Editor::RenderPhase(){
     float h = m_domain.Particles[0]->h/2.;
     pn.Scale(h, h,h);  
       Vec3_t v = m_domain.Particles[p]->x ;
-      Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0);
-
+      //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+      Vector3f pos(v(0),v(1),v(2)); 
       glm::mat4 model = glm::mat4(1.0f);
      // model[0][0]=model[1][1]=model[2][2]=h;
       //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
@@ -1406,13 +1411,18 @@ void Editor::RenderPhase(){
       transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
 
       glm::mat4 mat = projection * transback * view * model;
+
+
       
       //glm::mat4 mat = ptest * transback * view * model;
     
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
       //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
-      pn.WorldPos(pos);      
+      pn.WorldPos(pos);   
+      Matrix4f m = pn.GetWVPTrans();
+
+
       //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
       //If personalized shader
       objectColor = Vector3f(0.0f, 0.5f, 1.0f);
@@ -1432,7 +1442,10 @@ void Editor::RenderPhase(){
 
       trans_mat [p]= mat;
       
-        
+      //trans_mat [p]= m;
+      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING 
+
+      
       glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
       m_sphere_mesh.Render();
     }
