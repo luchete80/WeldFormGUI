@@ -59,6 +59,13 @@ void*                           GImGuiDemoMarkerCallbackUserData = NULL;
 
 static void ShowExampleAppLog(bool* p_open);
 
+glm::mat4 Matrix4fToGLM(const Matrix4f &m){
+  glm::mat4 ret(1.0f);
+  for (int i=0;i<4;i++)
+      for (int j=0;j<4;j++)
+        ret[i][j] = m[i][j];
+  return ret;
+}
 
 static void HelpMarker(const char* desc)
 {
@@ -1260,9 +1267,11 @@ void Editor::PickingPhase() {
   
   //THis can be done once, even scale
   Pipeline pn;
-  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  //pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
   pn.SetPerspectiveProj(m_persProjInfo);
-
+  Matrix4f proj = pn.GetProjTrans();
+  glm::mat4 ptest = Matrix4fToGLM(proj);
+  
       
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -1272,7 +1281,7 @@ void Editor::PickingPhase() {
   pn.Scale(h, h,h);  
       m_pickingEffect.Enable();
       Vec3_t v = m_domain.Particles[p]->x;
-      Vector3f pos(v(0),v(1),v(2));
+      Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0);
       //cout << "vert " <<v(0)<<", "<<endl;
       //Vector3f pos(0.,0.,0.);
 
@@ -1283,7 +1292,11 @@ void Editor::PickingPhase() {
       //model = glm::scale(model, glm::vec3(h,h,h));         
       
       glm::mat4 projection = glm::mat4(1.0f);
-      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      //projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
+        // 600.0f / 2.0f, -(600.0f / 2.0f), 
+      // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
@@ -1292,7 +1305,8 @@ void Editor::PickingPhase() {
       transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
 
       glm::mat4 mat = projection * transback * view * model;
-     
+      //glm::mat4 mat = ptest * transback * view * model;
+      
       
       pn.WorldPos(pos);   
       Matrix4f m = pn.GetWVPTrans();
@@ -1324,6 +1338,11 @@ void Editor::RenderPhase(){
   /////////////////////////////////////// CAMERA THINGS
   Pipeline pip;
 
+  Pipeline pn;
+  //pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  pn.SetPerspectiveProj(m_persProjInfo);
+  Matrix4f proj = pn.GetProjTrans();
+  glm::mat4 ptest = Matrix4fToGLM(proj);
   // render
   // ------
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
@@ -1356,17 +1375,12 @@ void Editor::RenderPhase(){
         
     
     
-
-    Pipeline pn;
-    pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp()); //equalling pipeline m_camera values
-    pn.SetPerspectiveProj(m_persProjInfo);    
-
     
     for (int p=0;p<m_domain.Particles.size();p++){    
     float h = m_domain.Particles[0]->h/2.;
     pn.Scale(h, h,h);  
       Vec3_t v = m_domain.Particles[p]->x ;
-      Vector3f pos(v(0),v(1),v(2));
+      Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0);
 
       glm::mat4 model = glm::mat4(1.0f);
      // model[0][0]=model[1][1]=model[2][2]=h;
@@ -1375,20 +1389,25 @@ void Editor::RenderPhase(){
       ////FIRST TRANSLATE AND THEN SCALE!!!!!
 
       model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-      //model = glm::scale(model, glm::vec3(h,h,h));         
+      //model = glm::scale(model, glm::vec3(h,h,h));  
+      
       
       glm::mat4 projection = glm::mat4(1.0f);
-      projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      //projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
+        // 600.0f / 2.0f, 0.0f, 
+      // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+      projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
       glm::mat4 transback = glm::mat4(1.0f);
       transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
-      //transback[0][3] = pos.x; transback[1][3] = pos.y;transback[2][3] = pos.z;
+
       glm::mat4 mat = projection * transback * view * model;
-      // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
-      //glm::mat4 mat = view;
+      
+      //glm::mat4 mat = ptest * transback * view * model;
     
       m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
