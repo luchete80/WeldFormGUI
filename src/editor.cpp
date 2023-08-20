@@ -604,7 +604,7 @@ IMGUI_DEMO_MARKER("Configuration");
     ImGuiFileDialog::Instance()->Close();
   }
   
-  ShowExampleAppMainMenuBar(*this);
+  //ShowExampleAppMainMenuBar(*this);
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
