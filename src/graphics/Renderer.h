@@ -4,9 +4,9 @@
 #include <glad/glad.h>
 #include <vector>
 #include "Math.h"
-#include "ogldev_pipeline.h"
+#include "ogldev_math_3d.h"
 
-#include "camera_system.h"
+//#include "camera_system.h"
 
 //LIKE IN BULLET3
 struct GraphicsInstance
@@ -36,7 +36,7 @@ class Renderer {
 
 public:
   Renderer();
-  void AddCamera(Camera *camera){m_Camera = camera;} //Put as a Scene Node??
+  //void AddCamera(Camera *camera){m_Camera = camera;} //Put as a Scene Node??
  
  
   void drawLines();
@@ -67,8 +67,8 @@ private:
   unsigned int VAO_Lines;
   unsigned int IBO_Lines;
   
-  Camera*           m_Camera;
-  CameraSystem*     m_CameraSystem;
+  // Camera*           m_Camera;
+  // CameraSystem*     m_CameraSystem;
   
   GLuint shaderProgram;
    

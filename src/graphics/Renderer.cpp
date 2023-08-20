@@ -118,12 +118,12 @@ void Renderer::drawLines(/*Vector3f *Vertices, */
 	glUseProgram(shaderProgram); //IF DOES NOT THIS ->position_attribute = glGetAttribLocatio AND  glEnableVertexAttribArray(position_attribute);
   //COORDINATES ARE OF SCREEN
 
-  Pipeline p;
+  // Pipeline p;
 
-  p.SetCamera(m_Camera->GetPos(), m_Camera->GetTarget(), m_Camera->GetUp());
-  //cout << "Camera pos "<<m_Camera->GetPos().x<<endl;
-  p.SetPerspectiveProj(m_persProjInfo);
-  //cout <<"Matrix"<<endl;
+  // p.SetCamera(m_Camera->GetPos(), m_Camera->GetTarget(), m_Camera->GetUp());
+  // //cout << "Camera pos "<<m_Camera->GetPos().x<<endl;
+  // p.SetPerspectiveProj(m_persProjInfo);
+  // //cout <<"Matrix"<<endl;
 
   //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, (const GLfloat*)p.GetWVPTrans());
   gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP"); //THIS CAN BE DONE ONCE 

@@ -85,10 +85,12 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
+              ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
               
               ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
 							${CMAKE_SOURCE_DIR}/src/shader.cpp
 							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
+
               
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
               #${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
