@@ -10,10 +10,10 @@
 #include "picking_technique.h"
 
 #ifndef WIN32
-#include "freetypeGL.h"
+//#include "freetypeGL.h"
 #endif
 
-#include "Editor.h"
+#include "editor.h"
 #include <sstream>
 
 #include "graphics/sphere_low.h"

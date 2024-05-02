@@ -1,28 +1,29 @@
-include_directories("${CMAKE_SOURCE_DIR}/Libs/glm-0.9.9.8")
+include_directories("${CMAKE_SOURCE_DIR}/libs/glm-0.9.9.8")
 include_directories("${CMAKE_SOURCE_DIR}/libs/glad/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/glm-0.9.9.8")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/glfw-3.3.4/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/glfw-3.3.4/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/stb_image")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/assimp-3.1/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/glew-2.2.0/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/freeglut/include")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/freetype-2.10.4/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/glm-0.9.9.8")
+include_directories("${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image")
+include_directories("${CMAKE_SOURCE_DIR}/libs/assimp-3.1/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/glew-2.2.0/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/freeglut/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include/freetype")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphics")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 
-include_directories("${CMAKE_SOURCE_DIR}/Libs/imgui-1.87")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/imgui-1.87/backends")
-include_directories("${CMAKE_SOURCE_DIR}/Libs/ImGuiFileDialog-0.6.4")
+include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87")
+include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends")
+include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
 
 include_directories("${CMAKE_SOURCE_DIR}/src/game")
 include_directories("${CMAKE_SOURCE_DIR}/src/common")
 
-# link_directories ("D:/Luciano/Libs/glfw-3.3.4/src")
+# link_directories ("D:/Luciano/libs/glfw-3.3.4/src")
 
 
-# link_directories ("D:/Luciano/Libs/freeglut-mingw/lib/x64")
-# link_directories ("D:/Luciano/Libs/freetype-2.10.4_bin")
+# link_directories ("D:/Luciano/libs/freeglut-mingw/lib/x64")
+# link_directories ("D:/Luciano/libs/freetype-2.10.4_bin")
 link_directories ("${GLFW_BINARY_DIR}/src")
 
 add_subdirectory("graphics")
@@ -75,7 +76,7 @@ add_subdirectory("graphics")
 add_executable(editor 	
 
               editor.cpp
-							${CMAKE_SOURCE_DIR}/src/mymesh.cpp
+              ${CMAKE_SOURCE_DIR}/src/myMesh.cpp
 							#skinning_technique.cpp
 							#game.cpp
               texture.cpp
@@ -85,7 +86,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
-              ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
+              ${CMAKE_SOURCE_DIR}/src/graphics/renderer.cpp
               
               ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
 							${CMAKE_SOURCE_DIR}/src/shader.cpp
@@ -105,6 +106,10 @@ add_executable(editor
               input_writer.cpp
 								) 
 
+if (WIN32)
+set (LIBS winmm)
+endif()
+
 target_link_libraries(editor 
 
 						freetype
@@ -119,7 +124,7 @@ target_link_libraries(editor
 					  backend
 					  glfw3
 					  #common
-					  winmm
+					  ${LIBS}
 )
 
 

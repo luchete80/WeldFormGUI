@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////
 ////////////// RENDERER ///////////////////////
 ///// 0 - LINES: This gonna be a large file (20220406)
-#include "Renderer.h"
-#include "Math.h"
+#include "renderer.h"
+#include "math.h"
 
 #include <GLFW/glfw3.h>
 

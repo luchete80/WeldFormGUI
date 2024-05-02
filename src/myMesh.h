@@ -10,7 +10,7 @@
 // #include <assimp/postprocess.h> // Post processing flags
 
 #include "ogldev_util.h"
-#include "Math.h" //In "Common" Dir
+//#include "Math.h" //In "Common" Dir
 #include "ogldev_texture.h"
 #include "ogldev_pipeline.h"
 

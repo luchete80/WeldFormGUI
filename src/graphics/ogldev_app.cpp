@@ -30,9 +30,9 @@ Markup sMarkup = { (char*)"Arial", 64, 1, 0, 0.0, 0.0,
 #endif
 
 OgldevApp::OgldevApp()
-#ifndef WIN32
-           : m_fontRenderer(sMarkup)
-#endif
+// #ifndef WIN32
+           // : m_fontRenderer(sMarkup)
+// #endif
 {
 	cout << "Creating App"<<endl;
     m_frameCount = 0;
@@ -63,9 +63,9 @@ void OgldevApp::RenderFPS()
     ZERO_MEM(text);        
     SNPRINTF(text, sizeof(text), "FPS: %d", m_fps);
 
-#ifndef WIN32
-    m_fontRenderer.RenderText(10, 10, text);        
-#endif
+// #ifndef WIN32
+    // m_fontRenderer.RenderText(10, 10, text);        
+// #endif
 }
 
 float OgldevApp::GetRunningTime()

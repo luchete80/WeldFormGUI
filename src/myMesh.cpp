@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "mymesh.h"
+#include "myMesh.h"
 #include "ogldev_engine_common.h"
 
 using namespace std;

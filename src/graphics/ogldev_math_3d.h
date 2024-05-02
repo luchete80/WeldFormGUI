@@ -265,7 +265,7 @@ public:
 				return m[iRow];
 		}
 		
-    Matrix4f()
+    Matrix3f()
     {
     }
 };

@@ -20,7 +20,7 @@
 #define OGLDEV_APP_H
 
 #ifndef WIN32
-#include "freetypeGL.h"
+//#include "freetypeGL.h"
 #endif
 
 
@@ -38,9 +38,9 @@ protected:
 	float GetRunningTime();
 
 protected:
-#ifndef WIN32
-	FontRenderer m_fontRenderer;
-#endif
+// #ifndef WIN32
+	// FontRenderer m_fontRenderer;
+// #endif
 private:
 	long long m_frameTime;
 	long long m_startTime;

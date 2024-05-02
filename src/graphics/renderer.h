@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 #include <vector>
-#include "Math.h"
+#include "math.h"
 #include "ogldev_math_3d.h"
 
 //#include "camera_system.h"
