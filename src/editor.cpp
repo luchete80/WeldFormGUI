@@ -718,14 +718,14 @@ void Editor:: CursorPos(double x, double y) {
       mouse_pressed = false;
     }
     if (rotatecam){
-      camera->OnMouse((int)x, (int)y);
+      //camera->OnMouse((int)x, (int)y);
       //cout << "ROT; x, y "<<x <<", "<< y<< endl;
-      cout << "ArcBall Camera pos: "<< arcCamera->currentPos[0] <<", " 
-                                  << arcCamera->currentPos.y <<", "  
-                                  << arcCamera->currentPos.z <<", "<<endl;
-      cout << "ArcBall Camera rot: "<< arcCamera->rotationalAxis.x <<", " 
-                                  << arcCamera->rotationalAxis.y <<", "  
-                                  << arcCamera->rotationalAxis.z <<", "<<endl;
+      // cout << "ArcBall Camera pos: "<< arcCamera->currentPos[0] <<", " 
+                                  // << arcCamera->currentPos.y <<", "  
+                                  // << arcCamera->currentPos.z <<", "<<endl;
+      // cout << "ArcBall Camera rot: "<< arcCamera->rotationalAxis.x <<", " 
+                                  // << arcCamera->rotationalAxis.y <<", "  
+                                  // << arcCamera->rotationalAxis.z <<", "<<endl;
 // and gluLookAt is equivalent to
 // glMultMatrixf(M);
 // glTranslated(-eyex, -eyey, -eyez);
@@ -737,7 +737,7 @@ void Editor:: CursorPos(double x, double y) {
     double x,y;
     glfwGetCursorPos(window, &x, &y);
     m_rotation = x-last_mouse_x;
-    cout << "rotation " <<m_rotation<<endl;
+    //cout << "rotation " <<m_rotation<<endl;
       
         
     }

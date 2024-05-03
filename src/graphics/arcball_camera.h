@@ -1,6 +1,9 @@
 #ifndef _ARCBALL_CAMERA_H_
 #define _ARCBALL_CAMERA_H_
 
+////////////////////////////////////////////////////
+///////////////////////// https://github.com/oguz81/ArcballCamera/blob/main/main.cpp
+/// CAMERA ROTATES ONLY WHEN FLAG IS ACTIVE
 
 class ArcballCamera{
 public:

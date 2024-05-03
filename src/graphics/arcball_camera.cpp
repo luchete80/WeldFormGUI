@@ -71,7 +71,8 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
         currentPos.z = z_axis(currentPos.x, currentPos.y);
         rotation();
         cout << "FLAG TRUE "<<endl;
-        cout << "curr pos "<<currentPos.x<<", "<<xpos<<endl;
+        cout << "curr pos x"<<currentPos.x<<", "<<xpos<<endl;
+        cout << "curr pos y"<<currentPos.y<<", "<<ypos<<endl;        
         cout << "angle "<<endl;
     }
 }
@@ -79,12 +80,14 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
 void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 
     //action == glfwGetMouseButton(window, GLFW_KEY_LEFT_CONTROL);
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
         
         double startXPos, startYPos; //screen coordinates when mouse clicks.
         glfwGetCursorPos(window, &startXPos, &startYPos);
         startPos.x = ((startXPos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
         startPos.y = (((SCR_HEIGHT/2) - startYPos) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
+        cout << "start pos x "<<startPos.x<<endl;
+        cout << "start pos y "<<startPos.y<<endl;
         //startPos.x =  startXPos * RADIUS; //convert to NDC, then assign to startPos.
         //startPos.y =  startYPos * RADIUS;// ..same for y coordinate.
         startPos.z = z_axis(startPos.x, startPos.y);
@@ -137,6 +140,7 @@ void ArcballCamera::rotation(){
     cosValue = dotProduct(); //q0 is cosine of the angle here.
     if(cosValue > 1) cosValue = 1; // when dot product gives '1' as result, it doesn't equal to 1 actually. It equals to just like 1.00000000001 . 
     theta = (acos(cosValue) * 180 / 3.1416); //theta is the angle now.
+    cout << "theta "<<theta<<endl;
     currentQuaternion.cosine = cos((theta / 2) * 3.1416 / 180); //currentQuaternion.cosine is cos of half the angle now.
 
     currentQuaternion.axis.x = currentQuaternion.axis.x * sin((theta / 2) * 3.1416 / 180);
@@ -164,11 +168,15 @@ void ArcballCamera::rotation(){
                             (lastQuaternion.cosine * currentQuaternion.axis.z ) +
                             temporaryVector.z;
     
+    if (cosValue_2 > 1.0) cosValue_2 = 1.0;
+    if (cosValue_2 < -1.0) cosValue_2 = -1.0;
     angle = (acos(cosValue_2) * 180 / 3.1416) * 2;
 
     rotationalAxis.x = rotationalAxis_2.x / sin((angle / 2) * 3.1416 / 180);
     rotationalAxis.y = rotationalAxis_2.y / sin((angle / 2) * 3.1416 / 180);
     rotationalAxis.z = rotationalAxis_2.z / sin((angle / 2) * 3.1416 / 180);
+    cout << "angle "<<angle<<endl;
+    cout << "cosValue_2 " <<cosValue_2<<endl;
 }
 
 void ArcballCamera::replace(){
