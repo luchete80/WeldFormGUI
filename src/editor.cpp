@@ -105,7 +105,11 @@ void ShowExampleMenuFile(const Editor &editor)
     IMGUI_DEMO_MARKER("Examples/Menu");
     ImGui::MenuItem("(demo menu)", NULL, false, false);
     if (ImGui::MenuItem("New")) {}
-    if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+    if (ImGui::MenuItem("Open", "Ctrl+O")) {
+        // ////// open Dialog Simple
+  // if (ImGui::Button("Open File Dialog"))
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+    }
     if (ImGui::BeginMenu("Open Recent"))
     {
         ImGui::MenuItem("fish_hat.c");
@@ -254,6 +258,7 @@ void Editor::drawGui() {
       // }
       ImGui::EndMenuBar();
   }
+
 IMGUI_DEMO_MARKER("Configuration");
     if (ImGui::CollapsingHeader("Configuration"))
     {
@@ -546,9 +551,9 @@ IMGUI_DEMO_MARKER("Configuration");
       
     }
 
-  ////// open Dialog Simple
-  if (ImGui::Button("Open File Dialog"))
-    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+  // ////// open Dialog Simple
+  // if (ImGui::Button("Open File Dialog"))
+    // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
 
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) 
