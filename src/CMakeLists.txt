@@ -11,6 +11,7 @@ include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include")
 include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include/freetype")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphics")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
+include_directories("${CMAKE_SOURCE_DIR}/src/model")
 
 include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87")
 include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends")
@@ -80,7 +81,7 @@ add_executable(editor
 							#skinning_technique.cpp
 							#game.cpp
               texture.cpp
-              Domain.cpp
+              model/Domain.cpp
               material_dialog.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
