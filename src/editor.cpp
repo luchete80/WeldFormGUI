@@ -604,7 +604,7 @@ IMGUI_DEMO_MARKER("Configuration");
     ImGuiFileDialog::Instance()->Close();
   }
   
-  //ShowExampleAppMainMenuBar(*this);
+  ShowExampleAppMainMenuBar(*this);
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
@@ -695,7 +695,7 @@ static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, 
 }
 
 void Editor::Key(int key, int scancode, int action, int mods) {   
-    camera->OnKeyboard(key);
+    //camera->OnKeyboard(key);
 }
 
 bool mouse_pressed;
@@ -714,7 +714,7 @@ static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
 ///
 void Editor:: CursorPos(double x, double y) {
      if (mouse_pressed){
-      camera->SetLastMousePos(x,y);
+      //camera->SetLastMousePos(x,y);
       mouse_pressed = false;
     }
     if (rotatecam){
@@ -947,7 +947,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void Editor::scroll(double xoffset, double yoffset)
 {
 
-  camera->MoveFwd(yoffset*0.1);
+  //camera->MoveFwd(yoffset*0.1);
 }
 
 
@@ -1058,7 +1058,7 @@ int Editor::Init(){
   Vector3f Target(-0.5f, -0.5f, 1.0f);
   Vector3f Up(0.0, 1.0f, 0.0f);
 
-  camera = new Camera(SCR_WIDTH, SCR_HEIGHT, Pos, Target, Up);
+  //camera = new Camera(SCR_WIDTH, SCR_HEIGHT, Pos, Target, Up);
 
   Pipeline p;
   m_persProjInfo.FOV    = 60.0f;
@@ -1267,10 +1267,10 @@ void Editor::PickingPhase() {
   
   //THis can be done once, even scale
   Pipeline pn;
-  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  pn.SetPerspectiveProj(m_persProjInfo);
-  Matrix4f proj = pn.GetProjTrans();
-  glm::mat4 ptest = Matrix4fToGLM(proj);
+  // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  // pn.SetPerspectiveProj(m_persProjInfo);
+  // Matrix4f proj = pn.GetProjTrans();
+  // glm::mat4 ptest = Matrix4fToGLM(proj);
   
       
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1344,10 +1344,10 @@ void Editor::RenderPhase(){
   Pipeline pip;
 
   Pipeline pn;
-  pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  pn.SetPerspectiveProj(m_persProjInfo);
-  Matrix4f proj = pn.GetProjTrans();
-  glm::mat4 ptest = Matrix4fToGLM(proj);
+  // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+  // pn.SetPerspectiveProj(m_persProjInfo);
+  // Matrix4f proj = pn.GetProjTrans();
+  // glm::mat4 ptest = Matrix4fToGLM(proj);
   // render
   // ------
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
@@ -1416,7 +1416,7 @@ void Editor::RenderPhase(){
       
       //glm::mat4 mat = ptest * transback * view * model;
     
-      m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
       //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);   
@@ -1507,11 +1507,6 @@ void Editor::Run(){
   float dt = 1./60.;
   while (!glfwWindowShouldClose(window)) {
       CalcFPS();
-
-      
-
-      
-      camera->OnRender();
       
       processInput(window);
       

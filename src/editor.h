@@ -143,7 +143,7 @@ protected:
   TextRenderer *m_Text;
 
 
-  Camera *camera;
+  //Camera *camera;
   PersProjInfo m_persProjInfo;
 
   GLuint gWVPLocation;
