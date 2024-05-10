@@ -1,17 +1,19 @@
 #include "Mesh.h"
 #include "Node.h"
 
-Mesh::addBoxLength(const int L[3]){
+Mesh::addBoxLength(const double &L[3], const double &V[3], double r){
     Node Xp;
+    
     int p, nnodz;
     int nel[3];
-  
-    // if (L.z > 0.0) m_dim = 3;
+    int m_dim = 2;
+    
+    if (L[2] > 0.0) m_dim = 3;
     
     
-    // nel[0] = (int)(L.x/(2.0*r));
-    // nel[1] = (int)(L.y/(2.0*r));
-    // cout << "Nel x: "<<nel[0]<<", y "<<nel[1]<<endl;
+    nel[0] = (int)(L[0]/(2.0*r));
+    nel[1] = (int)(L[1]/(2.0*r));
+    cout << "Nel x: "<<nel[0]<<", y "<<nel[1]<<endl;
     
     // m_gp_count = 1;
     // if (m_dim == 2){
@@ -25,13 +27,13 @@ Mesh::addBoxLength(const int L[3]){
     // }
     
 
-    // Xp.z = V.z ;
+    Xp[2] = V[2] ;
     
 
     // // write (*,*) "Creating Mesh ...", "Elements ", neL.y, ", ",neL.z
-  // int nc = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
-  // int ne = nel[0]*nel[1]*nel[2];
-  // cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
+  int nc = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
+  int ne = nel[0]*nel[1]*nel[2];
+  cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
   
   // //thisAllocateNodes((nel[0] +1) * (nel[1]+1) * (nel[2]+1));
     // // print *, "Element count in XYZ: ", nel(:)
@@ -53,14 +55,14 @@ Mesh::addBoxLength(const int L[3]){
     // for (int k = 0; k < (nel[2] +1);k++) {
       // Xp.y = V.y;
       // for (int j = 0; j < (nel[1] +1);j++){
-        // Xp.x = V.x;
+        // Xp[0] = V[0];
         // for (int i = 0; i < (nel[0] +1);i++){
 					// //m_node.push_back(new Node(Xp));
 					// x_H[p] = Xp;
           // //nod%x(p,:) = Xp(:);
-          // cout << "node " << p <<"X: "<<Xp.x<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
+          // cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
           // p++;
-          // Xp.x = Xp.x + 2.0 * r;
+          // Xp[0] = Xp[0] + 2.0 * r;
         // }
         // Xp.y = Xp.y + 2.0 * r;
       // }// 
