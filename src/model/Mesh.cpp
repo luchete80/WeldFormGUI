@@ -1,11 +1,10 @@
 #include "Mesh.h"
 #include "Node.h"
 
-Mesh::addBoxLength(){
+Mesh::addBoxLength(const int L[3]){
     Node Xp;
-    // int p, nnodz;
-
-    // int nel[3];
+    int p, nnodz;
+    int nel[3];
   
     // if (L.z > 0.0) m_dim = 3;
     
