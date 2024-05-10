@@ -954,7 +954,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void Editor::scroll(double xoffset, double yoffset)
 {
   zcam +=0.01*yoffset;
-  cout << "zcam "<<zcam<<endl;
   //camera->MoveFwd(yoffset*0.1);
 }
 
