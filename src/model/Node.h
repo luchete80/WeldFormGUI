@@ -9,10 +9,11 @@ public:
   Node(const double &x, const double &y, const double &z){
     
   }  
-  operator[](const int &i){return x[i];}
+  operator[](const int &i){return m_x[i];}
 
 protected:
-  double x[3];
+  double  m_x[3];
+  int     m_id;
 };
 
 #endif

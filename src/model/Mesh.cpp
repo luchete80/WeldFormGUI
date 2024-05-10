@@ -31,10 +31,10 @@ Mesh::addBoxLength(const double &L[3], const double &V[3], double r){
     
 
     // // write (*,*) "Creating Mesh ...", "Elements ", neL.y, ", ",neL.z
-  int nc = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
-  int ne = nel[0]*nel[1]*nel[2];
+  m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
+  m_elem_count = nel[0]*nel[1]*nel[2];
   cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
-  
+
   // //thisAllocateNodes((nel[0] +1) * (nel[1]+1) * (nel[2]+1));
     // // print *, "Element count in XYZ: ", nel(:)
     // // write (*,*) "Box Node count ", node_count
@@ -50,98 +50,98 @@ Mesh::addBoxLength(const double &L[3], const double &V[3], double r){
 	// //int size = dom.Particles.size() * sizeof(vector_t);
 	// cout << "Copying to device..."<<endl;
     
-    // cout << "Box Particle Count is " << m_node_count <<endl;
-    // p = 0;
-    // for (int k = 0; k < (nel[2] +1);k++) {
-      // Xp.y = V.y;
-      // for (int j = 0; j < (nel[1] +1);j++){
-        // Xp[0] = V[0];
-        // for (int i = 0; i < (nel[0] +1);i++){
-					// //m_node.push_back(new Node(Xp));
-					// x_H[p] = Xp;
-          // //nod%x(p,:) = Xp(:);
-          // cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
-          // p++;
-          // Xp[0] = Xp[0] + 2.0 * r;
-        // }
-        // Xp.y = Xp.y + 2.0 * r;
-      // }// 
-      // Xp.z = Xp.z + 2 * r;
+    cout << "Box Particle Count is " << m_node_count <<endl;
+    p = 0;
+    for (int k = 0; k < (nel[2] +1);k++) {
+      Xp.y = V.y;
+      for (int j = 0; j < (nel[1] +1);j++){
+        Xp[0] = V[0];
+        for (int i = 0; i < (nel[0] +1);i++){
+					//m_node.push_back(new Node(Xp));
+					x_H[p] = Xp;
+          //nod%x(p,:) = Xp(:);
+          cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
+          p++;
+          Xp[0] = Xp[0] + 2.0 * r;
+        }
+        Xp.y = Xp.y + 2.0 * r;
+      }// 
+      Xp.z = Xp.z + 2 * r;
 
-    // //cout <<"m_node size"<<m_node.size()<<endl;
-    // } 
-		// memcpy_t(this->x, x_H, sizeof(vector_t) * m_node_count);    
+    //cout <<"m_node size"<<m_node.size()<<endl;
+    } 
+		memcpy_t(this->x, x_H, sizeof(vector_t) * m_node_count);    
 
     // // !! ALLOCATE ELEMENTS
     // // !! DIMENSION = 2
-    // int gp = 1;
-    // if (m_dim == 2) {
-      // // if (redint .eqv. .False.) then
-        // // gp = 4
-      // // end if 
-      // //call AllocateElements(neL.y * neL.z,gp) !!!!REDUCED INTEGRATION
-    // } else {
-      // // if (redint .eqv. .False.) then
-        // // gp = 8
-      // // end if 
-      // // call AllocateElements(neL.y * neL.z*nel(3),gp) 
-    // }
+    int gp = 1;
+    if (m_dim == 2) {
+      // if (redint .eqv. .False.) then
+        // gp = 4
+      // end if 
+      //call AllocateElements(neL.y * neL.z,gp) !!!!REDUCED INTEGRATION
+    } else {
+      // if (redint .eqv. .False.) then
+        // gp = 8
+      // end if 
+      // call AllocateElements(neL.y * neL.z*nel(3),gp) 
+    }
 
-		// elnod_h       = new int [m_elem_count * m_nodxelem]; //Flattened
+		elnod_h       = new int [m_elem_count * m_nodxelem]; //Flattened
 
-     // int *nodel_count_h  = new int [m_node_count];
-     // int *nodel_offset_h = new int [m_node_count];
+    int *nodel_count_h  = new int [m_node_count];
+    int *nodel_offset_h = new int [m_node_count];
     
-		// int ex, ey, ez;
-		// std::vector <int> n;
-    // if (m_dim == 2) {
-			// n.resize(4);
-      // int ei = 0;
-      // for (int ey = 0; ey < nel[1];ey++){
-        // for (int ex = 0; ex < nel[0];ex++){
-        // int iv[4];
-        // elnod_h[ei  ] = (nel[0]+1)*ey + ex;        elnod_h[ei+1] = (nel[0]+1)*ey + ex+1;
-        // elnod_h[ei+2] = (nel[0]+1)*(ey+1) + ex+1;  elnod_h[ei+3] = (nel[0]+1)*(ey+1) + ex;
+		int ex, ey, ez;
+		std::vector <int> n;
+    if (m_dim == 2) {
+			n.resize(4);
+      int ei = 0;
+      for (int ey = 0; ey < nel[1];ey++){
+        for (int ex = 0; ex < nel[0];ex++){
+        int iv[4];
+        elnod_h[ei  ] = (nel[0]+1)*ey + ex;        elnod_h[ei+1] = (nel[0]+1)*ey + ex+1;
+        elnod_h[ei+2] = (nel[0]+1)*(ey+1) + ex+1;  elnod_h[ei+3] = (nel[0]+1)*(ey+1) + ex;
 			
-				 // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
-					// cout << "Nel x : "<<nel[0]<<endl;
-					// cout << "nodes "<<endl;
-					// ei += m_nodxelem;
-					 // }
-      // } 
-    // } else { //dim: 3
-      // int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
-      // int nnodz = (nel[0]+1)*(nel[1]+1);
-      // for (int ez = 0; ez < nel[2];ez++)
-      // for (int ey = 0; ey < nel[1];ey++){
-        // for (int ex = 0; ex < nel[0];ex++){
+				 for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
+					cout << "Nel x : "<<nel[0]<<endl;
+					cout << "nodes "<<endl;
+					ei += m_nodxelem;
+					 }
+      } 
+    } else { //dim: 3
+      int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
+      int nnodz = (nel[0]+1)*(nel[1]+1);
+      for (int ez = 0; ez < nel[2];ez++)
+      for (int ey = 0; ey < nel[1];ey++){
+        for (int ex = 0; ex < nel[0];ex++){
           
-          // int iv[8];
-          // int nb1 = nnodz*ez + (nel[0]+1)*ey + ex;
-          // int nb2 = nnodz*ez + (nel[0]+1)*(ey+1) + ex;
+          int iv[8];
+          int nb1 = nnodz*ez + (nel[0]+1)*ey + ex;
+          int nb2 = nnodz*ez + (nel[0]+1)*(ey+1) + ex;
           
-          // elnod_h[ei  ] = nb1;                      nodel_count_h[nb1  ] ++;          
-          // elnod_h[ei+1] = nb1+1;                    nodel_count_h[nb1+1] ++;
-          // elnod_h[ei+2] = nb2+1;                    nodel_count_h[nb2+1] ++;
-          // elnod_h[ei+3] = nb2;                      nodel_count_h[nb2  ] ++;
+          elnod_h[ei  ] = nb1;                      nodel_count_h[nb1  ] ++;          
+          elnod_h[ei+1] = nb1+1;                    nodel_count_h[nb1+1] ++;
+          elnod_h[ei+2] = nb2+1;                    nodel_count_h[nb2+1] ++;
+          elnod_h[ei+3] = nb2;                      nodel_count_h[nb2  ] ++;
           
-          // elnod_h[ei+4] = nb1 + nnodz*(ez+1);       nodel_count_h[nb1 + nnodz*(ez+1)    ]++;   
-          // elnod_h[ei+5] = nb1 + nnodz*(ez+1) + 1;   nodel_count_h[nb1 + nnodz*(ez+1) + 1]++;  
-          // elnod_h[ei+6] = nb2 + nnodz*(ez+1) + 1;   nodel_count_h[nb2 + nnodz*(ez+1) + 1]++;  
-          // elnod_h[ei+7] = nb2 + nnodz*(ez+1);       nodel_count_h[nb2 + nnodz*(ez+1)    ]++;  
+          elnod_h[ei+4] = nb1 + nnodz*(ez+1);       nodel_count_h[nb1 + nnodz*(ez+1)    ]++;   
+          elnod_h[ei+5] = nb1 + nnodz*(ez+1) + 1;   nodel_count_h[nb1 + nnodz*(ez+1) + 1]++;  
+          elnod_h[ei+6] = nb2 + nnodz*(ez+1) + 1;   nodel_count_h[nb2 + nnodz*(ez+1) + 1]++;  
+          elnod_h[ei+7] = nb2 + nnodz*(ez+1);       nodel_count_h[nb2 + nnodz*(ez+1)    ]++;  
           
-          // for (int i=0;i<8;i++)
-            // cout << elnod_h[ei + i]<<", ";
-          // cout <<endl;
+          for (int i=0;i<8;i++)
+            cout << elnod_h[ei + i]<<", ";
+          cout <<endl;
 
-            // cout << "Nel x : "<<nel[0]<<endl;
-           // cout << "nodes "<<endl;
+            cout << "Nel x : "<<nel[0]<<endl;
+           cout << "nodes "<<endl;
            
-           // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
-           // ei += m_nodxelem;
+           for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
+           ei += m_nodxelem;
 
-					 // }
-      // } 
+					 }
+      } 
 
 		// }//if dim 
 
@@ -153,13 +153,13 @@ Mesh::addBoxLength(const double &L[3], const double &V[3], double r){
     // malloc_t(m_jacob, Matrix, m_elem_count );
     
     // //////////////////// ELEMENT SHARED BY NODES (FOR PARALLEL NODAL MODE ASSEMBLY) ///////////////////////////////
-    // int nodel_tot = 0;
-    // for (int n=0;n<m_node_count;n++){
-      // nodel_offset_h[n] = nodel_tot;
-      // nodel_tot        += nodel_count_h[n];
-      // cout << "Node "<< n << " Shared elements: "<<nodel_count_h[n]<<endl;
+    int nodel_tot = 0;
+    for (int n=0;n<m_node_count;n++){
+      nodel_offset_h[n] = nodel_tot;
+      nodel_tot        += nodel_count_h[n];
+      cout << "Node "<< n << " Shared elements: "<<nodel_count_h[n]<<endl;
 
-    // }
+    }
     // cout << "Size of Nodal shared Elements vector "<< nodel_tot<<endl;
 		// int *nodel_h       = new int [nodel_tot];          //ASSUMED EACH NODE SHARES 8 ELEMENT
     // int *nodel_loc_h   = new int [nodel_tot];          //ASSUMED EACH NODE SHARES 8 ELEMENT    

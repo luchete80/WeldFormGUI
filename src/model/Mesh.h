@@ -9,6 +9,8 @@ public:
   void addNode();
   void addBoxLength();
 protected:
+  int m_node_count;
+  int m_elem_count;
   std::vector <Node*>    m_node;
   std::vector <Element*> m_elem;
 

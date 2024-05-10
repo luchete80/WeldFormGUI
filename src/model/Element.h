@@ -5,7 +5,7 @@ class Element {
 public:
   Element(){}
 protected:
-  std::vector<Node*> m_node;
+  std::vector<Node*> m_node;  //Is like elnod
   m_nodecount;
 };
 
