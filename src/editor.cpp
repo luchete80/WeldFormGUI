@@ -29,6 +29,8 @@ using namespace SPH;
 
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 
+float zcam;
+
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -951,7 +953,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void Editor::scroll(double xoffset, double yoffset)
 {
-
+  zcam +=0.01*yoffset;
+  cout << "zcam "<<zcam<<endl;
   //camera->MoveFwd(yoffset*0.1);
 }
 
@@ -1308,7 +1311,7 @@ void Editor::PickingPhase() {
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
       glm::mat4 transback = glm::mat4(1.0f);
-      //transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
+      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
       glm::mat4 mat = projection * transback * view * model;
       //glm::mat4 mat = ptest * transback * view * model;
@@ -1413,7 +1416,7 @@ void Editor::RenderPhase(){
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
       
       glm::mat4 transback = glm::mat4(1.0f);
-      //transback = glm::translate(transback, glm::vec3(m_domain_center.x,m_domain_center.x,m_domain_center.z));
+      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
       glm::mat4 mat = projection * transback * view * model;
 
@@ -1563,6 +1566,7 @@ int Editor::Terminate(){
 }
 int main()
 {
+  zcam = 0.0;
     cout << "Creating editor"<<endl;  
     editor = new Editor();
     cout << "done."<<endl;
