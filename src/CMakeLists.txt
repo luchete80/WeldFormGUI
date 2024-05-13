@@ -28,6 +28,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/common")
 link_directories ("${GLFW_BINARY_DIR}/src")
 
 add_subdirectory("graphics")
+add_subdirectory("model")
 
 # add_executable(editor 	
 							# #camera_system.cpp

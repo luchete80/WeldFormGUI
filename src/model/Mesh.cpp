@@ -1,7 +1,8 @@
 #include "Mesh.h"
 #include "Node.h"
 
-Mesh::addBoxLength(const double &L[3], const double &V[3], double r){
+// #include <glm/gtc/matrix_transform.hpp>
+Mesh::addBoxLength(Vector L[3], const double &V[3], double r){
     Node Xp;
     
     int p, nnodz;
