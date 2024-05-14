@@ -1699,8 +1699,7 @@ bool Editor::LoadSphere(){
 							   
 	int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
   int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
-	// int vcount    = sizeof(vertices)/(3*sizeof(float));
-  // int indcount  = sizeof(indices)/sizeof(unsigned int);
+
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
   

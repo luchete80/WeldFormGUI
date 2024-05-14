@@ -16,6 +16,8 @@ public:
   Mesh();
   void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
+  const int & getNodeCount()const {return m_node_count;}
+  Node* getNode(const int &i){return m_node[i];} 
 protected:
   int m_node_count;
   int m_elem_count;

@@ -1,6 +1,8 @@
 #include "gMesh.h"
 #include "Mesh.h"
 #include "common/math/math.h" //float Vector2 and 3f
+#include <iostream>
+#include "Node.h"
 
 gMesh::gMesh(Mesh* msh){
   m_msh = msh;
@@ -8,12 +10,7 @@ gMesh::gMesh(Mesh* msh){
 	//// 2 3
 	//// 0 1
 	/////////
-	Vector3f apos[4] ={	
-						Vector3f(-PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
-						Vector3f(-PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.),
-						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
-						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
-						
+			
 
 	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
                       Vector2f(1.0f, 0.0f),
@@ -35,8 +32,8 @@ gMesh::gMesh(Mesh* msh){
 	vector <unsigned int > vind(indcount); //2 triangles
   
 	for (int i=0;i<vcount;i++){
-    Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
-		vpos[i]	= vert * 0.01;
+    //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+		vpos[i]	= msh->getNode(i)->getPos();
     //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
