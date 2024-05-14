@@ -528,10 +528,12 @@ IMGUI_DEMO_MARKER("Configuration");
             static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
             ImGui::InputFloat3("input float3", vec4a);
             
-            double radius = 0.01;
-            ImGui::InputDouble("Particle Radius",&radius);
+            static double radius = 0.01;
+            ImGui::InputDouble("Particle Radius",&radius); 
             if (ImGui::Button("Create")){
-              if (item_current == 2)//Plane
+             cout << "radius "<<radius<<endl;
+             cout << "size 0"<<size[0]<<endl;
+            if (item_current == 2)//Plane
                 cout << "PLANE!"<<endl;
               double L = 0.5;
               double H = 0.5;
@@ -540,7 +542,7 @@ IMGUI_DEMO_MARKER("Configuration");
               double h = 1.2*radius;
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               if (item_current == 2)//Plane
-              size[2] = 0.0;
+                size[2] = 0.0;
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
               calcDomainCenter();
               cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;

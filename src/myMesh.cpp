@@ -331,12 +331,13 @@ void myMesh::Render() {
             m_Textures[MaterialIndex]->Bind(COLOR_TEXTURE_UNIT);
         }
 
+        //IF FULL 
         glDrawElementsBaseVertex(GL_TRIANGLES, 
                          m_Entries[i].NumIndices, 
                          GL_UNSIGNED_INT, 
                          (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
                          m_Entries[i].BaseVertex);
-
+        //IF WIREFRANME
         glDrawElementsBaseVertex(GL_LINES, 
                          m_Entries[i].NumIndices, 
                          GL_UNSIGNED_INT, 
