@@ -12,8 +12,8 @@ class Model {
 public:
   Model(){}
 protected:
-  std::vector <Part*> m_part;
-  std::vector <Material*> m_mat;  
+  std::vector <Part*>       m_part;
+  std::vector <Material*>   m_mat;  
 };
 
 #endif

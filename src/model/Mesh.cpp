@@ -5,7 +5,7 @@
 
 // #include <glm/gtc/matrix_transform.hpp>
 void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
-    Node Xp;
+    Vector3f Xp;
     
     int p, nnodz;
     int nel[3];
@@ -35,9 +35,9 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
     
 
     // // // write (*,*) "Creating Mesh ...", "Elements ", neL.y, ", ",neL.z
-  // m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
-  // m_elem_count = nel[0]*nel[1]*nel[2];
-  // cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
+  m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
+  m_elem_count = nel[0]*nel[1]*nel[2];
+  cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
 
   // // //thisAllocateNodes((nel[0] +1) * (nel[1]+1) * (nel[2]+1));
     // // // print *, "Element count in XYZ: ", nel(:)
@@ -56,22 +56,24 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
     
     // cout << "Box Particle Count is " << m_node_count <<endl;
     // p = 0;
-    // for (int k = 0; k < (nel[2] +1);k++) {
-      // Xp.y = V.y;
-      // for (int j = 0; j < (nel[1] +1);j++){
-        // Xp[0] = V[0];
-        // for (int i = 0; i < (nel[0] +1);i++){
-					// //m_node.push_back(new Node(Xp));
-					// x_H[p] = Xp;
-          // //nod%x(p,:) = Xp(:);
-          // cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
-          // p++;
-          // Xp[0] = Xp[0] + 2.0 * r;
-        // }
-        // Xp.y = Xp.y + 2.0 * r;
-      // }// 
+    
+    //for (int k = 0; k < (nel[2] +1);k++) {
+      Xp.y= V.y;
+      for (int j = 0; j < (nel[1] +1);j++){
+        Xp.x = V.x;
+        for (int i = 0; i < (nel[0] +1);i++){
+					//m_node.push_back(new Node(Xp));
+					//x_H[p] = Xp;
+          //nod%x(p,:) = Xp(:);
+          cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
+          m_node.push_back(new Node(Xp.x,Xp.y,0.0));
+          p++;
+          Xp.x += 2.0 * r;
+        }
+        Xp.y += 2.0 * r;
+      }// 
       // Xp.z = Xp.z + 2 * r;
-
+    //}
     // //cout <<"m_node size"<<m_node.size()<<endl;
     // } 
 		// memcpy_t(this->x, x_H, sizeof(vector_t) * m_node_count);    
@@ -91,29 +93,32 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
       // // call AllocateElements(neL.y * neL.z*nel(3),gp) 
     // }
 
-		// elnod_h       = new int [m_elem_count * m_nodxelem]; //Flattened
+		//int *elnod_h       = new int [m_elem_count * m_nodxelem]; //Flattened
 
     // int *nodel_count_h  = new int [m_node_count];
     // int *nodel_offset_h = new int [m_node_count];
     
-		// int ex, ey, ez;
-		// std::vector <int> n;
-    // if (m_dim == 2) {
-			// n.resize(4);
-      // int ei = 0;
-      // for (int ey = 0; ey < nel[1];ey++){
-        // for (int ex = 0; ex < nel[0];ex++){
-        // int iv[4];
-        // elnod_h[ei  ] = (nel[0]+1)*ey + ex;        elnod_h[ei+1] = (nel[0]+1)*ey + ex+1;
-        // elnod_h[ei+2] = (nel[0]+1)*(ey+1) + ex+1;  elnod_h[ei+3] = (nel[0]+1)*(ey+1) + ex;
-			
+		int ex, ey, ez;
+		std::vector <Node*> n;
+    if (m_dim == 2) {
+			n.resize(4);
+      int ei = 0;
+      for (int ey = 0; ey < nel[1];ey++){
+        for (int ex = 0; ex < nel[0];ex++){
+        int iv[4];
+        //elnod_h[ei  ] = (nel[0]+1)*ey + ex;        elnod_h[ei+1] = (nel[0]+1)*ey + ex+1;
+        //elnod_h[ei+2] = (nel[0]+1)*(ey+1) + ex+1;  elnod_h[ei+3] = (nel[0]+1)*(ey+1) + ex;
+
+        n[0] = m_node[(nel[0]+1)*ey + ex];        n[1] = m_node[(nel[0]+1)*ey + ex+1];
+        n[2] = m_node[(nel[0]+1)*(ey+1) + ex+1];  n[3] = m_node[(nel[0]+1)*(ey+1) + ex];
+        m_elem.push_back(new Quad(n));
 				 // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
 					// cout << "Nel x : "<<nel[0]<<endl;
 					// cout << "nodes "<<endl;
 					// ei += m_nodxelem;
-					 // }
-      // } 
-    // } else { //dim: 3
+					}
+       } 
+    } else { //dim: 3
       // int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
       // int nnodz = (nel[0]+1)*(nel[1]+1);
       // for (int ez = 0; ez < nel[2];ez++)
@@ -147,7 +152,7 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
 					 // }
       // } 
 
-		// // }//if dim 
+		}//if dim 
 
     // // //cudaMalloc((void **)&m_elnod, m_elem_count * m_nodxelem * sizeof (int));	
     // // malloc_t(m_elnod, unsigned int, m_elem_count * m_nodxelem);
