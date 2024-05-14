@@ -68,8 +68,8 @@ add_library(basic_lighting ogldev_basic_lighting.cpp
 add_library(shadow_map_fbo #SHARED 
 							ogldev_shadow_map_fbo.cpp)
 
-add_library(app  ogldev_app.cpp)
-target_link_libraries(app util)
+# add_library(app  ogldev_app.cpp)
+# target_link_libraries(app util)
 
 link_directories ("D:/Luciano/Libs/freeglut-mingw/lib/x64")
 # add_library(atb SHARED ogldev_atb.cpp)

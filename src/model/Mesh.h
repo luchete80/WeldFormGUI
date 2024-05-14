@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
+#include "common/math/math.h"
 
 class Element;
 class Node;
@@ -11,7 +12,7 @@ class Mesh{
 public:
   Mesh();
   void addNode();
-  void addBoxLength(Vector L[3], const double &V[3], double r);
+  void addBoxLength(Vector3f L, Vector3f V, double r);
 protected:
   int m_node_count;
   int m_elem_count;
