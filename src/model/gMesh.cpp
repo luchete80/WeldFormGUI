@@ -19,11 +19,12 @@ gMesh::gMesh(Mesh* msh){
 
 	unsigned int aind[] = { 0, 1, 2,
 							1, 3, 2};
-							   
-	int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
-  int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
-	// int vcount    = sizeof(vertices)/(3*sizeof(float));
-  // int indcount  = sizeof(indices)/sizeof(unsigned int);
+	
+  int vcount    = msh->getNodeCount();
+	//int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
+  //int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+  int indcount  = msh->getElemCount();
+  
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
   
@@ -39,7 +40,8 @@ gMesh::gMesh(Mesh* msh){
 		//vtex[i]	=atex[i];
 	}
   for (int i=0;i<indcount;i++){
-    vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+    //REPLACE WITH ELEMENT INDICES
+    //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
   
   int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
