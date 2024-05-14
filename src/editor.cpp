@@ -493,13 +493,13 @@ IMGUI_DEMO_MARKER("Configuration");
     } //MODEL TREE
     
     if (ImGui::CollapsingHeader("New Domain")){
-
+      static int item_current = 0;
       {
           // Using the _simplified_ one-liner Combo() api here
           // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
           IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
           const char* items[] = { "Box", "Cylinder", "Plane"};
-          static int item_current = 0;
+          
           ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
           ImGui::SameLine(); HelpMarker(
               "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
@@ -531,12 +531,16 @@ IMGUI_DEMO_MARKER("Configuration");
             double radius = 0.01;
             ImGui::InputDouble("Particle Radius",&radius);
             if (ImGui::Button("Create")){
+              if (item_current == 2)//Plane
+                cout << "PLANE!"<<endl;
               double L = 0.5;
               double H = 0.5;
               m_dx = 0.05;
               double rho = 1.;
               double h = 1.2*radius;
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
+              if (item_current == 2)//Plane
+              size[2] = 0.0;
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
               calcDomainCenter();
               cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;

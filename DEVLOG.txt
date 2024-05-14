@@ -13,4 +13,9 @@
 20230817 - Added material creation and begining to Edit
 20230818 - Changed Camera from airplane useless one to trackball (Error with box select now)
 20230819 - Fixed single select  particles recognition now
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+20240514 - Begining to add FEM mesh.
+         - Fixed 2D plane in particles
+         
          

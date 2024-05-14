@@ -86,7 +86,9 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
 		
 		//For new SOA accessing
 		std::vector <Vec3_t> x_sta;
-
+    
+    if (Lz < h) Dimension = 2;
+    
     if (Dimension==3) {
     	if (type==0) {
     		//Hexagonal close packing
