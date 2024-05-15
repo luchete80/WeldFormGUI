@@ -11,6 +11,8 @@
 //LIKE IN BULLET3
 struct GraphicsInstance
 {
+  unsigned int m_VAO, m_EBO, m_VBO;
+  
 	unsigned int m_cube_vao;
 	unsigned int m_index_vbo;
 	unsigned int m_textureIndex;

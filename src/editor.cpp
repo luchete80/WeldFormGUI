@@ -560,7 +560,7 @@ IMGUI_DEMO_MARKER("Configuration");
             
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
-              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),0.01);
+              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),0.05);
               m_fem_gmsh = new gMesh(m_fem_msh);
               is_fem_mesh = true;
             }
@@ -1280,7 +1280,7 @@ int Editor::Init(){
 
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
-}
+}//Editor::Init()
 
 
 void Editor::PickingPhase() {
@@ -1359,43 +1359,6 @@ void Editor::PickingPhase() {
       //}
     }
     
-    if (is_fem_mesh)
-    {
-      Vector3f pos(0.0,0.0,0.0); //ORTHO
-      glm::mat4 model = glm::mat4(1.0f);
-
-      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-      //model = glm::scale(model, glm::vec3(h,h,h));         
-      
-      glm::mat4 projection(1.0);
-      //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
-      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-      // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
-        // 600.0f / 2.0f, -(600.0f / 2.0f), 
-      // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
-      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-      view = glm::translate(view, arcCamera->position);// this, too.  
-      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
-      
-      glm::mat4 transback = glm::mat4(1.0f);
-      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
-
-      glm::mat4 mat = projection * transback * view * model;
-      //glm::mat4 mat = ptest * transback * view * model;
-      
-      
-      pn.WorldPos(pos);   
-      Matrix4f m = pn.GetWVPTrans();
-
-      //m_pickingEffect.SetObjectIndex((p+1));
-
-
-      m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE       
-      m_fem_gmsh->Render();
-      
-    }
-
-
     
     //glUseProgram(0);
 
@@ -1520,7 +1483,39 @@ void Editor::RenderPhase(){
       m_sphere_mesh.Render();
     }
 
+    if (is_fem_mesh)
+    {
+      Vector3f pos(0.0,0.0,0.0); //ORTHO
+      glm::mat4 model = glm::mat4(1.0f);
 
+      //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+           
+      
+      glm::mat4 projection(1.0);
+
+      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+      glm::mat4 mat = projection /** transback */ * view * model;
+
+      
+      
+      pn.WorldPos(pos);   
+      Matrix4f m = pn.GetWVPTrans();
+
+      //m_pickingEffect.SetObjectIndex((p+1));
+
+
+      m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE       
+      m_fem_gmsh->Render();
+      
+    }
     // glUseProgram(shaderProgram);
     // // //////////////// RENDER TEST ///
     // //pn.Scale(h, h,);  

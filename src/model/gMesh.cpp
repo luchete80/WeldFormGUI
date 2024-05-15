@@ -36,6 +36,7 @@ gMesh::gMesh(Mesh* msh){
 	for (int i=0;i<vcount;i++){
     //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
 		vpos[i]	= msh->getNodePos(i);
+    cout << "node pos "<<vpos[i].x<<"; "<<vpos[i].y<<", "<<vpos[i].z<<endl;
     //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
@@ -44,8 +45,10 @@ gMesh::gMesh(Mesh* msh){
   cout << "Creating indices"<<endl;
   for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
-    for (int j=0;j<3;j++)
+    for (int j=0;j<3;j++){
       vind[i] = msh->getElem(i)->getNodeId(j);
+      cout << "elem ind "<<msh->getElem(i)->getNodeId(j)<<endl;
+    }
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
   
@@ -69,11 +72,24 @@ gMesh::gMesh(Mesh* msh){
     Vector3f v2 = r2-r0;
     Vector3f vnn = (v1.Cross(v2)).Normalize();
     for (int l=0;l<3;l++) {vnprom[vind[3*e+l]]+=vnn;}
+    
+    //TEST
+    for (int l=0;l<3;l++) {vnprom[vind[3*e+l]] = 0.0;}
+    vnprom[e].z = -1.0;
   }
   
-  cout << "Normals"<<endl;
-  for (int i=0;i<vcount;i++){
-    vnprom[i].Normalize();
-    cout << vnprom[i].x<< ", "<<vnprom[i].y<<", "<<vnprom[i].z<<endl;
-  }
+  // cout << "Normals"<<endl;
+  // for (int i=0;i<vcount;i++){
+    // vnprom[i].Normalize();
+    // cout << vnprom[i].x<< ", "<<vnprom[i].y<<", "<<vnprom[i].z<<endl;
+  // }
+  string texfile = "test.txt";
+  cout << "Generating FEM mesh..."<<endl;
+	if (!LoadMesh(vpos, vnprom, vtex,vind,texfile)) {
+		std::cout<<"Mesh load failed"<<endl;
+		printf("Mesh load failed\n");
+
+		
+	}
+
 }
