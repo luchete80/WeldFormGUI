@@ -23,7 +23,7 @@ gMesh::gMesh(Mesh* msh){
   int vcount    = msh->getNodeCount();
 	//int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
   //int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
-  int indcount  = msh->getElemCount();
+  int indcount  = msh->getElemCount()*3;
   
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
@@ -34,13 +34,15 @@ gMesh::gMesh(Mesh* msh){
   
 	for (int i=0;i<vcount;i++){
     //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
-		vpos[i]	= msh->getNode(i)->getPos();
+		vpos[i]	= msh->getNodePos(i);
     //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
 	}
   for (int i=0;i<indcount;i++){
     //REPLACE WITH ELEMENT INDICES
+    for (int j=0;j<3;j++)
+      vind[i] = msh->getElem(i)->getNodeId(j);
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
   
@@ -51,9 +53,14 @@ gMesh::gMesh(Mesh* msh){
     int i = vind[3*e]; //Element First node
     int j = vind[3*e+1];
     int k = vind[3*e+2];
-    Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
-    Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
-    Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+    // Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+    // Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
+    // Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+
+    Vector3f r0(vpos[i]);
+    Vector3f r1(vpos[j]);
+    Vector3f r2(vpos[k]);
+
     Vector3f v1 = r1-r0;
     Vector3f v2 = r2-r0;
     Vector3f vnn = (v1.Cross(v2)).Normalize();

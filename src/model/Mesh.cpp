@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+const Vector3f& Mesh::getNodePos(const int &i)const{
+  return m_node[i]->getPos();
+}
+  
 // #include <glm/gtc/matrix_transform.hpp>
 void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
     Vector3f Xp;
@@ -55,7 +59,7 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
 	// // cout << "Copying to device..."<<endl;
     
     // cout << "Box Particle Count is " << m_node_count <<endl;
-    // p = 0;
+    p = 0;
     
     //for (int k = 0; k < (nel[2] +1);k++) {
       Xp.y= V.y;
@@ -66,7 +70,7 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
 					//x_H[p] = Xp;
           //nod%x(p,:) = Xp(:);
           cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
-          m_node.push_back(new Node(Xp.x,Xp.y,0.0));
+          m_node.push_back(new Node(Xp.x,Xp.y,0.0,p));
           p++;
           Xp.x += 2.0 * r;
         }

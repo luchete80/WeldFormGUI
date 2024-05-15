@@ -18,7 +18,10 @@ public:
   void addBoxLength(Vector3f L, Vector3f V, double r);
   const int & getNodeCount()const {return m_node_count;}
   const int & getElemCount()const {return m_elem_count;}
-  Node* getNode(const int &i){return m_node[i];} 
+  Node*     getNode(const int &i){return m_node[i];} 
+  Element*  getElem(const int &i){return m_elem[i];} 
+  
+  const Vector3f& getNodePos(const int &i)const;
 protected:
   int m_node_count;
   int m_elem_count;

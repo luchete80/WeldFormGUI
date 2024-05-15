@@ -6,6 +6,7 @@ class Node;
 class Element {
 public:
   Element(){}
+  const int & getNodeId(const int &i)const;
 protected:
   std::vector<Node*> m_node;  //Is like elnod
   int m_nodecount;
