@@ -469,7 +469,7 @@ Renderer::addMesh(Mesh* msh){
     
     //TEST
     for (int l=0;l<3;l++) {vnprom[vind[3*e+l]] = 0.0;}
-    vnprom[e].z = -1.0;
+    vnprom[e].z = 1.0;
   }
   
   // cout << "Normals"<<endl;

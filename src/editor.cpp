@@ -1334,7 +1334,7 @@ void Editor::PickingPhase() {
       // pn.WorldPos(pos);   
       // Matrix4f m = pn.GetWVPTrans();
 
-      // //m_pickingEffect.SetObjectIndex((p+1));
+      // m_pickingEffect.SetObjectIndex((p));///HERE IS THE P
 
 
       // m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
@@ -1344,7 +1344,7 @@ void Editor::PickingPhase() {
       // //}
     // }    
     
-    //glUseProgram(0);
+    glUseProgram(0);
 
   m_pickingTexture.DisableWriting();
 
