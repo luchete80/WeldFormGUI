@@ -2,6 +2,7 @@
 
 #include "myMesh.h"
 #include "ogldev_engine_common.h"
+#include "model/Mesh.h"
 
 using namespace std;
 
@@ -13,20 +14,20 @@ using namespace std;
 #include <iostream>
 using namespace std;
 
-myMesh::myMesh()
+Renderer::Renderer()
 {
     m_VAO = 0;
     ZERO_MEM(m_Buffers);
 }
 
 
-myMesh::~myMesh()
+Renderer::~Renderer()
 {
     Clear();
 }
 
 
-void myMesh::Clear()
+void Renderer::Clear()
 {
     for (unsigned int i = 0 ; i < m_Textures.size() ; i++) {
         SAFE_DELETE(m_Textures[i]);
@@ -43,7 +44,7 @@ void myMesh::Clear()
 }
 
 
-bool myMesh::LoadMesh(const string& Filename)
+bool Renderer::LoadMesh(const string& Filename)
 {
     // // Release the previously loaded mesh (if it exists)
     // Clear();
@@ -76,7 +77,7 @@ bool myMesh::LoadMesh(const string& Filename)
 //////////////////////
 ////// LUCIANO
 ////// THIS IS SIMILAR TO OGLDEV LOAD MESH FROM ASSIMP BUT IS WITH A VERTEX LIST
-bool myMesh::LoadMesh(    vector<Vector3f> Positions,
+bool Renderer::LoadMesh(    vector<Vector3f> Positions,
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
     vector<unsigned int> Indices,
@@ -100,10 +101,10 @@ bool myMesh::LoadMesh(    vector<Vector3f> Positions,
     
     // Count the number of vertices and indices
     //for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
-	m_Entries[0].MaterialIndex = 0;        
-	m_Entries[0].NumIndices = Indices.size();
-	m_Entries[0].BaseVertex = 0;
-	m_Entries[0].BaseIndex = 0;
+    m_Entries[0].MaterialIndex = 0;        
+    m_Entries[0].NumIndices = Indices.size();
+    m_Entries[0].BaseVertex = 0;
+    m_Entries[0].BaseIndex = 0;
 	
 		
 	cout << "Loading material"<<endl;
@@ -118,7 +119,7 @@ bool myMesh::LoadMesh(    vector<Vector3f> Positions,
 	return true;
 }
 
-// bool myMesh::InitFromScene(const aiScene* pScene, const string& Filename)
+// bool Renderer::InitFromScene(const aiScene* pScene, const string& Filename)
 // {  
     // m_Entries.resize(pScene->mNumMeshes);
     // cout << "Num meshes: "<<pScene->mNumMeshes<<endl;
@@ -162,7 +163,7 @@ bool myMesh::LoadMesh(    vector<Vector3f> Positions,
 	// return GenAndBindBuffers(Positions,Normals,TexCoords,Indices);
 // }
 
-bool myMesh::GenAndBindBuffers(
+bool Renderer::GenAndBindBuffers(
     vector<Vector3f> Positions,
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
@@ -190,7 +191,7 @@ bool myMesh::GenAndBindBuffers(
 	
 }
 
-// void myMesh::InitMesh(const aiMesh* paiMesh,
+// void Renderer::InitMesh(const aiMesh* paiMesh,
                     // vector<Vector3f>& Positions,
                     // vector<Vector3f>& Normals,
                     // vector<Vector2f>& TexCoords,
@@ -219,7 +220,7 @@ bool myMesh::GenAndBindBuffers(
     // }
 // }
 
-// bool myMesh::InitMaterials(const aiScene* pScene, const string& Filename)
+// bool Renderer::InitMaterials(const aiScene* pScene, const string& Filename)
 // {
     // // Extract the directory part from the file name
     // string::size_type SlashIndex = Filename.find_last_of("/");
@@ -274,7 +275,7 @@ bool myMesh::GenAndBindBuffers(
 // }
 // TODO; REPLACE ALL THIS IN BOTH InitMaterial function with another function
 // TODO: ADD A SHADER TO THIS
-bool myMesh::InitMaterial(const string& Filename) {
+bool Renderer::InitMaterial(const string& Filename) {
     // Extract the directory part from the file name
     string::size_type SlashIndex = Filename.find_last_of("/");
     string Dir;
@@ -304,7 +305,7 @@ bool myMesh::InitMaterial(const string& Filename) {
 }
 
 
-void myMesh::Render() {
+void Renderer::Render() {
    
     glBindVertexArray(m_VAO);
 
@@ -358,7 +359,7 @@ void myMesh::Render() {
     glBindVertexArray(0);
 }
 
-void myMesh::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const Matrix4f* WorldMats)
+void Renderer::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const Matrix4f* WorldMats)
 {        
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WVP_MAT_VB]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Matrix4f) * NumInstances, WVPMats, GL_DYNAMIC_DRAW);
@@ -389,3 +390,100 @@ void myMesh::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const Ma
     glBindVertexArray(0);
 }
 
+////ADD FINITE ELEMENT MESH////
+Renderer::addMesh(Mesh* msh){
+
+    	//// VERTICES 
+	//// 2 3
+	//// 0 1
+	/////////
+			
+
+	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
+                      Vector2f(1.0f, 0.0f),
+                      Vector2f(0.0f, 1.0f),
+						Vector2f(1.0f, 1.0f)};
+
+	unsigned int aind[] = { 0, 1, 2,
+							1, 3, 2};
+	
+  int vcount    = msh->getNodeCount();
+	//int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
+  //int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+  int indcount  = msh->getElemCount()*3;
+  
+  cout << "Vertex count " << vcount << endl;
+  cout << "Index  count " << indcount << endl;
+  
+	vector <Vector3f> vpos(vcount), vnorm(vcount);
+	vector <Vector2f> vtex(vcount);
+	vector <unsigned int > vind(indcount); //2 triangles
+  
+  cout << "Creating positions"<<endl;
+	for (int i=0;i<vcount;i++){
+    //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+		vpos[i]	= msh->getNodePos(i);
+    cout << "node pos "<<vpos[i].x<<"; "<<vpos[i].y<<", "<<vpos[i].z<<endl;
+    //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
+		//vnorm[i]=vn;
+		//vtex[i]	=atex[i];
+	}
+  int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
+  cout << "Creating indices"<<endl;
+  for (int i=0;i<elemcount;i++){
+    //REPLACE WITH ELEMENT INDICES
+    for (int j=0;j<3;j++)
+      vind[3*i+j] = msh->getElem(i)->getNodeId(j);
+    
+    // vind[6*i+3] = msh->getElem(i)->getNodeId(2);
+    // vind[6*i+4] = msh->getElem(i)->getNodeId(3);
+    // vind[6*i+5] = msh->getElem(i)->getNodeId(0);
+    
+    
+    //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  }
+  
+  cout << "indices "<<endl;
+  for (int i=0;i<indcount;i++)
+    cout << vind[i]<<", ";
+  cout<<endl;
+  std::vector<Vector3f> vnprom(vcount);
+
+  for (int e=0;e<elemcount;e++){
+    cout << "elem "<<e<<endl;
+    int i = vind[3*e]; //Element First node
+    int j = vind[3*e+1];
+    int k = vind[3*e+2];
+    // Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+    // Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
+    // Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+
+    Vector3f r0(vpos[i]);
+    Vector3f r1(vpos[j]);
+    Vector3f r2(vpos[k]);
+
+    Vector3f v1 = r1-r0;
+    Vector3f v2 = r2-r0;
+    Vector3f vnn = (v1.Cross(v2)).Normalize();
+    for (int l=0;l<3;l++) {vnprom[vind[3*e+l]]+=vnn;}
+    
+    //TEST
+    for (int l=0;l<3;l++) {vnprom[vind[3*e+l]] = 0.0;}
+    vnprom[e].z = -1.0;
+  }
+  
+  // cout << "Normals"<<endl;
+  // for (int i=0;i<vcount;i++){
+    // vnprom[i].Normalize();
+    // cout << vnprom[i].x<< ", "<<vnprom[i].y<<", "<<vnprom[i].z<<endl;
+  // }
+  string texfile = "test.txt";
+  cout << "Generating FEM mesh..."<<endl;
+	if (!LoadMesh(vpos, vnprom, vtex,vind,texfile)) {
+		std::cout<<"Mesh load failed"<<endl;
+		printf("Mesh load failed\n");
+
+		
+	}
+
+}

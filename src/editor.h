@@ -39,7 +39,7 @@
 #include "Material.h"
 
 
-#include "gMesh.h"
+//#include "gMesh.h"
 #include "model/Mesh.h"
 
 float vertices[] = {
@@ -107,7 +107,7 @@ public:
   virtual void scroll(double xoffset, double yoffset);
   virtual void Mouse(int Button, int Action, int Mode);
   virtual void Key(int key, int scancode, int action, int mods);
-  bool LoadGround(myMesh *m_fieldmesh);
+  bool LoadGround(Renderer *m_fieldmesh);
   
   bool LoadSphere();
   
@@ -141,7 +141,7 @@ protected:
   //MOUSE
   bool is_struct;
   bool m_left_button_pressed;
-  std::vector <myMesh *> m_nodemesh;
+
   bool mesh_loaded;
   bool box_select_mode;
   TextRenderer *m_Text;
@@ -152,10 +152,9 @@ protected:
 
   GLuint gWVPLocation;
 
-  myMesh ground_mesh;
-  myMesh m_sphere_mesh;
+  //Renderer ground_mesh;
+  Renderer m_sphere_mesh;
   
-  gMesh  *m_fem_gmsh;
   Mesh   *m_fem_msh;
   bool    is_fem_mesh;
   
@@ -167,8 +166,6 @@ protected:
   double m_dx;
 
   bool rotatecam;
-  
-  unsigned int VBO, VAO, EBO; //TODO: THIS SHOULD BE MOVED TO 
   
   ArcballCamera *arcCamera;
   Selector m_selector;

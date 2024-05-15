@@ -560,8 +560,8 @@ IMGUI_DEMO_MARKER("Configuration");
             
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
-              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),0.05);
-              m_fem_gmsh = new gMesh(m_fem_msh);
+              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),radius);
+              m_sphere_mesh.addMesh(m_fem_msh);
               is_fem_mesh = true;
             }
     }
@@ -591,42 +591,7 @@ IMGUI_DEMO_MARKER("Configuration");
       
       cout << "file path name "<<filePathName<<endl;
 
-    //NODE MESHES: TEMPORARY THIS WAS OF RENDER
-    for (int i=0;i<1;i++) {
-      if (filePathName.find(".dae")!=string::npos){ //THIS NEEDS TO BE IMPROVED
-        myMesh *mesh = new myMesh();
-          if (!mesh->LoadMesh(
-            filePathName.c_str()
-            )) {
-            std::cout<<"Mesh load failed"<<endl;
-            printf("Mesh load failed\n");
-
-          }
-          else {
-            m_nodemesh.push_back(mesh);
-            mesh_loaded = true;
-          }
-      } else if (filePathName.find(".str") !=string::npos) {
-        cout << "Opening structure..."<<endl;
-
-        // cout << "Nodes "<<st->GetNodeCount()<<endl;
-        // for (int i=0;i<st->GetNodeCount();i++) {
-          // myMesh *mesh = new myMesh();
-            // if (!mesh->LoadMesh(
-              // "Sphere.dae"
-              // )) {
-              // std::cout<<"Mesh load failed"<<endl;
-              // printf("Mesh load failed\n");
-
-            // }
-            // else {
-              // m_nodemesh.push_back(mesh);
-              // mesh_loaded = true;
-            // }
-        // }//For nodes
-      
-      }
-    }
+ 
       // action
     }
     
@@ -1101,7 +1066,6 @@ int Editor::Init(){
   
   
   cout << "Loading ground"<<endl;
-  LoadGround(&ground_mesh);
   LoadSphere();
 
   /// NOW LIGHT TECHNIQUE
@@ -1230,27 +1194,6 @@ int Editor::Init(){
       return false;
   } 
   
-  //FOR RENDER LINES
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
@@ -1309,7 +1252,7 @@ void Editor::PickingPhase() {
     
     //m_pickingEffect.Enable();
     for (int p=0;p<m_domain.Particles.size();p++){
-   float h = m_domain.Particles[0]->h/2.;
+      float h = m_domain.Particles[0]->h/2.;
       pn.Scale(h, h,h);  
       m_pickingEffect.Enable();
       Vec3_t v = m_domain.Particles[p]->x;
@@ -1358,7 +1301,48 @@ void Editor::PickingPhase() {
       m_sphere_mesh.Render();
       //}
     }
-    
+
+
+    // if (is_fem_mesh) {
+      // Vector3f pos(0.0,0.0,0.0); //ORTHO
+      // //cout << "vert " <<v(0)<<", "<<endl;
+      // //Vector3f pos(0.,0.,0.);
+
+
+      // glm::mat4 model = glm::mat4(1.0f);
+
+      // //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+              
+      
+      // glm::mat4 projection(1.0);
+      // //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      // projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      // // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
+        // // 600.0f / 2.0f, -(600.0f / 2.0f), 
+      // // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+      // glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      // view = glm::translate(view, arcCamera->position);// this, too.  
+      // view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      // glm::mat4 transback = glm::mat4(1.0f);
+      // transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+      // glm::mat4 mat = projection * transback * view * model;
+      // //glm::mat4 mat = ptest * transback * view * model;
+      
+      
+      // pn.WorldPos(pos);   
+      // Matrix4f m = pn.GetWVPTrans();
+
+      // //m_pickingEffect.SetObjectIndex((p+1));
+
+
+      // m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
+      
+      
+      // m_sphere_mesh.Render();
+      // //}
+    // }    
     
     //glUseProgram(0);
 
@@ -1485,16 +1469,15 @@ void Editor::RenderPhase(){
 
     if (is_fem_mesh)
     {
-      Vector3f pos(0.0,0.0,0.0); //ORTHO
+      Vector3f pos(0.0,0.0,0.0); 
       glm::mat4 model = glm::mat4(1.0f);
 
       //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-           
+      
       
       glm::mat4 projection(1.0);
-
       projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
+ 
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
@@ -1502,55 +1485,42 @@ void Editor::RenderPhase(){
       glm::mat4 transback = glm::mat4(1.0f);
       transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
-      glm::mat4 mat = projection /** transback */ * view * model;
+      glm::mat4 mat = projection * transback * view * model;
+
 
       
+      //glm::mat4 mat = ptest * transback * view * model;
+    
+      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
       
+      //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);   
       Matrix4f m = pn.GetWVPTrans();
 
-      //m_pickingEffect.SetObjectIndex((p+1));
 
+      //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
+      //If personalized shader
+      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+      // for (int s=0;s<m_sel_count;s++){
+        // //cout << "sel_count"<<m_sel_count<<endl;
+        // if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        // // cout <<"selected particle "<<p<<endl;
+        // // cout << "m_sel_count "<<m_sel_count<<endl;
+        // // glm::vec4 v(pos.x,pos.y,pos.z,1.0);
+        // // glm::vec4 pp = mat * v;
+        // // cout << "proj pos "<< pp.x<<", "<<pp.y<<", "<<pp.z<<endl;
+        // }
+        // //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
 
-      m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE       
-      m_fem_gmsh->Render();
-      
-    }
-    // glUseProgram(shaderProgram);
-    // // //////////////// RENDER TEST ///
-    // //pn.Scale(h, h,);  
-      // Vec3_t v = Vec3_t(0.0,0.0,0.0);
-      // Vector3f pos(v(0),v(1),v(2));
+      // }
+      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
-      // glm::mat4 model = glm::mat4(1.0f);
-      // model[0][0]=model[1][1]=model[2][2]=0.01;
-      // //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
-      // //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;
-      // glm::mat4 projection = glm::mat4(1.0f);
-      // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-      // glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-      // view = glm::translate(view, arcCamera->position);// this, too.  
-      // view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
-      
-      // glm::mat4 transback = glm::mat4(1.0f);
-      // //transback[1][3] = pos.x; transback[2][3] = pos.y;transback[3][3] = pos.z;
-      // glm::mat4 mat = projection * transback * view * model;
-      // // In shader 	gl_Position = projection * view * model * vec4(aPos, 1.0);
-      // //glm::mat4 mat = view;
-    
-      // m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      
-      // objectColor = Vector3f(0.0f, 0.5f, 1.0f);
-      // glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+      //trans_mat [p]= mat;
    
-      // //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &mat[0][0]);
-        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),  1, GL_FALSE, &view[0][0]);
-        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),  1, GL_FALSE, &model[0][0]);
-        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transback"),  1, GL_FALSE, &transback[0][0]);
-        
-      // m_sphere_mesh.Render();
-    
+      glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
+      m_sphere_mesh.Render();
+    }
+
 
   glUseProgram(0);
   drawGui();
@@ -1681,50 +1651,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-bool Editor::LoadGround(myMesh *m_fieldmesh){
-	vector<Vector3f> vpos(4), vnorm(4);
-	vector<Vector2f> vtex(4);
-	vector <unsigned int > vind(6); //2 triangles
-  
-  	//// VERTICES 
-	//// 2 3
-	//// 0 1
-	/////////
-	Vector3f apos[4] ={	
-						Vector3f(-PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
-						Vector3f(-PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.),
-						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
-						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
-	Vector3f norm[4]= {Vector3f(0.,1.,0.), Vector3f(0.,1.,0.),
-                      Vector3f(1.,1.,1.),Vector3f(1.,1.,1.)};
-                      
-	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
-                      Vector2f(1.0f, 0.0f),
-                      Vector2f(0.0f, 1.0f),
-						Vector2f(1.0f, 1.0f)};
-
-	unsigned int aind[] = { 0, 1, 2,
-							1, 3, 2};
-							   
-	
-	for (int i=0;i<4;i++){
-		vpos[i]	=apos[i];
-		vnorm[i]=norm[i];
-		vtex[i]	=atex[i];
-	}
-	
- 
-	for (int i=0;i<6;i++) vind[i] = aind[i];
-	string file = "checker_blue.png";
-	
-	if (!m_fieldmesh->LoadMesh(vpos, vnorm, vtex,vind,file)){
-		std::cout<<"Mesh load failed"<<endl;
-		printf("Mesh load failed\n");
-		return false;        			
-		
-	}
-  return true;
-}
 
 
 bool Editor::LoadSphere(){

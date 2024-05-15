@@ -88,7 +88,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
-              ${CMAKE_SOURCE_DIR}/src/graphics/renderer.cpp
+              #${CMAKE_SOURCE_DIR}/src/graphics/renderer.cpp
               
               ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
 							${CMAKE_SOURCE_DIR}/src/shader.cpp
