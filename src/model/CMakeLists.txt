@@ -2,6 +2,7 @@
 include_directories("${CMAKE_SOURCE_DIR}")
 
 FILE(GLOB_RECURSE MODEL_SRCS         "*.h" "Mesh.cpp"
+                                           "Element.cpp"
                                            "gMesh.cpp" #graphic instance of gmsh
                                            )
 

@@ -32,6 +32,7 @@ gMesh::gMesh(Mesh* msh){
 	vector <Vector2f> vtex(vcount);
 	vector <unsigned int > vind(indcount); //2 triangles
   
+  cout << "Creating positions"<<endl;
 	for (int i=0;i<vcount;i++){
     //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
 		vpos[i]	= msh->getNodePos(i);
@@ -39,17 +40,20 @@ gMesh::gMesh(Mesh* msh){
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
 	}
-  for (int i=0;i<indcount;i++){
+  int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
+  cout << "Creating indices"<<endl;
+  for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
     for (int j=0;j<3;j++)
       vind[i] = msh->getElem(i)->getNodeId(j);
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
   
-  int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
+
   std::vector<Vector3f> vnprom(vcount);
 
   for (int e=0;e<elemcount;e++){
+    cout << "elem "<<e<<endl;
     int i = vind[3*e]; //Element First node
     int j = vind[3*e+1];
     int k = vind[3*e+2];

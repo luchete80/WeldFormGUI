@@ -38,6 +38,10 @@
 
 #include "Material.h"
 
+
+#include "gMesh.h"
+#include "model/Mesh.h"
+
 float vertices[] = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
@@ -150,7 +154,11 @@ protected:
 
   myMesh ground_mesh;
   myMesh m_sphere_mesh;
-
+  
+  gMesh  *m_fem_gmsh;
+  Mesh   *m_fem_msh;
+  bool    is_fem_mesh;
+  
   DirectionalLight 					m_directionalLight;
 
   long long m_start_time;

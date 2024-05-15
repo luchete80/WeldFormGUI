@@ -1,6 +1,7 @@
 #ifndef _ELEMENT_H_
 #define _ELEMENT_H_
 
+#include <vector>
 class Node;
 
 class Element {

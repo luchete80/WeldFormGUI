@@ -8,7 +8,7 @@ const Vector3f& Mesh::getNodePos(const int &i)const{
 }
   
 // #include <glm/gtc/matrix_transform.hpp>
-void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
+void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
     Vector3f Xp;
     
     int p, nnodz;
@@ -20,6 +20,7 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
     
     nel[0] = (int)(L[0]/(2.0*r));
     nel[1] = (int)(L[1]/(2.0*r));
+    nel[2] = 0;
     
     cout << "Nel x: "<<nel[0]<<", y "<<nel[1]<<endl;
     
@@ -40,7 +41,10 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
 
     // // // write (*,*) "Creating Mesh ...", "Elements ", neL.y, ", ",neL.z
   m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
-  m_elem_count = nel[0]*nel[1]*nel[2];
+  if (m_dim == 2)
+    m_elem_count = nel[0]*nel[1];
+  else 
+    m_elem_count = nel[0]*nel[1]*nel[2];
   cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
 
   // // //thisAllocateNodes((nel[0] +1) * (nel[1]+1) * (nel[2]+1));
@@ -60,7 +64,7 @@ void Mesh::addBoxLength(Vector3f L, Vector3f V, double r){
     
     // cout << "Box Particle Count is " << m_node_count <<endl;
     p = 0;
-    
+    Xp.x = 0.0;
     //for (int k = 0; k < (nel[2] +1);k++) {
       Xp.y= V.y;
       for (int j = 0; j < (nel[1] +1);j++){

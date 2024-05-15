@@ -113,7 +113,7 @@ set (LIBS winmm)
 endif()
 
 target_link_libraries(editor 
-
+            model
 						freetype
 						basic_lighting
 						pipeline

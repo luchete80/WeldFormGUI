@@ -13,7 +13,7 @@ class Node;
 
 class Mesh{
 public:
-  Mesh();
+  Mesh(){}
   void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
   const int & getNodeCount()const {return m_node_count;}
