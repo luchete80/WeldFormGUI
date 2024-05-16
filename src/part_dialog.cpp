@@ -2,14 +2,14 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "material_dialog.h"
+#include "part_dialog.h"
 
 #include <iostream>
 
 
 using namespace std;
 
-void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
+void  PartDialog::Draw(const char* title, bool* p_open, Material_ *mat){
 
   create_material = false; 
   if (!ImGui::Begin(title, p_open))
@@ -33,7 +33,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   //m_density_const = dens;
 }
 
-Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create){
+Material_ ShowCreatePartDialog(bool* p_open, PartDialog *matdlg, bool *create){
   
   Material_ ret;
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);

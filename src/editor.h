@@ -40,7 +40,9 @@
 
 
 //#include "gMesh.h"
+#include "model/Model.h"
 #include "model/Mesh.h"
+
 
 float vertices[] = {
     // first triangle
@@ -200,7 +202,10 @@ protected:
   
   float m_rotation;
   
-  std::vector <Material_ > m_mats;
+  std::vector <Material_*> m_mats;
+  
+  Model *m_model;
+  Material_ *selected_mat;
   
   Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)

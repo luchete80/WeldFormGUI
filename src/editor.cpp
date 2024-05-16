@@ -359,19 +359,23 @@ IMGUI_DEMO_MARKER("Configuration");
         bool open_ = ImGui::TreeNode("Parts");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {
-            //m_show_mat_dlg = true;
-          }
-          ImGui::TreePop();
+          if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
+            ImGui::EndPopup();          
         }
-        
+        if (open_)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
+        //-----------------------
         open_ = ImGui::TreeNode("Sets");
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
           ImGui::EndPopup();
         }
-        if (open_)
+        if (open_) //Expand
         {
            // your tree code stuff
            ImGui::TreePop();
@@ -401,7 +405,7 @@ IMGUI_DEMO_MARKER("Configuration");
             {
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_mat_dlg_edit = true;
-                
+                selected_mat = m_mats[i];
               }
               ImGui::EndPopup();
             }                    ImGui::Text("blah blah");
@@ -416,7 +420,20 @@ IMGUI_DEMO_MARKER("Configuration");
            // your tree code stuff
            ImGui::TreePop();
         }
-
+        //-----------------------------------------------------
+        open_ = ImGui::TreeNode("InteractionProps");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+            ImGui::EndPopup();
+          
+        }
+        if (open_)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
+        //------------------------------------------------------
         IMGUI_DEMO_MARKER("Widgets/Trees/Advanced, with Selectable nodes");
         if (ImGui::TreeNode("Advanced, with Selectable nodes"))
         {
@@ -610,16 +627,16 @@ IMGUI_DEMO_MARKER("Configuration");
   create_new_mat = false;
   Material_ mat;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
-  else if (m_show_mat_dlg_edit) {/*ShowEditMaterialDialog;*/}
+  else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   if (create_new_mat) {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!
     //cout << "temp dens" <<m_matdlg.m_density_const<<endl;
-    m_mats.push_back(Material_(mat));
+    m_mats.push_back(new Material_(mat));
     
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
-    cout << "Density:" <<m_mats[0].getDensityConstant()<<endl;
+    cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
 
   }
 }
@@ -1220,7 +1237,8 @@ int Editor::Init(){
   m_impact_force = 0.;
 
   m_sel_particles[0] = -1;
-
+  
+  m_model = new Model;
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }//Editor::Init()
