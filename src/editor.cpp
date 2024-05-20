@@ -594,7 +594,7 @@ IMGUI_DEMO_MARKER("Configuration");
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),radius);
-              m_sphere_mesh.addMesh(m_fem_msh);
+              m_renderer.addMesh(m_fem_msh);
               is_fem_mesh = true;
             }
     }
@@ -1332,7 +1332,7 @@ void Editor::PickingPhase() {
       //m_pickingEffect.SetWVP(pn.GetWVPTrans()); 
       
       
-      m_sphere_mesh.Render();
+      m_renderer.Render();
       //}
     }
 
@@ -1374,7 +1374,7 @@ void Editor::PickingPhase() {
       // m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
       
       
-      // m_sphere_mesh.Render();
+      // m_renderer.Render();
       // //}
     // }    
     
@@ -1498,7 +1498,7 @@ void Editor::RenderPhase(){
 
       
       glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
-      m_sphere_mesh.Render();
+      m_renderer.Render();
     }
 
     if (is_fem_mesh)
@@ -1552,7 +1552,7 @@ void Editor::RenderPhase(){
       //trans_mat [p]= mat;
    
       glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
-      m_sphere_mesh.Render();
+      m_renderer.Render();
     }
 
 
@@ -1766,7 +1766,7 @@ bool Editor::LoadSphere(){
   
 	string file = "checker_blue.png";
 	
-	if (!m_sphere_mesh.LoadMesh(vpos, vnprom, vtex,vind,file)){
+	if (!m_renderer.LoadMesh(vpos, vnprom, vtex,vind,file)){
 		std::cout<<"Mesh load failed"<<endl;
 		printf("Mesh load failed\n");
 		return false;        			

@@ -8,7 +8,7 @@
 
 #include "text_renderer.h"
 
-#include "myMesh.h"
+#include "renderer.h"
 
 #include "ogldev_basic_lighting.h"
 
@@ -155,7 +155,7 @@ protected:
   GLuint gWVPLocation;
 
   //Renderer ground_mesh;
-  Renderer m_sphere_mesh;
+  Renderer m_renderer;
   
   Mesh   *m_fem_msh;
   bool    is_fem_mesh;

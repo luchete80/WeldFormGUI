@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "myMesh.h"
+#include "renderer.h"
 #include "ogldev_engine_common.h"
 #include "model/Mesh.h"
 

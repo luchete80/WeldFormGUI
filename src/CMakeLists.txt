@@ -78,7 +78,7 @@ add_subdirectory("model")
 add_executable(editor 	
 
               editor.cpp
-              ${CMAKE_SOURCE_DIR}/src/myMesh.cpp
+              ${CMAKE_SOURCE_DIR}/src/renderer.cpp
 							#skinning_technique.cpp
 							#game.cpp
               texture.cpp
