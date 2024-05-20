@@ -2,6 +2,7 @@
 #include "Node.h"
 
 #include <iostream>
+using namespace std;
 
 const Vector3f& Mesh::getNodePos(const int &i)const{
   return m_node[i]->getPos();

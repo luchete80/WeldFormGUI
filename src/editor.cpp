@@ -623,7 +623,7 @@ IMGUI_DEMO_MARKER("Configuration");
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
       cout << "file path name "<<filePathName<<endl;
-      m_model = new Model(filePathName+filePath);
+      m_model = new Model(filePathName);
  
       // action
     }

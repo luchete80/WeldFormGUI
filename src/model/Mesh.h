@@ -4,8 +4,8 @@
 /////////////// FINITE ELEMENT MESH ///////////
 
 #include <vector>
-#include <glm/gtc/matrix_transform.hpp>
-#include "common/math/math.h"
+//#include <glm/gtc/matrix_transform.hpp>
+#include "../common/math/math.h"
 #include "Element.h"
 
 class Element;
