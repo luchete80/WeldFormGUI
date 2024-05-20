@@ -2,7 +2,7 @@
 #define _NODE_H_
 
 // #include <glm>
-#include "common/math/math.h"
+#include "../common/math/math.h"
 class Element;
 
 struct Node

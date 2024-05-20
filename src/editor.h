@@ -205,6 +205,7 @@ protected:
   std::vector <Material_*> m_mats;
   
   Model *m_model;
+  bool is_model_open;
   Material_ *selected_mat;
   
   Action* m_currentaction;

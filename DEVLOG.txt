@@ -17,5 +17,7 @@
 ------------------------------------------------------------------------------
 20240514 - Begining to add FEM mesh.
          - Fixed 2D plane in particles
-         
+20240520 - Added own LSDynaReader library to import
+         - Added Boundary Conditions to Main Menu 
+         - 
          

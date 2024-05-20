@@ -112,6 +112,9 @@ void ShowExampleMenuFile(const Editor &editor)
   // if (ImGui::Button("Open File Dialog"))
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
+    if (ImGui::MenuItem("Import", "Ctrl+O")){
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".k", ".");
+    }
     if (ImGui::BeginMenu("Open Recent"))
     {
         ImGui::MenuItem("fish_hat.c");
@@ -433,6 +436,19 @@ IMGUI_DEMO_MARKER("Configuration");
            // your tree code stuff
            ImGui::TreePop();
         }
+        //-----------------------------------------------------
+        open_ = ImGui::TreeNode("Boundary Conditions");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+            ImGui::EndPopup();
+          
+        }
+        if (open_)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
         //------------------------------------------------------
         IMGUI_DEMO_MARKER("Widgets/Trees/Advanced, with Selectable nodes");
         if (ImGui::TreeNode("Advanced, with Selectable nodes"))
@@ -607,7 +623,7 @@ IMGUI_DEMO_MARKER("Configuration");
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
       cout << "file path name "<<filePathName<<endl;
-
+      m_model = new Model(filePathName+filePath);
  
       // action
     }

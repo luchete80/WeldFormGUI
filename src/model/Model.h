@@ -2,6 +2,7 @@
 #define _MODEL_H_
 
 #include <vector>
+#include <string>
 
 class Element;
 class Material;
@@ -11,6 +12,7 @@ class Part;
 class Model {
 public:
   Model(){}
+  Model(std::string );
 protected:
   std::vector <Part*>       m_part;
   std::vector <Material*>   m_mat;  
