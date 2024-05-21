@@ -14,6 +14,9 @@ class Node;
 class Mesh{
 public:
   Mesh(){}
+  void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
+                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
+                    std::vector <int>      elnod_h);
   void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
   const int & getNodeCount()const {return m_node_count;}

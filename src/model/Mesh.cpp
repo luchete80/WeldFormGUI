@@ -4,6 +4,14 @@
 #include <iostream>
 using namespace std;
 
+void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
+                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
+                    std::vector <int>      elnod_h){
+  
+
+}
+
+
 const Vector3f& Mesh::getNodePos(const int &i)const{
   return m_node[i]->getPos();
 }

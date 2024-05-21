@@ -19,7 +19,7 @@ public:
     for (int n=0;n<m_nodecount;n++)
       m_node[n]=nv[n];
   }    
-  }
+  
   const int & getNodeId(const int &i)const;
 protected:
   std::vector<Node*> m_node;  //Is like elnod

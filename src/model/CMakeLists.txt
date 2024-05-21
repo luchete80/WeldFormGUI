@@ -4,7 +4,7 @@ include_directories("../../")
 set( MODEL_SRCS         "Mesh.cpp"
                                "Element.cpp"
                                "Model.cpp"
-                                           )
+                               "Part.cpp"            )
 
 ADD_LIBRARY(model ${MODEL_SRCS})
 
