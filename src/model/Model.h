@@ -5,6 +5,7 @@
 #include <string>
 
 class Element;
+class Node;
 class Material;
 class Part;
 
@@ -16,6 +17,7 @@ public:
 protected:
   std::vector <Part*>       m_part;
   std::vector <Material*>   m_mat;  
+  std::vector <Node* >      m_node; //Mesh part refer to this
 };
 
 #endif

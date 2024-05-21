@@ -7,6 +7,19 @@ class Node;
 class Element {
 public:
   Element(){}
+  Element(std::vector<Node*>nv){
+    m_nodecount = 4;
+    m_node.resize(4);
+    for (int n=0;n<4;n++)
+      m_node[n]=nv[n];
+  }
+  void initValues(std::vector<Node*>nv){ //TO INHERIT
+    m_nodecount = nv.size();
+    m_node.resize(m_nodecount);
+    for (int n=0;n<m_nodecount;n++)
+      m_node[n]=nv[n];
+  }    
+  }
   const int & getNodeId(const int &i)const;
 protected:
   std::vector<Node*> m_node;  //Is like elnod

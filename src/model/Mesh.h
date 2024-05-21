@@ -25,8 +25,8 @@ public:
 protected:
   int m_node_count;
   int m_elem_count;
-  std::vector <Node*>    m_node;
-  std::vector <Element*> m_elem;
+  std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!
+  std::vector <Element*> m_elem; //BUT THIS ARE FROM THE PART!!
   std::vector <int>      elnod_h;
 
 };
