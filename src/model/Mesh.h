@@ -10,11 +10,17 @@
 
 class Element;
 class Node;
+class Model;
 
 class Mesh{
+  friend class Model;
 public:
   Mesh(){}
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
+                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
+                    std::vector <int>      elnod_h);
+  //This function does not create the pointers
+  void assignValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
                     std::vector <int>      elnod_h);
   void addNode();
