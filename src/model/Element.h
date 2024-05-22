@@ -3,8 +3,12 @@
 
 #include <vector>
 class Node;
-
+class Model;
 class Element {
+  
+friend class Model;
+friend class Mesh;
+
 public:
   Element(){}
   Element(std::vector<Node*>nv){

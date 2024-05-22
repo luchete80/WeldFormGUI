@@ -23,16 +23,19 @@ Model::Model(string name){
   /// IN THIS CASE, ELEMENT AND NODES ARE CREATED INSIDE MODEL
   for (int e = 0;e<reader.m_elem_count;e++){
     std::vector<Node*> enod;
+    //cout << "node size"<<reader.m_elem[e].node.size()<<endl;
     for (int ne=0;ne<reader.m_elem[e].node.size();ne++){
       enod.push_back(m_node[reader.m_elem[e].node[ne]]);
-      m_elem.push_back(new Element(enod)); //This vector is created in new element space
+      // for (int t=0;t<3;t++)
+      // msh->getElem(ne)->getNodeId(t);
       //reader.getNodePos(ne);
+      
     }
-    
+    m_elem.push_back(new Element(enod)); //This vector is created in new element space
+
   }
   Mesh *msh = new Mesh;
-  m_part.push_back(new Part(msh));
   msh->assignValues(m_node, m_elem);
-
+  m_part.push_back(new Part(msh));
   
 }

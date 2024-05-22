@@ -17,7 +17,12 @@ void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
   m_node_count = n.size();
   
   m_elem.resize(e.size());
-  for (int nn=0;nn<e.size(); nn++) m_elem[nn]=e[nn];
+  for (int nn=0;nn<e.size(); nn++) {
+    cout << "element nodecount " << e[nn]->m_node.size()<<endl;
+    for (int ne=0;ne<8;ne++)
+      cout << "eleement node id "<< e[nn]->getNodeId(ne)<<endl;
+    m_elem[nn]=e[nn];
+  }
   m_elem_count = e.size();
 }
 
