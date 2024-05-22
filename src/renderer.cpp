@@ -423,7 +423,7 @@ Renderer::addMesh(Mesh* msh){
 	for (int i=0;i<vcount;i++){
     //Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
 		vpos[i]	= msh->getNodePos(i);
-    cout << "node pos "<<vpos[i].x<<"; "<<vpos[i].y<<", "<<vpos[i].z<<endl;
+    //cout << "node pos "<<vpos[i].x<<"; "<<vpos[i].y<<", "<<vpos[i].z<<endl;
     //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
@@ -432,9 +432,10 @@ Renderer::addMesh(Mesh* msh){
   cout << "Creating indices"<<endl;
   for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
-    for (int j=0;j<3;j++)
+    for (int j=0;j<3;j++){
+      cout << "Node id "<< msh->getElem(i)->getNodeId(j)<<endl;
       vind[3*i+j] = msh->getElem(i)->getNodeId(j); //Instead of the position?
-    
+    }
     // vind[6*i+3] = msh->getElem(i)->getNodeId(2);
     // vind[6*i+4] = msh->getElem(i)->getNodeId(3);
     // vind[6*i+5] = msh->getElem(i)->getNodeId(0);

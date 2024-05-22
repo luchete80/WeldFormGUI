@@ -8,8 +8,8 @@ class Element {
 public:
   Element(){}
   Element(std::vector<Node*>nv){
-    m_nodecount = 4;
-    m_node.resize(4);
+    m_nodecount = nv.size();
+    m_node.resize(nv.size());
     for (int n=0;n<4;n++)
       m_node[n]=nv[n];
   }
