@@ -624,7 +624,7 @@ IMGUI_DEMO_MARKER("Configuration");
       
       cout << "file path name "<<filePathName<<endl;
       m_model = new Model(filePathName);
- 
+      m_renderer.addMesh(m_model->getPartMesh(0));
       // action
     }
     

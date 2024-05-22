@@ -433,7 +433,7 @@ Renderer::addMesh(Mesh* msh){
   for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
     for (int j=0;j<3;j++)
-      vind[3*i+j] = msh->getElem(i)->getNodeId(j);
+      vind[3*i+j] = msh->getElem(i)->getNodeId(j); //Instead of the position?
     
     // vind[6*i+3] = msh->getElem(i)->getNodeId(2);
     // vind[6*i+4] = msh->getElem(i)->getNodeId(3);

@@ -5,12 +5,21 @@
 using namespace std;
 
 void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
-                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
-                    std::vector <int>      elnod_h){
+                    std::vector <int>      elnod){
   
 
 }
 
+void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
+                    std::vector <Element*> e){
+  m_node.resize(n.size());
+  for (int nn=0;nn<n.size(); nn++) m_node[nn]=n[nn];
+  m_node_count = n.size();
+  
+  m_elem.resize(e.size());
+  for (int nn=0;nn<e.size(); nn++) m_elem[nn]=e[nn];
+  m_elem_count = e.size();
+}
 
 const Vector3f& Mesh::getNodePos(const int &i)const{
   return m_node[i]->getPos();

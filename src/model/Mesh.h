@@ -17,12 +17,10 @@ class Mesh{
 public:
   Mesh(){}
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
-                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
-                    std::vector <int>      elnod_h);
+                    std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
-  void assignValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
-                    std::vector <Element*> m_elem, //BUT THIS ARE FROM THE PART!!
-                    std::vector <int>      elnod_h);
+  void assignValues( std::vector <Node*>     m_node, //LOCATED ON MODEL SPACE!!!!
+                     std::vector <Element* > m_elem);
   void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
   const int & getNodeCount()const {return m_node_count;}
@@ -30,7 +28,7 @@ public:
   Node*     getNode(const int &i){return m_node[i];} 
   Element*  getElem(const int &i){return m_elem[i];} 
   
-  const Vector3f& getNodePos(const int &i)const;
+  const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
 protected:
   int m_node_count;
   int m_elem_count;
