@@ -10,7 +10,7 @@ public:
   Element(std::vector<Node*>nv){
     m_nodecount = nv.size();
     m_node.resize(nv.size());
-    for (int n=0;n<4;n++)
+    for (int n=0;n<nv.size();n++)
       m_node[n]=nv[n];
   }
   void initValues(std::vector<Node*>nv){ //TO INHERIT
