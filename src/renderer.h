@@ -23,12 +23,13 @@
 //////////////////////////
 #define INVALID_MATERIAL 0xFFFFFFFF
    
-#define INDEX_BUFFER 0    
-#define POS_VB       1
-#define NORMAL_VB    2
-#define TEXCOORD_VB  3    
-#define WVP_MAT_VB   4
-#define WORLD_MAT_VB 5
+#define INDEX_BUFFER  0    
+#define POS_VB        1
+#define NORMAL_VB     2
+#define TEXCOORD_VB   3    
+#define WVP_MAT_VB    4
+#define WORLD_MAT_VB  5
+#define IDX_WIREFRAME 6    
 
 struct myVertex
 {
@@ -74,6 +75,7 @@ public:
 					vector<Vector3f> Normals,
 					vector<Vector2f> TexCoords,
 					vector<unsigned int> Indices,
+          vector<unsigned int> wf_Indices,
 					string &texfname);
 
     void Render();
@@ -86,7 +88,7 @@ public:
 
 private:
   GLuint m_VAO;
-  GLuint m_Buffers[6];
+  GLuint m_Buffers[7];
 
     //bool InitFromScene(const aiScene* pScene, const std::string& Filename);
     // void InitMesh(const aiMesh* paiMesh,
@@ -98,7 +100,9 @@ private:
   //bool InitMaterials(const aiScene* pScene, const std::string& Filename);
 	bool InitMaterial(const string& Filename);
     void Clear();
-	bool GenAndBindBuffers(vector<Vector3f> Positions,vector<Vector3f> Normals, vector<Vector2f> TexCoords,vector<unsigned int> Indices);
+	bool GenAndBindBuffers(vector<Vector3f> Positions,vector<Vector3f> Normals, vector<Vector2f> TexCoords,
+                          vector<unsigned int> Indices,
+                          vector<unsigned int> wireframe_Indices); //NEW
 
 
     

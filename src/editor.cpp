@@ -1765,8 +1765,8 @@ bool Editor::LoadSphere(){
   // }
   
 	string file = "checker_blue.png";
-	
-	if (!m_renderer.LoadMesh(vpos, vnprom, vtex,vind,file)){
+	std::vector <unsigned int > wf;
+	if (!m_renderer.LoadMesh(vpos, vnprom, vtex,vind,wf,file)){
 		std::cout<<"Mesh load failed"<<endl;
 		printf("Mesh load failed\n");
 		return false;        			

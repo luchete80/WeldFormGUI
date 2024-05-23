@@ -81,6 +81,7 @@ bool Renderer::LoadMesh(    vector<Vector3f> Positions,
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
     vector<unsigned int> Indices,
+    vector<unsigned int> wfIndices,
 	string &texfname) {
 
     Clear();
@@ -111,7 +112,7 @@ bool Renderer::LoadMesh(    vector<Vector3f> Positions,
 	if (!InitMaterial(texfname))
 		return false;
 	cout << "Material created"<<endl;
-	GenAndBindBuffers(Positions, Normals, TexCoords, Indices);
+	GenAndBindBuffers(Positions, Normals, TexCoords, Indices,wfIndices);
 
     // Make sure the VAO is not changed from the outside
     glBindVertexArray(0);
@@ -167,7 +168,8 @@ bool Renderer::GenAndBindBuffers(
     vector<Vector3f> Positions,
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
-    vector<unsigned int> Indices){
+    vector<unsigned int> Indices,
+                          vector<unsigned int> wireframe_Indices){
 	// Generate and populate the buffers with vertex attributes and the indices
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
@@ -186,7 +188,10 @@ bool Renderer::GenAndBindBuffers(
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices[0]) * Indices.size(), &Indices[0], GL_STATIC_DRAW);
-
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[IDX_WIREFRAME]);    
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wireframe_Indices[0]) * wireframe_Indices.size(), &wireframe_Indices[0], GL_STATIC_DRAW);
+    
     return GLCheckError();
 	
 }
@@ -345,12 +350,12 @@ void Renderer::Render() {
                          (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
                          m_Entries[i].BaseVertex);
 
-        // glDrawElements(GL_TRIANGLES, 
-                         // m_Entries[i].NumIndices, 
-                         // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
-                         // //,m_Entries[i].BaseVertex
-                         // );
+        glDrawElements(GL_TRIANGLES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         //,m_Entries[i].BaseVertex
+                         );
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -410,6 +415,8 @@ Renderer::addMesh(Mesh* msh){
   int vcount    = msh->getNodeCount();
 	//int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
   //int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+  
+  //IF TRIANGLES
   int indcount  = msh->getElemCount()*3;
   
   cout << "Vertex count " << vcount << endl;
@@ -418,6 +425,7 @@ Renderer::addMesh(Mesh* msh){
 	vector <Vector3f> vpos(vcount), vnorm(vcount);
 	vector <Vector2f> vtex(vcount);
 	vector <unsigned int > vind(indcount); //2 triangles
+	vector <unsigned int > v_wf_ind; //WIREFRAME INDEX_BUFFER
   
   cout << "Creating positions"<<endl;
 	for (int i=0;i<vcount;i++){
@@ -452,12 +460,12 @@ Renderer::addMesh(Mesh* msh){
 
   for (int e=0;e<elemcount;e++){
     //cout << "elem "<<e<<endl;
+
+    //TRIANGLES!!!!
     int i = vind[3*e]; //Element First node
     int j = vind[3*e+1];
     int k = vind[3*e+2];
-    // Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
-    // Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
-    // Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+    //LINES!
 
     Vector3f r0(vpos[i]);
     Vector3f r1(vpos[j]);
@@ -480,7 +488,7 @@ Renderer::addMesh(Mesh* msh){
   // }
   string texfile = "test.txt";
   cout << "Generating FEM mesh..."<<endl;
-	if (!LoadMesh(vpos, vnprom, vtex,vind,texfile)) {
+	if (!LoadMesh(vpos, vnprom, vtex,vind,v_wf_ind,texfile)) { //GRAPHICAL MESH
 		std::cout<<"Mesh load failed"<<endl;
 		printf("Mesh load failed\n");
 
