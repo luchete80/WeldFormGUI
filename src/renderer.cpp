@@ -12,6 +12,8 @@ using namespace std;
 
 
 #include <iostream>
+#include <set> //TO NOT REPEAT LINES
+
 using namespace std;
 
 Renderer::Renderer()
@@ -43,40 +45,7 @@ void Renderer::Clear()
     }
 }
 
-
-bool Renderer::LoadMesh(const string& Filename)
-{
-    // // Release the previously loaded mesh (if it exists)
-    // Clear();
- 
-    // // Create the VAO
-    // glGenVertexArrays(1, &m_VAO);   
-    // glBindVertexArray(m_VAO);
-    
-    // // Create the buffers for the vertices attributes
-    // glGenBuffers(ARRAY_SIZE_IN_ELEMENTS(m_Buffers), m_Buffers);
-
-    // bool Ret = false;
-    // Assimp::Importer Importer;
-
-    // const aiScene* pScene = Importer.ReadFile(Filename.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_FindDegenerates);
-    
-    // if (pScene) {
-        // Ret = InitFromScene(pScene, Filename);
-    // }
-    // else {
-        // printf("Error parsing '%s': '%s'\n", Filename.c_str(), Importer.GetErrorString());
-    // }
-
-    // // Make sure the VAO is not changed from the outside
-    // glBindVertexArray(0);	
-
-    // return Ret;
-}
-
 //////////////////////
-////// LUCIANO
-////// THIS IS SIMILAR TO OGLDEV LOAD MESH FROM ASSIMP BUT IS WITH A VERTEX LIST
 bool Renderer::LoadMesh(    vector<Vector3f> Positions,
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
@@ -104,6 +73,7 @@ bool Renderer::LoadMesh(    vector<Vector3f> Positions,
     //for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
     m_Entries[0].MaterialIndex = 0;        
     m_Entries[0].NumIndices = Indices.size();
+    m_Entries[0].NumIndicesWF = wfIndices.size();
     m_Entries[0].BaseVertex = 0;
     m_Entries[0].BaseIndex = 0;
 	
@@ -120,49 +90,6 @@ bool Renderer::LoadMesh(    vector<Vector3f> Positions,
 	return true;
 }
 
-// bool Renderer::InitFromScene(const aiScene* pScene, const string& Filename)
-// {  
-    // m_Entries.resize(pScene->mNumMeshes);
-    // cout << "Num meshes: "<<pScene->mNumMeshes<<endl;
-    // m_Textures.resize(pScene->mNumMaterials);
-
-    // vector<Vector3f> Positions;
-    // vector<Vector3f> Normals;
-    // vector<Vector2f> TexCoords;
-    // vector<unsigned int> Indices;
-
-    // unsigned int NumVertices = 0;
-    // unsigned int NumIndices = 0;
-    
-    // // Count the number of vertices and indices
-    // for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
-        // m_Entries[i].MaterialIndex = pScene->mMeshes[i]->mMaterialIndex;        
-        // m_Entries[i].NumIndices = pScene->mMeshes[i]->mNumFaces * 3;
-        // m_Entries[i].BaseVertex = NumVertices;
-        // m_Entries[i].BaseIndex = NumIndices;
-        
-        // NumVertices += pScene->mMeshes[i]->mNumVertices;
-        // NumIndices  += m_Entries[i].NumIndices;
-    // }
-    
-    // // Reserve space in the vectors for the vertex attributes and indices
-    // Positions.reserve(NumVertices);
-    // Normals.reserve(NumVertices);
-    // TexCoords.reserve(NumVertices);
-    // Indices.reserve(NumIndices);
-
-    // // Initialize the meshes in the scene one by one
-    // for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
-        // const aiMesh* paiMesh = pScene->mMeshes[i];
-        // InitMesh(paiMesh, Positions, Normals, TexCoords, Indices);
-    // }
-
-    // if (!InitMaterials(pScene, Filename)) {
-        // return false;
-    // }
-
-	// return GenAndBindBuffers(Positions,Normals,TexCoords,Indices);
-// }
 
 bool Renderer::GenAndBindBuffers(
     vector<Vector3f> Positions,
@@ -359,6 +286,23 @@ void Renderer::Render() {
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[IDX_WIREFRAME]);
+    
+    
+    for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
+
+        glDrawElements(GL_LINES, 
+                         m_Entries[i].NumIndicesWF, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         //,m_Entries[i].BaseVertex
+                         );
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    
+    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     // Make sure the VAO is not changed from the outside    
     glBindVertexArray(0);
@@ -395,6 +339,12 @@ void Renderer::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const 
     glBindVertexArray(0);
 }
 
+std::pair<int,int> my_make_pair(int a, int b) 
+{
+    if ( a < b ) return std::pair<int,int>(a,b);
+    else return std::pair<int,int>(b,a);
+}
+
 ////ADD FINITE ELEMENT MESH////
 Renderer::addMesh(Mesh* msh){
 
@@ -426,6 +376,14 @@ Renderer::addMesh(Mesh* msh){
 	vector <Vector2f> vtex(vcount);
 	vector <unsigned int > vind(indcount); //2 triangles
 	vector <unsigned int > v_wf_ind; //WIREFRAME INDEX_BUFFER
+
+  //ASSUMES ALL ELEMENTS HAVE SAME NODECOUNT
+  //TODO: CHANGE THIS TO CHECK FOR EACH MESH ELEMENT 
+  std::set < std::pair <int,int> > lines;
+  // if ( msh->getElem(0)->getNodeCount()==8){
+    // cout << "Generating hexa indices"<<endl;
+    v_wf_ind.resize(msh->getElemCount()*2); //REPEATED!!
+  // }  
   
   cout << "Creating positions"<<endl;
 	for (int i=0;i<vcount;i++){
@@ -447,9 +405,17 @@ Renderer::addMesh(Mesh* msh){
     // vind[6*i+3] = msh->getElem(i)->getNodeId(2);
     // vind[6*i+4] = msh->getElem(i)->getNodeId(3);
     // vind[6*i+5] = msh->getElem(i)->getNodeId(0);
-    
+
+    //WIREFRAME
+    if ( msh->getElem(0)->getNodeCount()==8){
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(0)));
+    }    
+    v_wf_ind[2*i+0] = msh->getElem(i)->getNodeId(0);
+    v_wf_ind[2*i+1] = msh->getElem(i)->getNodeId(1);
     
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  
+  
   }
   
   // cout << "indices "<<endl;
@@ -458,6 +424,8 @@ Renderer::addMesh(Mesh* msh){
   // cout<<endl;
   std::vector<Vector3f> vnprom(vcount);
 
+
+  
   for (int e=0;e<elemcount;e++){
     //cout << "elem "<<e<<endl;
 
@@ -479,6 +447,8 @@ Renderer::addMesh(Mesh* msh){
     //TEST
     for (int l=0;l<3;l++) {vnprom[vind[3*e+l]] = 0.0;}
     vnprom[e].z = 1.0;
+    
+      
   }
   
   // cout << "Normals"<<endl;

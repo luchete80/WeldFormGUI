@@ -25,6 +25,7 @@ public:
   }    
   
   const int & getNodeId(const int &i)const;
+  const int & getNodeCount()const{return m_nodecount;}
 protected:
   std::vector<Node*> m_node;  //Is like elnod
   int m_nodecount;

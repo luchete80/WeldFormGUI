@@ -57,6 +57,7 @@ struct BasicMeshEntry {
         }
         
         unsigned int NumIndices;
+        unsigned int NumIndicesWF;
 		unsigned int BaseVertex;
         unsigned int BaseIndex;
         unsigned int MaterialIndex;
