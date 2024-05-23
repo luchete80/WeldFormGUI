@@ -444,14 +444,14 @@ Renderer::addMesh(Mesh* msh){
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   }
   
-  cout << "indices "<<endl;
-  for (int i=0;i<indcount;i++)
-    cout << vind[i]<<", ";
-  cout<<endl;
+  // cout << "indices "<<endl;
+  // for (int i=0;i<indcount;i++)
+    // cout << vind[i]<<", ";
+  // cout<<endl;
   std::vector<Vector3f> vnprom(vcount);
 
   for (int e=0;e<elemcount;e++){
-    cout << "elem "<<e<<endl;
+    //cout << "elem "<<e<<endl;
     int i = vind[3*e]; //Element First node
     int j = vind[3*e+1];
     int k = vind[3*e+2];
