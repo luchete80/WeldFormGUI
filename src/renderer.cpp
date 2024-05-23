@@ -265,24 +265,24 @@ void Renderer::Render() {
         }
 
         //IF FULL 
-        glDrawElementsBaseVertex(GL_TRIANGLES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         m_Entries[i].BaseVertex);
-        //IF WIREFRANME
-        glDrawElementsBaseVertex(GL_LINES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         m_Entries[i].BaseVertex);
+        // glDrawElementsBaseVertex(GL_TRIANGLES, 
+                         // m_Entries[i].NumIndices, 
+                         // GL_UNSIGNED_INT, 
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         // m_Entries[i].BaseVertex);
+        // //IF WIREFRANME
+        // glDrawElementsBaseVertex(GL_LINES, 
+                         // m_Entries[i].NumIndices, 
+                         // GL_UNSIGNED_INT, 
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         // m_Entries[i].BaseVertex);
 
-        glDrawElements(GL_TRIANGLES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
-                         //,m_Entries[i].BaseVertex
-                         );
+        // glDrawElements(GL_TRIANGLES, 
+                         // m_Entries[i].NumIndices, 
+                         // GL_UNSIGNED_INT, 
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         // //,m_Entries[i].BaseVertex
+                         // );
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -382,7 +382,7 @@ Renderer::addMesh(Mesh* msh){
   std::set < std::pair <int,int> > lines;
   // if ( msh->getElem(0)->getNodeCount()==8){
     // cout << "Generating hexa indices"<<endl;
-    v_wf_ind.resize(msh->getElemCount()*2); //REPEATED!!
+    v_wf_ind.resize(msh->getElemCount()*8); //REPEATED!!
   // }  
   
   cout << "Creating positions"<<endl;
@@ -410,9 +410,10 @@ Renderer::addMesh(Mesh* msh){
     if ( msh->getElem(0)->getNodeCount()==8){
       lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(0)));
     }    
-    v_wf_ind[2*i+0] = msh->getElem(i)->getNodeId(0);
-    v_wf_ind[2*i+1] = msh->getElem(i)->getNodeId(1);
-    
+    v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
+    v_wf_ind[8*i+2] = msh->getElem(i)->getNodeId(1);v_wf_ind[8*i+3] = msh->getElem(i)->getNodeId(2);    
+    v_wf_ind[8*i+4] = msh->getElem(i)->getNodeId(2);v_wf_ind[8*i+5] = msh->getElem(i)->getNodeId(3);
+    // v_wf_ind[8*i+6] = msh->getElem(i)->getNodeId(3);v_wf_ind[8*i+7] = msh->getElem(i)->getNodeId(4);
     //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
   
   
