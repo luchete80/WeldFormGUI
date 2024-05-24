@@ -8,6 +8,7 @@ class Element {
   
 friend class Model;
 friend class Mesh;
+//enum elem_type ={2D_Plane_Stress, 2D_Plane_Strain, 3D_Solid};
 
 public:
   Element(){}
@@ -29,6 +30,8 @@ public:
 protected:
   std::vector<Node*> m_node;  //Is like elnod
   int m_nodecount;
+  //elem_type m_type;
+  
 };
 
 class Quad:
@@ -37,10 +40,8 @@ public:
   Quad(){
     m_nodecount = 4;m_node.resize(4);}
   Quad(std::vector<Node*>nv){
-    m_nodecount = 4;
-    m_node.resize(4);
-    for (int n=0;n<4;n++)
-      m_node[n]=nv[n];
+    initValues(nv);
+    
   }
 
 };

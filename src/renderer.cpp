@@ -379,10 +379,10 @@ Renderer::addMesh(Mesh* msh){
 
   //ASSUMES ALL ELEMENTS HAVE SAME NODECOUNT
   //TODO: CHANGE THIS TO CHECK FOR EACH MESH ELEMENT 
-  std::set < std::pair <int,int> > lines;
+  std::set < std::pair <int,int> > lines; //TODO: CONSTRUCT A VECToR OF CLASSES LINES FRMO THIS
   // if ( msh->getElem(0)->getNodeCount()==8){
     // cout << "Generating hexa indices"<<endl;
-    v_wf_ind.resize(msh->getElemCount()*8); //REPEATED!!
+  //v_wf_ind.resize(msh->getElemCount()*8); //REPEATED!!
   // }  
   
   cout << "Creating positions"<<endl;
@@ -408,15 +408,42 @@ Renderer::addMesh(Mesh* msh){
 
     //WIREFRAME
     if ( msh->getElem(0)->getNodeCount()==8){
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(0)));
-    }    
-    v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
-    v_wf_ind[8*i+2] = msh->getElem(i)->getNodeId(1);v_wf_ind[8*i+3] = msh->getElem(i)->getNodeId(2);    
-    v_wf_ind[8*i+4] = msh->getElem(i)->getNodeId(2);v_wf_ind[8*i+5] = msh->getElem(i)->getNodeId(3);
-    // v_wf_ind[8*i+6] = msh->getElem(i)->getNodeId(3);v_wf_ind[8*i+7] = msh->getElem(i)->getNodeId(4);
-    //vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+      cout << i<< ": ";
+      for (int j=0;j<8;j++)
+        cout<<msh->getElem(i)->getNodeId(j)<<" ";
+      cout <<endl;
+      int j = 0;
+      //for (int j=0;j<2;j++){
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1))); //Ordered pair
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+1),msh->getElem(i)->getNodeId(4*j+2))); //Ordered pair
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+2),msh->getElem(i)->getNodeId(4*j+3))); //Ordered pair
+      //lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+3),msh->getElem(i)->getNodeId(4*j+0))); //Ordered pair
+      //}
+      
+    } else if ( msh->getElem(0)->getNodeCount()==4){
+       
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(1)));
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(1),msh->getElem(i)->getNodeId(2)));      
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(2),msh->getElem(i)->getNodeId(3)));
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(0)));
+    }
+    //if ( msh->getElem(0)->getNodeCount()==8)    
+    // v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
+    // v_wf_ind[8*i+2] = msh->getElem(i)->getNodeId(1);v_wf_ind[8*i+3] = msh->getElem(i)->getNodeId(2);    
+    // v_wf_ind[8*i+4] = msh->getElem(i)->getNodeId(2);v_wf_ind[8*i+5] = msh->getElem(i)->getNodeId(3);
+
   
   
+  }
+  cout << "Mesh line count "<<lines.size()<<endl;
+  
+  v_wf_ind.resize(2*lines.size()+1); //REPEATED!!
+  std::set <std::pair <int,int> > ::iterator it = lines.begin();
+  for (int i=0;i<lines.size();i++){
+    //cout << "pair ind "<< it->first<<",  "<<it->second<<endl;
+    v_wf_ind[2*i  ] = it->first;
+    v_wf_ind[2*i+1] = it->second;
+    it++;
   }
   
   // cout << "indices "<<endl;
