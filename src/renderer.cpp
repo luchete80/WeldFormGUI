@@ -408,17 +408,18 @@ Renderer::addMesh(Mesh* msh){
 
     //WIREFRAME
     if ( msh->getElem(0)->getNodeCount()==8){
-      cout << i<< ": ";
-      for (int j=0;j<8;j++)
-        cout<<msh->getElem(i)->getNodeId(j)<<" ";
-      cout <<endl;
+
       int j = 0;
-      //for (int j=0;j<2;j++){
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1))); //Ordered pair
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+1),msh->getElem(i)->getNodeId(4*j+2))); //Ordered pair
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+2),msh->getElem(i)->getNodeId(4*j+3))); //Ordered pair
-      //lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+3),msh->getElem(i)->getNodeId(4*j+0))); //Ordered pair
-      //}
+      for (int j=0;j<2;j++){
+        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1))); //Ordered pair
+        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+1),msh->getElem(i)->getNodeId(4*j+2))); //Ordered pair
+        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+2),msh->getElem(i)->getNodeId(4*j+3))); //Ordered pair
+        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+3),msh->getElem(i)->getNodeId(4*j+0))); //Ordered pair
+      }
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(4))); //Ordered pair
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(1),msh->getElem(i)->getNodeId(5))); //Ordered pair
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(2),msh->getElem(i)->getNodeId(6))); //Ordered pair
+      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(7))); //Ordered pair
       
     } else if ( msh->getElem(0)->getNodeCount()==4){
        
