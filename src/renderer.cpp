@@ -265,11 +265,11 @@ void Renderer::Render() {
         }
 
         //IF FULL 
-        // glDrawElementsBaseVertex(GL_TRIANGLES, 
-                         // m_Entries[i].NumIndices, 
-                         // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         // m_Entries[i].BaseVertex);
+        glDrawElementsBaseVertex(GL_TRIANGLES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         m_Entries[i].BaseVertex);
         // //IF WIREFRANME
         // glDrawElementsBaseVertex(GL_LINES, 
                          // m_Entries[i].NumIndices, 
@@ -277,12 +277,12 @@ void Renderer::Render() {
                          // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
                          // m_Entries[i].BaseVertex);
 
-        // glDrawElements(GL_TRIANGLES, 
-                         // m_Entries[i].NumIndices, 
-                         // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
-                         // //,m_Entries[i].BaseVertex
-                         // );
+        glDrawElements(GL_TRIANGLES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         //,m_Entries[i].BaseVertex
+                         );
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -402,9 +402,6 @@ Renderer::addMesh(Mesh* msh){
 
       vind[3*i+j] = msh->getElem(i)->getNodeId(j); //Instead of the position?
     }
-    // vind[6*i+3] = msh->getElem(i)->getNodeId(2);
-    // vind[6*i+4] = msh->getElem(i)->getNodeId(3);
-    // vind[6*i+5] = msh->getElem(i)->getNodeId(0);
 
     //WIREFRAME
     if ( msh->getElem(0)->getNodeCount()==8){
@@ -427,6 +424,7 @@ Renderer::addMesh(Mesh* msh){
       lines.insert(my_make_pair(msh->getElem(i)->getNodeId(1),msh->getElem(i)->getNodeId(2)));      
       lines.insert(my_make_pair(msh->getElem(i)->getNodeId(2),msh->getElem(i)->getNodeId(3)));
       lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(0)));
+      
     }
     //if ( msh->getElem(0)->getNodeCount()==8)    
     // v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
