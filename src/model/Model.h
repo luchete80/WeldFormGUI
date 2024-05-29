@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class Element;
 class Node;
@@ -22,6 +23,7 @@ protected:
   // NDOES AND ELEMENTS
   std::vector <Node* >      m_node; //Mesh part refer to this
   std::vector <Element* >   m_elem; //Mesh part refer to this
+  std::map <std::pair<int,int>, int> m_linemap;
 };
 
 #endif

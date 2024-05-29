@@ -13,6 +13,7 @@ using namespace std;
 
 #include <iostream>
 #include <set> //TO NOT REPEAT LINES
+#include <map>
 
 using namespace std;
 
@@ -345,6 +346,24 @@ std::pair<int,int> my_make_pair(int a, int b)
     else return std::pair<int,int>(b,a);
 }
 
+template<class T> inline
+bool contains(const std::set<T>& container, const T& value)
+{
+    return container.find(value) != container.end();
+}
+
+void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <std::pair<int,int>, int> *m_linemap, std::set<pair<int,int>> *lines){
+  std::pair<int,int> p = my_make_pair(msh->getElem(e)->getNodeId(i),msh->getElem(e)->getNodeId(j));
+  // if (lines.insert(pair)) //Ordered pair
+  if (!contains(*lines,p)){
+    m_linemap->insert(make_pair(p,1));
+    //lines.insert(pair);
+  }else {
+    //cout << "Line already existent "<<endl;
+    (*m_linemap)[p]++;
+    //cout << "line with nodes "<<pair.first<<", "<<pair.second<<" have "<<m_linemap[pair]<< " elements"<<endl;
+  }
+}
 ////ADD FINITE ELEMENT MESH////
 Renderer::addMesh(Mesh* msh){
 
@@ -377,6 +396,8 @@ Renderer::addMesh(Mesh* msh){
 	vector <unsigned int > vind(indcount); //2 triangles
 	vector <unsigned int > v_wf_ind; //WIREFRAME INDEX_BUFFER
 
+  std::map <std::pair<int,int>, int> m_linemap;
+  
   //ASSUMES ALL ELEMENTS HAVE SAME NODECOUNT
   //TODO: CHANGE THIS TO CHECK FOR EACH MESH ELEMENT 
   std::set < std::pair <int,int> > lines; //TODO: CONSTRUCT A VECToR OF CLASSES LINES FRMO THIS
@@ -396,6 +417,7 @@ Renderer::addMesh(Mesh* msh){
 	}
   int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
   cout << "Creating indices"<<endl;
+  int line_count = 0;
   for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
     for (int j=0;j<3;j++){
@@ -408,7 +430,19 @@ Renderer::addMesh(Mesh* msh){
 
       int j = 0;
       for (int j=0;j<2;j++){
-        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1))); //Ordered pair
+        InsertLine(msh,i, 4*j+0,4*j+1, &m_linemap,&lines); /////CRASHING
+        // InsertLine(msh,i, 4*j+1,4*j+2, m_linemap,lines);
+        
+        
+        std::pair<int,int> pair = my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1));
+        // if (!contains(lines,pair)){
+          //m_linemap.insert(make_pair(pair,1));
+          lines.insert(pair);
+        // }else {
+          // //cout << "Line already existent "<<endl;
+          // m_linemap[pair]++;
+          // //cout << "line with nodes "<<pair.first<<", "<<pair.second<<" have "<<m_linemap[pair]<< " elements"<<endl;
+        //}
         lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+1),msh->getElem(i)->getNodeId(4*j+2))); //Ordered pair
         lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+2),msh->getElem(i)->getNodeId(4*j+3))); //Ordered pair
         lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+3),msh->getElem(i)->getNodeId(4*j+0))); //Ordered pair
@@ -426,16 +460,18 @@ Renderer::addMesh(Mesh* msh){
       lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(0)));
       
     }
+    
+    
     //if ( msh->getElem(0)->getNodeCount()==8)    
     // v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
     // v_wf_ind[8*i+2] = msh->getElem(i)->getNodeId(1);v_wf_ind[8*i+3] = msh->getElem(i)->getNodeId(2);    
     // v_wf_ind[8*i+4] = msh->getElem(i)->getNodeId(2);v_wf_ind[8*i+5] = msh->getElem(i)->getNodeId(3);
 
+  }//ELEMENT COUNT 
   
-  
-  }
   cout << "Mesh line count "<<lines.size()<<endl;
-  
+
+  /////_----------------------------------- ORIGINAL
   v_wf_ind.resize(2*lines.size()+1); //REPEATED!!
   std::set <std::pair <int,int> > ::iterator it = lines.begin();
   for (int i=0;i<lines.size();i++){
@@ -444,6 +480,27 @@ Renderer::addMesh(Mesh* msh){
     v_wf_ind[2*i+1] = it->second;
     it++;
   }
+  ////_--------------------------------------------------
+  
+  int ext_line =0;
+  std::map <std::pair <int,int> , int > ::iterator mit = m_linemap.begin();
+  for (int i=0;i<m_linemap.size();i++){
+    if (it->second<3)
+      ext_line ++;
+    mit++;
+  }
+  
+  
+  cout << "External lines"<<ext_line<<endl;
+  // v_wf_ind.resize(ext_line); //REPEATED!!
+// mit = m_linemap.begin();
+  // int l=0;
+  // for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
+    // //cout << "pair ind "<< it->first<<",  "<<it->second<<endl;
+    // v_wf_ind[2*l  ] = it->first;
+    // v_wf_ind[2*l+1] = it->second;
+    // l++;
+  // }
   
   // cout << "indices "<<endl;
   // for (int i=0;i<indcount;i++)
