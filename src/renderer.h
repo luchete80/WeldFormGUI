@@ -66,7 +66,7 @@ struct BasicMeshEntry {
 class Renderer
 {
 public:
-    addMesh (Mesh *); //adds fem mesh
+    void addMesh (Mesh *); //adds fem mesh
     Renderer();
 
     ~Renderer();

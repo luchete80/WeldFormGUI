@@ -354,18 +354,26 @@ bool contains(const std::set<T>& container, const T& value)
 
 void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <std::pair<int,int>, int> *m_linemap, std::set<pair<int,int>> *lines){
   std::pair<int,int> p = my_make_pair(msh->getElem(e)->getNodeId(i),msh->getElem(e)->getNodeId(j));
+  lines->insert(p);
   // if (lines.insert(pair)) //Ordered pair
   if (!contains(*lines,p)){
-    m_linemap->insert(make_pair(p,1));
+    m_linemap->insert(make_pair(p,0));
+    lines->insert(p);
     //lines.insert(pair);
   }else {
     //cout << "Line already existent "<<endl;
-    (*m_linemap)[p]++;
+     (*m_linemap)[p]++;
+     //cout << "elements shared "<<(*m_linemap)[p] <<endl;
+      // if ((*m_linemap)[p] < 3)
+        // lines->insert(p);
+      // else
+        // cout << "Line with 3 common elements "<<endl;
     //cout << "line with nodes "<<pair.first<<", "<<pair.second<<" have "<<m_linemap[pair]<< " elements"<<endl;
   }
+  //cout << "lines size"<<lines->size()<<endl;
 }
 ////ADD FINITE ELEMENT MESH////
-Renderer::addMesh(Mesh* msh){
+void Renderer::addMesh(Mesh* msh){
 
     	//// VERTICES 
 	//// 2 3
@@ -431,26 +439,22 @@ Renderer::addMesh(Mesh* msh){
       int j = 0;
       for (int j=0;j<2;j++){
         InsertLine(msh,i, 4*j+0,4*j+1, &m_linemap,&lines); /////CRASHING
-        // InsertLine(msh,i, 4*j+1,4*j+2, m_linemap,lines);
-        
-        
-        std::pair<int,int> pair = my_make_pair(msh->getElem(i)->getNodeId(4*j+0),msh->getElem(i)->getNodeId(4*j+1));
-        // if (!contains(lines,pair)){
-          //m_linemap.insert(make_pair(pair,1));
-          lines.insert(pair);
-        // }else {
-          // //cout << "Line already existent "<<endl;
-          // m_linemap[pair]++;
-          // //cout << "line with nodes "<<pair.first<<", "<<pair.second<<" have "<<m_linemap[pair]<< " elements"<<endl;
-        //}
-        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+1),msh->getElem(i)->getNodeId(4*j+2))); //Ordered pair
-        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+2),msh->getElem(i)->getNodeId(4*j+3))); //Ordered pair
-        lines.insert(my_make_pair(msh->getElem(i)->getNodeId(4*j+3),msh->getElem(i)->getNodeId(4*j+0))); //Ordered pair
+        InsertLine(msh,i, 4*j+1,4*j+2, &m_linemap,&lines); /////CRASHING
+        InsertLine(msh,i, 4*j+2,4*j+3, &m_linemap,&lines); /////CRASHING
+        InsertLine(msh,i, 4*j+3,4*j+0, &m_linemap,&lines); /////CRASHING
+
+
       }
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(4))); //Ordered pair
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(1),msh->getElem(i)->getNodeId(5))); //Ordered pair
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(2),msh->getElem(i)->getNodeId(6))); //Ordered pair
-      lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(7))); //Ordered pair
+
+        InsertLine(msh,i, 0,4, &m_linemap,&lines); /////CRASHING
+        InsertLine(msh,i, 1,5, &m_linemap,&lines); /////CRASHING
+        InsertLine(msh,i, 2,6, &m_linemap,&lines); /////CRASHING
+        InsertLine(msh,i, 3,7, &m_linemap,&lines); /////CRASHING
+        
+      // lines.insert(my_make_pair(msh->getElem(i)->getNodeId(0),msh->getElem(i)->getNodeId(4))); //Ordered pair
+      // lines.insert(my_make_pair(msh->getElem(i)->getNodeId(1),msh->getElem(i)->getNodeId(5))); //Ordered pair
+      // lines.insert(my_make_pair(msh->getElem(i)->getNodeId(2),msh->getElem(i)->getNodeId(6))); //Ordered pair
+      // lines.insert(my_make_pair(msh->getElem(i)->getNodeId(3),msh->getElem(i)->getNodeId(7))); //Ordered pair
       
     } else if ( msh->getElem(0)->getNodeCount()==4){
        
@@ -462,6 +466,8 @@ Renderer::addMesh(Mesh* msh){
     }
     
     
+    
+    
     //if ( msh->getElem(0)->getNodeCount()==8)    
     // v_wf_ind[8*i+0] = msh->getElem(i)->getNodeId(0);v_wf_ind[8*i+1] = msh->getElem(i)->getNodeId(1);
     // v_wf_ind[8*i+2] = msh->getElem(i)->getNodeId(1);v_wf_ind[8*i+3] = msh->getElem(i)->getNodeId(2);    
@@ -469,7 +475,7 @@ Renderer::addMesh(Mesh* msh){
 
   }//ELEMENT COUNT 
   
-  cout << "Mesh line count "<<lines.size()<<endl;
+  cout << "Total Mesh line count "<<lines.size()<<endl;
 
   /////_----------------------------------- ORIGINAL
   v_wf_ind.resize(2*lines.size()+1); //REPEATED!!
@@ -484,23 +490,29 @@ Renderer::addMesh(Mesh* msh){
   
   int ext_line =0;
   std::map <std::pair <int,int> , int > ::iterator mit = m_linemap.begin();
-  for (int i=0;i<m_linemap.size();i++){
-    if (it->second<3)
+  for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
+    if (mit->second<3){
       ext_line ++;
+    }
     mit++;
   }
   
   
   cout << "External lines"<<ext_line<<endl;
-  // v_wf_ind.resize(ext_line); //REPEATED!!
-// mit = m_linemap.begin();
-  // int l=0;
-  // for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
-    // //cout << "pair ind "<< it->first<<",  "<<it->second<<endl;
-    // v_wf_ind[2*l  ] = it->first;
-    // v_wf_ind[2*l+1] = it->second;
-    // l++;
-  // }
+  v_wf_ind.resize(ext_line); //REPEATED!!
+  mit = m_linemap.begin();
+    int l=0;
+    for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
+    if (mit->second<3){
+      v_wf_ind[2*l  ] = mit->first.first;
+      v_wf_ind[2*l+1] = mit->first.second;
+      l++;
+    }
+      //cout << "pair ind "<< mit->first.first <<",  "<<mit->first.second<<endl;
+      // v_wf_ind[2*l  ] = it->first;
+      // v_wf_ind[2*l+1] = it->second;
+      
+    }
   
   // cout << "indices "<<endl;
   // for (int i=0;i<indcount;i++)
