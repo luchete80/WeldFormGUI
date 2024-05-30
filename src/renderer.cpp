@@ -266,11 +266,11 @@ void Renderer::Render() {
         }
 
         //IF FULL 
-        glDrawElementsBaseVertex(GL_TRIANGLES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         m_Entries[i].BaseVertex);
+        // glDrawElementsBaseVertex(GL_TRIANGLES, 
+                         // m_Entries[i].NumIndices, 
+                         // GL_UNSIGNED_INT, 
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         // m_Entries[i].BaseVertex);
         // //IF WIREFRANME
         // glDrawElementsBaseVertex(GL_LINES, 
                          // m_Entries[i].NumIndices, 
@@ -278,12 +278,12 @@ void Renderer::Render() {
                          // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
                          // m_Entries[i].BaseVertex);
 
-        glDrawElements(GL_TRIANGLES, 
-                         m_Entries[i].NumIndices, 
-                         GL_UNSIGNED_INT, 
-                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
-                         //,m_Entries[i].BaseVertex
-                         );
+        // glDrawElements(GL_TRIANGLES, 
+                         // m_Entries[i].NumIndices, 
+                         // GL_UNSIGNED_INT, 
+                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex) 
+                         // //,m_Entries[i].BaseVertex
+                         // );
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -359,11 +359,12 @@ void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <s
   if (!contains(*lines,p)){
     m_linemap->insert(make_pair(p,0));
     lines->insert(p);
+    (*m_linemap)[p]++;
     //lines.insert(pair);
   }else {
     //cout << "Line already existent "<<endl;
      (*m_linemap)[p]++;
-     //cout << "elements shared "<<(*m_linemap)[p] <<endl;
+     cout << "elements shared "<<(*m_linemap)[p] <<endl;
       // if ((*m_linemap)[p] < 3)
         // lines->insert(p);
       // else
@@ -491,19 +492,19 @@ void Renderer::addMesh(Mesh* msh){
   int ext_line =0;
   std::map <std::pair <int,int> , int > ::iterator mit = m_linemap.begin();
   for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
-    if (mit->second<3){
+    if (mit->second<4){
       ext_line ++;
     }
     mit++;
   }
   
+  if (msh->getElem(0)->getNodeCount()==8){
   
-  cout << "External lines"<<ext_line<<endl;
-  v_wf_ind.resize(ext_line); //REPEATED!!
-  mit = m_linemap.begin();
+    cout << "External lines"<<ext_line<<endl;
+    v_wf_ind.resize(2*ext_line); //REPEATED!!
     int l=0;
     for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
-    if (mit->second<3){
+    if (mit->second<4){
       v_wf_ind[2*l  ] = mit->first.first;
       v_wf_ind[2*l+1] = mit->first.second;
       l++;
@@ -511,8 +512,8 @@ void Renderer::addMesh(Mesh* msh){
       //cout << "pair ind "<< mit->first.first <<",  "<<mit->first.second<<endl;
       // v_wf_ind[2*l  ] = it->first;
       // v_wf_ind[2*l+1] = it->second;
-      
     }
+  }
   
   // cout << "indices "<<endl;
   // for (int i=0;i<indcount;i++)
