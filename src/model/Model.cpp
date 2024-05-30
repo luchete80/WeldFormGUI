@@ -17,7 +17,6 @@ Model::Model(string name){
   for (int n=0;n<reader.m_node.size();n++){
     m_node.push_back(new Node(reader.m_node[n].m_x[0],reader.m_node[n].m_x[1],reader.m_node[n].m_x[2], 
                               reader.m_node[n].m_id));
-    cout << "node "<< n <<": "<<reader.m_node[n].m_x[0] << " "<< reader.m_node[n].m_x[1] << " "<< reader.m_node[n].m_x[2] << endl;
     //Node ID is needed for element indices
   }
   /// IN THIS CASE, ELEMENT AND NODES ARE CREATED INSIDE MODEL

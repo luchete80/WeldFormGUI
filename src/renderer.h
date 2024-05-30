@@ -15,6 +15,7 @@
 #include "ogldev_pipeline.h"
 
 #include <string>
+#include "Domain.h"
 
 #include "model/Mesh.h"
 
@@ -66,7 +67,8 @@ struct BasicMeshEntry {
 class Renderer
 {
 public:
-    void addMesh (Mesh *); //adds fem mesh
+    void addMesh   (Mesh *); //adds fem mesh
+    void addDomain (SPH::Domain *); //adds fem mesh
     Renderer();
 
     ~Renderer();

@@ -573,7 +573,7 @@ IMGUI_DEMO_MARKER("Configuration");
             
             static double radius = 0.01;
             ImGui::InputDouble("Particle Radius",&radius); 
-            if (ImGui::Button("Create")){
+            if (ImGui::Button("Create SPH")){
              cout << "radius "<<radius<<endl;
              cout << "size 0"<<size[0]<<endl;
             if (item_current == 2)//Plane
@@ -594,8 +594,8 @@ IMGUI_DEMO_MARKER("Configuration");
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              //m_renderer.addMesh(m_fem_msh);
-              //is_fem_mesh = true;
+              m_renderer.addMesh(m_fem_msh);
+              is_fem_mesh = true;
             }
     }
 

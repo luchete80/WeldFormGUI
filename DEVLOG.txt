@@ -19,5 +19,6 @@
          - Fixed 2D plane in particles
 20240520 - Added own LSDynaReader library to import
          - Added Boundary Conditions to Main Menu 
-         - 
+20240530 - Added "Create SPH" to domain.
+         - Added FEM Cube mesh
          

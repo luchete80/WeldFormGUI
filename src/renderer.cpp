@@ -354,7 +354,8 @@ bool contains(const std::set<T>& container, const T& value)
 
 void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <std::pair<int,int>, int> *m_linemap, std::set<pair<int,int>> *lines){
   std::pair<int,int> p = my_make_pair(msh->getElem(e)->getNodeId(i),msh->getElem(e)->getNodeId(j));
-  lines->insert(p);
+
+
   // if (lines.insert(pair)) //Ordered pair
   if (!contains(*lines,p)){
     m_linemap->insert(make_pair(p,0));
@@ -362,9 +363,9 @@ void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <s
     (*m_linemap)[p]++;
     //lines.insert(pair);
   }else {
-    //cout << "Line already existent "<<endl;
+
      (*m_linemap)[p]++;
-     // cout << "elements shared "<<(*m_linemap)[p] <<endl;
+
       // if ((*m_linemap)[p] < 3)
         // lines->insert(p);
       // else
@@ -399,8 +400,9 @@ void Renderer::addMesh(Mesh* msh){
   
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
-  
-	vector <Vector3f> vpos(vcount), vnorm(vcount);
+  int vcount_ext = vcount + 8*vcount;
+  //8 x vcount means a cube which represents each node
+	vector <Vector3f> vpos(vcount + 8*vcount), vnorm(vcount);
 	vector <Vector2f> vtex(vcount);
 	vector <unsigned int > vind(indcount); //2 triangles
 	vector <unsigned int > v_wf_ind; //WIREFRAME INDEX_BUFFER
@@ -424,15 +426,25 @@ void Renderer::addMesh(Mesh* msh){
 		//vnorm[i]=vn;
 		//vtex[i]	=atex[i];
 	}
+  
+  //Draw the cubes representing the nodes
+  for (int i=vcount;i<vcount_ext;i++){
+    
+    
+  }
+  
+  //Second part, now the nodes
   int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
   cout << "Creating indices"<<endl;
   int line_count = 0;
   for (int i=0;i<elemcount;i++){
     //REPLACE WITH ELEMENT INDICES
-    for (int j=0;j<3;j++){
+    //cout << " index "<<i<<endl;
+    //WE HAVE TO ADD SPHERES (OR CUBES) TO NODE SELECTION
+    // for (int j=0;j<3;j++){
 
-      vind[3*i+j] = msh->getElem(i)->getNodeId(j); //Instead of the position?
-    }
+      // vind[3*i+j] = msh->getElem(i)->getNodeId(j); //Instead of the position?
+    // }
 
     //WIREFRAME
     if ( msh->getElem(0)->getNodeCount()==8){
@@ -478,28 +490,29 @@ void Renderer::addMesh(Mesh* msh){
   
   cout << "Total Mesh line count "<<lines.size()<<endl;
 
-  /////_----------------------------------- ORIGINAL
-  v_wf_ind.resize(2*lines.size()+1); //REPEATED!!
-  std::set <std::pair <int,int> > ::iterator it = lines.begin();
-  for (int i=0;i<lines.size();i++){
-    //cout << "pair ind "<< it->first<<",  "<<it->second<<endl;
-    v_wf_ind[2*i  ] = it->first;
-    v_wf_ind[2*i+1] = it->second;
-    it++;
-  }
-  ////_--------------------------------------------------
-  
-  int ext_line =0;
-  std::map <std::pair <int,int> , int > ::iterator mit = m_linemap.begin();
-  for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
-    if (mit->second<4){
-      ext_line ++;
+  if (msh->getElem(0)->getNodeCount()==4){
+    /////_----------------------------------- ORIGINAL
+    v_wf_ind.resize(2*lines.size()+1); //REPEATED!!
+    std::set <std::pair <int,int> > ::iterator it = lines.begin();
+    for (int i=0;i<lines.size();i++){
+      //cout << "pair ind "<< it->first<<",  "<<it->second<<endl;
+      v_wf_ind[2*i  ] = it->first;
+      v_wf_ind[2*i+1] = it->second;
+      it++;
     }
-    mit++;
-  }
-  
-  if (msh->getElem(0)->getNodeCount()==8){
-  
+    ////_--------------------------------------------------
+
+  } else if (msh->getElem(0)->getNodeCount()==8){
+    int ext_line =0;
+    std::map <std::pair <int,int> , int > ::iterator mit = m_linemap.begin();
+    for (mit = m_linemap.begin(); mit != m_linemap.end(); mit++){
+      if (mit->second<4){
+        ext_line ++;
+      }
+      //cout << mit->first.first << ", "<<mit->first.second << ", " <<mit->second<<endl;  
+    }
+    cout << "Element node count "<<msh->getElem(0)->getNodeCount()<<endl;
+    
     cout << "External lines"<<ext_line<<endl;
     v_wf_ind.resize(2*ext_line); //REPEATED!!
     int l=0;

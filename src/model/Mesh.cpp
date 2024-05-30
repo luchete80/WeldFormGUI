@@ -175,7 +175,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
        } 
     } else { //dim: 3
       int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
-      n.resize(4);
+      n.resize(8);
       int nnodz = (nel[0]+1)*(nel[1]+1);
       for (int ez = 0; ez < nel[2];ez++){
         for (int ey = 0; ey < nel[1];ey++){
@@ -195,13 +195,11 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
             n[6] = m_node[nb2 + nnodz + 1];   
             n[7] = m_node[nb2 + nnodz    ];         
             cout << "largest ind "<<nb2 + nnodz + 1<<endl;
-            // for (int i=0;i<8;i++)
-              // cout << elnod_h[ei + i]<<", ";
-            // cout <<endl;
+            for (int i=0;i<8;i++)
+              cout << n[i]->getId()<<", ";
+            cout <<endl;
             m_elem.push_back(new Element(n));
             
-            cout << "Nel x : "<<nel[0]<<endl;
-            cout << "nodes "<<endl;
              
              // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
              // ei += m_nodxelem;
