@@ -17,7 +17,7 @@ Model::Model(string name){
   for (int n=0;n<reader.m_node.size();n++){
     m_node.push_back(new Node(reader.m_node[n].m_x[0],reader.m_node[n].m_x[1],reader.m_node[n].m_x[2], 
                               reader.m_node[n].m_id));
-                              
+    cout << "node "<< n <<": "<<reader.m_node[n].m_x[0] << " "<< reader.m_node[n].m_x[1] << " "<< reader.m_node[n].m_x[2] << endl;
     //Node ID is needed for element indices
   }
   /// IN THIS CASE, ELEMENT AND NODES ARE CREATED INSIDE MODEL
@@ -29,8 +29,9 @@ Model::Model(string name){
       // for (int t=0;t<3;t++)
       // msh->getElem(ne)->getNodeId(t);
       //reader.getNodePos(ne);
-      
+      //cout << reader.getNodePos(reader.m_elem[e].node[ne]) << " ";
     }
+    //cout << endl;
     m_elem.push_back(new Element(enod)); //This vector is created in new element space
 
   }

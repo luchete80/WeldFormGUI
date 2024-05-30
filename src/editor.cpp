@@ -593,9 +593,9 @@ IMGUI_DEMO_MARKER("Configuration");
             
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
-              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(0.1,0.1,0),radius);
-              m_renderer.addMesh(m_fem_msh);
-              is_fem_mesh = true;
+              m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
+              //m_renderer.addMesh(m_fem_msh);
+              //is_fem_mesh = true;
             }
     }
 

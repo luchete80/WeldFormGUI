@@ -90,6 +90,7 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
     if (Lz < h) Dimension = 2;
     
     if (Dimension==3) {
+      cout << "Dimension: 3"<<endl;
     	if (type==0) {
     		//Hexagonal close packing
     		double z,zp;

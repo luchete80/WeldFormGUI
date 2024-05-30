@@ -43,7 +43,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
     
     nel[0] = (int)(L[0]/(2.0*r));
     nel[1] = (int)(L[1]/(2.0*r));
-    nel[2] = 0;
+    nel[2] = (int)(L[1]/(2.0*r));
     
     cout << "Nel x: "<<nel[0]<<", y "<<nel[1]<<endl;
     
@@ -84,7 +84,8 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 
 	// // //int size = dom.Particles.size() * sizeof(vector_t);
 	// // cout << "Copying to device..."<<endl;
-    
+
+    if (m_dim == 2) {    
     // cout << "Box Particle Count is " << m_node_count <<endl;
     p = 0;
     Xp.x = 0.0;
@@ -104,7 +105,30 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
         Xp.y += 2.0 * r;
       }// 
       // Xp.z = Xp.z + 2 * r;
-    //}
+    } else {
+      Xp.z = 0.0;
+      p = 0;
+      for (int k = 0; k < (nel[2] +1);k++){
+        Xp.x = 0.0;
+        //for (int k = 0; k < (nel[2] +1);k++) {
+        Xp.y= V.y;
+        for (int j = 0; j < (nel[1] +1);j++){
+          Xp.x = V.x;
+          for (int i = 0; i < (nel[0] +1);i++){
+            //m_node.push_back(new Node(Xp));
+            //x_H[p] = Xp;
+            //nod%x(p,:) = Xp(:);
+            cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
+            m_node.push_back(new Node(Xp.x,Xp.y,Xp.z,p));
+            p++;
+            Xp.x += 2.0 * r;
+          }
+          Xp.y += 2.0 * r;
+        }// 
+         Xp.z += 2 * r;     
+      }//for k
+      
+    }
     // //cout <<"m_node size"<<m_node.size()<<endl;
     // } 
 		// memcpy_t(this->x, x_H, sizeof(vector_t) * m_node_count);    
@@ -150,39 +174,41 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 					}
        } 
     } else { //dim: 3
-      // int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
-      // int nnodz = (nel[0]+1)*(nel[1]+1);
-      // for (int ez = 0; ez < nel[2];ez++)
-      // for (int ey = 0; ey < nel[1];ey++){
-        // for (int ex = 0; ex < nel[0];ex++){
-          
-          // int iv[8];
-          // int nb1 = nnodz*ez + (nel[0]+1)*ey + ex;
-          // int nb2 = nnodz*ez + (nel[0]+1)*(ey+1) + ex;
-          
-          // elnod_h[ei  ] = nb1;                      nodel_count_h[nb1  ] ++;          
-          // elnod_h[ei+1] = nb1+1;                    nodel_count_h[nb1+1] ++;
-          // elnod_h[ei+2] = nb2+1;                    nodel_count_h[nb2+1] ++;
-          // elnod_h[ei+3] = nb2;                      nodel_count_h[nb2  ] ++;
-          
-          // elnod_h[ei+4] = nb1 + nnodz*(ez+1);       nodel_count_h[nb1 + nnodz*(ez+1)    ]++;   
-          // elnod_h[ei+5] = nb1 + nnodz*(ez+1) + 1;   nodel_count_h[nb1 + nnodz*(ez+1) + 1]++;  
-          // elnod_h[ei+6] = nb2 + nnodz*(ez+1) + 1;   nodel_count_h[nb2 + nnodz*(ez+1) + 1]++;  
-          // elnod_h[ei+7] = nb2 + nnodz*(ez+1);       nodel_count_h[nb2 + nnodz*(ez+1)    ]++;  
-          
-          // for (int i=0;i<8;i++)
-            // cout << elnod_h[ei + i]<<", ";
-          // cout <<endl;
+      int ei = 0; //ELEMENT INTERNAL NODE (GLOBAL INDEX)
+      n.resize(4);
+      int nnodz = (nel[0]+1)*(nel[1]+1);
+      for (int ez = 0; ez < nel[2];ez++){
+        for (int ey = 0; ey < nel[1];ey++){
+          for (int ex = 0; ex < nel[0];ex++){
+            cout << "elem 1"<< endl;
+            int iv[8];
+            int nb1 = nnodz*ez + (nel[0]+1)*ey + ex;
+            int nb2 = nnodz*ez + (nel[0]+1)*(ey+1) + ex;
+            
+            n[0] = m_node[nb1  ];                        
+            n[1] = m_node[nb1+1];                    
+            n[2] = m_node[nb2+1];                    
+            n[3] = m_node[nb2  ];                      
+            
+            n[4] = m_node[nb1 + nnodz    ];      
+            n[5] = m_node[nb1 + nnodz + 1];    
+            n[6] = m_node[nb2 + nnodz + 1];   
+            n[7] = m_node[nb2 + nnodz    ];         
+            cout << "largest ind "<<nb2 + nnodz + 1<<endl;
+            // for (int i=0;i<8;i++)
+              // cout << elnod_h[ei + i]<<", ";
+            // cout <<endl;
+            m_elem.push_back(new Element(n));
+            
+            cout << "Nel x : "<<nel[0]<<endl;
+            cout << "nodes "<<endl;
+             
+             // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
+             // ei += m_nodxelem;
 
-            // cout << "Nel x : "<<nel[0]<<endl;
-           // cout << "nodes "<<endl;
-           
-           // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
-           // ei += m_nodxelem;
-
-					 // }
-      // } 
-
+          }
+        } 
+      }
 		}//if dim 
 
     // // //cudaMalloc((void **)&m_elnod, m_elem_count * m_nodxelem * sizeof (int));	

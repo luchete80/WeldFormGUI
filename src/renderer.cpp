@@ -266,11 +266,11 @@ void Renderer::Render() {
         }
 
         //IF FULL 
-        // glDrawElementsBaseVertex(GL_TRIANGLES, 
-                         // m_Entries[i].NumIndices, 
-                         // GL_UNSIGNED_INT, 
-                         // (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
-                         // m_Entries[i].BaseVertex);
+        glDrawElementsBaseVertex(GL_TRIANGLES, 
+                         m_Entries[i].NumIndices, 
+                         GL_UNSIGNED_INT, 
+                         (void*)(sizeof(unsigned int) * m_Entries[i].BaseIndex), 
+                         m_Entries[i].BaseVertex);
         // //IF WIREFRANME
         // glDrawElementsBaseVertex(GL_LINES, 
                          // m_Entries[i].NumIndices, 
@@ -364,7 +364,7 @@ void InsertLine(Mesh *msh, const int &e, const int &i, const int &j, std::map <s
   }else {
     //cout << "Line already existent "<<endl;
      (*m_linemap)[p]++;
-     cout << "elements shared "<<(*m_linemap)[p] <<endl;
+     // cout << "elements shared "<<(*m_linemap)[p] <<endl;
       // if ((*m_linemap)[p] < 3)
         // lines->insert(p);
       // else
