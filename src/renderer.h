@@ -52,16 +52,16 @@ static const GLushort cubeIndices[] = {
     1,5,3
 };
 
-float quad_vertices[] = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
-};
-unsigned int quad_indices[] = {  // note that we start from 0!
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-};  
+// float quad_vertices[] = {
+     // 0.5f,  0.5f, 0.0f,  // top right
+     // 0.5f, -0.5f, 0.0f,  // bottom right
+    // -0.5f, -0.5f, 0.0f,  // bottom left
+    // -0.5f,  0.5f, 0.0f   // top left 
+// };
+// unsigned int quad_indices[] = {  // note that we start from 0!
+    // 0, 1, 3,   // first triangle
+    // 1, 2, 3    // second triangle
+// };  
 
 struct myVertex
 {
@@ -142,7 +142,7 @@ private:
                           vector<unsigned int> Indices,
                           vector<unsigned int> wireframe_Indices); //NEW
 
-
+  bool GenAndBindInstancedBuffers(Mesh *);
     
     std::vector<BasicMeshEntry> m_Entries;
     std::vector<Texture*> m_Textures;

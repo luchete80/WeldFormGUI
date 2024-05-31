@@ -1310,20 +1310,14 @@ void Editor::PickingPhase() {
   
   glUseProgram(shaderProgram);
   
-  //THis can be done once, even scale
-  Pipeline pn;
-  // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
-  // pn.SetPerspectiveProj(m_persProjInfo);
-  // Matrix4f proj = pn.GetProjTrans();
-  // glm::mat4 ptest = Matrix4fToGLM(proj);
-  
+
       
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //m_pickingEffect.Enable();
     for (int p=0;p<m_domain.Particles.size();p++){
       float h = m_domain.Particles[0]->h/2.;
-      pn.Scale(h, h,h);  
+
       m_pickingEffect.Enable();
       Vec3_t v = m_domain.Particles[p]->x;
       //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
@@ -1351,22 +1345,11 @@ void Editor::PickingPhase() {
       transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
       glm::mat4 mat = projection * transback * view * model;
-      //glm::mat4 mat = ptest * transback * view * model;
       
-      
-      pn.WorldPos(pos);   
-      Matrix4f m = pn.GetWVPTrans();
-
-      
-      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]);   
-      //if (p<255){
       m_pickingEffect.SetObjectIndex((p+1));
-      //m_pickingEffect.SetWVP(pn.GetWVPTrans());    
 
       m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
-      
-      //m_pickingEffect.SetWVP(pn.GetWVPTrans()); 
-      
+
       
       m_renderer.Render();
       //}
@@ -1470,7 +1453,7 @@ void Editor::RenderPhase(){
       Matrix4f *mi = new Matrix4f[m_domain.Particles.size()];
       for (int p=0;p<m_domain.Particles.size();p++){    
       float h = m_domain.Particles[0]->h/2.;
-      pn.Scale(h, h,h);  
+
         Vec3_t v = m_domain.Particles[p]->x ;
         //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
         Vector3f pos(v(0),v(1),v(2)); 
@@ -1496,10 +1479,6 @@ void Editor::RenderPhase(){
         transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
         glm::mat4 mat = projection * transback * view * model;
-
-        pn.WorldPos(pos);   
-        Matrix4f m = pn.GetWVPTrans();
-        mi[p] = pn.GetWVPTrans();
 
 
         //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
@@ -1548,7 +1527,7 @@ void Editor::RenderPhase(){
 
 
       pn.WorldPos(pos);   
-      Matrix4f m = pn.GetWVPTrans();
+      //Matrix4f m = pn.GetWVPTrans(); //NOT USED!
 
 
       objectColor = Vector3f(0.0f, 0.5f, 1.0f);
@@ -1564,7 +1543,7 @@ void Editor::RenderPhase(){
       ////RENDER every NODES 
       /////// TODO: PASS THIS TO RENDERER
       Matrix4f *mi = new Matrix4f[m_fem_msh->getNodeCount()];
-      for (int p=0;p<m_domain.Particles.size();p++){ 
+      for (int p=0;p<m_fem_msh->getNodeCount();p++){ 
 
         float h = m_domain.Particles[0]->h/2.;
         pn.Scale(h, h,h);  
@@ -1590,9 +1569,6 @@ void Editor::RenderPhase(){
 
         glm::mat4 mat = projection * transback * view * model;
 
-        pn.WorldPos(pos);   
-        Matrix4f m = pn.GetWVPTrans();
-
 
         //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
         //If personalized shader
@@ -1616,7 +1592,7 @@ void Editor::RenderPhase(){
 
     }
 
-
+      } //IF IS FEM
   glUseProgram(0);
   drawGui();
 
