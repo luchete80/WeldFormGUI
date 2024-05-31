@@ -1463,7 +1463,7 @@ void Editor::RenderPhase(){
         //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
         ////FIRST TRANSLATE AND THEN SCALE!!!!!
 
-        model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+        model = glm::translate(model, glm::vec3(-m_femsh_center.x+pos.x,-m_femsh_center.y+pos.y,-m_femsh_center.z+pos.z));
         
         glm::mat4 projection(1.0);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -1494,12 +1494,6 @@ void Editor::RenderPhase(){
         }
         glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
-        trans_mat [p]= mat;
-        
-        //trans_mat [p]= m;
-        //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING 
-
-        
         glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
         m_renderer.Render();
       }//loop particles
@@ -1826,6 +1820,8 @@ void Editor::CalcFPS()
     }
 }
 
+///// TODO: PASS TO RENDERER
+/////////////////////////////
 void Editor::calcDomainCenter(){
   
   m_domain_center = 0.0;
@@ -1837,4 +1833,17 @@ void Editor::calcDomainCenter(){
     m_domain_center.z += m_domain.Particles[p]->x(2);
   }
   m_domain_center = m_domain_center/m_domain.Particles.size();
+}
+
+void Editor::calcMeshCenter(){
+  
+  m_femsh_center = 0.0;
+  //Converting from Vec3_t to Vector3f
+  //SELECT IF DOMAIN IS SPH
+  for (int p=0;p<m_domain.Particles.size();p++)    {
+    m_femsh_center.x += m_domain.Particles[p]->x(0);
+    m_femsh_center.y += m_domain.Particles[p]->x(1);
+    m_femsh_center.z += m_domain.Particles[p]->x(2);
+  }
+  m_femsh_center = m_femsh_center/m_domain.Particles.size();
 }

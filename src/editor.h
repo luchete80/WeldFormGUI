@@ -127,7 +127,7 @@ public:
   const SPH::Domain & getDomain() const {return m_domain;}
   
   void calcDomainCenter();
-  
+  void calcMeshCenter();
 protected:
   PickingTexture m_pickingTexture;
   PickingTechnique m_pickingEffect;
@@ -166,6 +166,7 @@ protected:
   long long m_start_time;
   SPH::Domain m_domain;
   Vector3f m_domain_center;
+  Vector3f m_femsh_center;
   double m_dx;
 
   bool rotatecam;
