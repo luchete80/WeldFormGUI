@@ -31,6 +31,26 @@
 #define WVP_MAT_VB    4
 #define WORLD_MAT_VB  5
 #define IDX_WIREFRAME 6    
+#define IDX_BALLSELEC  7    
+
+static const GLfloat cubeVertices[] = {
+    -1.0, -1.0,  1.0,
+    1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    1.0,  1.0,  1.0,
+    -1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+    1.0,  1.0, -1.0,
+};
+
+static const GLushort cubeIndices[] = {
+    // 0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
+    0,1,2, 1,3,2,
+    4,6,5, 5,6,7,
+    0,4,1, 1,4,5,
+    1,5,3
+};
 
 struct myVertex
 {
@@ -59,6 +79,7 @@ struct BasicMeshEntry {
         
         unsigned int NumIndices;
         unsigned int NumIndicesWF;
+        unsigned int NumIndicesCube;
 		unsigned int BaseVertex;
         unsigned int BaseIndex;
         unsigned int MaterialIndex;
@@ -85,13 +106,15 @@ public:
 	
     void Render(unsigned int NumInstances, const Matrix4f* WVPMats, const Matrix4f* WorldMats);
     
+    void RenderFEMNodes(); //Using last index
+    
     Orientation& GetOrientation() { return m_orientation; }
 
 
 
 private:
   GLuint m_VAO;
-  GLuint m_Buffers[7];
+  GLuint m_Buffers[8];
 
     //bool InitFromScene(const aiScene* pScene, const std::string& Filename);
     // void InitMesh(const aiMesh* paiMesh,

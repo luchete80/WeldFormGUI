@@ -113,7 +113,10 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".k", ".");
+    }
+    if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
     }
     if (ImGui::BeginMenu("Open Recent"))
     {
@@ -215,6 +218,7 @@ void ShowExampleMenuFile(const Editor &editor)
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+
     }
 }
 
@@ -589,6 +593,7 @@ IMGUI_DEMO_MARKER("Configuration");
               m_domain.AddBoxLength(0 ,Vec3_t ( 0. , 0.,0. ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
               calcDomainCenter();
               cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
+              is_sph_mesh = true;
             }
             
             if (ImGui::Button("Create FEM")){
@@ -614,7 +619,7 @@ IMGUI_DEMO_MARKER("Configuration");
     // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
 
   // display
-  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) 
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImport")) 
   {
     // action if OK
     if (ImGuiFileDialog::Instance()->IsOk())
@@ -626,6 +631,28 @@ IMGUI_DEMO_MARKER("Configuration");
       m_model = new Model(filePathName);
       m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
+      // action
+    }
+    
+    // close
+    ImGuiFileDialog::Instance()->Close();
+  }
+
+
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgExport")) 
+  {
+
+    // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+      
+          cout << "Exporting file "<<filePathName<<endl;
+      
+      //m_model = new Model(filePathName);
+      //m_renderer.addMesh(m_model->getPartMesh(0));
+      //is_fem_mesh = true;
       // action
     }
     
@@ -997,6 +1024,7 @@ Editor::Editor(){
   m_sel_count = 0;
   
   is_fem_mesh = false;
+  is_sph_mesh = false;
 }
 
 int Editor::Init(){
@@ -1431,79 +1459,67 @@ void Editor::RenderPhase(){
         // lightingShader.setVec3("lightPos", lightPos);
         
     
+    if (is_sph_mesh){
     
-    
-    for (int p=0;p<m_domain.Particles.size();p++){    
-    float h = m_domain.Particles[0]->h/2.;
-    pn.Scale(h, h,h);  
-      Vec3_t v = m_domain.Particles[p]->x ;
-      //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
-      Vector3f pos(v(0),v(1),v(2)); 
-      glm::mat4 model = glm::mat4(1.0f);
-     // model[0][0]=model[1][1]=model[2][2]=h;
-      //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
-      //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
-      ////FIRST TRANSLATE AND THEN SCALE!!!!!
+      for (int p=0;p<m_domain.Particles.size();p++){    
+      float h = m_domain.Particles[0]->h/2.;
+      pn.Scale(h, h,h);  
+        Vec3_t v = m_domain.Particles[p]->x ;
+        //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+        Vector3f pos(v(0),v(1),v(2)); 
+        glm::mat4 model = glm::mat4(1.0f);
+       // model[0][0]=model[1][1]=model[2][2]=h;
+        //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+        //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
+        ////FIRST TRANSLATE AND THEN SCALE!!!!!
 
-      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-      //model = glm::scale(model, glm::vec3(h,h,h));  
-      
-      
-      glm::mat4 projection(1.0);
-      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-      // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
-        // 600.0f / 2.0f, 0.0f, 
-      // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
-      //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
-      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-      view = glm::translate(view, arcCamera->position);// this, too.  
-      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
-      
-      glm::mat4 transback = glm::mat4(1.0f);
-      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+        model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+        
+        glm::mat4 projection(1.0);
+        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
+          // 600.0f / 2.0f, 0.0f, 
+        // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+        //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+        glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+        view = glm::translate(view, arcCamera->position);// this, too.  
+        view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+        
+        glm::mat4 transback = glm::mat4(1.0f);
+        transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
-      glm::mat4 mat = projection * transback * view * model;
+        glm::mat4 mat = projection * transback * view * model;
 
-
-      
-      //glm::mat4 mat = ptest * transback * view * model;
-    
-      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      
-      //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
-      pn.WorldPos(pos);   
-      Matrix4f m = pn.GetWVPTrans();
+        pn.WorldPos(pos);   
+        Matrix4f m = pn.GetWVPTrans();
 
 
-      //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
-      //If personalized shader
-      objectColor = Vector3f(0.0f, 0.5f, 1.0f);
-      for (int s=0;s<m_sel_count;s++){
-        //cout << "sel_count"<<m_sel_count<<endl;
-        if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
-        // cout <<"selected particle "<<p<<endl;
-        // cout << "m_sel_count "<<m_sel_count<<endl;
-        // glm::vec4 v(pos.x,pos.y,pos.z,1.0);
-        // glm::vec4 pp = mat * v;
-        // cout << "proj pos "<< pp.x<<", "<<pp.y<<", "<<pp.z<<endl;
+        //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
+        //If personalized shader
+        objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+        for (int s=0;s<m_sel_count;s++){
+          //cout << "sel_count"<<m_sel_count<<endl;
+          if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+
+          }
+          //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+
         }
-        //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
-      }
-      glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+        trans_mat [p]= mat;
+        
+        //trans_mat [p]= m;
+        //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING 
 
-      trans_mat [p]= mat;
+        
+        glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
+        m_renderer.Render();
+      }//loop particles
+    
+    } else if (is_fem_mesh) {
       
-      //trans_mat [p]= m;
-      //glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, &m[0][0]); //PASSING 
-
-      
-      glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
-      m_renderer.Render();
-    }
-
-    if (is_fem_mesh)
-    {
+      ////// MESH RENDER 
       Vector3f pos(0.0,0.0,0.0); 
       glm::mat4 model = glm::mat4(1.0f);
 
@@ -1523,37 +1539,23 @@ void Editor::RenderPhase(){
       glm::mat4 mat = projection * transback * view * model;
 
 
-      
-      //glm::mat4 mat = ptest * transback * view * model;
-    
-      //m_plightEffect->SetEyeWorldPos(camera->GetPos());
-      
-      //pn.Rotate(270.0f, - 90.0f + (m_rotation*180./3.14159), 0.0f);       
       pn.WorldPos(pos);   
       Matrix4f m = pn.GetWVPTrans();
 
 
-      //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
-      //If personalized shader
       objectColor = Vector3f(0.0f, 0.5f, 1.0f);
       // for (int s=0;s<m_sel_count;s++){
-        // //cout << "sel_count"<<m_sel_count<<endl;
-        // if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
-        // // cout <<"selected particle "<<p<<endl;
-        // // cout << "m_sel_count "<<m_sel_count<<endl;
-        // // glm::vec4 v(pos.x,pos.y,pos.z,1.0);
-        // // glm::vec4 pp = mat * v;
-        // // cout << "proj pos "<< pp.x<<", "<<pp.y<<", "<<pp.z<<endl;
-        // }
-        // //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
 
-      // }
       glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
       //trans_mat [p]= mat;
    
       glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
       m_renderer.Render();
+
+
+
+
     }
 
 

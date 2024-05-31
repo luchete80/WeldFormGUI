@@ -75,6 +75,7 @@ bool Renderer::LoadMesh(    vector<Vector3f> Positions,
     m_Entries[0].MaterialIndex = 0;        
     m_Entries[0].NumIndices = Indices.size();
     m_Entries[0].NumIndicesWF = wfIndices.size();
+    m_Entries[0].NumIndicesCube = 12;
     m_Entries[0].BaseVertex = 0;
     m_Entries[0].BaseIndex = 0;
 	
@@ -97,7 +98,9 @@ bool Renderer::GenAndBindBuffers(
     vector<Vector3f> Normals,
     vector<Vector2f> TexCoords,
     vector<unsigned int> Indices,
-                          vector<unsigned int> wireframe_Indices){
+    vector<unsigned int> wireframe_Indices/*,
+    vector<unsigned int> cube_Indices,*/
+    ){
 	// Generate and populate the buffers with vertex attributes and the indices
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
@@ -237,6 +240,10 @@ bool Renderer::InitMaterial(const string& Filename) {
     return Ret;
 }
 
+void Renderer::RenderFEMNodes(){
+  
+  
+}
 
 void Renderer::Render() {
    
@@ -319,6 +326,7 @@ void Renderer::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const 
 
     glBindVertexArray(m_VAO);
     
+    
     for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
         const unsigned int MaterialIndex = m_Entries[i].MaterialIndex;
 
@@ -391,18 +399,18 @@ void Renderer::addMesh(Mesh* msh){
 	unsigned int aind[] = { 0, 1, 2,
 							1, 3, 2};
 	
-  int vcount    = msh->getNodeCount();
+  int vcount    = msh->getNodeCount(); //LAST ONE ARE THE NODES
 	//int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
   //int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
   
   //IF TRIANGLES
-  int indcount  = msh->getElemCount()*3;
+  int indcount  = msh->getElemCount()*3; //IF THIS CHANGES IT CRASHES
   
   cout << "Vertex count " << vcount << endl;
   cout << "Index  count " << indcount << endl;
   int vcount_ext = vcount + 8*vcount;
   //8 x vcount means a cube which represents each node
-	vector <Vector3f> vpos(vcount + 8*vcount), vnorm(vcount);
+	vector <Vector3f> vpos(vcount + 8), vnorm(vcount);
 	vector <Vector2f> vtex(vcount);
 	vector <unsigned int > vind(indcount); //2 triangles
 	vector <unsigned int > v_wf_ind; //WIREFRAME INDEX_BUFFER
