@@ -22,6 +22,7 @@
 #include <algorithm>
 
 #include "input_writer.h"
+#include "LSDynaWriter.h"
 
 glm::mat4 trans_mat[1000]; //test
 
@@ -648,8 +649,14 @@ IMGUI_DEMO_MARKER("Configuration");
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
-          cout << "Exporting file "<<filePathName<<endl;
-      
+      cout << "Exporting file "<<filePathName<<endl;
+      if (is_sph_mesh){    
+        // for (int p=0;p<m_domain.Particles.size();p++){    
+          // float h = m_domain.Particles[0]->h/2.;
+          // pn.Scale(h, h,h);  
+          // Vec3_t v = m_domain.Particles[p]->x ;
+        LSDynaWriter writer(&m_domain, filePathName);
+      }
       //m_model = new Model(filePathName);
       //m_renderer.addMesh(m_model->getPartMesh(0));
       //is_fem_mesh = true;

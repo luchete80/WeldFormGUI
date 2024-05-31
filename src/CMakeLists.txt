@@ -85,6 +85,7 @@ add_executable(editor
               model/Domain.cpp
               material_dialog.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
+              ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
@@ -97,7 +98,7 @@ add_executable(editor
               
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
               #${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
+              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp    
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
