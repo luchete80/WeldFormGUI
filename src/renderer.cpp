@@ -348,6 +348,11 @@ void Renderer::Render(unsigned int NumInstances, const Matrix4f* WVPMats, const 
     glBindVertexArray(0);
 }
 
+void Renderer::RenderMeshNodes(/*unsigned int NumInstances, const Matrix4f* WVPMats, const Matrix4f* WorldMats*/){ //AS QUADs
+  //convert to instances
+
+}
+
 std::pair<int,int> my_make_pair(int a, int b) 
 {
     if ( a < b ) return std::pair<int,int>(a,b);
