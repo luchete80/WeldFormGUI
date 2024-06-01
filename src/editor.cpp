@@ -1534,58 +1534,53 @@ void Editor::RenderPhase(){
       glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
       m_renderer.Render();
 
+      //TODO: CHANGE TO INSTANCING
       ////RENDER every NODES 
       /////// TODO: PASS THIS TO RENDERER
-      Matrix4f *mi = new Matrix4f[m_fem_msh->getNodeCount()];
       for (int p=0;p<m_fem_msh->getNodeCount();p++){ 
 
-        float h = m_domain.Particles[0]->h/2.;
-        pn.Scale(h, h,h);  
-        Vec3_t v = m_domain.Particles[p]->x ;
-        //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
-        Vector3f pos(v(0),v(1),v(2)); 
-        glm::mat4 model = glm::mat4(1.0f);
+        // float h = m_domain.Particles[0]->h/2.;
+        // pn.Scale(h, h,h);  
+        // Vec3_t v = m_domain.Particles[p]->x ;
+        // //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+        // Vector3f pos(v(0),v(1),v(2)); 
+        // glm::mat4 model = glm::mat4(1.0f);
 
-        model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+        // model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
         
-        glm::mat4 projection(1.0);
-        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
-          // 600.0f / 2.0f, 0.0f, 
-        // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
-        //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
-        glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-        view = glm::translate(view, arcCamera->position);// this, too.  
-        view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+        // glm::mat4 projection(1.0);
+        // projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+        // glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+        // view = glm::translate(view, arcCamera->position);// this, too.  
+        // view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
         
-        glm::mat4 transback = glm::mat4(1.0f);
-        transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+        // glm::mat4 transback = glm::mat4(1.0f);
+        // transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
-        glm::mat4 mat = projection * transback * view * model;
+        // glm::mat4 mat = projection * transback * view * model;
 
 
-        //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
-        //If personalized shader
-        objectColor = Vector3f(0.0f, 0.5f, 1.0f);
-        for (int s=0;s<m_sel_count;s++){
-          //cout << "sel_count"<<m_sel_count<<endl;
-          if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+        // //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
+        // //If personalized shader
+        // objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+        // for (int s=0;s<m_sel_count;s++){
+          // //cout << "sel_count"<<m_sel_count<<endl;
+          // if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
 
-          }
-          //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+          // }
+          // //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
 
-        }
-        glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+        // }
+        // glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
 
-        trans_mat [p]= mat;
+        // trans_mat [p]= mat;
         
         
-        glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
-        m_renderer.Render();      
-
-
-    }
-
+        // glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)        m_renderer.Render();      
+        //RENDER ONLY THE NODES HERE! NOT THE FEM MESH
+      }
+      m_renderer.Render(); //THIS IS DONE ONCE      
       } //IF IS FEM
   glUseProgram(0);
   drawGui();

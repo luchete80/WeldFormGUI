@@ -591,6 +591,7 @@ void Renderer::addMesh(Mesh* msh){
 
 }
 
+// THIS IS FOR INSTANCING RENDERING
 //FOR NODES IN CASE OF FEM MESH
 bool Renderer::GenAndBindInstancedBuffers(Mesh *msh){
 
