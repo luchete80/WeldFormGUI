@@ -1462,8 +1462,8 @@ void Editor::RenderPhase(){
         //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
         //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
         ////FIRST TRANSLATE AND THEN SCALE!!!!!
+        model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
 
-        model = glm::translate(model, glm::vec3(-m_femsh_center.x+pos.x,-m_femsh_center.y+pos.y,-m_femsh_center.z+pos.z));
         
         glm::mat4 projection(1.0);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -1497,6 +1497,7 @@ void Editor::RenderPhase(){
         glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
         m_renderer.Render();
       }//loop particles
+
     
     } else if (is_fem_mesh) {
       
@@ -1506,7 +1507,8 @@ void Editor::RenderPhase(){
 
       //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
       
-      
+      model = glm::translate(model, glm::vec3(-m_femsh_center.x+pos.x,-m_femsh_center.y+pos.y,-m_femsh_center.z+pos.z));
+              
       glm::mat4 projection(1.0);
       projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
  
