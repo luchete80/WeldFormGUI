@@ -21,4 +21,5 @@
          - Added Boundary Conditions to Main Menu 
 20240530 - Added "Create SPH" to domain.
          - Added FEM Cube mesh
-         
+20240604 - Fixed some particle selecting things
+         - Added box selection

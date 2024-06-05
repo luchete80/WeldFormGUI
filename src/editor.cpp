@@ -843,58 +843,30 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         
         if (!box_select_mode)  { //SINGLE SELECT
         cout << "Pixel.ObjectID " << Pixel.ObjectID<<endl;
-          // if (Pixel.ObjectID != 0){
-           
-            // Vector3f vel(0.,0.,0.);
-            // m_sel_node = Pixel.ObjectID-1;
-            // float dt = (float) (GetCurrentTimeMillis() - m_last_mouse_dragtime)*1000.;
-            // //We have to transform coordinates!
-            // vel = Vector3f( (x-last_mouse_x)/dt,
-                            // (y-last_mouse_y)/dt,
-                            // 0.);
-            // //if (!m_is_node_sel) { //recently pressed, reset node velocity
-              // m_last_mouse_dragtime = GetCurrentTimeMillis();
-              // vel = Vector3f(0.,20.,0.);
-              // Vector3f f(0.,100.,0.);
-              // Vector3f force(0.,10,0.);
-
-              // m_is_node_sel = true;
-
-
-        
-        // int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
-        // cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
-            
-
-            //cout << "Node Vel "<<vel.x<< ", "<< vel.y<< ", "<<vel.z<<endl;
-            
-            // m_last_mouse_dragtime = GetCurrentTimeMillis();
-          // } else {m_is_node_sel = false;
-                  // cout <<"not selected node" <<endl;}
               
-        cout << "x,y: "<<x<<" , "<<y<<endl;
-        int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1)-1;
-        if (test >=0 ) {
-          //cout<<"SELECTED!"<<endl;
-        //CHECK
-          Vec3_t v = m_domain.Particles[test]->x;        
-          glm::vec4 pos(v(0),v(1),v(2),1.0);
-          glm::vec4 res = trans_mat[test] * pos;
-          cout << "particle center "<<res.x<<", "<<res.y<<endl;
+          cout << "x,y: "<<x<<" , "<<y<<endl;
+          int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1)-1;
+          if (test >=0 ) {
+            //cout<<"SELECTED!"<<endl;
+          //CHECK
+            Vec3_t v = m_domain.Particles[test]->x;        
+            glm::vec4 pos(v(0),v(1),v(2),1.0);
+            glm::vec4 res = trans_mat[test] * pos;
+            cout << "particle center "<<res.x<<", "<<res.y<<endl;
 
-           m_sel_count = 1;
-           //cout << " m_sel_count = 1; "<<endl;
-          m_sel_particles.clear();
-          m_sel_particles.push_back(test);
-        //}//If is sel
-        cout << "Pressed"<<endl;
-        
-          float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
-          cout << "x,y: "<<xx<<" , "<<yy<<endl;
-          }
-        else          {cout<<"NOT SELECTED"<<endl;}
-        cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
+             m_sel_count = 1;
+             //cout << " m_sel_count = 1; "<<endl;
+            m_sel_particles.clear();
+            m_sel_particles.push_back(test);
+          //}//If is sel
+          cout << "Pressed"<<endl;
+          
+            float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
+            float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+            cout << "x,y: "<<xx<<" , "<<yy<<endl;
+            }
+          else          {cout<<"NOT SELECTED"<<endl;}
+          cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
             
         //if (m_is_node_sel){
 
@@ -907,7 +879,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
       }// if press
       if(Button == GLFW_MOUSE_BUTTON_LEFT && Action == GLFW_RELEASE){
         m_left_button_pressed = false;
-        
+        cout <<"released "<<"box_select_mode "<<box_select_mode<<endl;
         if (box_select_mode) {
           m_sel_particles.clear();
           m_sel_count = 0;
@@ -949,11 +921,13 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             //if (res.x > xd_last && res.x < xd_curr && res.y > yd_last && res.y < yd_curr){
             if (resint_x > xbox[0] && resint_x < xbox[1] && resint_y > ybox[0] && resint_y < ybox[1]){
               //cout << "SELECTED"<<endl;
-              
+                
               m_sel_count++;
               m_sel_particles.push_back(p);
             }
           }// For particles
+
+          cout << "Selected %d particles "<<m_sel_count<<endl;
           logtest.AddLog("Selected %d particles \n",m_sel_count);
             
           // for (int i=(int)last_mouse_x;i<=(int)x;i++){
@@ -1479,7 +1453,7 @@ void Editor::RenderPhase(){
         transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
 
         glm::mat4 mat = projection * transback * view * model;
-
+        trans_mat [p]= mat;
 
         //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
         //If personalized shader
@@ -1584,6 +1558,21 @@ void Editor::RenderPhase(){
       }
       m_renderer.Render(); //THIS IS DONE ONCE      
       } //IF IS FEM
+
+                    // top left
+          // bottom left
+          // top right
+          // bottom right
+            glBegin (GL_QUADS);
+
+              glVertex2f (-0.1,0.1);
+              glVertex2f (-0.1,-0.1);
+              glVertex2f (0.1,-0.1);
+              glVertex2f (0.1,0.1);
+            
+
+            glEnd ();
+
   glUseProgram(0);
   drawGui();
 
@@ -1680,10 +1669,12 @@ void Editor::processInput(GLFWwindow *window)
       cout << "Pressed A"<<endl;
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-      cout << "Pressed A"<<endl;
-      if (box_select_mode ) cout << "Box Select Mode ON"<<endl;
-      else                 cout << "Box Select Mode OFF"<<endl;
       box_select_mode = !box_select_mode;
+      cout << "Pressed S"<<endl;
+      cout << "Box Select Mode ";
+      if (box_select_mode ) cout << "ON "<<endl;
+      else                  cout << "OFF "<<endl;
+
       
     }
 
