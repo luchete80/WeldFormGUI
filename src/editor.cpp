@@ -380,7 +380,10 @@ IMGUI_DEMO_MARKER("Configuration");
         open_ = ImGui::TreeNode("Sets");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New", "CTRL+Z")) {
+            
+            m_show_set_dlg = true;
+          }
           ImGui::EndPopup();
         }
         if (open_) //Expand
@@ -676,9 +679,13 @@ IMGUI_DEMO_MARKER("Configuration");
   ShowExampleAppLog(&show_app_log, &logtest);
   //cout << "log tst "<<logtest.test<<endl;
   create_new_mat = false;
+  create_new_set = false;
+
   Material_ mat;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
+  else if (m_show_set_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);}
+  
   if (create_new_mat) {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!
@@ -1000,6 +1007,7 @@ Editor::Editor(){
   
   m_currentaction = NULL;
   m_show_mat_dlg = false;
+  m_show_set_dlg = false;
   
   m_sel_particles.resize(1);
   m_sel_count = 0;

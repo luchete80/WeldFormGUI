@@ -1,0 +1,13 @@
+#ifndef _SET_H_
+#define _SET_H_
+
+//Option is to inherit characteristic from item
+
+template<typename T>
+class Set
+{
+  std::vector <T> m_item;
+  
+};
+
+#endif

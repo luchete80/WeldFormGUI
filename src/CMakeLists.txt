@@ -84,6 +84,7 @@ add_executable(editor
               texture.cpp
               model/Domain.cpp
               material_dialog.cpp
+              set_dialog.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
               ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp

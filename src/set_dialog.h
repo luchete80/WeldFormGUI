@@ -4,13 +4,23 @@
 
 #include "Material.h"
 #include "Dialog.h"
+#include "Set.h"
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-struct CreateSetDialog:
-public Dialog {
-  
 
+class CreateSetDialog:
+public Dialog { 
+public:
+  CreateSetDialog(){ }
+template <typename T>
+void  Draw(const char* title, bool* p_open, Set<T> *mat);
+void Draw(){}
+
+protected:  
+  bool create_set;
+  bool cancel_action;
+  
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
 };

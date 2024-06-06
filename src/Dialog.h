@@ -1,19 +1,20 @@
-#ifndef _SET_DIALOG_H_
-#define _SET_DIALOG_H_
+#ifndef _DIALOG_H_
+#define _DIALOG_H_
 
 
 #include "Material.h"
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-struct Dialog{
-
+class Dialog{
+public:
   Dialog (){m_isopen = false;}
   bool isOpen(){return m_isopen;}
-  virtual void Draw();
+  virtual void Draw(){};
+  
+protected:
 
-
-  bool isopen;
+  bool m_isopen;
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
 };

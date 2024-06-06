@@ -35,6 +35,7 @@
 
 #include "log.h"
 #include "material_dialog.h"
+#include "set_dialog.h"
 
 #include "Material.h"
 
@@ -197,10 +198,14 @@ protected:
   
   ExampleAppLog logtest;
   
-  MaterialDialog m_matdlg;
+  MaterialDialog  m_matdlg;
+  CreateSetDialog m_setdlg;
+  
   bool m_show_mat_dlg; //create
+  bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;
+  bool create_new_set;
 
 
   

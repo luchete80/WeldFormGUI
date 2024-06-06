@@ -8,6 +8,9 @@
 #include "../common/math/math.h"
 #include "Element.h"
 
+#include "Entity.h"
+#include "Set.h"
+
 class Element;
 class Node;
 class Model;
@@ -29,13 +32,16 @@ public:
   Element*  getElem(const int &i){return m_elem[i];} 
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
+
 protected:
   int m_node_count;
   int m_elem_count;
   std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!
   std::vector <Element*> m_elem; //BUT THIS ARE FROM THE PART!!
   std::vector <int>      elnod_h;
-
+  
+  std::vector < Set<Element> >  m_set_elem;
+  std::vector <Node*>     m_set_node;
 };
 
 #endif
