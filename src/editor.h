@@ -199,6 +199,7 @@ protected:
   ExampleAppLog logtest;
   
   MaterialDialog  m_matdlg;
+  
   CreateSetDialog m_setdlg;
   
   bool m_show_mat_dlg; //create

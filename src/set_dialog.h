@@ -6,21 +6,43 @@
 #include "Dialog.h"
 #include "Set.h"
 
-//SAME DIALOG FROM CREATE AND EDIT MATERIAL
-// IS BASICALLY THE SAME 
+#define NODE_SET      1
+#define ELEM_SET      2
+#define PARTICLE_SET  3
 
-class CreateSetDialog:
+class CreateSetTypeDialog:
 public Dialog { 
 public:
-  CreateSetDialog(){ }
-template <typename T>
-void  Draw(const char* title, bool* p_open, Set<T> *mat);
+  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type);
+
 void Draw(){}
 
 protected:  
   bool create_set;
   bool cancel_action;
   
+  // const bool & isMaterialCreated()const{return create_material;}
+  // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
+};
+
+
+//SAME DIALOG FROM CREATE AND EDIT MATERIAL
+// IS BASICALLY THE SAME 
+
+class CreateSetDialog:
+public Dialog { 
+public:
+  CreateSetDialog(){set_type=1; }
+template <typename T>
+void  Draw(const char* title, bool* p_open, Set<T> *mat);
+void Draw(){}
+
+void ShowSetTypeDialog();
+
+//protected:  
+  bool create_set;
+  bool cancel_action;
+  int set_type;
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
 };

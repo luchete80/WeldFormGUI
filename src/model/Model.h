@@ -10,7 +10,9 @@ class Node;
 class Material;
 class Part;
 class Mesh;
+class Particle;
 
+//HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
 public:
   Model(){}
@@ -21,6 +23,7 @@ protected:
   std::vector <Material*>   m_mat;  
   // TODO: SHOULD ANALYZE IF IT IS NECESARY TO HAVE REPEATED POINTERS FOR MESH AND MODEL 
   // NDOES AND ELEMENTS
+  std::vector <Particle* >  m_particle; 
   std::vector <Node* >      m_node; //Mesh part refer to this
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
