@@ -37,7 +37,7 @@ using namespace std;
 // Constructor
 SPHModel::SPHModel ()
 {
- 
+ m_modeltype=SPH_Model;
 }
 
 SPHModel::~SPHModel ()
@@ -274,5 +274,6 @@ void SPHModel::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, dou
 		cout << "Particle Count: "<<Particles.size()<< endl;
 
 	R = r;
+  m_modeltype==SPH_Model;
 }
 

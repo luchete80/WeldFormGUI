@@ -9,7 +9,7 @@ using namespace std;
 
 
 
-CreateSetTypeDialog::  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type, Model *){ 
+CreateSetTypeDialog::  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type, Model *model){ 
   create_set = false; 
   if (!ImGui::Begin(title, p_open))
   { cout << "test"<<endl;
@@ -28,6 +28,14 @@ CreateSetTypeDialog::  CreateSetTypeDialog(const char* title, bool* p_open, int 
   static int e;
   ImGui::RadioButton("Geometry", set_type, 1); ImGui::SameLine();
   ImGui::RadioButton("Node", set_type, 2); ImGui::SameLine();
+  if (model->getModelType() == SPH_Model){
+    ImGui::RadioButton("Particle", set_type, 3); ImGui::SameLine();
+
+  } else {
+   ImGui::BeginDisabled();
+  ImGui::RadioButton("Particle", set_type, 3); ImGui::SameLine();
+    ImGui::EndDisabled();    
+  }
   if (ImGui::Button("Cancel")) {
     cancel_action = false;
   }

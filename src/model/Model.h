@@ -19,6 +19,7 @@ public:
   Model(){}
   Model(std::string );
   Mesh* getPartMesh(const int &i);
+  const model_type& getModelType () const {return m_modeltype;}
 protected:
   std::vector <Part*>       m_part;
   std::vector <Material*>   m_mat;  
