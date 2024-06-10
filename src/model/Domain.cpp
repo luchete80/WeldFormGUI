@@ -33,22 +33,20 @@
 
 using namespace std;
 
-namespace SPH {
-
 
 // Constructor
-Domain::Domain ()
+SPHModel::SPHModel ()
 {
  
 }
 
-Domain::~Domain ()
+SPHModel::~SPHModel ()
 {
 	// size_t Max = Particles.size();
 	// for (size_t i=1; i<=Max; i++)  Particles.DelItem(Max-i);
 }
 
-void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, double Lz, 
+void SPHModel::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, double Lz, 
 									double r, double Density, double h, int type, int rotation, bool random, bool Fixed) {
     if ( !(type == 0 || type == 1) ) {
 	   	std::cout << "Packing Type is out of range. Please correct it and run again" << std::endl;
@@ -191,9 +189,9 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
 
 		// #pragma omp parallel for num_threads(Nproc)
 		// #ifdef __GNUC__
-		// for (size_t i=0; i<Particles.size(); i++)	//Like in Domain::Move
+		// for (size_t i=0; i<Particles.size(); i++)	//Like in SPHModel::Move
 		// #else
-		// for (int i=0; i<Particles.size(); i++)//Like in Domain::Move
+		// for (int i=0; i<Particles.size(); i++)//Like in SPHModel::Move
 		// #endif
 		// {
 			// Particles[i]->Mass = Mass;
@@ -278,4 +276,3 @@ void Domain::AddBoxLength(int tag, Vec3_t const & V, double Lx, double Ly, doubl
 	R = r;
 }
 
-}; // namespace SPH

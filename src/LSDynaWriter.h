@@ -6,11 +6,11 @@
 #include <iomanip>
 #include <vector>
 
-class SPH::Domain; //SPH DOMAIN
+class SPHModel; //SPH DOMAIN
 
 class LSDynaWriter {
 public:
-  LSDynaWriter(SPH::Domain *dom, const std::string& filename);
+  LSDynaWriter(SPHModel *dom, const std::string& filename);
 
 
 

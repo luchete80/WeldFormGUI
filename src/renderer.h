@@ -100,7 +100,7 @@ class Renderer
 {
 public:
     void addMesh   (Mesh *); //adds fem mesh
-    void addDomain (SPH::Domain *); //adds fem mesh
+    void addDomain (SPHModel *); //adds fem mesh
     Renderer();
 
     ~Renderer();

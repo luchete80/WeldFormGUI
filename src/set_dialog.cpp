@@ -9,7 +9,7 @@ using namespace std;
 
 
 
-CreateSetTypeDialog::  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type){ 
+CreateSetTypeDialog::  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type, Model *){ 
   create_set = false; 
   if (!ImGui::Begin(title, p_open))
   { cout << "test"<<endl;

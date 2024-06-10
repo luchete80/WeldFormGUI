@@ -8,7 +8,7 @@
 class InputWriter {
   //Check if write particles as geometry or with ext file
 public:
-  InputWriter(const std::string &, const SPH::Domain &);
+  InputWriter(const std::string &, const SPHModel &);
   
 };
 

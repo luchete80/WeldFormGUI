@@ -125,7 +125,7 @@ public:
   
   ArcballCamera * ArcCamera(){return arcCamera;}
   
-  const SPH::Domain & getDomain() const {return m_domain;}
+  const SPHModel & getDomain() const {return m_domain;}
   
   void calcDomainCenter();
   void calcMeshCenter();
@@ -165,7 +165,7 @@ protected:
   DirectionalLight 					m_directionalLight;
 
   long long m_start_time;
-  SPH::Domain m_domain;
+  SPHModel m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
   Vector3f m_domain_center;
   Vector3f m_femsh_center;
   double m_dx;

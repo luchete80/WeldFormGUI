@@ -6,9 +6,10 @@
 #include "LSDynaWriter.h"
 #include <iostream>
 using namespace std;
-using namespace SPH;
 
-LSDynaWriter:: LSDynaWriter(SPH::Domain *dom, const std::string& filename){
+
+// TODO: CHANGE BY GENERIC MODEL
+LSDynaWriter:: LSDynaWriter(SPHModel *dom, const std::string& filename){
     std::ofstream file(filename);
 
     if (!file.is_open()) {

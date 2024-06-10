@@ -1,6 +1,7 @@
 #ifndef _SET_DIALOG_H_
 #define _SET_DIALOG_H_
 
+#include "Model.h"
 
 #include "Material.h"
 #include "Dialog.h"
@@ -13,7 +14,7 @@
 class CreateSetTypeDialog:
 public Dialog { 
 public:
-  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type);
+  CreateSetTypeDialog(const char* title, bool* p_open, int *set_type, Model *model);
 
 void Draw(){}
 

@@ -26,7 +26,6 @@
 
 glm::mat4 trans_mat[1000]; //test
 
-using namespace SPH;
 
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 
@@ -685,8 +684,11 @@ IMGUI_DEMO_MARKER("Configuration");
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
-
-      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type);
+    
+    if(is_fem_mesh)
+      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
+    else
+      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, &m_domain);
     if(is_fem_mesh){
 
       //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
@@ -694,7 +696,7 @@ IMGUI_DEMO_MARKER("Configuration");
       
     } //IF IS GEOMETRY??
 
-    cout << "SET TYPE"<<m_setdlg.set_type<<endl;
+    //cout << "SET TYPE"<<m_setdlg.set_type<<endl;
   }//show_set_mat
   if (create_new_mat) {
     m_show_mat_dlg=false;

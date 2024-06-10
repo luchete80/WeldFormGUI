@@ -16,10 +16,10 @@
 #include <cmath>
 #include <vector>
 
+#include "Model.h"
 
 //C++ Enum used for easiness of coding in the input files
 
-namespace SPH {
 
 class Vec3_t {
   public:
@@ -38,14 +38,17 @@ private:
  // friend Domain;
 };
 
-class Domain
+class Model;
+
+class SPHModel:
+public Model
 {
 public:
     // Constructor
-    Domain();
+    SPHModel();
 
     // Destructor
-    ~Domain();
+    ~SPHModel();
 
     // Domain Part
     void AddSingleParticle	(int tag, Vec3_t const & x, double Mass, double Density, double h, bool Fixed);		//Add one particle
@@ -201,6 +204,5 @@ public:
 };
 
 
-}; // namespace SPH
 
 #endif // SPH_DOMAIN_H

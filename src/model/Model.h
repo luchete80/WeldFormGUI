@@ -12,6 +12,7 @@ class Part;
 class Mesh;
 class Particle;
 
+enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
 public:
@@ -27,6 +28,17 @@ protected:
   std::vector <Node* >      m_node; //Mesh part refer to this
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
+  model_type m_modeltype;
+};
+
+class FEMModel:
+public Model{
+public:
+  FEMModel(){ m_modeltype = FEM_Model;}
+  FEMModel(std::string );
+  Mesh* getPartMesh(const int &i);
+protected:
+
 };
 
 #endif

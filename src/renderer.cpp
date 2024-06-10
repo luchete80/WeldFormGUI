@@ -615,7 +615,7 @@ bool Renderer::GenAndBindInstancedBuffers(Mesh *msh){
         // float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
         // displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         // float z = cos(angle) * radius + displacement;
-        SPH::Vec3_t x;
+        Vec3_t x;
         model = glm::translate(model, glm::vec3(x(0), x(1), x(2)));
 
         // 2. scale: Scale between 0.05 and 0.25f

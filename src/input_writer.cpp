@@ -4,7 +4,7 @@
 
 using namespace std;
 
-InputWriter::InputWriter (const string &str, const SPH::Domain &dom) {
+InputWriter::InputWriter (const string &str, const SPHModel &dom) {
   std::ostringstream oss;
   
   oss << "\"Configuration\":{ \" "            <<endl<<
