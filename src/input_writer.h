@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Domain.h"
+#include "Model.h"
 
 //TODO: TEMPLATE AS MODEL TYPE, SPH; FEM
 class InputWriter {

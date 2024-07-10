@@ -44,6 +44,7 @@
 #include "model/Model.h"
 #include "model/Mesh.h"
 
+class SceneView;
 
 float vertices[] = {
     // first triangle
@@ -208,7 +209,7 @@ protected:
   bool create_new_mat;
   bool create_new_set;
 
-
+  SceneView *m_sceneview;
   
   float m_rotation;
   

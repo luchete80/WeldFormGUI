@@ -42,4 +42,15 @@ protected:
 
 };
 
+// DEFINED IN DOMAIN_d
+// class SPHModel:
+// public Model{
+// public:
+  // SPHModel(){ m_modeltype = SPH_Model;}
+  // SPHModel(std::string );
+  // //Mesh* getPartMesh(const int &i);
+// protected:
+
+// };
+
 #endif

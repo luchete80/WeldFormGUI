@@ -24,6 +24,8 @@
 #include "input_writer.h"
 #include "LSDynaWriter.h"
 
+#include "SceneView.h"
+
 glm::mat4 trans_mat[1000]; //test
 
 
@@ -1304,8 +1306,6 @@ void Editor::PickingPhase() {
   
   glUseProgram(shaderProgram);
   
-
-      
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //m_pickingEffect.Enable();
@@ -1394,6 +1394,8 @@ void Editor::PickingPhase() {
     glUseProgram(0);
 
   m_pickingTexture.DisableWriting();
+  
+  m_sceneview = new SceneView;
 
 }
 
@@ -1402,6 +1404,31 @@ void Editor::RenderPhase(){
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
+
+  // ImGui::Begin("Scene");
+
+  // float width = ImGui::GetContentRegionAvail().x;
+  // float height = ImGui::GetContentRegionAvail().y;
+  
+  // // *m_width = width;
+  // // *m_height = height;
+  // ImGui::Image(
+    // (ImTextureID)sceneBuffer->getFrameTexture(), 
+    // ImGui::GetContentRegionAvail(), 
+    // ImVec2(0, 1), 
+    // ImVec2(1, 0)
+  // );  
+
+        // // // and here we can add our created texture as image to ImGui
+        // // // unfortunately we need to use the cast to void* or I didn't find another way tbh
+        // // ImGui::GetWindowDrawList()->AddImage(
+            // // (void *)texture_id, 
+            // // ImVec2(pos.x, pos.y), 
+            // // ImVec2(pos.x + window_width, pos.y + window_height), 
+            // // ImVec2(0, 1), 
+            // // ImVec2(1, 0)
+        // // );
   
   
   /////////////////////////////////////// CAMERA THINGS
@@ -1594,7 +1621,12 @@ void Editor::RenderPhase(){
             glEnd ();
 
   glUseProgram(0);
+
+  // RENDER SCENE
+  //ImGui::End();  
+  
   drawGui();
+
 
 
   //// IMGUI Rendering
