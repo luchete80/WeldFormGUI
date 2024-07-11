@@ -1047,6 +1047,12 @@ int Editor::Init(){
   // --------------------
   bool isFullScreen = false;
    GLFWmonitor* pMonitor = isFullScreen ? glfwGetPrimaryMonitor() : NULL;
+  const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+  // SCR_WIDTH = mode->width;
+  // SCR_HEIGHT = mode->height;
+  cout << "Working area: "<<SCR_WIDTH<< ", "<<SCR_HEIGHT<<endl;
+    
   window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "WeldFormGUI", NULL, NULL);
   if (window == NULL)
   {
