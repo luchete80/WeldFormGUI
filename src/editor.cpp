@@ -421,7 +421,8 @@ IMGUI_DEMO_MARKER("Configuration");
                 selected_mat = m_mats[i];
               }
               ImGui::EndPopup();
-            }                    ImGui::Text("blah blah");
+            }                    
+              ImGui::Text("blah blah");
               ImGui::SameLine();
               if (ImGui::SmallButton("button")) {}
               ImGui::TreePop();
@@ -1297,6 +1298,7 @@ int Editor::Init(){
   
   m_model = new Model;
 
+  m_add_part = false;
     m_sceneview = new SceneView(400,400);  
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
   
