@@ -25,3 +25,6 @@
          - Added box selection
 20240605 - Beginging to add create selection 
 20240610 - Changed old Domain to SPH model
+-------------------------------------------------------------------------------
+20240711 - Added Separate Windows for model scene view. 
+         - This allows to add a tab for result view, and to change to function view, etc.

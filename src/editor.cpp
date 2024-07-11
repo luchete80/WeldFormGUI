@@ -1416,6 +1416,8 @@ void Editor::RenderPhase(){
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
+	glClearColor(0.0, 0.0, 0.0, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   ImGui::Begin("Scene");
   m_sceneview->getFrameBuffer()->Bind();
@@ -1638,7 +1640,7 @@ void Editor::RenderPhase(){
   glUseProgram(0);
 
   m_sceneview->getFrameBuffer()->Unbind();
-   ImGui::End();  
+  ImGui::End();  
   drawGui();
 
 
