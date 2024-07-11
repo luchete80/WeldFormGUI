@@ -87,6 +87,7 @@ add_executable(editor
               set_dialog.cpp
               #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
               ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
+              ${CMAKE_SOURCE_DIR}/src/FrameBuffer.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
               ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	

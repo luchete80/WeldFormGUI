@@ -125,6 +125,7 @@ public:
   void CalcFPS();
   
   ArcballCamera * ArcCamera(){return arcCamera;}
+  SceneView* getSceneView(){return m_sceneview;}
   
   const SPHModel & getDomain() const {return m_domain;}
   

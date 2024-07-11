@@ -34,6 +34,7 @@ Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
 float zcam;
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+static void window_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 template <typename T>
@@ -1066,6 +1067,8 @@ int Editor::Init(){
 
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetWindowSizeCallback(window, window_size_callback);
+
 
   glfwSetKeyCallback(window, KeyCallback);
   
@@ -1287,8 +1290,11 @@ int Editor::Init(){
   m_sel_particles[0] = -1;
   
   m_model = new Model;
-  
+
+    m_sceneview = new SceneView(400,400);  
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
+  
+
 }//Editor::Init()
 
 
@@ -1395,7 +1401,6 @@ void Editor::PickingPhase() {
 
   m_pickingTexture.DisableWriting();
   
-  m_sceneview = new SceneView;
 
 }
 
@@ -1406,19 +1411,23 @@ void Editor::RenderPhase(){
   ImGui::NewFrame();
 
 
-  // ImGui::Begin("Scene");
+  ImGui::Begin("Scene");
+  m_sceneview->getFrameBuffer()->Bind();
+  // RENDER SCENE
 
-  // float width = ImGui::GetContentRegionAvail().x;
-  // float height = ImGui::GetContentRegionAvail().y;
+   
+  
+  float width = ImGui::GetContentRegionAvail().x;
+  float height = ImGui::GetContentRegionAvail().y;
   
   // // *m_width = width;
   // // *m_height = height;
-  // ImGui::Image(
-    // (ImTextureID)sceneBuffer->getFrameTexture(), 
-    // ImGui::GetContentRegionAvail(), 
-    // ImVec2(0, 1), 
-    // ImVec2(1, 0)
-  // );  
+  ImGui::Image(
+    (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(), 
+    ImGui::GetContentRegionAvail(), 
+    ImVec2(0, 1), 
+    ImVec2(1, 0)
+  );  
 
         // // // and here we can add our created texture as image to ImGui
         // // // unfortunately we need to use the cast to void* or I didn't find another way tbh
@@ -1430,7 +1439,7 @@ void Editor::RenderPhase(){
             // // ImVec2(1, 0)
         // // );
   
-  
+
   /////////////////////////////////////// CAMERA THINGS
   Pipeline pip;
 
@@ -1622,9 +1631,8 @@ void Editor::RenderPhase(){
 
   glUseProgram(0);
 
-  // RENDER SCENE
-  //ImGui::End();  
-  
+  m_sceneview->getFrameBuffer()->Unbind();
+   ImGui::End();  
   drawGui();
 
 
@@ -1755,6 +1763,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+	editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(width, height);
+}
 
 
 
