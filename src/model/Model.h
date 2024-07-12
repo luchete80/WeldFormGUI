@@ -19,6 +19,7 @@ public:
   Model(){}
   Model(std::string );
   Mesh* getPartMesh(const int &i);
+  void addPart(Part *);
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}
 protected:

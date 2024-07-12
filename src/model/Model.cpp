@@ -39,3 +39,7 @@ Model::Model(string name){
   m_part.push_back(new Part(msh));
   
 }
+
+void Model::addPart(Part *part){
+  m_part.push_back(part);
+}
