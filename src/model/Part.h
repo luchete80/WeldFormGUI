@@ -12,7 +12,7 @@ public:
   Part(){}
   Part(Mesh *mesh);
   Mesh* getMesh(){return m_msh;}
-  virtual Part_Type getType(){return m_type}
+  virtual Part_Type getType(){return m_type;}
 protected:
   Mesh* m_msh;
   Part_Type m_type;

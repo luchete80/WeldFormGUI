@@ -11,6 +11,7 @@ class Material;
 class Part;
 class Mesh;
 class Particle;
+class BoundaryCondition;
 
 enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 

@@ -46,6 +46,8 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     return out.str();
 }
 
+float scr_width;
+float scr_height;
 
 
 // settings
@@ -422,7 +424,6 @@ IMGUI_DEMO_MARKER("Configuration");
               }
               ImGui::EndPopup();
             }                    
-              ImGui::Text("blah blah");
               ImGui::SameLine();
               if (ImGui::SmallButton("button")) {}
               ImGui::TreePop();
@@ -859,16 +860,16 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         glfwGetCursorPos(window, &x, &y);
         m_left_button_pressed = true;
         //cout << "screen x y" <<x << ", " <<y<<endl; 
-          float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          float xx = ((x - (scr_width/2) ) / (scr_width/2));
+          float yy  = (((scr_height/2) - y) / (scr_height/2));
           cout << "x,y: "<<xx<<" , "<<yy<<endl;        
-        PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, SCR_HEIGHT - y - 1);
+        PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(x, scr_height - y - 1);
         
         if (!box_select_mode)  { //SINGLE SELECT
         cout << "Pixel.ObjectID " << Pixel.ObjectID<<endl;
               
           cout << "x,y: "<<x<<" , "<<y<<endl;
-          int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1)-1;
+          int test = m_pickingTexture.ReadPixelToInt(x, scr_height - y - 1)-1;
           if (test >=0 ) {
             //cout<<"SELECTED!"<<endl;
           //CHECK
@@ -884,8 +885,8 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           //}//If is sel
           cout << "Pressed"<<endl;
           
-            float xx = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-            float yy  = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+            float xx = ((x - (scr_width/2) ) / (scr_width/2));
+            float yy  = (((scr_height/2) - y) / (scr_height/2));
             cout << "x,y: "<<xx<<" , "<<yy<<endl;
             }
           else          {cout<<"NOT SELECTED"<<endl;}
@@ -912,11 +913,11 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           cout << "xy initial "<<last_mouse_x<<", "<<last_mouse_y<<endl;
           
           // float xd_curr,yd_curr;
-          // xd_curr = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          // yd_curr = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2));
+          // xd_curr = ((x - (scr_width/2) ) / (scr_width/2));
+          // yd_curr = (((scr_height/2) - y) / (scr_height/2));
           // float xd_last,yd_last;
-          // xd_last = ((last_mouse_x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2));
-          // yd_last = (((SCR_HEIGHT/2) - last_mouse_y) / (SCR_HEIGHT/2));
+          // xd_last = ((last_mouse_x - (scr_width/2) ) / (scr_width/2));
+          // yd_last = (((scr_height/2) - last_mouse_y) / (scr_height/2));
           
 
           // cout << "xy current int "<<xd_curr<< "; "<<yd_curr<<endl;
@@ -931,8 +932,8 @@ void Editor::Mouse(int Button, int Action, int Mode) {
 
         
             glm::vec4 res = trans_mat[p] * pos;
-            int resint_x = res.x * (SCR_WIDTH/2) + (SCR_WIDTH/2); 
-            int resint_y = (SCR_HEIGHT/2) - res.y * (SCR_HEIGHT/2);
+            int resint_x = res.x * (scr_width/2) + (scr_width/2); 
+            int resint_y = (scr_height/2) - res.y * (scr_height/2);
             
             //TODO: CHANGE TO AABBBOX
             int xbox[2],ybox[2];
@@ -955,13 +956,13 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             
           // for (int i=(int)last_mouse_x;i<=(int)x;i++){
             // for (int j=(int)last_mouse_y;j<=(int)y;j++) {
-            // PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(i, SCR_HEIGHT - j - 1);
+            // PickingTexture::PixelInfo Pixel = m_pickingTexture.ReadPixel(i, scr_height - j - 1);
             // /// THIS SHOULD BE DONE ONLY WITH THE CENTERS 
             // cout << "obj id " << Pixel.ObjectID<<endl;
               // if (Pixel.ObjectID != 0){
                 // Vector3f vel(0.,0.,0.);
                 // m_sel_node = Pixel.ObjectID-1;
-                // int test = m_pickingTexture.ReadPixelToInt(x, SCR_HEIGHT - y - 1);
+                // int test = m_pickingTexture.ReadPixelToInt(x, scr_height - y - 1);
                 // cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;          
               // }
             // }
@@ -1299,10 +1300,14 @@ int Editor::Init(){
   m_model = new Model;
 
   m_add_part = false;
-    m_sceneview = new SceneView(400,400);  
-  return 1; // IF THIS IS NOT HERE CRASHES!!!!
+    m_sceneview = new SceneView(100,100);  
   
-
+  
+  //ONLY AT THE BEGINING
+  scr_width = SCR_WIDTH;
+  scr_height = SCR_HEIGHT;
+  
+  return 1; // IF THIS IS NOT HERE CRASHES!!!!
 }//Editor::Init()
 
 
@@ -1316,7 +1321,18 @@ void Editor::PickingPhase() {
   gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
   
   m_pickingTexture.EnableWriting();
+
+  //float width = ImGui::GetContentRegionAvail().x;
+  //float height = ImGui::GetContentRegionAvail().y;
   
+  // // *m_width = width;
+  // // *m_height = height;
+  // ImGui::Image(
+    // (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(), 
+    // ImGui::GetContentRegionAvail(), 
+    // ImVec2(0, 1), 
+    // ImVec2(1, 0)
+  // );    
   
   glUseProgram(shaderProgram);
   
@@ -1341,10 +1357,10 @@ void Editor::PickingPhase() {
       
       glm::mat4 projection(1.0);
       //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
-      projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-      // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
-        // 600.0f / 2.0f, -(600.0f / 2.0f), 
-      // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+      //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+      projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+
       glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
       view = glm::translate(view, arcCamera->position);// this, too.  
       view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
@@ -1427,9 +1443,11 @@ void Editor::RenderPhase(){
 
      
     
-    float width = ImGui::GetContentRegionAvail().x;
-    float height = ImGui::GetContentRegionAvail().y;
+    scr_width = ImGui::GetContentRegionAvail().x;
+    scr_height = ImGui::GetContentRegionAvail().y;
+    editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(scr_width, scr_height);
     
+    //cout << "SCR WIDTH: "<<scr_width<< ", HEIGHT: "<<scr_height<<endl;
     // // *m_width = width;
     // // *m_height = height;
     ImGui::Image(
@@ -1506,7 +1524,8 @@ void Editor::RenderPhase(){
 
           
           glm::mat4 projection(1.0);
-          projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+          //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+          projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
           // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
             // 600.0f / 2.0f, 0.0f, 
           // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
@@ -1550,8 +1569,9 @@ void Editor::RenderPhase(){
         model = glm::translate(model, glm::vec3(-m_femsh_center.x+pos.x,-m_femsh_center.y+pos.y,-m_femsh_center.z+pos.z));
                 
         glm::mat4 projection(1.0);
-        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-   
+        //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+        
         glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
         view = glm::translate(view, arcCamera->position);// this, too.  
         view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);

@@ -1,3 +1,6 @@
+//https://uysalaltas.github.io/2022/01/09/OpenGL_Imgui.html
+//https://www.codingwiththomas.com/blog/rendering-an-opengl-framebuffer-into-a-dear-imgui-window
+
 #include "FrameBuffer.h"
 
 #include <iostream>
