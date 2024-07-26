@@ -900,7 +900,12 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         cout << "vmax x,y "<<vmax.x<<", " << vmax.y<<endl;
         if (x >vmin.x + vpos.x && x < vmax.x + vpos.x && 
             y >vmin.y + vpos.y && y < vmax.y + vpos.y) {
+          //GET RELATIVE COORD:
+          x -= (vmin.x + vpos.x); 
+          y -= (vmin.y + vpos.y);
+          cout << "rel x, y "<<x << ", "<<y<<endl;
           cout <<"INSIDE"<<endl;
+          cout << "scr_width "<< scr_width <<", from vmin and vmax "<< vmax.x-vmin.x<<endl;
         //cout << "screen x y" <<x << ", " <<y<<endl; 
           float xx = ((x - (scr_width/2) ) / (scr_width/2));
           float yy  = (((scr_height/2) - y) / (scr_height/2));
@@ -1489,7 +1494,7 @@ void Editor::RenderPhase(){
   ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse);
 
   //if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse)) 
-  
+  float sx,sy;
   {
     m_sceneview->getFrameBuffer()->Bind();
     // RENDER SCENE
@@ -1499,14 +1504,25 @@ void Editor::RenderPhase(){
     scr_width = ImGui::GetContentRegionAvail().x;
     scr_height = ImGui::GetContentRegionAvail().y;
     editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(scr_width, scr_height);
+    //ImVec2 cr = GetWindowContentRegionAvail();
+    //https://github.com/ocornut/imgui/issues/2486
     vmin = ImGui::GetWindowContentRegionMin();
+    vmax = ImGui::GetWindowContentRegionMax();
+    
+    
+    //cout << "win pos x "<<ImGui::GetWindowPos().x<<endl;
+    
+    // vmin.x += ImGui::GetWindowPos().x;
+    // vmin.y += ImGui::GetWindowPos().y;
+    // vmax.x += ImGui::GetWindowPos().x;
+    // vmax.y += ImGui::GetWindowPos().y;
     
     vpos = ImGui::GetWindowPos();
-    ImGui::Text("window pos %.1f %.1f", vpos.x, vpos.y);
+    //ImGui::Text("window pos %.1f %.1f", vpos.x, vpos.y);
 
     //cout << "win pos min "<< vmin.x<< ", "<<vmin.y <<endl;
 
-    vmax = ImGui::GetWindowContentRegionMax();
+    
     //cout << "win pos max "<< vmax.x<< ", "<<vmax.y <<endl;
     
     //cout << "SCR WIDTH: "<<scr_width<< ", HEIGHT: "<<scr_height<<endl;
