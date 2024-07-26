@@ -78,6 +78,7 @@ add_subdirectory("model")
 add_executable(editor 	
 
               editor.cpp
+              ViewportWindow.cpp
               ${CMAKE_SOURCE_DIR}/src/renderer.cpp
 							#skinning_technique.cpp
 							#game.cpp

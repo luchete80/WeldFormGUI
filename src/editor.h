@@ -40,40 +40,15 @@
 #include "Material.h"
 
 
+
+
 //#include "gMesh.h"
 #include "model/Model.h"
 #include "model/Mesh.h"
 
 class SceneView;
+class ViewportWindow;
 
-float vertices[] = {
-    // first triangle
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f,  0.5f, 0.0f,  // top left 
-    // second triangle
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left
-}; 
-  // unsigned int indices[] = {  // note that we start from 0!
-      // 0, 1, 
-      // 0, 2,  // first Triangle
-      // 0, 3,
-      // 1, 2,
-      // 2, 3,
-      // 3, 1
-      // // 4, 5,
-      // // 5, 6,
-      // // 6, 7,
-      // // 7, 4  
-      // // GROUND
-  // };
-  
-  unsigned int indices[] = {  // note that we start from 0!
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-  };  
   
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -94,9 +69,9 @@ class ExampleAppLog;
 class Editor 
 //: public ICallbacks, public OgldevApp
 {
-public:
 
 public:  
+  friend ViewportWindow;
   Editor();
   ~Editor(){}
   int Init();
@@ -227,6 +202,8 @@ protected:
   bool m_show_app_console;
   
   bool m_add_part;
+  
+  ViewportWindow *m_viewport_win;
   
 };
 

@@ -26,6 +26,8 @@
 
 #include "SceneView.h"
 
+#include "ViewportWindow.h"
+
 glm::mat4 trans_mat[1000]; //test
 
 
@@ -36,6 +38,8 @@ float zcam;
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void window_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+
+ImVec2 vpos, vmin, vmax;
 
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
@@ -49,6 +53,35 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 float scr_width;
 float scr_height;
 
+
+float vertices[] = {
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left 
+    // second triangle
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left
+}; 
+  // unsigned int indices[] = {  // note that we start from 0!
+      // 0, 1, 
+      // 0, 2,  // first Triangle
+      // 0, 3,
+      // 1, 2,
+      // 2, 3,
+      // 3, 1
+      // // 4, 5,
+      // // 5, 6,
+      // // 6, 7,
+      // // 7, 4  
+      // // GROUND
+  // };
+  
+  unsigned int indices[] = {  // note that we start from 0!
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+  };  
 
 // settings
 
@@ -859,6 +892,15 @@ void Editor::Mouse(int Button, int Action, int Mode) {
           
         glfwGetCursorPos(window, &x, &y);
         m_left_button_pressed = true;
+        cout << "mouse x,y "<<x<<", "<<y<<endl;
+        //ImVec2 absmin = vmin + vpos;
+        //ImVec2 absmax = vmax + vpos;
+        cout << "abs mouse pos x,y "<<vpos.x + vmin.x <<", "<< vpos.y + vmin.x<<endl;
+        cout << "vmin x,y "<<vmin.x<<", " << vmin.y<<endl;
+        cout << "vmax x,y "<<vmax.x<<", " << vmax.y<<endl;
+        if (x >vmin.x + vpos.x && x < vmax.x + vpos.x && 
+            y >vmin.y + vpos.y && y < vmax.y + vpos.y) {
+          cout <<"INSIDE"<<endl;
         //cout << "screen x y" <<x << ", " <<y<<endl; 
           float xx = ((x - (scr_width/2) ) / (scr_width/2));
           float yy  = (((scr_height/2) - y) / (scr_height/2));
@@ -897,6 +939,9 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         } else {
           m_selector.setStartPoint(x,y);
         }
+        
+        }// IF INSIDE SELECTION
+        
         last_mouse_x = x;
         last_mouse_y = y;  
 
@@ -1302,6 +1347,7 @@ int Editor::Init(){
   m_add_part = false;
     m_sceneview = new SceneView(100,100);  
   
+  m_viewport_win = new ViewportWindow(this);
   
   //ONLY AT THE BEGINING
   scr_width = SCR_WIDTH;
@@ -1328,7 +1374,7 @@ void Editor::PickingPhase() {
   // // *m_width = width;
   // // *m_height = height;
   // ImGui::Image(
-    // (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(), 
+    // (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(),   
     // ImGui::GetContentRegionAvail(), 
     // ImVec2(0, 1), 
     // ImVec2(1, 0)
@@ -1437,7 +1483,14 @@ void Editor::RenderPhase(){
 	glClearColor(0.0, 0.0, 0.0, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse)) {
+  
+  //m_viewport_win->Draw();
+  
+  ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse);
+
+  //if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse)) 
+  
+  {
     m_sceneview->getFrameBuffer()->Bind();
     // RENDER SCENE
 
@@ -1446,6 +1499,15 @@ void Editor::RenderPhase(){
     scr_width = ImGui::GetContentRegionAvail().x;
     scr_height = ImGui::GetContentRegionAvail().y;
     editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(scr_width, scr_height);
+    vmin = ImGui::GetWindowContentRegionMin();
+    
+    vpos = ImGui::GetWindowPos();
+    ImGui::Text("window pos %.1f %.1f", vpos.x, vpos.y);
+
+    //cout << "win pos min "<< vmin.x<< ", "<<vmin.y <<endl;
+
+    vmax = ImGui::GetWindowContentRegionMax();
+    //cout << "win pos max "<< vmax.x<< ", "<<vmax.y <<endl;
     
     //cout << "SCR WIDTH: "<<scr_width<< ", HEIGHT: "<<scr_height<<endl;
     // // *m_width = width;
@@ -1539,7 +1601,7 @@ void Editor::RenderPhase(){
 
           glm::mat4 mat = projection * transback * view * model;
           trans_mat [p]= mat;
-
+  
           //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
           //If personalized shader
           objectColor = Vector3f(0.0f, 0.5f, 1.0f);
@@ -1601,46 +1663,7 @@ void Editor::RenderPhase(){
         /////// TODO: PASS THIS TO RENDERER
         for (int p=0;p<m_fem_msh->getNodeCount();p++){ 
 
-          // float h = m_domain.Particles[0]->h/2.;
-          // pn.Scale(h, h,h);  
-          // Vec3_t v = m_domain.Particles[p]->x ;
-          // //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
-          // Vector3f pos(v(0),v(1),v(2)); 
-          // glm::mat4 model = glm::mat4(1.0f);
 
-          // model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
-          
-          // glm::mat4 projection(1.0);
-          // projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-          // glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
-          // view = glm::translate(view, arcCamera->position);// this, too.  
-          // view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
-          
-          // glm::mat4 transback = glm::mat4(1.0f);
-          // transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
-
-          // glm::mat4 mat = projection * transback * view * model;
-
-
-          // //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
-          // //If personalized shader
-          // objectColor = Vector3f(0.0f, 0.5f, 1.0f);
-          // for (int s=0;s<m_sel_count;s++){
-            // //cout << "sel_count"<<m_sel_count<<endl;
-            // if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
-
-            // }
-            // //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
-
-          // }
-          // glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
-
-          // trans_mat [p]= mat;
-          
-          
-          // glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)        m_renderer.Render();      
-          //RENDER ONLY THE NODES HERE! NOT THE FEM MESH
         }
         m_renderer.Render(); //THIS IS DONE ONCE      
         } //IF IS FEM
@@ -1662,7 +1685,11 @@ void Editor::RenderPhase(){
     glUseProgram(0);
 
     m_sceneview->getFrameBuffer()->Unbind();
+    
   }
+  
+  
+
   ImGui::End();  
   drawGui();
 

@@ -1,7 +1,10 @@
 //https://uysalaltas.github.io/2022/01/09/OpenGL_Imgui.html
 //https://www.codingwiththomas.com/blog/rendering-an-opengl-framebuffer-into-a-dear-imgui-window
+#ifndef _SCENEVIEW_H_
+#define _SCENEVIEW_H_
 
 #include "FrameBuffer.h"
+
 
 #include <iostream>
 using namespace std;
@@ -10,6 +13,7 @@ class SceneView {
 public:
   SceneView(){
     m_framebuffer = NULL;
+    float m_pos_x,m_pos_y;
   }
   SceneView(const unsigned int &width, const unsigned int &height){
     
@@ -25,3 +29,4 @@ protected:
   FrameBuffer *m_framebuffer; 
 
 };    
+#endif
