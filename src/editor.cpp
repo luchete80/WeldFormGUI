@@ -938,7 +938,7 @@ void Editor::Mouse(int Button, int Action, int Mode) {
             }
           else          {cout<<"NOT SELECTED"<<endl;}
           cout << "Obj ID "<<test<<", DrawID" << int(Pixel.DrawID)<<", PrimID" << int(Pixel.PrimID)<<endl;
-            
+           logtest.AddLog("Selected particle %d  \n",test);           
         //if (m_is_node_sel){
 
         } else {
