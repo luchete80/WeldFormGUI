@@ -452,7 +452,9 @@ void Editor::drawGui() {
 
           if (ImGui::TreeNode((void*)(intptr_t)i, "Material %d", i))
           {
-
+            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+              m_show_mat_dlg_edit = true;
+              selected_mat = m_mats[i];}
             if (ImGui::BeginPopupContextItem())
             {
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
