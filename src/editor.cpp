@@ -151,7 +151,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".json, .k", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -306,7 +306,7 @@ void Editor::drawGui() {
       ImGui::EndMenuBar();
   }
 
-IMGUI_DEMO_MARKER("Configuration");
+// IMGUI_DEMO_MARKER("Configuration");
     if (ImGui::CollapsingHeader("Configuration"))
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -397,7 +397,10 @@ IMGUI_DEMO_MARKER("Configuration");
     }
 
     //if (ImGui::CollapsingHeader("New Domain")){
-    IMGUI_DEMO_MARKER("Widgets/Trees");
+    // IMGUI_DEMO_MARKER("Widgets/Trees");
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("TABS", tab_bar_flags)){
+    if (ImGui::BeginTabItem("Model")) { 
     if (ImGui::TreeNode("Model"))
     {
 
@@ -579,6 +582,40 @@ IMGUI_DEMO_MARKER("Configuration");
         ImGui::TreePop();
         
     } //MODEL TREE
+
+      ImGui::EndTabItem(); }
+    if (ImGui::BeginTabItem("Results")) { 
+      bool open_ = ImGui::TreeNode("History");      
+      if (ImGui::BeginPopupContextItem())
+      {
+        // if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
+        // if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
+          ImGui::EndPopup();          
+      }     
+        if (open_)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }      
+      open_ = ImGui::TreeNode("Element Sets");      
+      if (ImGui::BeginPopupContextItem())
+      {
+        // if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
+        // if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
+          ImGui::EndPopup();          
+      }  
+      if (open_)
+      {
+         // your tree code stuff
+         ImGui::TreePop();
+      }      
+      ImGui::EndTabItem(); 
+    }
+    
+      ImGui::EndTabBar();
+    }
+    ////////////////////// END TAB BAR ///////////////////////////////////
+    
     
     if (ImGui::CollapsingHeader("New Domain")){
       static int item_current = 0;
