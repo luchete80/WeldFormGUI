@@ -1,11 +1,22 @@
 #include "input_writer.h"
 #include <sstream>
 #include <fstream>
+#include "json.hpp"
+#include "Model.h"
+#include "Material.h"
 
 using namespace std;
 
+using json = nlohmann::json;
+
 InputWriter::InputWriter (const string &str, const SPHModel &dom) {
-  std::ostringstream oss;
+  
+
+  std::ofstream of(str, std::ios::out);
+  
+  json j;
+  
+  ostringstream oss;
   
   oss << "\"Configuration\":{ \" "            <<endl<<
            "  \"particleRadius\": 0.001,"       <<endl<<      //
@@ -43,8 +54,13 @@ InputWriter::InputWriter (const string &str, const SPHModel &dom) {
   
   oss << "}"                                   <<endl;    
 
-  std::ofstream of(str, std::ios::out);
 	of << oss.str();
+  
+  j["pi"] = 3.14;
+  if (dom.getMaterialCount()>0)
+    j["Materials"]["density0"]=dom.getMaterial(0)->getDensityConstant();
+  
+  of << j <<endl;
 	of.close();
   
   

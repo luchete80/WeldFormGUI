@@ -11,6 +11,10 @@ class InputWriter {
 public:
   InputWriter(const std::string &, const SPHModel &);
   
+  bool Write();
+protected:
+  
+  
 };
 
 

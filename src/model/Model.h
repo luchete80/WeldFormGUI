@@ -7,7 +7,7 @@
 
 class Element;
 class Node;
-class Material;
+class Material_;
 class Part;
 class Mesh;
 class Particle;
@@ -23,9 +23,11 @@ public:
   void addPart(Part *);
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}
+  const Material_* getMaterial (const int &m)const{return m_mat[m];}
+  const int & getMaterialCount()const{return m_mat_count;}
 protected:
   std::vector <Part*>       m_part;
-  std::vector <Material*>   m_mat;  
+  std::vector <Material_*>   m_mat;  
   // TODO: SHOULD ANALYZE IF IT IS NECESARY TO HAVE REPEATED POINTERS FOR MESH AND MODEL 
   // NDOES AND ELEMENTS
   std::vector <Particle* >  m_particle; 
@@ -33,6 +35,7 @@ protected:
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
   model_type m_modeltype;
+  int m_mat_count;
 };
 
 class FEMModel:

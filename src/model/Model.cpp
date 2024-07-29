@@ -11,6 +11,8 @@ using namespace LS_Dyna;
 Mesh* Model::getPartMesh(const int &i){m_part[i]->getMesh();}
   
 Model::Model(string name){
+  m_mat_count = 0;
+  
   cout << "Reading "<<name<<endl;
   string ext = name.substr(name.find_last_of(".")+1, name.length() - 1);
   cout << "extension: "<< ext<<endl;

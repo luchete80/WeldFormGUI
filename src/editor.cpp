@@ -401,6 +401,7 @@ void Editor::drawGui() {
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("TABS", tab_bar_flags)){
     if (ImGui::BeginTabItem("Model")) { 
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     if (ImGui::TreeNode("Model"))
     {
 
