@@ -34,6 +34,7 @@
 #include "action.h"
 
 #include "log.h"
+#include "entity_dialog.h"
 #include "material_dialog.h"
 #include "set_dialog.h"
 
@@ -65,6 +66,8 @@ class ViewportWindow;
   // };
   
 class ExampleAppLog;
+class Job;
+
 
 class Editor 
 //: public ICallbacks, public OgldevApp
@@ -176,6 +179,7 @@ protected:
   ExampleAppLog logtest;
   
   MaterialDialog  m_matdlg;
+  EntityDialog<Job> m_jobdlg;
   
   CreateSetDialog m_setdlg;
   
@@ -190,6 +194,7 @@ protected:
   float m_rotation;
   
   std::vector <Material_*> m_mats;
+  std::vector <Job *> m_jobs;
   
   Model *m_model;
   bool is_model_open;
@@ -206,6 +211,8 @@ protected:
   ViewportWindow *m_viewport_win;
   
 };
+
+#include "job_dialog.cpp"
 
 
 #endif

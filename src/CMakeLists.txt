@@ -108,7 +108,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
               ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-              
+              Job.cpp
               log.cpp
               input_writer.cpp
 								) 
