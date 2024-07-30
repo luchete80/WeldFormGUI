@@ -29,6 +29,17 @@
 #include "ViewportWindow.h"
 #include "Job.h"
 
+#include<iostream>
+#include <thread>
+
+
+void my_thread_function(int* pData)
+{
+    std::cout << "Hello from my_thread_function!  and data passd ="<<*pData << std::endl;
+    //job->Run();
+}
+
+
 
 
 glm::mat4 trans_mat[1000]; //test
@@ -515,7 +526,13 @@ void Editor::drawGui() {
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {
                         m_show_mat_dlg = true;
-                        m_jobs.push_back(new Job("Compression.json")); m_jobs[0]->Run();}
+                        m_jobs.push_back(new Job("Compression.json")); m_jobs[0]->Run();
+                        
+                                            int data = 101;
+                    std::thread my_thread(my_thread_function,&data);
+                    my_thread.join();
+                    
+    }
             ImGui::EndPopup();
         }
         if (open_)

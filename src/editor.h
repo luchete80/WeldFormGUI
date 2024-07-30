@@ -129,6 +129,7 @@ protected:
   bool box_select_mode;
   TextRenderer *m_Text;
 
+  
 
   //Camera *camera;
   PersProjInfo m_persProjInfo;
