@@ -513,7 +513,9 @@ void Editor::drawGui() {
         bool open_ = ImGui::TreeNode("Jobs");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {m_jobs.push_back(new Job("Input.json")); m_jobs[0]->Run();}
+          if (ImGui::MenuItem("New", "CTRL+Z")) {
+                        m_show_mat_dlg = true;
+                        m_jobs.push_back(new Job("Compression.json")); m_jobs[0]->Run();}
             ImGui::EndPopup();
         }
         if (open_)
@@ -1051,6 +1053,7 @@ Editor::Editor(){
   m_currentaction = NULL;
   m_show_mat_dlg = false;
   m_show_set_dlg = false;
+  m_show_job_dlg = false;
   
   m_sel_particles.resize(1);
   m_sel_count = 0;

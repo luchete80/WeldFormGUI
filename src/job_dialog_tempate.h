@@ -1,11 +1,15 @@
-#ifndef _ENTITY_DIALOG_H_
-#define _ENTITY_DIALOG_H_
+#ifndef _JOB_DIALOG_H_
+#define _JOB_DIALOG_H_
 
+#include "entity_dialog.h"
+#include "Job.h"
+
+template  EntityDialog<Job>;
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-template <typename T> 
-class EntityDialog{
+class JobDialog:
+public EntityDialog < Job > {
   
   // //void    AddLog(const char* fmt, ...);
 
@@ -14,16 +18,19 @@ class EntityDialog{
   bool create_entity;
   
   const bool & isEntityCreated()const{return create_entity;}
-  virtual void Draw(const char* title, bool* p_open = NULL, T* entity = NULL){entity->Draw();} 
+  virtual void Draw(const char* title, bool* p_open = NULL); 
 };
 
-//Returns true if NEW material is created or if changes are saved, if no
-//if no material is created, pointer is null
-template <typename T>
-T ShowCreateEntityDialog(bool* p_open, EntityDialog<T> *, bool* ret){}
 
-template <typename T>
-bool ShowEditEntityDialog(bool* p_open, EntityDialog<T> *, T *);
+void JobDialog<Job>::Draw(const char* title, bool* p_open = NULL, Job* entity = NULL){}
+
+// //Returns true if NEW material is created or if changes are saved, if no
+// //if no material is created, pointer is null
+// template <typename T>
+// T ShowCreateEntityDialog(bool* p_open, EntityDialog<T> *, bool* ret){}
+
+// template <typename T>
+// bool ShowEditEntityDialog(bool* p_open, EntityDialog<T> *, T *);
 
 
 // Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create){

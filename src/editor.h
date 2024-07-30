@@ -40,7 +40,7 @@
 
 #include "Material.h"
 
-
+#include "job_dialog.h"
 
 
 //#include "gMesh.h"
@@ -179,11 +179,12 @@ protected:
   ExampleAppLog logtest;
   
   MaterialDialog  m_matdlg;
-  EntityDialog<Job> m_jobdlg;
-  
+  //JobDialog<Job> m_jobdlg;
+  JobDialog m_jobdlg;
   CreateSetDialog m_setdlg;
   
   bool m_show_mat_dlg; //create
+  bool m_show_job_dlg; //create
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;
@@ -212,7 +213,6 @@ protected:
   
 };
 
-#include "job_dialog.cpp"
 
 
 #endif

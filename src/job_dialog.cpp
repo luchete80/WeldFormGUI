@@ -1,8 +1,28 @@
-#ifndef _JOB_DIALOG_H_
-#define _JOB_DIALOG_H_
+
+#include "job_dialog.h"
 
 
-#include "entity_dialog.h"
+void  MaterialDialog::Draw(const char* title, bool* p_open, Job *mat){
+
+  create_material = false; 
+  if (!ImGui::Begin(title, p_open))
+  {
+      ImGui::End();
+      return;
+  }
+  //Vec3_t size;
+
+  ImGui::InputDouble("Density ", &m_density_const, 0.00f, 1.0f, "%.4f");  
+
+  if (ImGui::Button("Create")) {create_material = true;}
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel")) {
+    cancel_action = false;
+  }
+  ImGui::End();
+  
+  //m_density_const = dens;
+}
 
 // //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // // IS BASICALLY THE SAME 
@@ -29,4 +49,3 @@
 template  void EntityDialog<Job>:: Draw(const char* title, bool* p_open, Job *mat);
 
 
-#endif
