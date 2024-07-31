@@ -102,9 +102,11 @@ void JobShowDialog::Draw(){
 
   str = m_job->getLog();
 
-  //ImGui::TextUnformatted("State %s", str.c_str()  );  
+  ImGui::Text("State %s", str.c_str()  );  
   //ImGui::TextUnformatted();
-  cout <<str<<endl;
+
+  
+  if (ImGui::Button("Close")){m_show=false;}
 
   ImGui::End();
 }

@@ -15,12 +15,13 @@ Job::Job(std::string str){
 }
 
 int Job::Run(){
+  // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
   std::string str;
   int returnCode ;
   #ifdef _WIN32
-  //str = "START /B solvers\\WeldForm " + m_path_file;
+  str = "START /B solvers\\WeldForm " + m_path_file + "> log.txt" ;
   #elif linux
-  str = "nohup solvers/WeldForm " + m_path_file + " > my.log 2>&1  &";
+  str = "nohup solvers/WeldForm " + m_path_file + " > log.txt 2>&1  &";
   //echo $!
   #endif
   //int returnCode = system(str.c_str());
@@ -40,11 +41,22 @@ int Job::Run(){
 }
 void Job::UpdateOutput(){
   int returnCode;
-  string str =  m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";
+  string str;
+  //str =  m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";
+  str = "log.txt";
+  string cpy_str;
+  #ifdef _WIN32
+  system("del temp.out");
+  cpy_str = "copy " + str + " " + "temp.out";
+  #elif linux
+  system("rm temp.out");  
+  cpy_str = "cp " + str + " " + "temp.out";
+  //echo $!
+  #endif
   
-  string cpy_str = "cp " + str + " " + "temp.out";
   
-  system("rm temp.out");
+  
+  
   returnCode = system(cpy_str.c_str());
   
   ifstream file;
@@ -55,7 +67,7 @@ void Job::UpdateOutput(){
   string line;
   m_log = "";
   while(getline(file, line))
-    m_log += line;
+    m_log += line + "\n";
 	} else {
 		cout << "[E] Input file " << "temp.out" << " could not be found!!" << endl;
 	}
