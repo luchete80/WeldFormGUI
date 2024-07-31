@@ -2,12 +2,16 @@
 #include <cstdlib>
 
 #include <iostream>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 
 using namespace std;
 
 
 Job::Job(std::string str){
   m_path_file = str;
+  cout << "path "<<str<<endl;
 }
 
 int Job::Run(){
@@ -16,7 +20,7 @@ int Job::Run(){
   #ifdef _WIN32
   //str = "START /B solvers\\WeldForm " + m_path_file;
   #elif linux
-  str = "nohup solvers/WeldForm " + m_path_file /*+ " > my.log 2>&1 */ + " &";
+  str = "nohup solvers/WeldForm " + m_path_file + " > my.log 2>&1  &";
   //echo $!
   #endif
   //int returnCode = system(str.c_str());
@@ -25,13 +29,40 @@ int Job::Run(){
   //str = "START /B solvers\\WeldForm " + m_path_file;
   #elif linux
   //str = "echo $! > pid.txt";
-  str = "ps -e --sort=start_time | grep \"WeldForm \" ";
+  //str = "ps -e --sort=start_time | grep \"WeldForm \" ";
   //echo $!
   #endif
-  //system(str.c_str());
+  returnCode = system(str.c_str());
   
   cout << "Process ID "<< returnCode<<endl;
   return returnCode; 
+  
+}
+void Job::UpdateOutput(){
+  int returnCode;
+  string str =  m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";
+  
+  string cpy_str = "cp " + str + " " + "temp.out";
+  
+  system("rm temp.out");
+  returnCode = system(cpy_str.c_str());
+  
+  ifstream file;
+	file.open("temp.out");
+
+	if (file.is_open()) {
+		//cout << "[I] Found input file " << fileName << endl;
+  string line;
+  m_log = "";
+  while(getline(file, line))
+    m_log += line;
+	} else {
+		cout << "[E] Input file " << "temp.out" << " could not be found!!" << endl;
+	}
+  
+
+  
+  file.close();  
   
 }
 

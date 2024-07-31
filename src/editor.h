@@ -181,7 +181,8 @@ protected:
   
   MaterialDialog  m_matdlg;
   //JobDialog<Job> m_jobdlg;
-  JobDialog m_jobdlg;
+  JobDialog       m_jobdlg; //creation
+  JobShowDialog   m_jobshowdlg;
   CreateSetDialog m_setdlg;
   
   bool m_show_mat_dlg; //create

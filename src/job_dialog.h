@@ -3,25 +3,51 @@
 
 #include "Job.h"
 
+
 //template  EntityDialog<Job>;
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-class JobDialog{
+// FOR CREATION
+struct JobDialog:
+public ObjDialog{
+  
+   bool show_job_files;
+    
+  // //void    AddLog(const char* fmt, ...);
+  JobDialog():
+  ObjDialog(){
+    show_job_files = false;
+    create_entity = false;
+  }
+  
+  std::string m_filename;
+  
+  //void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
+  void Draw();
+};
+
+struct JobShowDialog:
+public ObjDialog{
   
   // //void    AddLog(const char* fmt, ...);
-
   
-  bool cancel_action;
-  bool create_entity;
+  Job *m_job;
   
-  const bool & isEntityCreated()const{return create_entity;}
+  const bool & isEntityCreated()const{return create_entity;}  
   void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
+  void Draw();
 };
 
 Job ShowCreateJobDialog(bool* p_open, JobDialog *, bool* ret);
 bool ShowEditJobDialog(bool* p_open, JobDialog *, Job *);
 
+// template  
+// class TestDialog:
+// public EntityDialog<Job> {
+  
+  
+// };
 
 //void JobDialog<Job>::Draw(const char* title, bool* p_open = NULL, Job* entity = NULL){}
 

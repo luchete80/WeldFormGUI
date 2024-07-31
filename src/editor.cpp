@@ -517,14 +517,47 @@ void Editor::drawGui() {
         bool open_ = ImGui::TreeNode("Jobs");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {
-                        m_show_job_dlg = true;
-                        m_jobs.push_back(new Job("Compression.json")); m_jobs[0]->Run();
-                        
-                                            int data = 101;
-                    
-    }
-            ImGui::EndPopup();
+          if (ImGui::MenuItem("New", "CTRL+Z")) 
+            m_jobdlg.m_show=true;
+                           
+          ImGui::EndPopup();
+        }
+        m_jobdlg.ShowIfEnabled();
+        m_jobshowdlg.ShowIfEnabled();
+        for (int i = 0; i < m_jobs.size(); i++)
+        {
+          if (i == 0)
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+          if (ImGui::TreeNode((void*)(intptr_t)i, "Job %d", i))
+          {
+            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+              //m_show_job_dlg_edit = true;
+            }
+              //selected_mat = m_mats[i];}
+            if (ImGui::BeginPopupContextItem())
+            {
+              if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                m_jobshowdlg.m_show = true;
+                //selected_mat = m_mats[i];
+              }
+              if (ImGui::MenuItem("Show Progress", "")) {
+                m_jobshowdlg.m_job = m_jobs[i];
+                m_jobs[i]->UpdateOutput();
+
+                m_jobshowdlg.m_show = true;
+                
+                //selected_mat = m_mats[i];
+              }
+              if (ImGui::MenuItem("Run", "")) {
+                m_jobs[i]->Run();
+              }
+              ImGui::EndPopup();
+            }                    
+            ImGui::SameLine();
+            if (ImGui::SmallButton("button")) {}
+            ImGui::TreePop();
+          }//Is hovered
         }
         if (open_)
         {
@@ -707,7 +740,7 @@ void Editor::drawGui() {
   Material_ mat;
   Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
-  if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
+  //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
     
@@ -735,6 +768,15 @@ void Editor::drawGui() {
     cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
 
   } else if (m_matdlg.cancel_action)     m_show_mat_dlg=false;
+  
+  if (m_jobdlg.create_entity){
+    cout << "Creating Job "<<m_jobdlg.m_filename<<endl;
+    m_jobs.push_back(new Job(m_jobdlg.m_filename)); 
+    m_jobdlg.create_entity = false;
+    m_jobdlg.m_show=false;
+  }
+    
+
 }
 
 //THESE SHADERS ARE FROM LEARNOPENGL

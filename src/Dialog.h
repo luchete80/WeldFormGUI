@@ -6,17 +6,34 @@
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-class Dialog{
-public:
+struct Dialog{
+
   Dialog (){m_isopen = false;}
   bool isOpen(){return m_isopen;}
   virtual void Draw(){};
+  void ShowIfEnabled(){if (m_show) this->Draw();}
   
-protected:
+  void setShow(const bool &state){m_show = state;};
+  
+
 
   bool m_isopen;
+  bool m_show; //If true, then draw me
+  
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
+};
+
+//Class Involving entity object
+struct ObjDialog:
+public Dialog{
+
+  void CheckAndCreateEntity();
+  bool cancel_action;
+  bool create_entity;
+  
+  const bool & isEntityCreated()const{return create_entity;}
+  
 };
 
 // //Returns true if NEW material is created or if changes are saved, if no
