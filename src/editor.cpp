@@ -33,13 +33,6 @@
 #include <thread>
 
 
-void my_thread_function(int* pData)
-{
-    std::cout << "Hello from my_thread_function!  and data passd ="<<*pData << std::endl;
-    //job->Run();
-}
-
-
 
 
 glm::mat4 trans_mat[1000]; //test
@@ -525,12 +518,10 @@ void Editor::drawGui() {
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {
-                        m_show_mat_dlg = true;
+                        m_show_job_dlg = true;
                         m_jobs.push_back(new Job("Compression.json")); m_jobs[0]->Run();
                         
                                             int data = 101;
-                    std::thread my_thread(my_thread_function,&data);
-                    my_thread.join();
                     
     }
             ImGui::EndPopup();
@@ -714,7 +705,9 @@ void Editor::drawGui() {
   create_new_set = false;
 
   Material_ mat;
+  Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
+  if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
     
@@ -741,7 +734,7 @@ void Editor::drawGui() {
     cout<<"Material Created"<<endl; 
     cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
 
-  }
+  } else if (m_matdlg.cancel_action)     m_show_mat_dlg=false;
 }
 
 //THESE SHADERS ARE FROM LEARNOPENGL

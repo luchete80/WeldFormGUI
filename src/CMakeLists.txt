@@ -98,7 +98,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
 							${CMAKE_SOURCE_DIR}/src/shader.cpp
 							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-
+  
               
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
               #${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
@@ -109,6 +109,7 @@ add_executable(editor
               ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
               ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
               Job.cpp
+              job_dialog.cpp
               log.cpp
               input_writer.cpp
 								) 

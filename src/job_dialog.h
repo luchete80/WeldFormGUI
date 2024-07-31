@@ -19,6 +19,9 @@ class JobDialog{
   void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
 };
 
+Job ShowCreateJobDialog(bool* p_open, JobDialog *, bool* ret);
+bool ShowEditJobDialog(bool* p_open, JobDialog *, Job *);
+
 
 //void JobDialog<Job>::Draw(const char* title, bool* p_open = NULL, Job* entity = NULL){}
 

@@ -12,6 +12,7 @@ using namespace std;
 void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
 
   create_material = false; 
+  cancel_action = false;
   if (!ImGui::Begin(title, p_open))
   {
       ImGui::End();
@@ -26,7 +27,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   if (ImGui::Button("Create")) {create_material = true;}
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
-    cancel_action = false;
+    cancel_action = true;
   }
   ImGui::End();
   
@@ -52,6 +53,8 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
     } else {
       cout << "Material elastic constants should not be zero;"<<endl;
     };
+  } else if (matdlg->cancel_action){
+    
   }
   //cout << "density "<<    ret.getDensityConstant()<<endl;
   return ret;

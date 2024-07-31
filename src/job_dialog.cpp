@@ -1,27 +1,35 @@
 
 #include "job_dialog.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
-void  MaterialDialog::Draw(const char* title, bool* p_open, Job *mat){
 
-  create_material = false; 
-  if (!ImGui::Begin(title, p_open))
+void  JobDialog::Draw(const char* title, bool* p_open, Job *job){
+
+  //create_job = false; 
+  // if (!ImGui::Begin(title, p_open))
   {
       ImGui::End();
       return;
   }
   //Vec3_t size;
 
-  ImGui::InputDouble("Density ", &m_density_const, 0.00f, 1.0f, "%.4f");  
+  // ImGui::InputDouble("Density ", &m_density_const, 0.00f, 1.0f, "%.4f");  
 
-  if (ImGui::Button("Create")) {create_material = true;}
-  ImGui::SameLine();
-  if (ImGui::Button("Cancel")) {
-    cancel_action = false;
-  }
-  ImGui::End();
+  // if (ImGui::Button("Create")) {create_material = true;}
+  // ImGui::SameLine();
+  // if (ImGui::Button("Cancel")) {
+    // cancel_action = false;
+  // }
+  // ImGui::End();
   
   //m_density_const = dens;
+}
+
+Job ShowCreateJobDialog(bool* p_open, JobDialog *, bool* ret){
+  
 }
 
 // //SAME DIALOG FROM CREATE AND EDIT MATERIAL
@@ -46,6 +54,6 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Job *mat){
 // bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *, Material_ *);
 
 
-template  void EntityDialog<Job>:: Draw(const char* title, bool* p_open, Job *mat);
+//template  void EntityDialog<Job>:: Draw(const char* title, bool* p_open, Job *mat);
 
 

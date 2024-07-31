@@ -14,7 +14,7 @@ public:
   int Run();
 protected:
   std::string m_path_file;
-  
+  int m_pid;
   
 };
 

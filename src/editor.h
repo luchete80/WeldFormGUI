@@ -189,6 +189,7 @@ protected:
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;
+  bool create_new_job;
   bool create_new_set;
 
   SceneView *m_sceneview;
