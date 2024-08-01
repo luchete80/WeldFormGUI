@@ -18,22 +18,29 @@ int Job::Run(){
   // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
   std::string str;
   int returnCode ;
+
+  //int returnCode = system(str.c_str());
+  //CATCH ID
+  //REMOVE LOG FIRST
+  #ifdef _WIN32
+  str =  "del" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";  
+  //str = "START /B solvers\\WeldForm " + m_path_file;
+  #elif linux
+  //str = "echo $! > pid.txt";
+  //str = "ps -e --sort=start_time | grep \"WeldForm \" ";
+  //echo $!
+  str =  "rm" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";  
+  #endif
+  returnCode = system(str.c_str());  
+
   #ifdef _WIN32
   str = "START /B solvers\\WeldForm " + m_path_file + "> log.txt" ;
   #elif linux
   str = "nohup solvers/WeldForm " + m_path_file + " > log.txt 2>&1  &";
   //echo $!
   #endif
-  //int returnCode = system(str.c_str());
-  //CATCH ID
-  #ifdef _WIN32
-  //str = "START /B solvers\\WeldForm " + m_path_file;
-  #elif linux
-  //str = "echo $! > pid.txt";
-  //str = "ps -e --sort=start_time | grep \"WeldForm \" ";
-  //echo $!
-  #endif
-  returnCode = system(str.c_str());
+
+  returnCode = system(str.c_str());    
   
   cout << "Process ID "<< returnCode<<endl;
   return returnCode; 
@@ -42,15 +49,16 @@ int Job::Run(){
 void Job::UpdateOutput(){
   int returnCode;
   string str;
-  //str =  m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";
-  str = "log.txt";
+  
   string cpy_str;
+  //cout << "Update.."<<endl;
   #ifdef _WIN32
   system("del temp.out");
-  cpy_str = "copy " + str + " " + "temp.out";
+  cpy_str = "copy log.txt temp.out";
   #elif linux
+  cout << "deleting "<<endl;
   system("rm temp.out");  
-  cpy_str = "cp " + str + " " + "temp.out";
+  cpy_str = "cp log.txt temp.out";
   //echo $!
   #endif
   
