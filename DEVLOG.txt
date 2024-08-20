@@ -34,3 +34,5 @@
          - FIXED PARTICLE SELECTION!
 20240729 - Added json library
          - Fixed json importer 
+-------------------------------------------------------------------------------
+20240820 - Added gmsh library for importing STL
