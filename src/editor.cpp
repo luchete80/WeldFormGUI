@@ -32,7 +32,7 @@
 #include<iostream>
 #include <thread>
 
-
+#include "gmsh/src/common/OpenFile.h"
 
 
 glm::mat4 trans_mat[1000]; //test
@@ -692,6 +692,12 @@ void Editor::drawGui() {
       m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
       // action
+      
+      
+      //test 
+      bool errorIfMissing;
+      MergeFile(filePathName, errorIfMissing);
+      //gmsh::merge(filePathName);
     }
     
     // close

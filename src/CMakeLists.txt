@@ -118,7 +118,14 @@ if (WIN32)
 set (LIBS winmm)
 endif()
 
+link_directories(${CMAKE_SOURCE_DIR}/libs)
+
+#target_compile_definitions(editor PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
+
 target_link_libraries(editor 
+
+            shared
+            ${LINK_LIBRARIES}
             model
 						freetype
 						basic_lighting
@@ -133,6 +140,7 @@ target_link_libraries(editor
 					  glfw3
 					  #common
 					  ${LIBS}
+           
 )
 
 

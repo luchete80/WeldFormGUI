@@ -13,8 +13,7 @@ sudo apt-get install xorg-dev libglu1-mesa-dev
 
 ## Geometry import
 
-- You need opencascade, occt-V7_5_0, 
-- gmsh is taken from master branch. Date is 20240820. (gmsh 4.13-0 and 4.13-1 have errors)
+You need opencocct-V7_5_0
 
 
 

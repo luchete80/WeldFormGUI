@@ -9,7 +9,7 @@ include_directories("${CMAKE_SOURCE_DIR}/Include")
 include_directories("${CMAKE_SOURCE_DIR}/include_logl")
 include_directories("${CMAKE_SOURCE_DIR}/glad/include")
 include_directories("${CMAKE_SOURCE_DIR}/configuration")
-
+include_directories("${CMAKE_SOURCE_DIR}/libs")
 #libs
 # ########### GAME ########
 add_subdirectory("libs")

@@ -36,6 +36,7 @@ set (ENABLE_OCC ON)
 set (ENABLE_NETGEN OFF)
 set (ENABLE_POST OFF)
 set (ENABLE_BUILD_DYNAMIC ON) #OR ENABLE_BUILD_LIB OR ENABLE_BUILD_SHARED
+#set (ENABLE_BUILD_LIB ON)
 
 opt(3M "Enable proprietary 3M extension" OFF)
 opt(ALGLIB "Enable ALGLIB (used by some mesh optimizers)" ${DEFAULT})
