@@ -25,6 +25,7 @@ public:
   const model_type& getModelType () const {return m_modeltype;}
   const Material_* getMaterial (const int &m)const{return m_mat[m];}
   const int & getMaterialCount()const{return m_mat_count;}
+  const bool &isAnyMesh()const {return have_meshes;}
 protected:
   std::vector <Part*>       m_part;
   std::vector <Material_*>   m_mat;  
@@ -36,6 +37,8 @@ protected:
   std::map <std::pair<int,int>, int> m_linemap;
   model_type m_modeltype;
   int m_mat_count;
+  
+  bool have_meshes;
 };
 
 class FEMModel:

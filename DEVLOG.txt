@@ -35,4 +35,5 @@
 20240729 - Added json library
          - Fixed json importer 
 -------------------------------------------------------------------------------
-20240820 - Added gmsh library for importing STL
+20240820 - Added gmsh library for importing STEP or STL geometry
+20240821 - Added first step importing actions 

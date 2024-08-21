@@ -5,13 +5,16 @@
 #include "Mesh.h"
 #include "Part.h"
 
+#include <gmsh.h>
+
 using namespace std;
 using namespace LS_Dyna;
 
-Mesh* Model::getPartMesh(const int &i){m_part[i]->getMesh();}
+Mesh* Model::getPartMesh(const int &i){ if (have_meshes) m_part[i]->getMesh();}
   
 Model::Model(string name){
   m_mat_count = 0;
+  have_meshes = false;
   
   cout << "Reading "<<name<<endl;
   string ext = name.substr(name.find_last_of(".")+1, name.length() - 1);
@@ -42,9 +45,41 @@ Model::Model(string name){
     Mesh *msh = new Mesh;
     msh->assignValues(m_node, m_elem);
     m_part.push_back(new Part(msh));
+    have_meshes = true;
   } else if (ext == "json"){
     
     
+  } else if (ext == "step"){
+      //test 
+      bool errorIfMissing;
+
+
+        // Load a STEP file (using `importShapes' instead of `merge' allows to
+      // directly retrieve the tags of the highest dimensional imported entities):
+      std::vector<std::pair<int, int> > v;
+     //try {
+        cout << "Loading file "<<name<<endl;
+      int argc;
+      char **argv;
+      gmsh::initialize(argc, argv);
+      gmsh::model::add("t20");
+      gmsh::model::occ::importShapes(name, v);
+      cout << "v size "<<v.size()<<endl;
+
+    // Get the bounding box of the volume:
+      double xmin, ymin, zmin, xmax, ymax, zmax;
+//      gmsh::model::occ::getBoundingBox(v[0].first, v[0].second, xmin, ymin, zmin,
+//                                       xmax, ymax, zmax);
+//    double dx = (xmax - xmin);
+//    double dy = (ymax - ymin);
+//    double dz = (zmax - zmin);
+///    cout << "dx dy dz "<<dx <<", "<<dy <<", "<<dz<<endl;
+
+    //} catch(...) {
+      //  gmsh::logger::write("Could not load STEP file: bye!");
+      //  gmsh::finalize();
+        //return 0;
+      //}
   }
 }
 

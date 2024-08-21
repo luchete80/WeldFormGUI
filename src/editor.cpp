@@ -32,7 +32,7 @@
 #include<iostream>
 #include <thread>
 
-#include "gmsh/src/common/OpenFile.h"
+#include <gmsh.h>
 
 
 glm::mat4 trans_mat[1000]; //test
@@ -158,7 +158,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".json,.k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.json,.k", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -689,14 +689,30 @@ void Editor::drawGui() {
       
       cout << "file path name "<<filePathName<<endl;
       m_model = new Model(filePathName);
+      if (m_model->isAnyMesh()){
       m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
+      }
       // action
       
       
       //test 
       bool errorIfMissing;
-      MergeFile(filePathName, errorIfMissing);
+      gmsh::model::add("t20");
+
+        // Load a STEP file (using `importShapes' instead of `merge' allows to
+      // directly retrieve the tags of the highest dimensional imported entities):
+      std::vector<std::pair<int, int> > v;
+     //try {
+        cout << "Loading file "<<filePathName<<endl;
+        //gmsh::model::occ::importShapes(filePathName, v);
+      //} catch(...) {
+      //  gmsh::logger::write("Could not load STEP file: bye!");
+      //  gmsh::finalize();
+        //return 0;
+      //}
+      
+      //MergeFile(filePathName, errorIfMissing);
       //gmsh::merge(filePathName);
     }
     
