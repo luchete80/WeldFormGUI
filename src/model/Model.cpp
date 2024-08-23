@@ -6,6 +6,8 @@
 #include "Part.h"
 
 #include <gmsh.h>
+#include "GModel.h"
+//#include "drawContext.h"
 
 using namespace std;
 using namespace LS_Dyna;
@@ -64,8 +66,11 @@ Model::Model(string name){
       gmsh::initialize(argc, argv);
       gmsh::model::add("t20");
       gmsh::model::occ::importShapes(name, v);
+      //GModel *m = GModel::current();
+      //m= gmsh::model::geo::list[0];
+      // = GModel::list[0];
       cout << "v size "<<v.size()<<endl;
-
+      //gmsh_::model::drawContext::drawGeom();
     // Get the bounding box of the volume:
       double xmin, ymin, zmin, xmax, ymax, zmax;
 //      gmsh::model::occ::getBoundingBox(v[0].first, v[0].second, xmin, ymin, zmin,

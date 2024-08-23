@@ -31,6 +31,9 @@ link_directories ("${GLFW_BINARY_DIR}/src")
 add_subdirectory("graphics")
 add_subdirectory("model")
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # add_executable(editor 	
 							# #camera_system.cpp
 							# main.cpp
@@ -112,6 +115,7 @@ add_executable(editor
               job_dialog.cpp
               log.cpp
               input_writer.cpp
+              #${CMAKE_SOURCE_DIR}/libs/gmsh/src/geo/GModel.cpp
 								) 
 
 if (WIN32)
@@ -140,6 +144,7 @@ target_link_libraries(editor
 					  glfw3
 					  #common
 					  ${LIBS}
+            ${RT_LIB}
            
 )
 
