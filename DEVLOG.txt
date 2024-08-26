@@ -37,3 +37,4 @@
 -------------------------------------------------------------------------------
 20240820 - Added gmsh library for importing STEP or STL geometry
 20240821 - Added first step importing actions 
+20240826 - Renderer engine replaced by VTK. 
