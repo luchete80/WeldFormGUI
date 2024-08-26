@@ -1,0 +1,8 @@
+https://discourse.vtk.org/t/vtk-dearimgui-integration-through-vtkgenericopenglrenderwindow/4424
+
+This is with SDL
+https://github.com/phcerdan/vtkImGuiAdapter/
+
+This is with GLFW
+https://github.com/jspanchu/vtkGlfw
+

@@ -47,3 +47,12 @@ make
 sudo make install
 # Notes:
 # * if you don't have root access, remove "sudo"
+
+This renders VTK to a FBO
+https://github.com/trlsmax/imgui-vtk
+
+MUST SPECIFY IMGUI AND GLFW3 DIRS TO IMUI-VTK
+
+PUT VTK BINARYPATH 
+BUILD IT AS RELEASE!
+cmake [SOURCE_DIR] -DVTK_INCLUDE_DIR="/usr/local/include/vtk-9.3" -DCMAKE_BUILD_TYPE=RELEASE 

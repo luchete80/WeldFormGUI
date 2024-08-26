@@ -1,228 +1,85 @@
-include_directories("${CMAKE_SOURCE_DIR}/libs/glm-0.9.9.8")
-include_directories("${CMAKE_SOURCE_DIR}/libs/glad/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/glm-0.9.9.8")
-include_directories("${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image")
-include_directories("${CMAKE_SOURCE_DIR}/libs/assimp-3.1/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/glew-2.2.0/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/freeglut/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include")
-include_directories("${CMAKE_SOURCE_DIR}/libs/freetype-2.10.4/include/freetype")
-include_directories("${CMAKE_SOURCE_DIR}/libs/nlohmann")
-include_directories("${CMAKE_SOURCE_DIR}/src/graphics")
-include_directories("${CMAKE_SOURCE_DIR}/src/physics")
-include_directories("${CMAKE_SOURCE_DIR}/src/model")
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+project(imgui-vtk)
 
-include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87")
-include_directories("${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends")
-include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
+set(CMAKE_CXX_STANDARD 11)
+# set(CMAKE_VERBOSE_MAKEFILE 1)
+set(APP_VERSION_MAJOR 1)
+set(APP_VERSION_MINOR 0)
+set(EXEC_NAME imgui_vtk)
 
-include_directories("${CMAKE_SOURCE_DIR}/src/game")
-include_directories("${CMAKE_SOURCE_DIR}/src/common")
+# In this CMakeLists.txt file, components are all built separately and linked together
+# If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
+# together, please see CMakeLists-alt.txt
+add_executable(${EXEC_NAME} main.cpp)
 
-# link_directories ("D:/Luciano/libs/glfw-3.3.4/src")
-
-
-# link_directories ("D:/Luciano/libs/freeglut-mingw/lib/x64")
-# link_directories ("D:/Luciano/libs/freetype-2.10.4_bin")
-link_directories ("${GLFW_BINARY_DIR}/src")
-
-add_subdirectory("graphics")
-add_subdirectory("model")
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# add_executable(editor 	
-							# #camera_system.cpp
-							# main.cpp
-              # editor_app.cpp
-							# ${CMAKE_SOURCE_DIR}/src/mymesh.cpp
-							# #skinning_technique.cpp
-							# #game.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
-              
-              # ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
-							# ${CMAKE_SOURCE_DIR}/src/shader.cpp
-							# ${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-              
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-								# ) 
-
-# target_link_libraries(editor 
-            # physics
-						# freetype
-						# #skinned_mesh
-						# basic_mesh
-						# basic_lighting
-						# #assimp
-						# pipeline
-						# technique
-						# camera
-						# shadow_map_fbo
-                      # # util
-					  # shapes
-            # app
-					  # backend
-					  # glfw3
-					  # common
-					  # winmm
-# )
-
-add_executable(editor 	
-
-              editor.cpp
-              ViewportWindow.cpp
-              ${CMAKE_SOURCE_DIR}/src/renderer.cpp
-							#skinning_technique.cpp
-							#game.cpp
-              texture.cpp
-              model/Domain.cpp
-              material_dialog.cpp
-              set_dialog.cpp
-              #${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
-              ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
-              ${CMAKE_SOURCE_DIR}/src/FrameBuffer.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
-              ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
-              #${CMAKE_SOURCE_DIR}/src/graphics/renderer.cpp
-              
-              ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
-							${CMAKE_SOURCE_DIR}/src/shader.cpp
-							${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-  
-              
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
-              #${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp    
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
-              ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
-              ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-              Job.cpp
-              job_dialog.cpp
-              log.cpp
-              input_writer.cpp
-              #${CMAKE_SOURCE_DIR}/libs/gmsh/src/geo/GModel.cpp
-								) 
-
-if (WIN32)
-set (LIBS winmm)
+# OpenGL
+find_package(OpenGL REQUIRED)
+target_link_libraries(${EXEC_NAME} OpenGL::GL)
+if (APPLE)
+	# Ignore macOS OpenGL deprecation warnings
+	target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
 endif()
 
-link_directories(${CMAKE_SOURCE_DIR}/libs)
 
-#target_compile_definitions(editor PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
+target_link_libraries(${EXEC_NAME} gl3w)
 
-target_link_libraries(editor 
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
-            shared
-            ${LINK_LIBRARIES}
-            model
-						freetype
-						basic_lighting
-						pipeline
-						technique
-						camera
-						shadow_map_fbo
-                      # util
-					  #shapes
-            #app
-					  backend
-					  glfw3
-					  #common
-					  ${LIBS}
-            ${RT_LIB}
-           
+
+# Dear ImGui
+#set(imgui_dir ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+file(GLOB imgui_src ${imgui_dir}/*.cpp)
+set(imgui_backend ${imgui_dir}/backends/imgui_impl_glfw.cpp ${imgui_dir}/backends/imgui_impl_opengl3.cpp)
+add_library(imgui STATIC ${imgui_src} ${imgui_backend})
+target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
+target_link_libraries(imgui glfw)
+target_link_libraries(${EXEC_NAME} imgui)
+
+# VTK
+find_package(VTK COMPONENTS 
+  CommonCore
+  CommonColor
+  CommonDataModel
+  FiltersCore
+  InteractionStyle
+  RenderingCore
+  RenderingFreeType
+  RenderingGL2PSOpenGL2
+  RenderingOpenGL2
+  QUIET
 )
+if (NOT VTK_FOUND)
+  message(FATAL_ERROR "VTK not found!")
+  return()
+endif()
 
+if (VTK_VERSION VERSION_LESS "9.0.0")
+  include(${VTK_USE_FILE})
+else()
+  # vtk_module_autoinit is needed
+  vtk_module_autoinit(
+    TARGETS ${EXEC_NAME}
+    MODULES ${VTK_LIBRARIES}
+  )
+endif()
+message (STATUS "VTK Version: ${VTK_VERSION}")
 
+# imgui-vtk (VTK Viewer class)
+set(imgui_vtk_viewer_dir ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(imgui_vtk_viewer STATIC ${imgui_vtk_viewer_dir}/VtkViewer.cpp)
+target_include_directories(imgui_vtk_viewer PUBLIC ${imgui_vtk_viewer_dir})
+target_link_libraries(imgui_vtk_viewer gl3w) # Since gl3w was compiled as a static library, we need to link to it
+target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a static library, we need to link to it
+target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES})
+target_link_libraries(${EXEC_NAME} imgui_vtk_viewer)
 
-# add_executable(editor_app
-              # main.cpp
-							# #camera_system.cpp
-							# editor_app.cpp
-							# ${CMAKE_SOURCE_DIR}/src/mymesh.cpp
-							# #skinning_technique.cpp
-							# #game.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/Renderer.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/ogldev_texture.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_texture.cpp
-              # ${CMAKE_SOURCE_DIR}/src/graphics/picking_technique.cpp	
-              
-              # ${CMAKE_SOURCE_DIR}/src/text_renderer.cpp
-							# ${CMAKE_SOURCE_DIR}/src/shader.cpp
-							# ${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-              
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_demo.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_draw.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_tables.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/imgui_widgets.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_glfw.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/imgui-1.87/backends/imgui_impl_opengl3.cpp
-              # ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-								# ) 
- 
-# target_link_libraries(editor_app 
-            # physics
-						# freetype
-						# #skinned_mesh
-						# basic_mesh
-						# basic_lighting
-						# #assimp
-						# pipeline
-						# technique
-						# camera
-						# shadow_map_fbo
-                      # # util
-					  # shapes
-            # app
-					  # backend
-					  # glfw3
-					  # common
-					  # winmm
-# )
-
-# add_executable(game_no_bckend main_no_bckend.cpp
-							# # camera_system.cpp
-							# # game.cpp
-							# # mymesh.cpp
-							# # text_renderer.cpp
-							# # shader.cpp
-							# ${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c
-								# ) 
-
-# target_link_libraries(game_no_bckend 
-            # # physics
-						# # freetype
-						# # #skinned_mesh
-						# # basic_mesh
-						# # basic_lighting
-						# # #assimp
-						# # pipeline
-						# # technique
-						# # camera
-						# # shadow_map_fbo
-                      # # # util
-					  # # shapes
-            # # app
-					  # # backend
-					  # glfw3
-					  # #common
-					  # winmm
-# )
-
-
+# GLFW is built from source in this example
+# But if you link dynamically, you may need to link some native libraries on macOS:
+# target_link_libraries(${EXEC_NAME} "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
+if (UNIX AND NOT APPLE)
+  target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
+endif()

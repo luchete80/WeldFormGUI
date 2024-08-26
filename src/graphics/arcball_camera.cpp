@@ -61,13 +61,14 @@ ArcballCamera::ArcballCamera(){
 };
 
 //ArcballCamera arcCamera;
-void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
+void ArcballCamera::mouse_pos_callback(GLFWwindow* window, float xpos, float ypos){
 
     if(flag == true){
         //Get the screen coordinates when mouse clicks.
-        currentPos.x = (((float)xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
-        currentPos.y = (((SCR_HEIGHT/2) - (float)ypos) / (SCR_HEIGHT/2)) * RADIUS;
-
+        //currentPos.x = (((float)xpos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS;
+        //currentPos.y = (((SCR_HEIGHT/2) - (float)ypos) / (SCR_HEIGHT/2)) * RADIUS;
+        currentPos.x =xpos*RADIUS;
+        currentPos.y =ypos*RADIUS;
         currentPos.z = z_axis(currentPos.x, currentPos.y);
         rotation();
         cout << "FLAG TRUE "<<endl;
@@ -77,15 +78,26 @@ void ArcballCamera::mouse_pos_callback(GLFWwindow* window, int xpos, int ypos){
     }
 }
 
-void ArcballCamera::mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+void ArcballCamera::mouse_button_callback(GLFWwindow* window, float x, float y, int button, int action, int mods){
 
     //action == glfwGetMouseButton(window, GLFW_KEY_LEFT_CONTROL);
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
         
         double startXPos, startYPos; //screen coordinates when mouse clicks.
-        glfwGetCursorPos(window, &startXPos, &startYPos);
-        startPos.x = ((startXPos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
-        startPos.y = (((SCR_HEIGHT/2) - startYPos) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
+        //glfwGetCursorPos(window, &startXPos, &startYPos);
+        //startPos.x = ((startXPos - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
+        //startPos.y = (((SCR_HEIGHT/2) - startYPos) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
+
+
+       startPos.x =x*RADIUS;
+       startPos.y =y*RADIUS;
+              
+        //startPos.x = ((x - (SCR_WIDTH/2) ) / (SCR_WIDTH/2)) * RADIUS; //convert to NDC, then assign to startPos.
+        //startPos.y = (((SCR_HEIGHT/2) - y) / (SCR_HEIGHT/2)) * RADIUS;// ..same for y coordinate.
+
+        //startPos.x *=RADIUS;
+        //startPos.y *=RADIUS;
+        
         cout << "start pos x "<<startPos.x<<endl;
         cout << "start pos y "<<startPos.y<<endl;
         //startPos.x =  startXPos * RADIUS; //convert to NDC, then assign to startPos.

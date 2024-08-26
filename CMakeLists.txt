@@ -18,6 +18,10 @@ include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/geo")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/graphics")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/mesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/numeric")
+
+include_directories("${VTK_INCLUDE_DIR}")
+set (gl3w_dir "${CMAKE_SOURCE_DIR}/libs/gl3w")
+set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAILS!
 #libs
 # ########### GAME ########
 add_subdirectory("libs")
@@ -31,3 +35,4 @@ add_subdirectory("tests")
 #add_subdirectory("OpenGLWindow")
 
 #add_subdirectory("tests")
+
