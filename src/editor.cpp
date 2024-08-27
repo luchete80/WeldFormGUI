@@ -59,12 +59,13 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 #define PITCH_LENGTH 20.
 
 // Helper to wire demo markers located in code to a interactive browser
+/*
 typedef void (*ImGuiDemoMarkerCallback)(const char* file, int line, const char* section, void* user_data);
 extern ImGuiDemoMarkerCallback  GImGuiDemoMarkerCallback;
 extern void*                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = NULL;
 void*                           GImGuiDemoMarkerCallbackUserData = NULL;
-#define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
+#define //IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
 
 
 static void ShowExampleAppLog(bool* p_open);
@@ -104,7 +105,7 @@ bool ImGui::ShowStyleSelector(const char* label)
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
 void ShowExampleMenuFile(const Editor &editor)
 {
-    IMGUI_DEMO_MARKER("Examples/Menu");
+    //IMGUI_DEMO_MARKER("Examples/Menu");
     ImGui::MenuItem("(demo menu)", NULL, false, false);
     if (ImGui::MenuItem("New")) {}
     if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -142,7 +143,7 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Save As..")) {}
 
     ImGui::Separator();
-    IMGUI_DEMO_MARKER("Examples/Menu/Options");
+    //IMGUI_DEMO_MARKER("Examples/Menu/Options");
     if (ImGui::BeginMenu("Options"))
     {
         static bool enabled = true;
@@ -159,7 +160,7 @@ void ShowExampleMenuFile(const Editor &editor)
         ImGui::EndMenu();
     }
 
-    IMGUI_DEMO_MARKER("Examples/Menu/Colors");
+    //IMGUI_DEMO_MARKER("Examples/Menu/Colors");
     if (ImGui::BeginMenu("Colors"))
     {
         float sz = ImGui::GetTextLineHeight();
@@ -180,7 +181,7 @@ void ShowExampleMenuFile(const Editor &editor)
     // In a real code-base using it would make senses to use this feature from very different code locations.
     if (ImGui::BeginMenu("Options")) // <-- Append!
     {
-        IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
+        //IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
         static bool b = true;
         ImGui::Checkbox("SomeOption", &b);
         ImGui::EndMenu();
@@ -230,13 +231,13 @@ void Editor::drawGui() {
   {
       if (ImGui::BeginMenu("Menu"))
       {
-          IMGUI_DEMO_MARKER("Menu/File");
+          //IMGUI_DEMO_MARKER("Menu/File");
           ShowExampleMenuFile(*this);
           ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Examples"))
       {
-          IMGUI_DEMO_MARKER("Menu/Examples");
+          //IMGUI_DEMO_MARKER("Menu/Examples");
           ImGui::MenuItem("Main menu bar", NULL, &m_show_app_main_menu_bar);
           ImGui::MenuItem("Console", NULL, &m_show_app_console);
           // ImGui::MenuItem("Log", NULL, &show_app_log);
@@ -256,7 +257,7 @@ void Editor::drawGui() {
       // ////if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
       // if (ImGui::BeginMenu("Tools"))
       // {
-          // IMGUI_DEMO_MARKER("Menu/Tools");
+          // //IMGUI_DEMO_MARKER("Menu/Tools");
   // #ifndef IMGUI_DISABLE_METRICS_WINDOW
           // ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics);
           // ImGui::MenuItem("Stack Tool", NULL, &show_app_stack_tool);
@@ -268,7 +269,7 @@ void Editor::drawGui() {
       ImGui::EndMenuBar();
   }
 
-// IMGUI_DEMO_MARKER("Configuration");
+// //IMGUI_DEMO_MARKER("Configuration");
     if (ImGui::CollapsingHeader("Configuration"))
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -311,7 +312,7 @@ void Editor::drawGui() {
             ImGui::Separator();
         }
 
-        IMGUI_DEMO_MARKER("Configuration/Backend Flags");
+        //IMGUI_DEMO_MARKER("Configuration/Backend Flags");
         if (ImGui::TreeNode("Backend Flags"))
         {
             HelpMarker(
@@ -329,7 +330,7 @@ void Editor::drawGui() {
             ImGui::Separator();
         }
 
-        IMGUI_DEMO_MARKER("Configuration/Style");
+        //IMGUI_DEMO_MARKER("Configuration/Style");
         if (ImGui::TreeNode("Style"))
         {
             HelpMarker("The same contents can be accessed in 'Tools->Style Editor' or by calling the ShowStyleEditor() function.");
@@ -338,7 +339,7 @@ void Editor::drawGui() {
             ImGui::Separator();
         }
 
-        IMGUI_DEMO_MARKER("Configuration/Capture, Logging");
+        //IMGUI_DEMO_MARKER("Configuration/Capture, Logging");
         if (ImGui::TreeNode("Capture/Logging"))
         {
             HelpMarker(
@@ -359,7 +360,7 @@ void Editor::drawGui() {
     }
 
     //if (ImGui::CollapsingHeader("New Domain")){
-    // IMGUI_DEMO_MARKER("Widgets/Trees");
+    // //IMGUI_DEMO_MARKER("Widgets/Trees");
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("TABS", tab_bar_flags)){
     if (ImGui::BeginTabItem("Model")) { 
@@ -559,7 +560,7 @@ void Editor::drawGui() {
       {
           // Using the _simplified_ one-liner Combo() api here
           // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-          IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
+          //IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
           const char* items[] = { "Box", "Cylinder", "Plane"};
           
           ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
@@ -1411,7 +1412,7 @@ void Editor::CalcFPS()
         m_fps = m_frameCount;
         m_frameCount = 0;
     }
-*/
+//IMGUI_DEMO_MARKER
 }
 
 ///// TODO: PASS TO RENDERER

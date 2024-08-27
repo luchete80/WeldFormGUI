@@ -16,7 +16,7 @@ set(EXEC_NAME imgui_vtk)
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
-                            #editor.cpp
+                            editor.cpp
                             material_dialog.cpp
                             set_dialog.cpp
                             )
