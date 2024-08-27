@@ -18,6 +18,7 @@
 // VTK
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
+//#include "editor.h"
 
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
@@ -111,6 +112,10 @@ int main(int argc, char* argv[])
   bool show_another_window = false;
   bool vtk_2_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  
+  //Editor* editor = new Editor();
+	//cout << "creating app app"<<endl;
+	//pApp= new EditorApp();
 
   // Main loop
   while (!glfwWindowShouldClose(window))

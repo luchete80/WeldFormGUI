@@ -1,4 +1,4 @@
-
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "imgui.h"
@@ -6,7 +6,8 @@
 #include "imgui_impl_opengl3.h"
 
 #include "ImGuiFileDialog.h"
-
+#include "picking_texture.h"
+#include "picking_technique.h"
 
 #ifndef WIN32
 //#include "freetypeGL.h"
@@ -15,16 +16,17 @@
 #include "editor.h"
 #include <sstream>
 
-//#include <glm/gtc/matrix_transform.hpp>
+#include "graphics/sphere_low.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
 
 #include "input_writer.h"
 #include "LSDynaWriter.h"
 
-//#include "SceneView.h"
+#include "SceneView.h"
 
-//#include "ViewportWindow.h"
+#include "ViewportWindow.h"
 #include "Job.h"
 
 #include<iostream>
@@ -32,8 +34,8 @@
 
 #include <gmsh.h>
 
-using namespace std;
-//glm::mat4 trans_mat[1000]; //test
+
+glm::mat4 trans_mat[1000]; //test
 
 
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
@@ -55,6 +57,41 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     return out.str();
 }
 
+float scr_width;
+float scr_height;
+
+
+float vertices[] = {
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left 
+    // second triangle
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left
+}; 
+  // unsigned int indices[] = {  // note that we start from 0!
+      // 0, 1, 
+      // 0, 2,  // first Triangle
+      // 0, 3,
+      // 1, 2,
+      // 2, 3,
+      // 3, 1
+      // // 4, 5,
+      // // 5, 6,
+      // // 6, 7,
+      // // 7, 4  
+      // // GROUND
+  // };
+  
+  unsigned int indices[] = {  // note that we start from 0!
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+  };  
+
+// settings
+
 #define PITCH_WIDTH 20.
 #define PITCH_LENGTH 20.
 
@@ -68,6 +105,14 @@ void*                           GImGuiDemoMarkerCallbackUserData = NULL;
 
 
 static void ShowExampleAppLog(bool* p_open);
+
+glm::mat4 Matrix4fToGLM(const Matrix4f &m){
+  glm::mat4 ret(1.0f);
+  for (int i=0;i<4;i++)
+      for (int j=0;j<4;j++)
+        ret[i][j] = m[i][j];
+  return ret;
+}
 
 static void HelpMarker(const char* desc)
 {
@@ -614,9 +659,7 @@ void Editor::drawGui() {
             if (ImGui::Button("Create FEM")){
               m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              
-              //m_renderer.addMesh(m_fem_msh);
-              
+              m_renderer.addMesh(m_fem_msh);
               is_fem_mesh = true;
             }
     }
@@ -647,7 +690,7 @@ void Editor::drawGui() {
       cout << "file path name "<<filePathName<<endl;
       m_model = new Model(filePathName);
       if (m_model->isAnyMesh()){
-      //m_renderer.addMesh(m_model->getPartMesh(0));
+      m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
       }
       // action
@@ -758,6 +801,67 @@ void Editor::drawGui() {
 
 }
 
+//THESE SHADERS ARE FROM LEARNOPENGL
+
+const char *vertexShaderSource = "#version 330 core\n"
+    // "layout (location = 0) in vec3 aPos;\n"
+    // "uniform mat4 gWVP;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "   //gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    // "}\0";
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 2) in vec3 aNormal;\n"
+"out vec3 FragPos;\n"
+"uniform mat4 gWVP;\n"
+"out vec3 Normal;\n"
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 projection;\n"
+"uniform mat4 transback;\n"
+"void main()\n"
+"{\n"
+"    FragPos = vec3(model * vec4(aPos, 1.0));\n"
+"    Normal = aNormal;     \n"
+"    //gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+"    //gl_Position = projection * transback * view * model * vec4(aPos, 1.0);\n"
+"    gl_Position = gWVP * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char *fragmentShaderSource = "#version 330 core\n"
+
+"out vec4 FragColor;\n"
+"in vec3 Normal;  \n"
+"in vec3 FragPos;  \n" 
+"uniform vec3 lightPos; \n"
+"uniform vec3 lightColor;\n"
+"uniform vec3 objectColor;\n"
+"void main()\n"
+"{ \n"
+"    // ambient\n"
+"    float ambientStrength = 0.2;\n"
+"    vec3 ambient = ambientStrength * lightColor;\n"
+"  	\n"
+"    // diffuse \n"
+"    vec3 norm = normalize(Normal);\n"
+"    vec3 lightDir = normalize(lightPos - FragPos);\n"
+"    float diff = max(dot(norm, lightDir), 0.0);\n"
+"    vec3 diffuse = diff * lightColor;\n"           
+"    vec3 result = (ambient + diffuse) * objectColor;\n" //THIS IS THE ORIGINAL
+//"    vec3 result = diffuse ;\n"
+"    FragColor = vec4(result, 1.0);\n"
+"}\0";
+
+// ORIGINAL
+    // "out vec4 FragColor;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    // "}\n\0";
+    
+//3D THINGS
+
 static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mods) {   
     editor->Key(key, scancode, action, mods);
 }
@@ -770,7 +874,7 @@ bool mouse_pressed;
 
 //TODO: WHY ALWAYS IS STATIC?
 static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
-/*    
+    
     // // //If callbacks are set AFTER, THEN THIS NEEDS TO BE CALLED
     // // //ImGui_ImplGlfw_CursorPosCallback(pWindow,x,y);//THIS IS IN ORDER 
     editor->CursorPos(x,  y);
@@ -784,7 +888,6 @@ static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
     cout << "x cent "<<xx<<endl;
     //cout << 
     editor->ArcCamera()->mouse_pos_callback(pWindow, xx,yy);
-    */
 }
 
 
@@ -826,7 +929,7 @@ void Editor:: CursorPos(double x, double y) {
 }
 
 static void MouseCallback(GLFWwindow* pWindow, int Button, int Action, int Mode){
-/*  
+  
   editor->Mouse(Button, Action, Mode);
   double x, y;
   glfwGetCursorPos(pWindow, &x, &y); 
@@ -834,12 +937,10 @@ static void MouseCallback(GLFWwindow* pWindow, int Button, int Action, int Mode)
     y -= (vmin.y + vpos.y);
     float xx = ((x - (scr_width/2) ) / (scr_width/2));
     float yy  = (((scr_height/2) - y) / (scr_height/2));
-*/
-  //editor->ArcCamera()->mouse_button_callback(pWindow, xx, yy, Button, Action, Mode);
+  editor->ArcCamera()->mouse_button_callback(pWindow, xx, yy, Button, Action, Mode);
 }
 
 void Editor::Mouse(int Button, int Action, int Mode) {
-  /*
     // // OGLDEV_MOUSE OgldevMouse = GLFWMouseToOGLDEVMouse(Button);
 
     // OGLDEV_KEY_STATE State = (Action == GLFW_PRESS) ? OGLDEV_KEY_STATE_PRESS : OGLDEV_KEY_STATE_RELEASE;
@@ -988,11 +1089,11 @@ void Editor::Mouse(int Button, int Action, int Mode) {
         }//Box select
       }//release button
       
-*/
+
 }
 
 void Editor::MoveNode(){
-  /*
+  
     if (m_is_node_sel){
       double x,y;
       glfwGetCursorPos(window, &x, &y);
@@ -1012,7 +1113,6 @@ void Editor::MoveNode(){
         m_last_mouse_dragtime = GetCurrentTimeMillis();
       //}
     } //Is node sel
-    */
 }
 
 // FROM https://stackoverflow.com/questions/44753169/opengl-glfw-scroll-wheel-not-responding
@@ -1031,7 +1131,6 @@ void Editor::scroll(double xoffset, double yoffset)
 
 
 Editor::Editor(){
-  /*
   //window = NULL;
   SCR_WIDTH = 800;
   SCR_HEIGHT = 600;
@@ -1051,11 +1150,9 @@ Editor::Editor(){
   
   is_fem_mesh = false;
   is_sph_mesh = false;
-  */
 }
 
 int Editor::Init(){
-  /*
   m_pause = true;
   mouse_pressed = false;
   rotatecam = false;
@@ -1331,8 +1428,413 @@ int Editor::Init(){
   scr_height = SCR_HEIGHT;
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
-  */
 }//Editor::Init()
+
+
+void Editor::PickingPhase() {
+  // render
+  // ------
+	glClearColor(0.0f, 0.0f, 0.f, 1.0f);  //DO NOT CHANGE THIS!!! BECAUSE OBJECT ID !=0 MEANS SOMETHING SELECTED
+
+  // draw our first triangle
+  
+  gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
+  
+  m_pickingTexture.EnableWriting();
+
+  //float width = ImGui::GetContentRegionAvail().x;
+  //float height = ImGui::GetContentRegionAvail().y;
+  
+  // // *m_width = width;
+  // // *m_height = height;
+  // ImGui::Image(
+    // (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(),   
+    // ImGui::GetContentRegionAvail(), 
+    // ImVec2(0, 1), 
+    // ImVec2(1, 0)
+  // );    
+  
+  glUseProgram(shaderProgram);
+  
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //cout << "Positions"<<endl;
+    //m_pickingEffect.Enable();
+    for (int p=0;p<m_domain.Particles.size();p++){
+      float h = m_domain.Particles[0]->h/2.;
+
+      m_pickingEffect.Enable();
+      Vec3_t v = m_domain.Particles[p]->x;
+      //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+      Vector3f pos(v(0)*1.0,v(1)*1.0,v(2)*1.0); //ORTHO
+      //cout << "vert " <<v(0)<<", "<<endl;
+      //Vector3f pos(0.,0.,0.);
+
+
+      glm::mat4 model = glm::mat4(1.0f);
+
+      model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+      //model = glm::scale(model, glm::vec3(h,h,h));         
+      
+      glm::mat4 projection(1.0);
+      //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+      projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+
+      glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      view = glm::translate(view, arcCamera->position);// this, too.  
+      view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      glm::mat4 transback = glm::mat4(1.0f);
+      transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+      glm::mat4 mat = projection * transback * view * model;
+      glm::vec4 test = mat * glm::vec4(v(0),v(1),v(2),0.0);
+      //cout << "test pos "<<test.x<<", "<<test.y<<", "<<test.z<<endl;
+      m_pickingEffect.SetObjectIndex((p+1));
+
+      m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
+
+      
+      m_renderer.Render();
+      //}
+    }
+
+
+    // if (is_fem_mesh) {
+      // Vector3f pos(0.0,0.0,0.0); //ORTHO
+      // //cout << "vert " <<v(0)<<", "<<endl;
+      // //Vector3f pos(0.,0.,0.);
+
+
+      // glm::mat4 model = glm::mat4(1.0f);
+
+      // //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+              
+      
+      // glm::mat4 projection(1.0);
+      // //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+      // projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+      // // projection = glm::ortho(-(800.0f / 2.0f), 800.0f / 2.0f, 
+        // // 600.0f / 2.0f, -(600.0f / 2.0f), 
+      // // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+      // glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+      // view = glm::translate(view, arcCamera->position);// this, too.  
+      // view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+      
+      // glm::mat4 transback = glm::mat4(1.0f);
+      // transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+      // glm::mat4 mat = projection * transback * view * model;
+      // //glm::mat4 mat = ptest * transback * view * model;
+      
+      
+      // pn.WorldPos(pos);   
+      // Matrix4f m = pn.GetWVPTrans();
+
+      // m_pickingEffect.SetObjectIndex((p));///HERE IS THE P
+
+
+      // m_pickingEffect.SetWVP_glm(mat);    ///TRANSPOSE = FALSE 
+      
+      
+      // m_renderer.Render();
+      // //}
+    // }    
+    
+    glUseProgram(0);
+
+  m_pickingTexture.DisableWriting();
+  
+
+}
+
+void Editor::RenderPhase(){
+    // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+	glClearColor(0.0, 0.0, 0.0, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  
+  //m_viewport_win->Draw();
+  
+  ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse);
+
+  //if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollWithMouse)) 
+  float sx,sy;
+  {
+    m_sceneview->getFrameBuffer()->Bind();
+    // RENDER SCENE
+
+     
+    
+    scr_width = ImGui::GetContentRegionAvail().x;
+    scr_height = ImGui::GetContentRegionAvail().y;
+    editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(scr_width, scr_height);
+    //ImVec2 cr = GetWindowContentRegionAvail();
+    //https://github.com/ocornut/imgui/issues/2486
+    vmin = ImGui::GetWindowContentRegionMin();
+    vmax = ImGui::GetWindowContentRegionMax();
+    
+    
+    //cout << "win pos x "<<ImGui::GetWindowPos().x<<endl;
+    
+    // vmin.x += ImGui::GetWindowPos().x;
+    // vmin.y += ImGui::GetWindowPos().y;
+    // vmax.x += ImGui::GetWindowPos().x;
+    // vmax.y += ImGui::GetWindowPos().y;
+    
+    vpos = ImGui::GetWindowPos();
+    //ImGui::Text("window pos %.1f %.1f", vpos.x, vpos.y);
+
+    //cout << "win pos min "<< vmin.x<< ", "<<vmin.y <<endl;
+
+    
+    //cout << "win pos max "<< vmax.x<< ", "<<vmax.y <<endl;
+    
+    //cout << "SCR WIDTH: "<<scr_width<< ", HEIGHT: "<<scr_height<<endl;
+    // // *m_width = width;
+    // // *m_height = height;
+    ImGui::Image(
+      (ImTextureID)m_sceneview->getFrameBuffer()->getFrameTexture(), 
+      ImGui::GetContentRegionAvail(), 
+      ImVec2(0, 1), 
+      ImVec2(1, 0)
+    );  
+
+          // // // and here we can add our created texture as image to ImGui
+          // // // unfortunately we need to use the cast to void* or I didn't find another way tbh
+          // // ImGui::GetWindowDrawList()->AddImage(
+              // // (void *)texture_id, 
+              // // ImVec2(pos.x, pos.y), 
+              // // ImVec2(pos.x + window_width, pos.y + window_height), 
+              // // ImVec2(0, 1), 
+              // // ImVec2(1, 0)
+          // // );
+    
+
+    /////////////////////////////////////// CAMERA THINGS
+    Pipeline pip;
+
+    Pipeline pn;
+    // pn.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+    // pn.SetPerspectiveProj(m_persProjInfo);
+    // Matrix4f proj = pn.GetProjTrans();
+    // glm::mat4 ptest = Matrix4fToGLM(proj);
+    // render
+    // ------
+    glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // draw our first triangle
+    glUseProgram(shaderProgram);
+    gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
+    
+    
+    //RENDERING FIRST IT WORKS; AFTER DOESn'T
+
+      // m_plightEffect->Enable();
+      // m_plightEffect->SetEyeWorldPos(camera->GetPos());
+      // m_plightEffect->SetWVP(p.GetWVPTrans());
+    
+    Vector3f lightPos(1.2f, 1.0f, 2.0f);
+    Vector3f lightColor(1.0f, 1.0f, 1.0f);
+    Vector3f objectColor(1.0f, 0.5f, 0.31f);
+      
+      
+
+      
+     glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, &lightPos[0]); 
+     glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, &lightColor[0]); 
+     
+           // lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+          // lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+          // lightingShader.setVec3("lightPos", lightPos);
+          
+      
+      if (is_sph_mesh){
+        Matrix4f *mi = new Matrix4f[m_domain.Particles.size()];
+        for (int p=0;p<m_domain.Particles.size();p++){    
+        float h = m_domain.Particles[0]->h/2.;
+
+          Vec3_t v = m_domain.Particles[p]->x ;
+          //Vector3f pos(v(0)*10.0,v(1)*10.0,v(2)*10.0); //ORTHO
+          Vector3f pos(v(0),v(1),v(2)); 
+          glm::mat4 model = glm::mat4(1.0f);
+         // model[0][0]=model[1][1]=model[2][2]=h;
+          //model[0][3] = -m_domain_center.x; model[1][3] = -m_domain_center.y; model[2][3] = -m_domain_center.z;
+          //model[0][3] = -pos.x; model[1][3] = -pos.y; model[2][3] = -pos.z;   
+          ////FIRST TRANSLATE AND THEN SCALE!!!!!
+          model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+
+          
+          glm::mat4 projection(1.0);
+          //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+          projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+          // projection = glm::ortho(-0.0f , 800.0f / 2.0f, 
+            // 600.0f / 2.0f, 0.0f, 
+          // -1000.0f, 1000.0f);/////glm::ortho(xmin, xmax, ymin, ymax)
+          //projection[0][0] = (float)SCR_HEIGHT/SCR_WIDTH;
+          glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+          view = glm::translate(view, arcCamera->position);// this, too.  
+          view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+          
+          glm::mat4 transback = glm::mat4(1.0f);
+          transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+          glm::mat4 mat = projection * transback * view * model;
+          trans_mat [p]= mat;
+  
+          //m_plightEffect->SetWVP(pn.GetWVPTrans()); If wanted to rotate spheres
+          //If personalized shader
+          objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+          for (int s=0;s<m_sel_count;s++){
+            //cout << "sel_count"<<m_sel_count<<endl;
+            if (p==m_sel_particles[s]) {objectColor = Vector3f(1.0f, 0.0f, 0.031f);
+
+            }
+            //else                    objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+
+          }
+          glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+
+          glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
+          m_renderer.Render();
+        }//loop particles
+
+      
+      } else if (is_fem_mesh) {
+        
+        ////// MESH RENDER 
+        Vector3f pos(0.0,0.0,0.0); 
+        glm::mat4 model = glm::mat4(1.0f);
+
+        //model = glm::translate(model, glm::vec3(-m_domain_center.x+pos.x,-m_domain_center.y+pos.y,-m_domain_center.z+pos.z));
+        
+        model = glm::translate(model, glm::vec3(-m_femsh_center.x+pos.x,-m_femsh_center.y+pos.y,-m_femsh_center.z+pos.z));
+                
+        glm::mat4 projection(1.0);
+        //projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(60.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+        
+        glm::mat4 view = glm::mat4(1.0f);// this command must be in the loop. Otherwise, the object moves if there is a glm::rotate func in the lop.    
+        view = glm::translate(view, arcCamera->position);// this, too.  
+        view = glm::rotate(view, glm::radians(arcCamera->angle), arcCamera->rotationalAxis);
+        
+        glm::mat4 transback = glm::mat4(1.0f);
+        transback = glm::translate(transback, glm::vec3(0.0,0.0,zcam));
+
+        glm::mat4 mat = projection * transback * view * model;
+
+
+        pn.WorldPos(pos);   
+        //Matrix4f m = pn.GetWVPTrans(); //NOT USED!
+
+
+        objectColor = Vector3f(0.0f, 0.5f, 1.0f);
+        // for (int s=0;s<m_sel_count;s++){
+
+        glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, &objectColor[0]); 
+
+        //trans_mat [p]= mat;
+     
+        glUniformMatrix4fv(gWVPLocation, 1, GL_FALSE, &mat[0][0]); ///// WITH GLM IS FALSE!!!!!!! (NOT TRANSPOSE)
+        m_renderer.Render();
+
+        //TODO: CHANGE TO INSTANCING
+        ////RENDER every NODES 
+        /////// TODO: PASS THIS TO RENDERER
+        for (int p=0;p<m_fem_msh->getNodeCount();p++){ 
+
+
+        }
+        m_renderer.Render(); //THIS IS DONE ONCE      
+        } //IF IS FEM
+
+                      // top left
+            // bottom left
+            // top right
+            // bottom right
+              glBegin (GL_QUADS);
+
+                glVertex2f (-0.1,0.1);
+                glVertex2f (-0.1,-0.1);
+                glVertex2f (0.1,-0.1);
+                glVertex2f (0.1,0.1);
+              
+
+              glEnd ();
+
+    glUseProgram(0);
+
+    m_sceneview->getFrameBuffer()->Unbind();
+    
+  }
+  
+  
+
+  ImGui::End();  
+  drawGui();
+
+
+
+  //// IMGUI Rendering
+  ImGui::Render();
+  int display_w, display_h;
+  glfwGetFramebufferSize(window, &display_w, &display_h);
+  glViewport(0, 0, display_w, display_h);
+  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  // // // glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+  // // // glClear(GL_COLOR_BUFFER_BIT);
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Editor::Run(){
+  cout << "Run "<<endl;
+  float dt = 1./60.;
+  while (!glfwWindowShouldClose(window)) {
+      CalcFPS();
+      
+      processInput(window);
+      
+      PickingPhase();
+      RenderPhase();
+
+      // glEnable(GL_BLEND);
+      // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      // // ///
+  
+  
+      // //"FPS: " + to_string(m_fps)
+      // m_Text->RenderText("Max Kin Energy: " + to_string_with_precision(kin_energy,1) + " J" , 
+                    // 20.f, 400.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
+                    
+      // m_Text->RenderText("Impact Force: " + to_string_with_precision(m_impact_force,1) + " N", 
+                    // 20.f, 350.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));    
+      // // m_Text->RenderText("Plastic Energy: " + to_string_with_precision(st->GetPlasticEnergy(),1) + " N", 
+                    // // 20.f, 300.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f)); 
+      // glDisable(GL_BLEND);
+        
+      // Poll and handle events (inputs, window resize, etc.)
+      // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+      // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+      // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+      // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+      glfwPollEvents();
+
+
+
+/////////////////////////////////////////////////
+
+      // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+      // -------------------------------------------------------------------------------
+      glfwSwapBuffers(window);
+      //glfwPollEvents();
+    }
+}
 
 
 int Editor::Terminate(){
@@ -1344,7 +1846,21 @@ int Editor::Terminate(){
     // glfwTerminate();
     // return 0;
 }
+int main()
+{
+  zcam = 0.0;
+    cout << "Creating editor"<<endl;  
+    editor = new Editor();
+    cout << "done."<<endl;
+    
+    cout << "Initializing "<<endl;
+    if (!editor->Init())
+      cout << "failed!"<<endl;
+    
+    cout << "Done. "<<endl;
+    editor->Run();
 
+}
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -1394,30 +1910,117 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	//editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(width, height);
+	editor->getSceneView()->getFrameBuffer()->RescaleFrameBuffer(width, height);
 }
 
 
+
+bool Editor::LoadSphere(){
+
+  
+  	//// VERTICES 
+	//// 2 3
+	//// 0 1
+	/////////
+	Vector3f apos[4] ={	
+						Vector3f(-PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
+						Vector3f(-PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.),
+						Vector3f( PITCH_LENGTH/2., 0.0f,-PITCH_WIDTH/2.),
+						Vector3f( PITCH_LENGTH/2., 0.0f, PITCH_WIDTH/2.)};
+						
+
+	Vector2f atex[4] ={	Vector2f(0.0f, 0.0f),
+                      Vector2f(1.0f, 0.0f),
+                      Vector2f(0.0f, 1.0f),
+						Vector2f(1.0f, 1.0f)};
+
+	unsigned int aind[] = { 0, 1, 2,
+							1, 3, 2};
+							   
+	int vcount    = sizeof(sphere_low_pos)/(3*sizeof(float));
+  int indcount  = sizeof(sphere_low_ind)/sizeof(unsigned int);
+	// int vcount    = sizeof(vertices)/(3*sizeof(float));
+  // int indcount  = sizeof(indices)/sizeof(unsigned int);
+  cout << "Vertex count " << vcount << endl;
+  cout << "Index  count " << indcount << endl;
+  
+	vector <Vector3f> vpos(vcount), vnorm(vcount);
+	vector <Vector2f> vtex(vcount);
+	vector <unsigned int > vind(indcount); //2 triangles
+  
+	for (int i=0;i<vcount;i++){
+    Vector3f vert(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+		vpos[i]	= vert * 0.01;
+    //Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]); //IF NORM IS READED FROM FILE
+		//vnorm[i]=vn;
+		//vtex[i]	=atex[i];
+	}
+  for (int i=0;i<indcount;i++){
+    vind[i] = sphere_low_ind[i]-1;  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  }
+  
+  int elemcount = indcount/3; //ATTENTION: THIS ASSUMES ALL IS CONVERTED TO TRIA
+  std::vector<Vector3f> vnprom(vcount);
+
+  for (int e=0;e<elemcount;e++){
+    int i = vind[3*e]; //Element First node
+    int j = vind[3*e+1];
+    int k = vind[3*e+2];
+    Vector3f r0(sphere_low_pos[3*i],sphere_low_pos[3*i+1],sphere_low_pos[3*i+2]);
+    Vector3f r1(sphere_low_pos[3*j],sphere_low_pos[3*j+1],sphere_low_pos[3*j+2]);
+    Vector3f r2(sphere_low_pos[3*k],sphere_low_pos[3*k+1],sphere_low_pos[3*k+2]);
+    Vector3f v1 = r1-r0;
+    Vector3f v2 = r2-r0;
+    Vector3f vnn = (v1.Cross(v2)).Normalize();
+    for (int l=0;l<3;l++) {vnprom[vind[3*e+l]]+=vnn;}
+  }
+  
+  cout << "Normals"<<endl;
+  for (int i=0;i<vcount;i++){
+    vnprom[i].Normalize();
+    cout << vnprom[i].x<< ", "<<vnprom[i].y<<", "<<vnprom[i].z<<endl;
+  }
+
+	// for (int i=0;i<vcount;i++){
+    // Vector3f vert(vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
+		// vpos[i]	= vert;
+    // Vector3f vn(sphere_low_norm[3*i],sphere_low_norm[3*i+1],sphere_low_norm[3*i+2]);
+		// vnorm[i]=vn;
+		// //vtex[i]	=atex[i];
+	// }
+  // for (int i=0;i<indcount;i++){
+    // vind[i] = indices[i];  //FROM OBJ FILE FORMAT, WHICH BEGINS AT ONE
+  // }
+  
+	string file = "checker_blue.png";
+	std::vector <unsigned int > wf;
+	if (!m_renderer.LoadMesh(vpos, vnprom, vtex,vind,wf,file)){
+		std::cout<<"Mesh load failed"<<endl;
+		printf("Mesh load failed\n");
+		return false;        			
+		
+	}
+  return true;
+}
 
 
 void Editor::CalcFPS()
 {
     m_frameCount++;
 
-    //long long time = GetCurrentTimeMillis();
- /*   
+    long long time = GetCurrentTimeMillis();
+    
     if (time - m_frameTime >= 1000) {
         m_frameTime = time;
         m_fps = m_frameCount;
         m_frameCount = 0;
     }
-*/
 }
 
 ///// TODO: PASS TO RENDERER
 /////////////////////////////
 void Editor::calcDomainCenter(){
-  /*
+  
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
@@ -1427,7 +2030,6 @@ void Editor::calcDomainCenter(){
     m_domain_center.z += m_domain.Particles[p]->x(2);
   }
   m_domain_center = m_domain_center/m_domain.Particles.size();
-  */
 }
 
 void Editor::calcMeshCenter(){

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 project(imgui-vtk)
 
+include_directories("${CMAKE_SOURCE_DIR}/src")
+include_directories("${CMAKE_SOURCE_DIR}/src/physics")
+include_directories("${CMAKE_SOURCE_DIR}/src/model")
+include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
+
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
@@ -10,7 +15,11 @@ set(EXEC_NAME imgui_vtk)
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
-add_executable(${EXEC_NAME} main.cpp)
+add_executable(${EXEC_NAME} main.cpp 
+                            #editor.cpp
+                            material_dialog.cpp
+                            set_dialog.cpp
+                            )
 
 # OpenGL
 find_package(OpenGL REQUIRED)

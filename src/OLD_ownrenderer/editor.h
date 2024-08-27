@@ -1,7 +1,7 @@
 #ifndef _EDITOR_H_
 #define _EDITOR_H_
 
-/*
+
 #include "ogldev_pipeline.h"
 #include "ogldev_camera.h"
 #include "ogldev_camera.h"
@@ -13,28 +13,25 @@
 #include "ogldev_basic_lighting.h"
 
 
+
+#define COLOR_TEXTURE_UNIT_INDEX        0
+
+#include <iostream>
+
 #include "picking_texture.h"
 #include "picking_technique.h"
 
 #include "ogldev_util.h"
 #include "ogldev_callbacks.h"
 #include "ogldev_app.h"
+
+#include "Domain.h"
+
 #include "arcball_camera.h"
 
-*/
+#include "selector.h"
 
-
-#define COLOR_TEXTURE_UNIT_INDEX        0
-
-#include <iostream>
-
-
-
-
-
-//#include "selector.h"
-#include "Domain.h"
-//#include "action.h"
+#include "action.h"
 
 #include "log.h"
 #include "entity_dialog.h"
@@ -92,7 +89,7 @@ public:
   virtual void scroll(double xoffset, double yoffset);
   virtual void Mouse(int Button, int Action, int Mode);
   virtual void Key(int key, int scancode, int action, int mods);
-  //bool LoadGround(Renderer *m_fieldmesh);
+  bool LoadGround(Renderer *m_fieldmesh);
   
   bool LoadSphere();
   
@@ -105,7 +102,7 @@ public:
   
   void CalcFPS();
   
-  //ArcballCamera * ArcCamera(){return arcCamera;}
+  ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
   
   const SPHModel & getDomain() const {return m_domain;}
@@ -113,6 +110,10 @@ public:
   void calcDomainCenter();
   void calcMeshCenter();
 protected:
+  PickingTexture m_pickingTexture;
+  PickingTechnique m_pickingEffect;
+
+  BasicLightingTechnique* m_plightEffect;
 
   GLFWwindow* window;
   unsigned int shaderProgram;
@@ -126,6 +127,7 @@ protected:
 
   bool mesh_loaded;
   bool box_select_mode;
+  TextRenderer *m_Text;
 
   
 
@@ -135,11 +137,13 @@ protected:
   GLuint gWVPLocation;
 
   //Renderer ground_mesh;
+  Renderer m_renderer;
   
   Mesh   *m_fem_msh;
   bool    is_fem_mesh;
   bool    is_sph_mesh;
   
+  DirectionalLight 					m_directionalLight;
 
   long long m_start_time;
   SPHModel m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
@@ -149,7 +153,8 @@ protected:
 
   bool rotatecam;
   
-  //Selector m_selector;
+  ArcballCamera *arcCamera;
+  Selector m_selector;
   
   std::vector < int > m_sel_particles; //TODO: MOVE TO SELECTOR
   int m_sel_count;
@@ -199,7 +204,7 @@ protected:
   bool is_model_open;
   Material_ *selected_mat;
   
-  //Action* m_currentaction;
+  Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
   
   bool m_show_app_main_menu_bar;
