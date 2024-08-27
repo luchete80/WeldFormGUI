@@ -71,15 +71,32 @@ int main(int argc, char* argv[])
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO(); (void)io;
+  ImFont* font1 = io.Fonts->AddFontDefault();
+
+
+  ImFont* font_ubu = io.Fonts->AddFontFromFileTTF("Ubuntu-L.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault()); 
+  ImFont* font_satoshi = io.Fonts->AddFontFromFileTTF("Satoshi.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault());
+  //IM_ASSERT(font_satoshi != NULL);
+  if (!font_ubu->IsLoaded()){
+    fprintf(stderr,"ERRROR. Cannot load font.\n");
+    }
+  
+  //ImGui::PushFont(font1);
+    
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows'
-
+  
+  
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
+
+
+  //ImGui::PushFont(font1);
+
 
   // Initialize VtkViewer objects
   VtkViewer vtkViewer1;
@@ -110,10 +127,14 @@ int main(int argc, char* argv[])
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    
+    /*
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+
     if (show_demo_window){
       ImGui::ShowDemoWindow(&show_demo_window);
     }
+    */
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
@@ -158,8 +179,9 @@ int main(int argc, char* argv[])
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
     ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
     if (vtk_2_open){
-      ImGui::Begin("Vtk Viewer 2", &vtk_2_open, VtkViewer::NoScrollFlags());
 
+      ImGui::Begin("Vtk Viewer 2", &vtk_2_open, VtkViewer::NoScrollFlags());
+      ImGui::PushFont(font_ubu); //AFTER NEW FRAME
       // Other widgets can be placed in the same window as the VTKViewer
       // However, since the VTKViewer is rendered to size ImGui::GetContentRegionAvail(),
       // it is best to put all widgets first (i.e., render the VTKViewer last).
@@ -187,7 +209,8 @@ int main(int argc, char* argv[])
       renderer->SetBackgroundAlpha(vtk2BkgAlpha);
 
       vtkViewer2.render();
-
+      
+      ImGui::PopFont();
       ImGui::End();
     }
 
