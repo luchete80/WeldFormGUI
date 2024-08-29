@@ -225,7 +225,7 @@ void ShowExampleMenuFile(const Editor &editor)
 
 void Editor::drawGui() { 
 
-
+  ImGui::Begin("Hello, world!"); 
   // Menu Bar
   if (ImGui::BeginMenuBar())
   {
@@ -349,12 +349,12 @@ void Editor::drawGui() {
             ImGui::LogButtons();
 
             HelpMarker("You can also call ImGui::LogText() to output directly to the log without a visual output.");
-            if (ImGui::Button("Copy \"Hello, world!\" to clipboard"))
-            {
-                ImGui::LogToClipboard();
-                ImGui::LogText("Hello, world!");
-                ImGui::LogFinish();
-            }
+            //~ if (ImGui::Button("Copy \"Hello, world!\" to clipboard"))
+            //~ {
+                //~ ImGui::LogToClipboard();
+                //~ ImGui::LogText("Hello, world!");
+                //~ ImGui::LogFinish();
+            //~ }
             ImGui::TreePop();
         }
     }
@@ -755,7 +755,7 @@ void Editor::drawGui() {
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }
-    
+  ImGui::End();
 
 }
 
@@ -1404,21 +1404,22 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 void Editor::CalcFPS()
 {
     m_frameCount++;
-
+/*
     //long long time = GetCurrentTimeMillis();
- /*   
+    
     if (time - m_frameTime >= 1000) {
         m_frameTime = time;
         m_fps = m_frameCount;
         m_frameCount = 0;
     }
+*/
 //IMGUI_DEMO_MARKER
 }
 
 ///// TODO: PASS TO RENDERER
 /////////////////////////////
 void Editor::calcDomainCenter(){
-  /*
+  
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
@@ -1428,7 +1429,7 @@ void Editor::calcDomainCenter(){
     m_domain_center.z += m_domain.Particles[p]->x(2);
   }
   m_domain_center = m_domain_center/m_domain.Particles.size();
-  */
+  
 }
 
 void Editor::calcMeshCenter(){

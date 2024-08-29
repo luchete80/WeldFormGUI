@@ -28,6 +28,8 @@ add_executable(${EXEC_NAME} main.cpp
                             Job.cpp
                             job_dialog.cpp
                             log.cpp
+                            
+                            ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             )
 
 # OpenGL

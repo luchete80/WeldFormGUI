@@ -79,15 +79,12 @@ class Editor
 public:  
   friend ViewportWindow;
   Editor();
-  ~Editor(){}
+  virtual ~Editor(){}
   int Init();
   void Run();
   int Terminate();
   
-  virtual void PickingPhase();
-  virtual void RenderPhase();
-  
-  void RenderBeams();
+
   
   virtual void scroll(double xoffset, double yoffset);
   virtual void Mouse(int Button, int Action, int Mode);

@@ -18,7 +18,7 @@
 // VTK
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
-//#include "editor.h"
+#include "editor.h"
 
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
   bool vtk_2_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   
-  //Editor* editor = new Editor();
+  Editor* editor = new Editor();
 	//cout << "creating app app"<<endl;
 	//pApp= new EditorApp();
 
@@ -132,6 +132,8 @@ int main(int argc, char* argv[])
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    
+    editor->drawGui();
     
     /*
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
@@ -218,6 +220,8 @@ int main(int argc, char* argv[])
       ImGui::PopFont();
       ImGui::End();
     }
+    
+    
 
     ImGui::Render();
 
