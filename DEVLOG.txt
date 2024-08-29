@@ -38,4 +38,5 @@
 20240820 - Added gmsh library for importing STEP or STL geometry
 20240821 - Added first step importing actions 
 20240826 - Renderer engine replaced by VTK (used imgui-vtk library).
-20240827 - Changed ImguiFont 
+20240827 - Changed ImguiFont
+20240829 - Added VTk OCCT 

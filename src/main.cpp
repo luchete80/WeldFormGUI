@@ -20,8 +20,12 @@
 #include <vtkActor.h>
 #include "editor.h"
 
+#include <vtkArrowSource.h>
+
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
+
+#include "vtkOCCTReader.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -176,7 +180,9 @@ int main(int argc, char* argv[])
       }
       ImGui::End();
     }
-
+    
+    vtkArrowSource *arrowSource = vtkNew<vtkArrowSource>;
+    
     // 4. Show a simple VtkViewer Instance (Always Open)
     ImGui::SetNextWindowSize(ImVec2(360, 240), ImGuiCond_FirstUseEver);
     ImGui::Begin("Vtk Viewer 1", nullptr, VtkViewer::NoScrollFlags());
