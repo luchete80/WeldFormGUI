@@ -1,7 +1,7 @@
 #include "input_writer.h"
 #include <sstream>
 #include <fstream>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "Model.h"
 #include "Material.h"
 

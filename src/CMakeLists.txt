@@ -12,13 +12,22 @@ set(APP_VERSION_MAJOR 1)
 set(APP_VERSION_MINOR 0)
 set(EXEC_NAME imgui_vtk)
 
+link_directories ("${GLFW_BINARY_DIR}/src")
+
+add_subdirectory("model")
+
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
+                            input_writer.cpp
                             material_dialog.cpp
                             set_dialog.cpp
+                            ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
+                            Job.cpp
+                            job_dialog.cpp
+                            log.cpp
                             )
 
 # OpenGL
@@ -92,3 +101,18 @@ target_link_libraries(${EXEC_NAME} imgui_vtk_viewer)
 if (UNIX AND NOT APPLE)
   target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
 endif()
+
+target_link_libraries(${EXEC_NAME} 
+
+            shared
+            ${LINK_LIBRARIES}
+            model
+						#freetype
+
+					  #backend
+					  glfw3
+					  #common
+					  ${LIBS}
+            ${RT_LIB}
+           
+)

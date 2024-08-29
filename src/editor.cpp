@@ -66,7 +66,7 @@ extern void*                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = NULL;
 void*                           GImGuiDemoMarkerCallbackUserData = NULL;
 #define //IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
-
+*/
 
 static void ShowExampleAppLog(bool* p_open);
 

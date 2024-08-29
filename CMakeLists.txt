@@ -11,6 +11,8 @@ include_directories("${CMAKE_SOURCE_DIR}/glad/include")
 include_directories("${CMAKE_SOURCE_DIR}/configuration")
 include_directories("${CMAKE_SOURCE_DIR}/libs")
 
+include_directories("${CMAKE_SOURCE_DIR}/libs/")
+include_directories("${CMAKE_SOURCE_DIR}/libs/json")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/api")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/common")
