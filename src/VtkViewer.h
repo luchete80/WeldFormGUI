@@ -18,6 +18,10 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
 
+//#include <vtkArrowSource.h>
+//#include <vtkNamedColors.h>
+//#include <vtkPolyDataMapper.h>
+
 #include "vtkOCCTReader.h" //If do not treat geometry
 
 // RGB Color in range [0.0, 1.0]
@@ -45,7 +49,6 @@ private:
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> interactorStyle;
 	vtkSmartPointer<vtkRenderer> renderer;
   
-  vtkSmartPointer<vtkOCCTReader> occreader;
 private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
@@ -115,4 +118,6 @@ public:
 	inline unsigned int getTexture() const {
 		return tex;
 	}
+  
+  void arrowtest();
 };

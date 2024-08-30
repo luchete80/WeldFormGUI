@@ -39,4 +39,6 @@
 20240821 - Added first step importing actions 
 20240826 - Renderer engine replaced by VTK (used imgui-vtk library).
 20240827 - Changed ImguiFont
-20240829 - Added VTk OCCT 
+20240829 - Added VTk OCCT
+20240830 - Added Axis, ATTENTION: All is linked in Viewer, which is linked to exe as library.
+           Do not build to executable without lik exe to VTK, this crashes

@@ -155,6 +155,7 @@ void VtkViewer::init(){
 	if (!renderer || !interactorStyle || !renderWindow || !interactor){
 		throw VtkViewerError("Couldn't initialize VtkViewer");
 	}
+
 }
 
 void VtkViewer::render(){
@@ -228,3 +229,32 @@ void VtkViewer::setViewportSize(const ImVec2 newSize){
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	firstRender = false;
 }
+
+
+
+/*
+void VtkViewer::arrowtest(){
+  
+    vtkNew<vtkNamedColors> colors;
+
+  // Create an arrow.
+  vtkNew<vtkArrowSource> arrowSource;
+  // arrowSource->SetShaftRadius(1.0);
+  // arrowSource->SetTipLength(1.0);
+  arrowSource->Update();
+
+  // Create a mapper and actor
+  vtkNew<vtkPolyDataMapper> mapper;
+  mapper->SetInputConnection(arrowSource->GetOutputPort());
+  vtkNew<vtkActor> actor;
+  actor->SetMapper(mapper);
+
+  // Visualize
+  vtkNew<vtkRenderer> renderer;
+  vtkNew<vtkRenderWindow> renderWindow;
+  renderWindow->SetWindowName("Arrow");
+  renderWindow->AddRenderer(renderer);
+  vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
+  renderWindowInteractor->SetRenderWindow(renderWindow);
+  }
+*/

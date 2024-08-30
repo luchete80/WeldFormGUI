@@ -68,8 +68,10 @@ find_package(VTK COMPONENTS
   CommonColor
   CommonDataModel
   FiltersCore
+  FiltersSources
   InteractionStyle
   RenderingCore
+  RenderingContextOpenGL2
   RenderingFreeType
   RenderingGL2PSOpenGL2
   RenderingOpenGL2
@@ -94,15 +96,27 @@ message ("VTK LIBS:" ${VTK_LIBRARIES})
 
 # imgui-vtk (VTK Viewer class)
 set(imgui_vtk_viewer_dir ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(imgui_vtk_viewer STATIC ${imgui_vtk_viewer_dir}/VtkViewer.cpp)
+add_library(imgui_vtk_viewer STATIC ${imgui_vtk_viewer_dir}/VtkViewer.cpp
+
+                                    #${imgui_vtk_viewer_dir}/graphics/axis.cpp
+                                    )
+
 target_include_directories(imgui_vtk_viewer PUBLIC ${imgui_vtk_viewer_dir})
 target_link_libraries(imgui_vtk_viewer gl3w) # Since gl3w was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES} 
                                       #vtkIOOCCT-9.3
-                                      #vtkFiltersSources-9.3
+                                     
                                       )
-target_link_libraries(${EXEC_NAME} imgui_vtk_viewer)
+add_library(scene STATIC ${imgui_vtk_viewer_dir}/graphics/axis.cpp
+                          )
+target_link_libraries(scene ${VTK_LIBRARIES} gl3w)
+
+target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
+                                  #scene
+                                  )
+
+
 
 # GLFW is built from source in this example
 # But if you link dynamically, you may need to link some native libraries on macOS:
@@ -112,7 +126,7 @@ if (UNIX AND NOT APPLE)
 endif()
 
 target_link_libraries(${EXEC_NAME} 
-
+            
             shared
             ${LINK_LIBRARIES}
             model
@@ -123,5 +137,5 @@ target_link_libraries(${EXEC_NAME}
 					  #common
 					  ${LIBS}
             ${RT_LIB}
-           
+            
 )

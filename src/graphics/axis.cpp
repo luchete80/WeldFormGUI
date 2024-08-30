@@ -1,22 +1,28 @@
 #include "axis.h"
 
 Axis::Axis()
+:colors(nullptr)
 {
+  
   /*
-  vtkNew<vtkNamedColors> colors;
+  colors = vtkSmartPointer<vtkNamedColors>::New();
 
   // Create an arrow.
-  vtkNew<vtkArrowSource> arrowSource;
+  arrowSource = vtkSmartPointer<vtkArrowSource>::New();
   // arrowSource->SetShaftRadius(1.0);
   // arrowSource->SetTipLength(1.0);
   arrowSource->Update();
 
   // Create a mapper and actor
-  vtkNew<vtkPolyDataMapper> mapper;
+  mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(arrowSource->GetOutputPort());
-  vtkNew<vtkActor> actor;
-  actor->SetMapper(mapper);
+  //vtkNew<vtkActor> actor;
+  
+  axisactor = vtkSmartPointer<vtkActor>::New();
+  axisactor->SetMapper(mapper);
 
+  */
+  /*
   // Visualize
   vtkNew<vtkRenderer> renderer;
   vtkNew<vtkRenderWindow> renderWindow;
@@ -34,4 +40,6 @@ Axis::Axis()
   */
   //return EXIT_SUCCESS;
 }
+Axis::~Axis(){
+  colors = nullptr;}
 

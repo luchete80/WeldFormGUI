@@ -22,14 +22,39 @@
 
 #include <vtkArrowSource.h>
 
+#include <vtkArrowSource.h>
+
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
 
+
+#include <vtkActor.h>
+#include <vtkArrowSource.h>
+#include <vtkNamedColors.h>
+
+//#include "graphics/axis.h" //test
+
+
+#include <vtkArrowSource.h>
+#include <vtkNamedColors.h>
+#include <vtkNew.h>
+#include <vtkPolyDataMapper.h>
+
+class Axis{
+
+public:
+  Axis(){}
+  ~Axis(){}
+vtkSmartPointer<vtkNamedColors> colors;
+
+};
 
 static void glfw_error_callback(int error, const char* description)
 {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+
+Axis axis;
 
 int main(int argc, char* argv[])
 {
@@ -119,6 +144,30 @@ int main(int argc, char* argv[])
   Editor* editor = new Editor();
 	//cout << "creating app app"<<endl;
 	//pApp= new EditorApp();
+
+    vtkNew<vtkNamedColors> colors;
+    vtkNew<vtkArrowSource> arrowSource;
+    arrowSource->Update();
+    vtkNew<vtkPolyDataMapper> mapper;
+    mapper->SetInputConnection(arrowSource->GetOutputPort());
+    vtkNew<vtkActor> arrow_actor;
+    vtkViewer2.addActor(arrow_actor);
+    
+    
+    actor->SetMapper(mapper);
+    
+    //Axis axis;    
+    //vtkViewer2.addActor(axis.axisactor);
+    
+    /*
+    // Visualize
+    vtkNew<vtkRenderer> renderer;
+    vtkNew<vtkRenderWindow> renderWindow;
+    renderWindow->SetWindowName("Arrow");
+    renderWindow->AddRenderer(renderer);
+    vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
+    renderWindowInteractor->SetRenderWindow(renderWindow);
+    */
 
   // Main loop
   while (!glfwWindowShouldClose(window))
@@ -226,6 +275,7 @@ int main(int argc, char* argv[])
       ImGui::End();
     }
     
+
     
 
     ImGui::Render();
