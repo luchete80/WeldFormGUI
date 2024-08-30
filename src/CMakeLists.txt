@@ -30,7 +30,9 @@ add_executable(${EXEC_NAME} main.cpp
                             log.cpp
                             
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
-                            geom/vtkOCCTGeom.cpp
+                            #geom/vtkOCCTGeom.cpp
+                            
+                            #graphics/axis.cpp
                             )
 
 # OpenGL
@@ -96,7 +98,10 @@ add_library(imgui_vtk_viewer STATIC ${imgui_vtk_viewer_dir}/VtkViewer.cpp)
 target_include_directories(imgui_vtk_viewer PUBLIC ${imgui_vtk_viewer_dir})
 target_link_libraries(imgui_vtk_viewer gl3w) # Since gl3w was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a static library, we need to link to it
-target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES})
+target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES} 
+                                      #vtkIOOCCT-9.3
+                                      #vtkFiltersSources-9.3
+                                      )
 target_link_libraries(${EXEC_NAME} imgui_vtk_viewer)
 
 # GLFW is built from source in this example

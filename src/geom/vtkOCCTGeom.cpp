@@ -7,7 +7,7 @@
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, unsigned int format)
 {
- /* 
+ 
   vtkNew<vtkOCCTReader> reader;
   reader->RelativeDeflectionOn();
   reader->SetLinearDeflection(0.1);
@@ -17,7 +17,7 @@ int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, uns
   reader->SetFileFormat(format);
   reader->Update();
   
-  
+  /*
   vtkNew<vtkCompositePolyDataMapper> mapper;
   mapper->SetInputDataObject(reader->GetOutput());
   vtkNew<vtkActor> actor;
@@ -56,9 +56,10 @@ int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, uns
 
   int vtkOCCTGeom::readFile(int argc, char* argv[])
   {
+    /*
     if (argc < 3)
     {
-      return EXIT_FAILURE;
+      //return EXIT_FAILURE;
     }
 
     if (!TestReader(
@@ -74,6 +75,7 @@ int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, uns
     }
 
     return EXIT_SUCCESS;
+    */
   }
 
 

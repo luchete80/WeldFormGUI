@@ -1,16 +1,18 @@
 // SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
 // SPDX-License-Identifier: BSD-3-Clause
-
+#include <iostream>
+/*
 #include <vtkActor.h>
 #include <vtkCompositePolyDataMapper.h>
 #include <vtkMultiBlockDataSet.h>
-#include <vtkNew.h>
+
 #include <vtkRegressionTestImage.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkTestUtilities.h>
-
+*/
+#include <vtkNew.h>
 #include "vtkOCCTReader.h"
 
 class vtkOCCTGeom{
@@ -21,6 +23,7 @@ public:
   int readFile(int argc, char* argv[]);
 
   int TestReader(int argc, char* argv[], const std::string& path, unsigned int format);
+  ~vtkOCCTGeom(){}
 };
 
 // int argc, char* argv are required for vtkRegressionTestImage
