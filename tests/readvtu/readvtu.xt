@@ -1,0 +1,11 @@
+find_package(VTK COMPONENTS 
+  CommonColor
+  CommonCore
+  IOXML
+  InteractionStyle
+  RenderingContextOpenGL2
+  RenderingCore
+  RenderingFreeType
+  RenderingGL2PSOpenGL2
+  RenderingOpenGL2
+)
