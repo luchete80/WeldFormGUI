@@ -30,6 +30,7 @@ add_executable(${EXEC_NAME} main.cpp
                             log.cpp
                             
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
+                            geom/vtkOCCTGeom.cpp
                             )
 
 # OpenGL
@@ -87,6 +88,7 @@ else()
   )
 endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
+message ("VTK LIBS:" ${VTK_LIBRARIES})
 
 # imgui-vtk (VTK Viewer class)
 set(imgui_vtk_viewer_dir ${CMAKE_CURRENT_SOURCE_DIR})

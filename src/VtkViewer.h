@@ -18,6 +18,8 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
 
+#include "vtkOCCTReader.h" //If do not treat geometry
+
 // RGB Color in range [0.0, 1.0]
 #define DEFAULT_BACKGROUND 0.39, 0.39, 0.39
 // Alpha value in range [0.0, 1.0] where 1 = opaque
@@ -42,6 +44,8 @@ private:
 	vtkSmartPointer<vtkGenericRenderWindowInteractor> interactor;
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> interactorStyle;
 	vtkSmartPointer<vtkRenderer> renderer;
+  
+  vtkSmartPointer<vtkOCCTReader> occreader;
 private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
