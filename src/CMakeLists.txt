@@ -62,8 +62,11 @@ target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
 target_link_libraries(${EXEC_NAME} imgui)
 
+## https://stackoverflow.com/questions/70790736/application-crashes-when-using-vtksmartvolumemappernew
 # VTK
-find_package(VTK COMPONENTS 
+find_package(VTK 
+  CONFIG REQUIRED 
+  COMPONENTS 
   CommonCore
   CommonColor
   CommonDataModel
@@ -75,8 +78,33 @@ find_package(VTK COMPONENTS
   RenderingFreeType
   RenderingGL2PSOpenGL2
   RenderingOpenGL2
+  
+  IOCore
+  IOGeometry
+  
+  IOOCCT
+  CommonExecutionModel
+  TestingCore
+  TestingRendering
+  FiltersGeneral
+  
   QUIET
 )
+
+#IOCCT
+#DEPENDS
+#  VTK::CommonExecutionModel
+#PRIVATE_DEPENDS
+#  VTK::CommonCore
+#  VTK::CommonDataModel
+#  VTK::FiltersGeneral
+#TEST_DEPENDS
+#  VTK::TestingCore
+#  VTK::TestingRendering
+#  VTK::RenderingOpenGL2
+#  VTK::InteractionStyle
+  
+  
 if (NOT VTK_FOUND)
   message(FATAL_ERROR "VTK not found!")
   return()
@@ -89,6 +117,25 @@ else()
   vtk_module_autoinit(
     TARGETS ${EXEC_NAME}
     MODULES ${VTK_LIBRARIES}
+  VTK::CommonCore
+  VTK::CommonColor
+  VTK::CommonDataModel
+  VTK::FiltersCore
+  VTK::FiltersSources
+  VTK::InteractionStyle
+  VTK::RenderingCore
+  VTK::RenderingContextOpenGL2
+  VTK::RenderingFreeType
+  VTK::RenderingGL2PSOpenGL2
+  VTK::RenderingOpenGL2
+  
+  VTK::IOCore
+  VTK::IOGeometry
+  VTK::IOOCCT
+  VTK::InteractionStyle
+  VTK::TestingCore
+  VTK::TestingRendering
+  VTK::FiltersGeneral
   )
 endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
@@ -105,7 +152,6 @@ target_include_directories(imgui_vtk_viewer PUBLIC ${imgui_vtk_viewer_dir})
 target_link_libraries(imgui_vtk_viewer gl3w) # Since gl3w was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES} 
-                                      #vtkIOOCCT-9.3
                                      
                                       )
 add_library(scene STATIC ${imgui_vtk_viewer_dir}/graphics/axis.cpp
@@ -116,7 +162,7 @@ target_link_libraries(${EXEC_NAME} imgui_vtk_viewer
                                   #scene
                                   )
 
-
+MESSAGE("LIBRARIES " ${VTK_LIBRARIES})
 
 # GLFW is built from source in this example
 # But if you link dynamically, you may need to link some native libraries on macOS:
@@ -137,5 +183,5 @@ target_link_libraries(${EXEC_NAME}
 					  #common
 					  ${LIBS}
             ${RT_LIB}
-            
+            ${VTK_LIBRARIES}
 )

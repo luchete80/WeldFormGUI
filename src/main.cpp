@@ -40,6 +40,78 @@
 #include <vtkNew.h>
 #include <vtkPolyDataMapper.h>
 
+
+///// FOR GEOMETRIA
+#include "vtkOCCTReader.h"
+#include <vtkCompositePolyDataMapper.h>
+#include <vtkMultiBlockDataSet.h>
+#include <vtkRegressionTestImage.h>
+
+
+class vtkOCCTGeom{
+protected:
+  //vtkSmartPointer<vtkOCCTReader> occtreader;
+  vtkSmartPointer<vtkCompositePolyDataMapper> mapper;
+public:
+  vtkOCCTGeom(){}
+  int readFile(int argc, char* argv[]);
+
+  int TestReader(int argc, char* argv[], const std::string& path, unsigned int format);
+  ~vtkOCCTGeom(){}
+};
+
+
+// int argc, char* argv are required for vtkRegressionTestImage
+int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, unsigned int format)
+{
+  //vtkNew<vtkOCCTReader> reader; //CRASEHS
+  /*
+  //cout << "
+  */
+  //vtkSmartPointer<vtkOCCTReader> reader;
+  //vtkNew<vtkOCCTReader> reader; //CRASEHS
+  //vtkOCCTReader *reader;
+  
+  //reader = vtkSmartPointer<vtkOCCTReader>::New();
+/*  
+  reader->RelativeDeflectionOn();
+  reader->SetLinearDeflection(0.1);
+  reader->SetAngularDeflection(0.5);
+  reader->ReadWireOn();
+  reader->SetFileName(path.c_str());
+  reader->SetFileFormat(format);
+  reader->Update();
+
+  mapper = vtkSmartPointer<vtkCompositePolyDataMapper>::New();
+   */ 
+  /*
+  vtkNew<vtkCompositePolyDataMapper> mapper;
+  mapper->SetInputDataObject(reader->GetOutput());
+  vtkNew<vtkActor> actor;
+  actor->SetMapper(mapper);
+  actor->RotateY(90);
+
+  vtkNew<vtkRenderer> renderer;
+  vtkNew<vtkRenderWindow> renderWindow;
+  vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
+  renderWindow->AddRenderer(renderer);
+  renderer->AddActor(actor);
+  renderWindowInteractor->SetRenderWindow(renderWindow);
+
+  renderWindow->SetSize(400, 400);
+  renderer->ResetCamera();
+  renderWindow->Render();
+
+  int retVal = vtkRegressionTestImage(renderWindow);
+  if (retVal == vtkRegressionTester::DO_INTERACTOR)
+  {
+    renderWindowInteractor->Start();
+  }
+  
+  return retVal;
+  */
+}
+
 class Axis{
 
 public:
@@ -168,7 +240,15 @@ int main(int argc, char* argv[])
     vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
     renderWindowInteractor->SetRenderWindow(renderWindow);
     */
-
+  
+  /*
+  if (!TestReader(
+          argc, argv, std::string{ argv[2] } += "valoppi_3.step", vtkOCCTReader::Format::STEP))
+    {
+      return EXIT_FAILURE;
+    }
+    */
+    
   // Main loop
   while (!glfwWindowShouldClose(window))
   {
