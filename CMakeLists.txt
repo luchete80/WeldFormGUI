@@ -28,8 +28,7 @@ set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAIL
 # ########### GAME ########
 add_subdirectory("libs")
 add_subdirectory("src")
-
-#add_subdirectory("tests")
+add_subdirectory("tests")
 
 
 

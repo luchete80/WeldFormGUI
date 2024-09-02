@@ -73,3 +73,10 @@ int TestOCCTReader(int argc, char* argv[])
   return EXIT_SUCCESS;
 }
 
+
+int main(int argc, char* argv[]){
+  
+  TestOCCTReader(argc,argv);
+  return EXIT_SUCCESS;
+  }
+
