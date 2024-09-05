@@ -13,12 +13,17 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 
+#include "imgui.h"
+
 
 class Axis{
 
 public:
   Axis();
   ~Axis();
+private:
+	/*IMGUI_IMPL_API*/ void init();
+
 vtkSmartPointer<vtkNamedColors> colors;
 
 /*

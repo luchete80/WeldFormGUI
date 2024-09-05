@@ -3,7 +3,7 @@
 Axis::Axis()
 :colors(nullptr)
 {
-  
+  init();
   /*
   colors = vtkSmartPointer<vtkNamedColors>::New();
 
@@ -43,3 +43,6 @@ Axis::Axis()
 Axis::~Axis(){
   colors = nullptr;}
 
+IMGUI_IMPL_API void Axis::init(){
+  colors = vtkSmartPointer<vtkNamedColors> ::New();
+  }

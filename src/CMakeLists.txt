@@ -5,6 +5,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
+include_directories("${CMAKE_SOURCE_DIR}/libs/imgui")
 
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
@@ -28,7 +29,7 @@ add_executable(${EXEC_NAME} main.cpp
                             Job.cpp
                             job_dialog.cpp
                             log.cpp
-                            
+                            graphics/axis.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             #geom/vtkOCCTGeom.cpp
                             
@@ -177,7 +178,7 @@ target_link_libraries(${EXEC_NAME}
             ${LINK_LIBRARIES}
             model
 						#freetype
-
+        
 					  #backend
 					  glfw3
 					  #common
