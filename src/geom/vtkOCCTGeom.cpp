@@ -5,7 +5,7 @@
 #include "vtkOCCTGeom.h"
 
 // int argc, char* argv are required for vtkRegressionTestImage
-int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, unsigned int format)
+int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
  
   vtkNew<vtkOCCTReader> reader;
@@ -17,13 +17,15 @@ int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, uns
   reader->SetFileFormat(format);
   reader->Update();
   
-  /*
+  
   vtkNew<vtkCompositePolyDataMapper> mapper;
   mapper->SetInputDataObject(reader->GetOutput());
-  vtkNew<vtkActor> actor;
+  actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
   actor->RotateY(90);
 
+
+  /*
   vtkNew<vtkRenderer> renderer;
   vtkNew<vtkRenderWindow> renderWindow;
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
@@ -52,6 +54,7 @@ int vtkOCCTGeom::TestReader(int argc, char* argv[], const std::string& path, uns
   */
   return 1;
 }
+
 
 
   int vtkOCCTGeom::readFile(int argc, char* argv[])

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
 // SPDX-License-Identifier: BSD-3-Clause
 #include <iostream>
-/*
+
 #include <vtkActor.h>
 #include <vtkCompositePolyDataMapper.h>
 #include <vtkMultiBlockDataSet.h>
@@ -11,7 +11,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkTestUtilities.h>
-*/
+
 #include <vtkNew.h>
 #include "vtkOCCTReader.h"
 
@@ -19,15 +19,16 @@ class vtkOCCTGeom{
 protected:
   //vtkSmartPointer<vtkOCCTReader> occtreader;
 public:
+  vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}
   int readFile(int argc, char* argv[]);
 
-  int TestReader(int argc, char* argv[], const std::string& path, unsigned int format);
+  int TestReader(const std::string& path, unsigned int format);
   ~vtkOCCTGeom(){}
 };
 
 // int argc, char* argv are required for vtkRegressionTestImage
-int TestReader(int argc, char* argv[], const std::string& path, unsigned int format);
+//int TestReader(int argc, char* argv[], const std::string& path, unsigned int format);
 
   /*
   vtkNew<vtkOCCTReader> reader;
@@ -64,7 +65,7 @@ int TestReader(int argc, char* argv[], const std::string& path, unsigned int for
 
   return retVal;
   */
-
+/*
 
 int TestOCCTReader(int argc, char* argv[])
 {
@@ -86,5 +87,5 @@ int TestOCCTReader(int argc, char* argv[])
   }
 
   return EXIT_SUCCESS;
-}
+}*/
 

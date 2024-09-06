@@ -30,7 +30,7 @@ add_executable(${EXEC_NAME} main.cpp
                             log.cpp
                             
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
-                            #geom/vtkOCCTGeom.cpp
+                            geom/vtkOCCTGeom.cpp
                             
                             #graphics/axis.cpp
                             )
@@ -81,14 +81,14 @@ find_package(VTK
   RenderingGL2PSOpenGL2
   RenderingOpenGL2
   #DisplayCoordinateAxes
-  #IOCore
-  #IOGeometry
+  IOCore
+  IOGeometry
   
-  #IOOCCT
-  #CommonExecutionModel
-  #TestingCore
-  #TestingRendering
-  #FiltersGeneral
+  IOOCCT
+  CommonExecutionModel
+  TestingCore
+  TestingRendering
+  FiltersGeneral
   
   QUIET
 )
@@ -134,12 +134,12 @@ else()
   VTK::RenderingOpenGL2
   VTK::FiltersHybrid
   #DisplayCoordinateAxes
-  #VTK::IOCore
-  #VTK::IOGeometry
-  #VTK::IOOCCT
-  #VTK::InteractionStyle
-  #VTK::TestingCore
-  #VTK::TestingRendering
+  VTK::IOCore
+  VTK::IOGeometry
+  VTK::IOOCCT
+
+  VTK::TestingCore
+  VTK::TestingRendering
   #VTK::FiltersGeneral
   )
 endif()

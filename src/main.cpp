@@ -47,6 +47,8 @@
 #include <vtkMultiBlockDataSet.h>
 #include <vtkRegressionTestImage.h>
 
+#include "geom/vtkOCCTGeom.h"
+
 //#include "graphics/axis.h"
 /*
 // int argc, char* argv are required for vtkRegressionTestImage
@@ -223,20 +225,10 @@ int main(int argc, char* argv[])
     axis.setInteractor(vtkViewer2.getInteractor());  
     vtkViewer2.addActor(axis.actor);
     
+    vtkOCCTGeom geom;
+    geom.TestReader("valoppi_z_3.step", vtkOCCTReader::Format::STEP);
     //widget->SetInteractor(renderWindowInteractor);
-    
-    /*
-
-/*
-  //TestOCCTReader(argc,argv);
-  if (!TestReader("valoppi_z_3.step", vtkOCCTReader::Format::STEP))
-  {
-    return EXIT_FAILURE;
-  }  
-  */
-   //vtkNew<vtkOCCTReader> reader;
-
-    
+    vtkViewer2.addActor(geom.actor);
   // Main loop
   while (!glfwWindowShouldClose(window))
   {
