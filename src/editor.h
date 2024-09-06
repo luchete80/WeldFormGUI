@@ -52,7 +52,7 @@
 
 class SceneView;
 class ViewportWindow;
-
+class VtkViewer;
   
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -101,6 +101,7 @@ public:
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   
   void CalcFPS();
+  void addViewer(VtkViewer *);
   
   //ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
@@ -205,6 +206,8 @@ protected:
   bool m_add_part;
   
   ViewportWindow *m_viewport_win;
+  
+  VtkViewer *viewer;
   
 };
 

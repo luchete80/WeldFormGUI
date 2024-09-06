@@ -224,11 +224,15 @@ int main(int argc, char* argv[])
     //Axis axis;  
     axis.setInteractor(vtkViewer2.getInteractor());  
     vtkViewer2.addActor(axis.actor);
-    
+
+/*    
     vtkOCCTGeom geom;
     geom.TestReader("valoppi_z_3.step", vtkOCCTReader::Format::STEP);
     //widget->SetInteractor(renderWindowInteractor);
     vtkViewer2.addActor(geom.actor);
+*/
+    
+    editor->addViewer(&vtkViewer2);
   // Main loop
   while (!glfwWindowShouldClose(window))
   {
@@ -323,7 +327,9 @@ int main(int argc, char* argv[])
       }
       ImGui::SameLine();
       if (ImGui::Button("VTK Background: Blue")){
-        renderer->SetBackground(0, 0, 1);
+        //renderer->SetBackground(0.6, 0.6, 0.8);
+        renderer->SetBackground(0.2,0.2,0.4);
+        renderer->SetBackground2(0.8,0.8,0.8);
       }
       static float vtk2BkgAlpha = 0.2f;
       ImGui::SliderFloat("Background Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);

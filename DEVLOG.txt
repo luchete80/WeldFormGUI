@@ -42,3 +42,7 @@
 20240829 - Added VTk OCCT
 20240830 - Added Axis, ATTENTION: All is linked in Viewer, which is linked to exe as library.
            Do not build to executable without lik exe to VTK, this crashes
+-------------------------------------------------------------------------------
+20240906 - Added IMGU-VTK succesfully (Thanks to imgui-vtk project)
+         - Added Import Step feature
+         - 

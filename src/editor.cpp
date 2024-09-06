@@ -32,6 +32,9 @@
 
 #include <gmsh.h>
 
+#include "geom/vtkOCCTGeom.h"
+#include "VtkViewer.h"
+
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
 
@@ -657,6 +660,13 @@ void Editor::drawGui() {
       //test 
       bool errorIfMissing;
       gmsh::model::add("t20");
+
+
+      vtkOCCTGeom geom;
+      geom.TestReader(filePathName, vtkOCCTReader::Format::STEP);
+      //widget->SetInteractor(renderWindowInteractor);
+      viewer->addActor(geom.actor);
+      
 
         // Load a STEP file (using `importShapes' instead of `merge' allows to
       // directly retrieve the tags of the highest dimensional imported entities):
@@ -1444,3 +1454,8 @@ void Editor::calcMeshCenter(){
   }
   m_femsh_center = m_femsh_center/m_domain.Particles.size();
 }
+
+void Editor::addViewer(VtkViewer *v){
+  viewer=v;
+  
+  }
