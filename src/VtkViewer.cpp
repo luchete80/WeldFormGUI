@@ -34,6 +34,8 @@
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 
+//#include <vtkArrowSource.h>
+
 void VtkViewer::isCurrentCallbackFn(vtkObject* caller, long unsigned int eventId, void* clientData, void* callData){
 	bool* isCurrent = static_cast<bool*>(callData);
 	*isCurrent = true;
@@ -232,9 +234,9 @@ void VtkViewer::setViewportSize(const ImVec2 newSize){
 
 
 
-/*
+
 void VtkViewer::arrowtest(){
-  
+  /*
     vtkNew<vtkNamedColors> colors;
 
   // Create an arrow.
@@ -256,5 +258,6 @@ void VtkViewer::arrowtest(){
   renderWindow->AddRenderer(renderer);
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
   renderWindowInteractor->SetRenderWindow(renderWindow);
-  }
-*/
+  */
+}
+

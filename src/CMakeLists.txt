@@ -5,7 +5,6 @@ include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
-include_directories("${CMAKE_SOURCE_DIR}/libs/imgui")
 
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
@@ -29,7 +28,7 @@ add_executable(${EXEC_NAME} main.cpp
                             Job.cpp
                             job_dialog.cpp
                             log.cpp
-                            graphics/axis.cpp
+                            
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             #geom/vtkOCCTGeom.cpp
                             
@@ -74,20 +73,22 @@ find_package(VTK
   FiltersCore
   FiltersSources
   InteractionStyle
+  InteractionWidgets
+  RenderingAnnotation
   RenderingCore
   RenderingContextOpenGL2
   RenderingFreeType
   RenderingGL2PSOpenGL2
   RenderingOpenGL2
+  #DisplayCoordinateAxes
+  #IOCore
+  #IOGeometry
   
-  IOCore
-  IOGeometry
-  
-  IOOCCT
-  CommonExecutionModel
-  TestingCore
-  TestingRendering
-  FiltersGeneral
+  #IOOCCT
+  #CommonExecutionModel
+  #TestingCore
+  #TestingRendering
+  #FiltersGeneral
   
   QUIET
 )
@@ -124,19 +125,22 @@ else()
   VTK::FiltersCore
   VTK::FiltersSources
   VTK::InteractionStyle
+  VTK::InteractionWidgets
+  VTK::RenderingAnnotation
   VTK::RenderingCore
   VTK::RenderingContextOpenGL2
   VTK::RenderingFreeType
   VTK::RenderingGL2PSOpenGL2
   VTK::RenderingOpenGL2
-  
-  VTK::IOCore
-  VTK::IOGeometry
-  VTK::IOOCCT
-  VTK::InteractionStyle
-  VTK::TestingCore
-  VTK::TestingRendering
-  VTK::FiltersGeneral
+  VTK::FiltersHybrid
+  #DisplayCoordinateAxes
+  #VTK::IOCore
+  #VTK::IOGeometry
+  #VTK::IOOCCT
+  #VTK::InteractionStyle
+  #VTK::TestingCore
+  #VTK::TestingRendering
+  #VTK::FiltersGeneral
   )
 endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
@@ -146,7 +150,7 @@ message ("VTK LIBS:" ${VTK_LIBRARIES})
 set(imgui_vtk_viewer_dir ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(imgui_vtk_viewer STATIC ${imgui_vtk_viewer_dir}/VtkViewer.cpp
 
-                                    #${imgui_vtk_viewer_dir}/graphics/axis.cpp
+                                    ${imgui_vtk_viewer_dir}/graphics/axis.cpp
                                     )
 
 target_include_directories(imgui_vtk_viewer PUBLIC ${imgui_vtk_viewer_dir})
@@ -155,9 +159,8 @@ target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a st
 target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES} 
                                      
                                       )
-add_library(scene STATIC ${imgui_vtk_viewer_dir}/graphics/axis.cpp
-                          )
-target_link_libraries(scene ${VTK_LIBRARIES} gl3w)
+#add_library(scene STATIC ${imgui_vtk_viewer_dir}/graphics/axis.cpp)
+#target_link_libraries(scene ${VTK_LIBRARIES} gl3w)
 
 target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
                                   #scene
@@ -178,7 +181,7 @@ target_link_libraries(${EXEC_NAME}
             ${LINK_LIBRARIES}
             model
 						#freetype
-        
+
 					  #backend
 					  glfw3
 					  #common

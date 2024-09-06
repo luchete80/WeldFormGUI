@@ -20,26 +20,26 @@
 #include <vtkActor.h>
 #include "editor.h"
 
-#include <vtkArrowSource.h>
 
-#include <vtkArrowSource.h>
 
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
 
 
 #include <vtkActor.h>
-#include <vtkArrowSource.h>
+//#include <vtkArrowSource.h>
 #include <vtkNamedColors.h>
 
-//#include "graphics/axis.h" //test
+
+#include "graphics/axis.h" //test
 
 
-#include <vtkArrowSource.h>
+
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
 #include <vtkPolyDataMapper.h>
 
+#include <vtkArrowSource.h>
 
 ///// FOR GEOMETRIA
 #include "vtkOCCTReader.h"
@@ -117,7 +117,7 @@ static void glfw_error_callback(int error, const char* description)
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-//Axis axis;
+Axis axis;
 
 int main(int argc, char* argv[])
 {
@@ -219,20 +219,14 @@ int main(int argc, char* argv[])
     
     actor->SetMapper(mapper);
     
-    //Axis axis;    
-    //vtkViewer2.addActor(axis.axisactor);
+    //Axis axis;  
+    axis.setInteractor(vtkViewer2.getInteractor());  
+    vtkViewer2.addActor(axis.actor);
+    
+    //widget->SetInteractor(renderWindowInteractor);
     
     /*
-    // Visualize
-    vtkNew<vtkRenderer> renderer;
-    vtkNew<vtkRenderWindow> renderWindow;
-    renderWindow->SetWindowName("Arrow");
-    renderWindow->AddRenderer(renderer);
-    vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
-    renderWindowInteractor->SetRenderWindow(renderWindow);
-    */
-  
-  
+
 /*
   //TestOCCTReader(argc,argv);
   if (!TestReader("valoppi_z_3.step", vtkOCCTReader::Format::STEP))

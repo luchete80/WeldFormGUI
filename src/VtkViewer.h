@@ -18,9 +18,10 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
 
+
 //#include <vtkArrowSource.h>
-//#include <vtkNamedColors.h>
-//#include <vtkPolyDataMapper.h>
+#include <vtkNamedColors.h>
+#include <vtkPolyDataMapper.h>
 
 #include "vtkOCCTReader.h" //If do not treat geometry
 
@@ -53,6 +54,10 @@ private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
 	bool firstRender;
+
+
+
+
 public:
 	VtkViewer();
 	VtkViewer(const VtkViewer& vtkViewer);
