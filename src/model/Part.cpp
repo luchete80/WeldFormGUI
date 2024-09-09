@@ -5,3 +5,7 @@ Part::Part(Mesh *mesh):
 m_msh(mesh){
   
 }
+
+Part::Part(Geom* geom){
+  
+}

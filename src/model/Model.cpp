@@ -7,6 +7,8 @@
 
 #include <gmsh.h>
 #include "GModel.h"
+#include "Geom.h"
+
 //#include "drawContext.h"
 
 using namespace std;
@@ -64,8 +66,11 @@ Model::Model(string name){
       int argc;
       char **argv;
       gmsh::initialize(argc, argv);
-      gmsh::model::add("t20");
-      gmsh::model::occ::importShapes(name, v);
+      //gmsh::model::add("t20");
+     /// gmsh::model::occ::importShapes(name, v);
+     
+     
+     
       //GModel *m = GModel::current();
       //m= gmsh::model::geo::list[0];
       // = GModel::list[0];
@@ -90,4 +95,12 @@ Model::Model(string name){
 
 void Model::addPart(Part *part){
   m_part.push_back(part);
+}
+
+void Model::addPart(Geom *geom){
+  m_part.push_back(new Part(geom));
+}
+
+void Model::addGeom(Geom *geom){
+  m_geom.push_back(geom);
 }

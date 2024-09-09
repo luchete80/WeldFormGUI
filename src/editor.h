@@ -49,6 +49,8 @@
 //#include "gMesh.h"
 #include "model/Model.h"
 #include "model/Mesh.h"
+#include "model/Geom.h"
+
 
 class SceneView;
 class ViewportWindow;
@@ -83,6 +85,7 @@ public:
   int Init();
   void Run();
   int Terminate();
+  void Update();
   
 
   
@@ -183,6 +186,7 @@ protected:
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;
+  bool create_new_part;
   bool create_new_job;
   bool create_new_set;
 
@@ -194,7 +198,7 @@ protected:
   std::vector <Job *> m_jobs;
   
   Model *m_model;
-  bool is_model_open;
+  bool is_model;
   Material_ *selected_mat;
   
   //Action* m_currentaction;

@@ -374,10 +374,48 @@ void Editor::drawGui() {
         bool open_ = ImGui::TreeNode("Parts");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.geo", ".");
+            
+            create_new_part = true;
+            
+            string test;
+
+            m_model->addGeom(new Geom(test));
+            m_model->addPart(m_model->getLastGeom());
+            cout << "Model part count "<<m_model->getPartCount()<<endl;
+          }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
             ImGui::EndPopup();          
         }
+
+      
+        for (int i = 0; i < m_model->getPartCount(); i++)
+        {
+          // Use SetNextItemOpen() so set the default state of a node to be open. We could
+          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+          if (i == 0)
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d", i))
+          {
+            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+              m_show_mat_dlg_edit = true;
+              selected_mat = m_mats[i];}
+            if (ImGui::BeginPopupContextItem())
+            {
+              if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                m_show_mat_dlg_edit = true;
+                selected_mat = m_mats[i];
+              }
+              ImGui::EndPopup();
+            }                    
+              ImGui::SameLine();
+              if (ImGui::SmallButton("button")) {}
+              ImGui::TreePop();
+          }
+        }
+      
         if (open_)
         {
            // your tree code stuff
@@ -673,7 +711,8 @@ void Editor::drawGui() {
       std::vector<std::pair<int, int> > v;
      //try {
         cout << "Loading file "<<filePathName<<endl;
-        //gmsh::model::occ::importShapes(filePathName, v);
+        gmsh::model::occ::importShapes(filePathName, v);
+        cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
       //} catch(...) {
       //  gmsh::logger::write("Could not load STEP file: bye!");
       //  gmsh::finalize();
@@ -681,7 +720,11 @@ void Editor::drawGui() {
       //}
       
       //MergeFile(filePathName, errorIfMissing);
-      //gmsh::merge(filePathName);
+      gmsh::merge(filePathName);
+
+      //gmsh::model::mesh::generate(2);
+      //gmsh::write("t20.msh");    
+    
     }
     
     // close
@@ -724,8 +767,9 @@ void Editor::drawGui() {
   //ExampleAppLog logtest;
   ShowExampleAppLog(&show_app_log, &logtest);
   //cout << "log tst "<<logtest.test<<endl;
-  create_new_mat = false;
-  create_new_set = false;
+  create_new_mat  = false;
+  create_new_set  = false;
+  create_new_part = false;
 
   Material_ mat;
   Job job;
@@ -765,9 +809,13 @@ void Editor::drawGui() {
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }
+  
+
+  
   ImGui::End();
 
-}
+} //GUI
+
 
 static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mods) {   
     editor->Key(key, scancode, action, mods);
@@ -1063,6 +1111,8 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
+  m_model = new Model();
+  
 }
 
 int Editor::Init(){

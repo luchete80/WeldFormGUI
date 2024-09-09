@@ -11,6 +11,7 @@ class Material_;
 class Part;
 class Mesh;
 class Particle;
+class Geom;
 class BoundaryCondition;
 
 enum model_type {FEM_Model=1, SPH_Model};
@@ -21,14 +22,18 @@ public:
   Model(std::string );
   Mesh* getPartMesh(const int &i);
   void addPart(Part *);
+  void addPart(Geom *);
+  void addGeom(Geom* );
+  Geom* getLastGeom(){return m_geom[m_geom.size()-1];}
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}
   const Material_* getMaterial (const int &m)const{return m_mat[m];}
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
 protected:
-  std::vector <Part*>       m_part;
+  std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
+  std::vector <Geom*>        m_geom;
   // TODO: SHOULD ANALYZE IF IT IS NECESARY TO HAVE REPEATED POINTERS FOR MESH AND MODEL 
   // NDOES AND ELEMENTS
   std::vector <Particle* >  m_particle; 

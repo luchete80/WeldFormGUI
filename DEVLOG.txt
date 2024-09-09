@@ -45,4 +45,6 @@
 -------------------------------------------------------------------------------
 20240906 - Added IMGU-VTK succesfully (Thanks to imgui-vtk project)
          - Added Import Step feature
+20240909 - Added Geo Class to manage gmsh geom
+         - Added import part
          - 

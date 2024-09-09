@@ -193,8 +193,8 @@ int main(int argc, char* argv[])
 
 
   // Initialize VtkViewer objects
-  VtkViewer vtkViewer1;
-  vtkViewer1.addActor(actor);
+  //VtkViewer vtkViewer1;
+  //vtkViewer1.addActor(actor);
 
   VtkViewer vtkViewer2;
   vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
@@ -206,7 +206,9 @@ int main(int argc, char* argv[])
   bool vtk_2_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   
+  cout << "Creating Editor"<<endl;
   Editor* editor = new Editor();
+  cout << "Done. "<<endl;
 	//cout << "creating app app"<<endl;
 	//pApp= new EditorApp();
 
@@ -298,7 +300,7 @@ int main(int argc, char* argv[])
     // 4. Show a simple VtkViewer Instance (Always Open)
     ImGui::SetNextWindowSize(ImVec2(360, 240), ImGuiCond_FirstUseEver);
     ImGui::Begin("Vtk Viewer 1", nullptr, VtkViewer::NoScrollFlags());
-    vtkViewer1.render(); // default render size = ImGui::GetContentRegionAvail()
+    //vtkViewer1.render(); // default render size = ImGui::GetContentRegionAvail()
     ImGui::End();
 
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
@@ -362,7 +364,10 @@ int main(int argc, char* argv[])
     }
 
     glfwSwapBuffers(window);
-  }
+  
+  
+    
+  }//main while
 
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();

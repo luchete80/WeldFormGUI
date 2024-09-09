@@ -4,6 +4,7 @@ include_directories("../../")
 set( MODEL_SRCS         "Mesh.cpp"
                         "Domain.cpp"
                                "Element.cpp"
+                               "Geom.cpp"
                                "Model.cpp"
                                "Part.cpp"            )
 
