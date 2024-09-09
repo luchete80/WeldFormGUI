@@ -24,7 +24,7 @@ set(CMAKE_C_STANDARD 99)
 # this variable controls the default value of the options which are normally set
 # to ON (useful if you want to configure a minimal version of Gmsh: e.g. "cmake
 # -DDEFAULT=0 -DENABLE_POST=1 -DENABLE_PARSER=1")
-set(DEFAULT ON CACHE INTERNAL "Default value for enabled-by-default options")
+set(DEFAULT OFF CACHE INTERNAL "Default value for enabled-by-default options")
 
 macro(opt OPTION HELP VALUE)
   option(ENABLE_${OPTION} ${HELP} ${VALUE})
@@ -37,7 +37,8 @@ set (ENABLE_NETGEN OFF)
 set (ENABLE_POST OFF)
 set (ENABLE_BUILD_DYNAMIC ON) #OR ENABLE_BUILD_LIB OR ENABLE_BUILD_SHARED
 #set (ENABLE_BUILD_LIB ON)
-
+set (HAVE_FLTK OFF)
+set (ENABLE_GRAPHICS OFF)
 opt(3M "Enable proprietary 3M extension" OFF)
 opt(ALGLIB "Enable ALGLIB (used by some mesh optimizers)" ${DEFAULT})
 opt(ANN "Enable ANN (used for fast point search in mesh/post)" ${DEFAULT})
@@ -61,7 +62,7 @@ opt(GEOMETRYCENTRAL "Enable geometry-central library (experimental)" ${DEFAULT})
 opt(GETDP "Enable GetDP solver (linked as a library, experimental)" ${DEFAULT})
 opt(GMM "Enable GMM linear solvers (simple alternative to PETSc)" ${DEFAULT})
 opt(GMP "Enable GMP for Kbipack (advanced)" ON)
-opt(GRAPHICS "Enable building graphics lib even without GUI (advanced)" ON)
+opt(GRAPHICS "Enable building graphics lib even without GUI (advanced)" OFF)
 opt(HXT "Enable HXT library (for reparametrization and meshing)" ${DEFAULT})
 opt(KBIPACK "Enable Kbipack (neeeded by homology solver)" ${DEFAULT})
 opt(MATHEX "Enable Mathex expression parser (used by plugins and options)" ${DEFAULT})
