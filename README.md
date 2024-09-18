@@ -33,12 +33,17 @@ https://gitlab.onelab.info/gmsh/gmsh/-/wikis/Gmsh-compilation
 
 WeldFormGUI uses gmsh and "contrib/netgen/libsrc/occ"
 
+On Ubuntu
 curl -L -o occt.tgz "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_5_0;sf=tgz"
 tar zxf occt.tgz
 cd occt-V7_5_0
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_MODULE_Draw=0 -DBUILD_MODULE_Visualization=0 -DBUILD_MODULE_ApplicationFramework=0 ..
+
+On MSWIN
+https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_5_0.tar.gz
+
 # Notes:
 # * if you installed dependencies (e.g. Freetype) in non-standard locations, add the option -DCMAKE_PREFIX_PATH=path-of-installed-dependencies
 # * if you don't have root access, add -DCMAKE_INSTALL_PREFIX=path-to-install
