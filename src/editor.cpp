@@ -377,19 +377,16 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
             ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.geo", ".");
             
-            create_new_part = true;
+
             
             string test;
-
-            m_model->addGeom(new Geom(test));
-            m_model->addPart(m_model->getLastGeom());
-            cout << "Model part count "<<m_model->getPartCount()<<endl;
+            //cout << "Model part count "<<m_model->getPartCount()<<endl;
           }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
             ImGui::EndPopup();          
         }
 
-      
+        cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -399,6 +396,7 @@ void Editor::drawGui() {
 
           if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d", i))
           {
+            //cout << "Model part count "<<m_model->getPartCount()<<endl;
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
               m_show_mat_dlg_edit = true;
               selected_mat = m_mats[i];}
@@ -687,13 +685,17 @@ void Editor::drawGui() {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
       cout << "file path name "<<filePathName<<endl;
-      m_model = new Model(filePathName);
+      //m_model = new Model(filePathName);
+      cout << "Adding part "<<endl;
+      string test;
+      m_model->addGeom(new Geom(test));
+      m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
       }
       // action
-      
+      create_new_part = true;
       
       //test 
       bool errorIfMissing;
