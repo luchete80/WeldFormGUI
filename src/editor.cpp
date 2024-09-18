@@ -699,7 +699,7 @@ void Editor::drawGui() {
       
       //test 
       bool errorIfMissing;
-      //gmsh::model::add("t20");
+      gmsh::model::add("t20");
 
 
       vtkOCCTGeom geom;
