@@ -62,6 +62,10 @@ target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
 target_link_libraries(${EXEC_NAME} imgui)
 
+set (GMSH_LIB shared)
+IF (WIN32)
+  set (GMSH_LIB gmsh)
+endif()
 ## https://stackoverflow.com/questions/70790736/application-crashes-when-using-vtksmartvolumemappernew
 # VTK
 find_package(VTK 
@@ -177,7 +181,7 @@ endif()
 
 target_link_libraries(${EXEC_NAME} 
             
-            shared
+            ${GMSH_LIBS}
             ${LINK_LIBRARIES}
             model
 						#freetype
