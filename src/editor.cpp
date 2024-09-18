@@ -699,7 +699,7 @@ void Editor::drawGui() {
       
       //test 
       bool errorIfMissing;
-      gmsh::model::add("t20");
+      //gmsh::model::add("t20");
 
 
       vtkOCCTGeom geom;
@@ -713,8 +713,8 @@ void Editor::drawGui() {
       std::vector<std::pair<int, int> > v;
      //try {
         cout << "Loading file "<<filePathName<<endl;
-        gmsh::model::occ::importShapes(filePathName, v);
-        cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
+        //gmsh::model::occ::importShapes(filePathName, v);
+        //cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
       //} catch(...) {
       //  gmsh::logger::write("Could not load STEP file: bye!");
       //  gmsh::finalize();
@@ -722,7 +722,7 @@ void Editor::drawGui() {
       //}
       
       //MergeFile(filePathName, errorIfMissing);
-      gmsh::merge(filePathName);
+      //gmsh::merge(filePathName);
 
       //gmsh::model::mesh::generate(2);
       //gmsh::write("t20.msh");    

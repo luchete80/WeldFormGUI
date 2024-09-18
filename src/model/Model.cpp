@@ -65,7 +65,7 @@ Model::Model(string name){
         cout << "Loading file "<<name<<endl;
       int argc;
       char **argv;
-      gmsh::initialize(argc, argv);
+      //gmsh::initialize(argc, argv);
       //gmsh::model::add("t20");
      /// gmsh::model::occ::importShapes(name, v);
      
