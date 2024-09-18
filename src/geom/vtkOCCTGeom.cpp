@@ -79,6 +79,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 
     return EXIT_SUCCESS;
     */
+    return EXIT_SUCCESS;
   }
 
 

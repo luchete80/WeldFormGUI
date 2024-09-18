@@ -1395,6 +1395,7 @@ int Editor::Init(){
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
   */
+  return 1;
 }//Editor::Init()
 
 
@@ -1405,7 +1406,7 @@ int Editor::Terminate(){
     // // glfw: terminate, clearing all previously allocated GLFW resources.
     // // ------------------------------------------------------------------
     // glfwTerminate();
-    // return 0;
+     return 0;
 }
 
 
