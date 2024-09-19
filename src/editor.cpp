@@ -117,7 +117,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.json,.k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.json,.k", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -375,7 +375,7 @@ void Editor::drawGui() {
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.geo", ".");
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
             
 
             
@@ -713,8 +713,8 @@ void Editor::drawGui() {
       std::vector<std::pair<int, int> > v;
      //try {
         cout << "Loading file "<<filePathName<<endl;
-        //gmsh::model::occ::importShapes(filePathName, v);
-        //cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
+        gmsh::model::occ::importShapes(filePathName, v);
+        cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
       //} catch(...) {
       //  gmsh::logger::write("Could not load STEP file: bye!");
       //  gmsh::finalize();
@@ -722,9 +722,9 @@ void Editor::drawGui() {
       //}
       
       //MergeFile(filePathName, errorIfMissing);
-      //gmsh::merge(filePathName);
+      gmsh::merge(filePathName);
 
-      //gmsh::model::mesh::generate(2);
+      gmsh::model::mesh::generate(1);
       //gmsh::write("t20.msh");    
     
     }
