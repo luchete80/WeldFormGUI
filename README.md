@@ -61,7 +61,12 @@ Should build VTK with
 cmake .......  -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON
 
 
--- Build Windows
+-- MS Windows Build Instructions
+
+- Download OpenCascade  7.8.0 built binaries
+
+https://github.com/Open-Cascade-SAS/OCCT/releases/tag/V7_8_0
+
 
 - Important, from compiled and installed OCCT library run "OCCT/env.bat" --BEFORE-- execute cmake.
  
