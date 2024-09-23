@@ -60,4 +60,11 @@ cmake [SOURCE_DIR] -DVTK_INCLUDE_DIR="/usr/local/include/vtk-9.3" -DCMAKE_BUILD_
 Should build VTK with
 cmake .......  -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON
 
+
+-- Build Windows
+
+- Important, from compiled and installed OCCT library run "OCCT/env.bat" --BEFORE-- execute cmake.
+ 
+
+
 GMSH USED IS 4.13.0 (4.13.1 DOES NOT WORK ON MSWIN)
