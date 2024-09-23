@@ -1111,7 +1111,7 @@ void delaunayTrgl(const std::size_t numThreads, const std::size_t NPTS_AT_ONCE,
       }
     }
 #if defined(VERBOSE)
-#pragma omp critical(delaunayTrgl)
+#pragma omp critical
     {
       totCavityGlob += totCavity;
       totSearchGlob += totSearch;

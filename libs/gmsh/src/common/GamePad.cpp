@@ -142,12 +142,9 @@ GamePad::GamePad() : active(false), frequency(.01)
 GamePad::~GamePad()
 {
    active = false;
-#if defined(WIN32)
-#else
 #if defined(HAVE_LINUX_JOYSTICK)
   if (gamepad_fd)  close(gamepad_fd);
    gamepad_fd = 0;
-#endif
 #endif
 }
 

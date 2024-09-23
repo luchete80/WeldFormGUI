@@ -51,10 +51,6 @@
 #include "extraDialogs.h"
 #endif
 
-#if defined(HAVE_OCC)
-#include <Standard_Version.hxx>
-#endif
-
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
@@ -391,24 +387,13 @@ onelab::client *Msg::GetOnelabClient()
 }
 #endif
 
-void Msg::Exit(int level, bool forceLevel)
+void Msg::Exit(int level)
 {
   Finalize();
 #if defined(HAVE_MPI)
   if(level) MPI_Abort(MPI_COMM_WORLD, level);
 #endif
-
-#if defined(HAVE_OCC) && (OCC_VERSION_HEX > 0x070800)
-#if defined(__APPLE__) || defined(__linux__)
-#warning "Using _exit() instead of exit() as workaround for OCC >= 7.8 STEP bug"
-  // workaround for recent versions of OpenCASCADE (>= 7.8) which on macOS and
-  // linux invoke a global destructor in the STEP module that sometimes leads to
-  // a segfault - using _exit() bypasses the global destructor
-  _exit((forceLevel || level) ? level : _atLeastOneErrorInRun);
-#endif
-#endif
-
-  exit((forceLevel || level) ? level : _atLeastOneErrorInRun);
+  exit(level ? level : _atLeastOneErrorInRun);
 }
 
 static int streamIsFile(FILE *stream)

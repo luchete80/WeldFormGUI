@@ -294,7 +294,8 @@ static int DefineSolver(const std::string &name)
 #endif
 
 int MergeFile(const std::string &fileName, bool errorIfMissing,
-              bool setBoundingBox, bool importPhysicalsInOnelab)
+              bool setBoundingBox, bool importPhysicalsInOnelab,
+              int partitionToRead)
 {
   // added 'b' for pure Windows programs, since some of these files
   // contain binary data
@@ -518,6 +519,9 @@ int MergeFile(const std::string &fileName, bool errorIfMissing,
         CTX::instance()->geom.matchMeshScaleFactor = 1;
         status = GModel::current()->readMSH(fileName);
       }
+#if defined(HAVE_POST)
+      if(status > 1) status = PView::readMSH(fileName, -1, partitionToRead);
+#endif
     }
 #if defined(HAVE_POST)
     else if(ext == ".pch") {

@@ -158,7 +158,7 @@ static void
 GetQualityMeasure(std::vector<T *> &ele, double &gamma, double &gammaMin,
                   double &gammaMax, double &minSICN, double &minSICNMin,
                   double &minSICNMax, double &minSIGE, double &minSIGEMin,
-                  double &minSIGEMax, double quality[3][101])
+                  double &minSIGEMax, double quality[3][100])
 {
   for(std::size_t i = 0; i < ele.size(); i++) {
     double g = ele[i]->gammaShapeMeasure();
@@ -173,15 +173,15 @@ GetQualityMeasure(std::vector<T *> &ele, double &gamma, double &gammaMin,
     minSIGE += e;
     minSIGEMin = std::min(minSIGEMin, e);
     minSIGEMax = std::max(minSIGEMax, e);
-    for(int j = 0; j < 101; j++) {
-      if(s > (2 * j - 101) / 101. && s <= (2 * j - 99) / 101.) quality[0][j]++;
-      if(g > j / 101. && g <= (j + 1) / 101.) quality[1][j]++;
-      if(e > (2 * j - 101) / 101. && e <= (2 * j - 99) / 101.) quality[2][j]++;
+    for(int j = 0; j < 100; j++) {
+      if(s > (2 * j - 100) / 100. && s <= (2 * j - 98) / 100.) quality[0][j]++;
+      if(g > j / 100. && g <= (j + 1) / 100.) quality[1][j]++;
+      if(e > (2 * j - 100) / 100. && e <= (2 * j - 98) / 100.) quality[2][j]++;
     }
   }
 }
 
-void GetStatistics(double stat[50], double quality[3][101], bool visibleOnly)
+void GetStatistics(double stat[50], double quality[3][100], bool visibleOnly)
 {
   for(int i = 0; i < 50; i++) stat[i] = 0.;
 
@@ -228,13 +228,13 @@ void GetStatistics(double stat[50], double quality[3][101], bool visibleOnly)
     stat[13] += (*it)->trihedra.size();
   }
 
-  stat[14] = CTX::instance()->mesh.timer[0];
-  stat[15] = CTX::instance()->mesh.timer[1];
-  stat[16] = CTX::instance()->mesh.timer[2];
+  stat[14] = CTX::instance()->meshTimer[0];
+  stat[15] = CTX::instance()->meshTimer[1];
+  stat[16] = CTX::instance()->meshTimer[2];
 
   if(quality) {
     for(int i = 0; i < 3; i++)
-      for(int j = 0; j < 101; j++) quality[i][j] = 0.;
+      for(int j = 0; j < 100; j++) quality[i][j] = 0.;
     double minSICN = 0., minSICNMin = 1., minSICNMax = -1.;
     double minSIGE = 0., minSIGEMin = 1., minSIGEMax = -1.;
     double gamma = 0., gammaMin = 1., gammaMax = 0.;
@@ -297,34 +297,6 @@ void GetStatistics(double stat[50], double quality[3][101], bool visibleOnly)
     stat[36] += data->getNumStrings2D() + data->getNumStrings3D();
   }
 #endif
-}
-
-static void GetQualityFast(GModel *m, int dim, double &qmin, double &qavg)
-{
-  int nthreads = CTX::instance()->numThreads;
-  if(CTX::instance()->mesh.maxNumThreads1D > 0)
-    nthreads = CTX::instance()->mesh.maxNumThreads1D;
-  if(!nthreads) nthreads = Msg::GetMaxThreads();
-
-  std::size_t N = 0;
-  std::vector<GEntity *> entities;
-  m->getEntities(entities, dim);
-  double qm = 1e200, qa = 0;
-  for(auto ge : entities) {
-    if(ge->dim() < 2) continue;
-    std::size_t ne = ge->getNumMeshElements();
-    N += ne;
-#pragma omp parallel for num_threads(nthreads) reduction(min:qm) reduction(+:qa)
-    for(std::size_t i = 0; i < ne; i++) {
-      MElement *e = ge->getMeshElement(i);
-      double q = e->minSICNShapeMeasure();
-      qm = std::min(qm, q);
-      qa += q;
-    }
-  }
-  if(N) qa /= N;
-  qmin = qm;
-  qavg = qa;
 }
 
 static void Mesh0D(GModel *m)
@@ -421,9 +393,9 @@ static void Mesh1D(GModel *m)
   Msg::StopProgressMeter();
 
   double t2 = Cpu(), w2 = TimeOfDay();
-  CTX::instance()->mesh.timer[0] = w2 - w1;
+  CTX::instance()->meshTimer[0] = w2 - w1;
   Msg::StatusBar(true, "Done meshing 1D (Wall %gs, CPU %gs)",
-                 CTX::instance()->mesh.timer[0], t2 - t1);
+                 CTX::instance()->meshTimer[0], t2 - t1);
 }
 
 static void PrintMesh2dStatistics(GModel *m)
@@ -487,7 +459,7 @@ static void PrintMesh2dStatistics(GModel *m)
           (double)nTotGoodQuality / nTotT);
   fprintf(statreport, "%d\t\t%8.7f\t%d\t\t%8.7f\t%8.1f\n", nTotE,
           exp(e_avg / (double)nTotE), nTotGoodLength,
-          (double)nTotGoodLength / nTotE, CTX::instance()->mesh.timer[1]);
+          (double)nTotGoodLength / nTotE, CTX::instance()->meshTimer[1]);
   fclose(statreport);
 }
 
@@ -593,9 +565,10 @@ static void Mesh2D(GModel *m)
   }
 
   double t2 = Cpu(), w2 = TimeOfDay();
-  CTX::instance()->mesh.timer[1] = w2 - w1;
+  CTX::instance()->meshTimer[1] = w2 - w1;
   Msg::StatusBar(true, "Done meshing 2D (Wall %gs, CPU %gs)",
-                 CTX::instance()->mesh.timer[1], t2 - t1);
+                 CTX::instance()->meshTimer[1], t2 - t1);
+
   PrintMesh2dStatistics(m);
 }
 
@@ -766,8 +739,8 @@ static void Mesh3D(GModel *m)
           Filler3D f;
           treat_region_ok = f.treat_region(gr);
         }
-      }
-
+      }    
+      
       if(treat_region_ok && (CTX::instance()->mesh.recombine3DAll ||
                              gr->meshAttributes.recombine3D)) {
 	meshCombine3D(gr);
@@ -803,15 +776,16 @@ static void Mesh3D(GModel *m)
     Msg::Error(debugInfo.str().c_str());
   }
 
+  double t2 = Cpu(), w2 = TimeOfDay();
+  CTX::instance()->meshTimer[2] = w2 - w1;
+
   if(m->getNumRegions()) {
     Msg::ProgressMeter(1, false, "Meshing 3D...");
     Msg::StopProgressMeter();
   }
 
-  double t2 = Cpu(), w2 = TimeOfDay();
-  CTX::instance()->mesh.timer[2] = w2 - w1;
   Msg::StatusBar(true, "Done meshing 3D (Wall %gs, CPU %gs)",
-                 CTX::instance()->mesh.timer[2], t2 - t1);
+                 CTX::instance()->meshTimer[2], t2 - t1);
 }
 
 void OptimizeMesh(GModel *m, const std::string &how, bool force, int niter)
@@ -1038,8 +1012,8 @@ void OptimizeMesh(GModel *m, const std::string &how, bool force, int niter)
                   EmbeddedCompatibilityTest());
 
   double t2 = Cpu(), w2 = TimeOfDay();
-  Msg::StatusBar(true, "Done optimizing mesh (Wall %gs, CPU %gs)",
-                 w2 - w1, t2 - t1);
+  Msg::StatusBar(true, "Done optimizing mesh (Wall %gs, CPU %gs)", w2 - w1,
+                 t2 - t1);
 }
 
 void AdaptMesh(GModel *m)
@@ -1502,11 +1476,6 @@ void GenerateMesh(GModel *m, int ask)
 
   Msg::Info("%d nodes %d elements", m->getNumMeshVertices(),
             m->getNumMeshElements());
-
-  GetQualityFast(m, m->getMeshStatus(), CTX::instance()->mesh.minQuality,
-                 CTX::instance()->mesh.avgQuality);
-  Msg::Debug("ICN mesh quality: min=%g avg=%g", CTX::instance()->mesh.minQuality,
-             CTX::instance()->mesh.avgQuality);
 
   Msg::PrintErrorCounter("Mesh generation error summary");
 

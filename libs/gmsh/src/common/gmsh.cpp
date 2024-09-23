@@ -4820,13 +4820,10 @@ gmsh::model::mesh::setTransfiniteCurve(const int tag, const int numNodes,
         (meshType == "Progression" || meshType == "Power") ? 1 :
         (meshType == "Bump")                               ? 2 :
         (meshType == "Beta")                               ? 3 :
-        (meshType == "Progression_HWall")                  ? 5 :
-        (meshType == "Bump_HWall")                         ? 6 :
-        (meshType == "Beta_HWall")                         ? 7 :
                                                              1;
-      ge->meshAttributes.coeffTransfinite =  ge->meshAttributes.typeTransfinite > 4 ? coef : std::abs(coef);
+      ge->meshAttributes.coeffTransfinite = std::abs(coef);
       // in .geo file we use a negative tag to do this trick; it's a bad idea
-      if(coef < 0 && ge->meshAttributes.typeTransfinite < 4) ge->meshAttributes.typeTransfinite *= -1;
+      if(coef < 0) ge->meshAttributes.typeTransfinite *= -1;
     }
     else {
       if(t > 0) {
@@ -8860,7 +8857,7 @@ public:
   apiMsg() {}
   virtual void operator()(std::string level, std::string message)
   {
-#pragma omp critical(apiMsg)
+#pragma omp critical
     _log.push_back(level + ": " + message);
   }
   void get(std::vector<std::string> &log) const { log = _log; }

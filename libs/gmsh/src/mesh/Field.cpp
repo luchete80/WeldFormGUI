@@ -373,14 +373,14 @@ public:
     double ny[3] = {y1[0] - x0[0], y1[1] - x0[1], y1[2] - x0[2]};
     double nz[3] = {z1[0] - x0[0], z1[1] - x0[1], z1[2] - x0[2]};
     double pvect[3] = {xp - x0[0], yp - x0[1], zp - x0[2]};
-    double projX = prosca(nx, pvect);
-    double tempX = prosca(nx, nx);
+    double projX = scalProd(nx, pvect);
+    double tempX = scalProd(nx, nx);
     if(tempX) projX /= tempX;
-    double projY = prosca(ny, pvect);
-    double tempY = prosca(ny, ny);
+    double projY = scalProd(ny, pvect);
+    double tempY = scalProd(ny, ny);
     if(tempY) projY /= tempY;
-    double projZ = prosca(nz, pvect);
-    double tempZ = prosca(nz, nz);
+    double projZ = scalProd(nz, pvect);
+    double tempZ = scalProd(nz, nz);
     if(tempZ) projZ /= tempZ;
     if(projX < 0.0) projX = 0.0;
     if(projX > 1.0) projX = 1.0;
@@ -663,7 +663,7 @@ public:
       new FieldOptionDouble(_lcMax, "Mesh size when value > DistMax");
     options["Sigmoid"] = new FieldOptionBool(
       _sigmoid,
-      "True to interpolate between SizeMin and SizeMax using a sigmoid, "
+      "True to interpolate between SizeMin and LcMax using a sigmoid, "
       "false to interpolate linearly");
     options["StopAtDistMax"] = new FieldOptionBool(
       _stopAtDistMax, "True to not impose mesh size outside DistMax (i.e., "
@@ -1999,7 +1999,7 @@ public:
                                     ge->tag()) != _surfaceTags.end()) ||
        (ge->dim() == 3 && std::find(_volumeTags.begin(), _volumeTags.end(),
                                     ge->tag()) != _volumeTags.end()))
-      return (*f)(x, y, z, ge);
+      return (*f)(x, y, z);
     if(_boundary) {
       if(ge->dim() <= 2) {
         std::list<GRegion *> volumes = ge->regions();

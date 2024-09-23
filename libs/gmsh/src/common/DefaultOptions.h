@@ -1139,9 +1139,6 @@ StringXNumber MeshOptions_Number[] = {
   { F|O, "AllowSwapAngle" , opt_mesh_allow_swap_edge_angle , 10.0 ,
     "Threshold angle (in degrees) between faces normals under which we allow "
     "an edge swap" },
-  { F|O, "AvgQuality" , opt_mesh_avg_quality, 0. ,
-    "Average mesh quality (inverse conditioning number, ICN) after the generation "
-    "of the current mesh (read-only)"},
 
   { F|O, "BdfFieldFormat" , opt_mesh_bdf_field_format , 1. ,
     "Field format for Nastran BDF files (0: free, 1: small, 2: large)" },
@@ -1356,27 +1353,18 @@ StringXNumber MeshOptions_Number[] = {
   { F|O, "MetisRefinementAlgorithm" , opt_mesh_partition_metis_refinement_algorithm, 2. ,
     "METIS algorithm for k-way refinement 'rtype' (1: FM-based cut, 2: Greedy, "
     "3: Two-sided node FM, 4: One-sided node FM)" },
-  { F|O, "MinLineNodes" , opt_mesh_min_line_nodes, 2. ,
+  { F|O, "MinimumLineNodes" , opt_mesh_min_line_nodes, 2. ,
     "Minimum number of nodes used to mesh (straight) lines"},
-  { F|O, "MinCircleNodes" , opt_mesh_min_circle_nodes, 7. ,
+  { F|O, "MinimumCircleNodes" , opt_mesh_min_circle_nodes, 7. ,
     "Minimum number of nodes used to mesh circles and ellipses" },
-  { F|O, "MinCurveNodes" , opt_mesh_min_curve_nodes, 3. ,
-    "Minimum number of nodes used to mesh curves other than lines, circles and "
-    "ellipses"},
-  { F|O, "MinQuality" , opt_mesh_min_quality, 0. ,
-    "Minimum mesh quality (inverse conditioning number, ICN) after the generation "
-    "of the current mesh (read-only)"},
-  { F|O|D, "MinimumLineNodes" , opt_mesh_min_line_nodes, 2. ,
-    "[Deprecated]"},
-  { F|O|D, "MinimumCircleNodes" , opt_mesh_min_circle_nodes, 7. ,
-    "[Deprecated]" },
   { F|O|D, "MinimumCirclePoints" , opt_mesh_min_circle_nodes, 7. ,
     "[Deprecated]" },
-  { F|O|D, "MinimumCurveNodes" , opt_mesh_min_curve_nodes, 3. ,
-    "[Deprecated]"},
+  { F|O, "MinimumCurveNodes" , opt_mesh_min_curve_nodes, 3. ,
+    "Minimum number of nodes used to mesh curves other than lines, circles and "
+    "ellipses"},
   { F|O|D, "MinimumCurvePoints" , opt_mesh_min_curve_nodes, 3. ,
     "[Deprecated]"},
-  { F|O|D, "MinimumElementsPerTwoPi" , opt_mesh_lc_from_curvature, 0. ,
+  { F|O, "MinimumElementsPerTwoPi" , opt_mesh_lc_from_curvature, 0. ,
     "[Deprecated]" },
   { F|O, "MshFileVersion" , opt_mesh_msh_file_version , 4.1 ,
     "Version of the MSH file format to use" },

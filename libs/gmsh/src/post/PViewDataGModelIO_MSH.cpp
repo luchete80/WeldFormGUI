@@ -61,7 +61,6 @@ bool PViewDataGModel::readMSH(const std::string &viewName,
       }
     }
     double *d = _steps[step]->getData(num, true, mult);
-
     if(binary) {
       if((int)fread(d, sizeof(double), numComp * mult, fp) != numComp * mult)
         return false;

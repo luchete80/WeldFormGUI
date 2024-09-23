@@ -1332,7 +1332,7 @@ void recombineIntoQuads(GFace *gf, bool blossom, int topologicalOptiPasses,
   }
 
 // FIXME: not thread-safe
-#pragma omp critical(recombineIntoQuads)
+#pragma omp critical
   {
     if(topologicalOptiPasses > 0) {
       if(!_isModelOkForTopologicalOpti(gf->model())) {

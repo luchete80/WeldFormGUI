@@ -141,7 +141,7 @@
 #include <ShapeUpgrade_UnifySameDomain.hxx>
 #endif
 
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
 #include <BRepAlgoAPI_Defeaturing.hxx>
 #include <Message_ProgressIndicator.hxx>
 #endif
@@ -3525,7 +3525,7 @@ bool OCC_Internals::defeature(const std::vector<int> &volumeTags,
                               std::vector<std::pair<int, int>> &outDimTags,
                               bool removeVolume)
 {
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
   // build a single compound shape
   BRep_Builder b;
   TopoDS_Compound c;
@@ -3740,7 +3740,7 @@ bool OCC_Internals::offsetCurve(const int curveLoopTag, double offset,
   return true;
 }
 
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
 
 class OCCBooleanProgress : public Message_ProgressIndicator {
 private:
@@ -3809,6 +3809,16 @@ static void _printBooleanWarnings(T &algo, const std::string &what)
 #endif
 }
 
+static void _filterTags(std::vector<std::pair<int, int>> &outDimTags,
+                        int minDim)
+{
+  std::vector<std::pair<int, int>> tmp(outDimTags);
+  outDimTags.clear();
+  for(std::size_t i = 0; i < tmp.size(); i++) {
+    if(tmp[i].first >= minDim) outDimTags.push_back(tmp[i]);
+  }
+}
+
 bool OCC_Internals::booleanOperator(
   int tag, BooleanOperator op,
   const std::vector<std::pair<int, int>> &objectDimTags,
@@ -3866,7 +3876,7 @@ bool OCC_Internals::booleanOperator(
       fuse.SetArguments(objectShapes);
       fuse.SetTools(toolShapes);
       _setBooleanOptions(fuse);
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
       OCCBooleanProgress progress("Union");
       fuse.Build(progress.Start());
 #else
@@ -3911,7 +3921,7 @@ bool OCC_Internals::booleanOperator(
       common.SetArguments(objectShapes);
       common.SetTools(toolShapes);
       _setBooleanOptions(common);
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
       OCCBooleanProgress progress("Intersection");
       common.Build(progress.Start());
 #else
@@ -3944,7 +3954,7 @@ bool OCC_Internals::booleanOperator(
       cut.SetArguments(objectShapes);
       cut.SetTools(toolShapes);
       _setBooleanOptions(cut);
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
       OCCBooleanProgress progress("Difference");
       cut.Build(progress.Start());
 #else
@@ -3972,8 +3982,6 @@ bool OCC_Internals::booleanOperator(
       }
     } break;
 
-    // TODO: implement OCC_Internals::Section:
-
     case OCC_Internals::Fragments:
     default: {
       BRepAlgoAPI_BuilderAlgo fragments;
@@ -3981,7 +3989,7 @@ bool OCC_Internals::booleanOperator(
       toolShapes.Clear();
       fragments.SetArguments(objectShapes);
       _setBooleanOptions(fragments);
-#if OCC_VERSION_HEX >= 0x070700
+#if OCC_VERSION_HEX >= 0x070500
       OCCBooleanProgress progress("Fragments");
       fragments.Build(progress.Start());
 #else
@@ -4039,6 +4047,7 @@ bool OCC_Internals::booleanOperator(
     }
     _multiBind(result, tag, outDimTags, (tag >= 0) ? true : false, true,
                (tag >= 0) ? false : true);
+    _filterTags(outDimTags, minDim);
   }
   else {
     // otherwise, try to preserve the numbering of the input shapes that did not
@@ -4060,7 +4069,9 @@ bool OCC_Internals::booleanOperator(
         Msg::Debug("BOOL (%d,%d) deleted", dim, tag);
       }
       else if(mapModified[i].Extent() == 0) { // not modified
-        _toPreserve.insert(std::make_pair(dim, tag));
+        auto ins = _toPreserve.insert(std::make_pair(dim, tag));
+        if(ins.second) // it's not yet in outDimTags
+          outDimTags.push_back(std::make_pair(dim, tag));
         Msg::Debug("BOOL (%d,%d) not modified", dim, tag);
       }
       else if(mapModified[i].Extent() == 1) { // replaced by single one
@@ -4074,7 +4085,9 @@ bool OCC_Internals::booleanOperator(
           if(tag != t)
             Msg::Info("Could not preserve tag of %dD object %d (->%d)", dim,
                       tag, t);
-          _toPreserve.insert(std::make_pair(dim, t));
+          auto ins = _toPreserve.insert(std::make_pair(dim, t));
+          if(ins.second) // it's not yet in outDimTags
+            outDimTags.push_back(std::make_pair(dim, t));
         }
         Msg::Debug("BOOL (%d,%d) replaced by 1", dim, tag);
       }
@@ -4091,16 +4104,19 @@ bool OCC_Internals::booleanOperator(
     for(int d = -2; d <= 3; d++) _recomputeMaxTag(d);
     // bind all remaining entities and add the new ones to the returned list
     _multiBind(result, -1, outDimTags, false, true, true);
+    _filterTags(outDimTags, minDim);
     _toPreserve.clear();
   }
 
-  // return output and input/output correspondence maps
+  // return input/output correspondence maps
   for(std::size_t i = 0; i < inDimTags.size(); i++) {
     int dim = inDimTags[i].first;
     int tag = inDimTags[i].second;
     std::pair<int, int> dimTag(dim, tag);
     std::vector<std::pair<int, int>> dimTags;
-    if(mapModified[i].Extent() == 0) { // not modified
+    if(mapDeleted[i]) { // deleted
+    }
+    else if(mapModified[i].Extent() == 0) { // not modified
       if(_isBound(dim, tag)) dimTags.push_back(dimTag);
     }
     else {
@@ -4125,22 +4141,6 @@ bool OCC_Internals::booleanOperator(
       sstream << " (" << dimTags[j].first << "," << dimTags[j].second << ")";
     Msg::Debug("%s", sstream.str().c_str());
     outDimTagsMap.push_back(dimTags);
-  }
-
-  outDimTags.clear();
-  for(auto v : outDimTagsMap)
-    for(auto e : v)
-      outDimTags.push_back(e);
-  // keep the ordering but remove duplicates - maybe we should leave them?
-  std::set<std::pair<int, int>> s;
-  for(auto it = outDimTags.begin(); it != outDimTags.end(); ) {
-    if(s.find(*it) == s.end()) {
-      s.insert(*it);
-      it++;
-    }
-    else {
-      it = outDimTags.erase(it);
-    }
   }
 
   return true;
@@ -4763,11 +4763,6 @@ bool OCC_Internals::importShapes(const std::string &fileName,
                                  std::vector<std::pair<int, int>> &outDimTags,
                                  const std::string &format)
 {
-  if(StatFile(fileName)) {
-    Msg::Error("File '%s' does not exist", fileName.c_str());
-    return false;
-  }
-
   std::vector<std::string> split = SplitFileName(fileName);
 
   TopoDS_Shape result;
