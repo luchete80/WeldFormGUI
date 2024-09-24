@@ -181,8 +181,7 @@ endif()
 
 target_link_libraries(${EXEC_NAME} 
             
-            ${GMSH_LIBS}
-            ${LINK_LIBRARIES}
+
             model
 						#freetype
 
@@ -192,4 +191,7 @@ target_link_libraries(${EXEC_NAME}
 					  ${LIBS}
             ${RT_LIB}
             ${VTK_LIBRARIES}
+	    SHARED
+            ${GMSH_LIBS}
+            ${LINK_LIBRARIES}
 )
