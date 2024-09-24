@@ -13,6 +13,7 @@ set(APP_VERSION_MINOR 0)
 set(EXEC_NAME imgui_vtk)
 
 link_directories ("${GLFW_BINARY_DIR}/src")
+link_directories ("${GMSH_LIB_DIR}")
 
 add_subdirectory("model")
 
@@ -62,7 +63,7 @@ target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
 target_link_libraries(${EXEC_NAME} imgui)
 
-set (GMSH_LIBS shared)
+set (GMSH_LIBS gmsh)
 #IF (WIN32)
 #  set (GMSH_LIBS gmsh)
 #endif()
@@ -191,7 +192,7 @@ target_link_libraries(${EXEC_NAME}
 					  ${LIBS}
             ${RT_LIB}
             ${VTK_LIBRARIES}
-	    SHARED
+	    
             ${GMSH_LIBS}
             ${LINK_LIBRARIES}
 )
