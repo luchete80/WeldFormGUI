@@ -287,11 +287,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkRenderer.h>
+
 
 #include <array>
 
@@ -351,14 +347,14 @@ int Mesh::createVTKPolyData() {
   //vtkNew<vtkCamera> camera;
   //camera->SetPosition(1, 1, 1);
   //camera->SetFocalPoint(0, 0, 0);
-
+/*
   vtkNew<vtkRenderer> renderer;
   vtkNew<vtkRenderWindow> renWin;
   renWin->AddRenderer(renderer);
   renWin->SetWindowName("Cube");
-
-  vtkNew<vtkRenderWindowInteractor> iren;
-  iren->SetRenderWindow(renWin);
+*/
+  //vtkNew<vtkRenderWindowInteractor> iren;
+  //iren->SetRenderWindow(renWin);
 
 
   

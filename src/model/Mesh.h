@@ -14,6 +14,9 @@
 
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+
 //https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
