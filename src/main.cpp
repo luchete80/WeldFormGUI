@@ -49,6 +49,8 @@
 
 #include "geom/vtkOCCTGeom.h"
 
+#include <gmsh.h>
+
 //#include "graphics/axis.h"
 /*
 // int argc, char* argv are required for vtkRegressionTestImage
@@ -209,6 +211,9 @@ int main(int argc, char* argv[])
   cout << "Creating Editor"<<endl;
   Editor* editor = new Editor();
   cout << "Done. "<<endl;
+  cout << "Initialize gmsh"<<endl;
+  gmsh::initialize(argc, argv);
+        
 	//cout << "creating app app"<<endl;
 	//pApp= new EditorApp();
 

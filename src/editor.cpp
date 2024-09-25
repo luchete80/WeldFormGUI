@@ -386,7 +386,7 @@ void Editor::drawGui() {
             ImGui::EndPopup();          
         }
 
-        cout << "Model part count "<<m_model->getPartCount()<<endl;      
+        //cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
