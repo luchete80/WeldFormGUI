@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 
 
   ImFont* font_ubu = io.Fonts->AddFontFromFileTTF("Ubuntu-L.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault()); 
-  ImFont* font_satoshi = io.Fonts->AddFontFromFileTTF("Satoshi.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault());
+  //ImFont* font_satoshi = io.Fonts->AddFontFromFileTTF("Satoshi.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault());
   //IM_ASSERT(font_satoshi != NULL);
   if (!font_ubu->IsLoaded()){
     fprintf(stderr,"ERRROR. Cannot load font.\n");
