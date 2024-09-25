@@ -281,7 +281,6 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 
 
 #include <vtkActor.h>
-#include <vtkCamera.h>
 #include <vtkCellArray.h>
 #include <vtkFloatArray.h>
 #include <vtkNamedColors.h>
@@ -344,13 +343,14 @@ int Mesh::createVTKPolyData() {
   vtkNew<vtkPolyDataMapper> cubeMapper;
   cubeMapper->SetInputData(cube);
   cubeMapper->SetScalarRange(cube->GetScalarRange());
-  vtkNew<vtkActor> cubeActor;
-  cubeActor->SetMapper(cubeMapper);
+  //vtkNew<vtkActor> cubeActor;
+  mesh_actor = vtkSmartPointer<vtkActor>::New();
+  mesh_actor->SetMapper(cubeMapper);
 
   // The usual rendering stuff.
-  vtkNew<vtkCamera> camera;
-  camera->SetPosition(1, 1, 1);
-  camera->SetFocalPoint(0, 0, 0);
+  //vtkNew<vtkCamera> camera;
+  //camera->SetPosition(1, 1, 1);
+  //camera->SetFocalPoint(0, 0, 0);
 
   vtkNew<vtkRenderer> renderer;
   vtkNew<vtkRenderWindow> renWin;
@@ -360,16 +360,18 @@ int Mesh::createVTKPolyData() {
   vtkNew<vtkRenderWindowInteractor> iren;
   iren->SetRenderWindow(renWin);
 
-  renderer->AddActor(cubeActor);
-  renderer->SetActiveCamera(camera);
-  renderer->ResetCamera();
-  renderer->SetBackground(colors->GetColor3d("Cornsilk").GetData());
 
-  renWin->SetSize(600, 600);
+  
+  //renderer->AddActor(cubeActor);
+  //renderer->SetActiveCamera(camera);
+  //renderer->ResetCamera();
+  //renderer->SetBackground(colors->GetColor3d("Cornsilk").GetData());
 
-  // interact with data
-  renWin->Render();
-  iren->Start();
+  //renWin->SetSize(600, 600);
+
+  //// interact with data
+  //renWin->Render();
+  //iren->Start();
 
   return EXIT_SUCCESS;
 }

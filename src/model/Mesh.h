@@ -12,6 +12,8 @@
 #include "Entity.h"
 #include "Set.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkActor.h>
 //https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
@@ -36,6 +38,7 @@ public:
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   int createVTKPolyData();
+  vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:
   int m_node_count;
   int m_elem_count;
@@ -48,7 +51,9 @@ protected:
   
   
   //VTK THING, for visualization
+   vtkSmartPointer<vtkActor> mesh_actor;
 /*
+ 
   vtkNew<vtkPolyData> cube;
   vtkNew<vtkPoints> points;
   vtkNew<vtkCellArray> polys;
