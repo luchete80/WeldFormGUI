@@ -13,7 +13,10 @@ set(APP_VERSION_MINOR 0)
 set(EXEC_NAME imgui_vtk)
 
 link_directories ("${GLFW_BINARY_DIR}/src")
+if (WIN32)
 link_directories ("${GMSH_LIB_DIR}")
+endif()
+
 
 add_subdirectory("model")
 
