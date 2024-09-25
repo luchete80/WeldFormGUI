@@ -104,3 +104,4 @@ void Model::addPart(Geom *geom){
 void Model::addGeom(Geom *geom){
   m_geom.push_back(geom);
 }
+
