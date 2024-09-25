@@ -6,8 +6,8 @@
 #include "Part.h"
 
 #include <gmsh.h>
-#include "GModel.h"
-#include "Geom.h"
+//#include "GModel.h"
+//#include "Geom.h"
 
 //#include "drawContext.h"
 
