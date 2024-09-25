@@ -3,6 +3,7 @@
 
 /////////////// FINITE ELEMENT MESH ///////////
 
+
 #include <vector>
 //#include <glm/gtc/matrix_transform.hpp>
 #include "../common/math/math.h"
@@ -10,6 +11,8 @@
 
 #include "Entity.h"
 #include "Set.h"
+
+//https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
 class Node;
@@ -32,7 +35,7 @@ public:
   Element*  getElem(const int &i){return m_elem[i];} 
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
-
+  int createVTKPolyData();
 protected:
   int m_node_count;
   int m_elem_count;
@@ -42,6 +45,16 @@ protected:
   
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
+  
+  
+  //VTK THING, for visualization
+/*
+  vtkNew<vtkPolyData> cube;
+  vtkNew<vtkPoints> points;
+  vtkNew<vtkCellArray> polys;
+  vtkNew<vtkFloatArray> scalars;  
+*/  
+  
 };
 
 #endif

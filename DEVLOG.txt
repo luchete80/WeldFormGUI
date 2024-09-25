@@ -47,4 +47,5 @@
          - Added Import Step feature
 20240909 - Added Geo Class to manage gmsh geom
          - Added import part
-         - 
+2024092X - Adapting to MSWN creation
+20240925 - Preparing for create VTKpolydata from GMSH 
