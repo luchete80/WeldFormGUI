@@ -511,10 +511,10 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
             ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
             
-
-            
             string test;
             //cout << "Model part count "<<m_model->getPartCount()<<endl;
+          }
+          if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
           }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
             ImGui::EndPopup();          
