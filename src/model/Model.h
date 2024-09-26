@@ -30,6 +30,7 @@ public:
   const Material_* getMaterial (const int &m)const{return m_mat[m];}
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
+   Part* getPart(const int &i) {return m_part[i];}
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  

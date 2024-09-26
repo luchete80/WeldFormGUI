@@ -287,6 +287,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
+#include <gmsh.h>
 
 
 #include <array>
@@ -295,6 +296,99 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 // FROM https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 int Mesh::createVTKPolyData() {
+
+
+
+
+  // Print the model name and dimension:
+  std::string name;
+  gmsh::model::getCurrent(name);
+  std::cout << "Model " << name << " (" << gmsh::model::getDimension()
+            << "D)\n";
+
+  //GET PART!!!
+
+  // Geometrical data is made of elementary model `entities', called `points'
+  // (entities of dimension 0), `curves' (entities of dimension 1), `surfaces'
+  // (entities of dimension 2) and `volumes' (entities of dimension 3). As we
+  // have seen in the other C++ tutorials, elementary model entities are
+  // identified by their dimension and by a `tag': a strictly positive
+  // identification number. Model entities can be either CAD entities (from the
+  // built-in `geo' kernel or from the OpenCASCADE `occ' kernel) or `discrete'
+  // entities (defined by a mesh). `Physical groups' are collections of model
+  // entities and are also identified by their dimension and by a tag.
+
+  // Get all the elementary entities in the model, as a vector of (dimension,
+  // tag) pairs:
+  std::vector<std::pair<int, int> > entities;
+  gmsh::model::getEntities(entities);
+
+  for(auto e : entities) {
+    cout<<" ---- \n"<<endl;
+    // Dimension and tag of the entity:
+    int dim = e.first, tag = e.second;
+
+    // Mesh data is made of `elements' (points, lines, triangles, ...), defined
+    // by an ordered list of their `nodes'. Elements and nodes are identified by
+    // `tags' as well (strictly positive identification numbers), and are stored
+    // ("classified") in the model entity they discretize. Tags for elements and
+    // nodes are globally unique (and not only per dimension, like entities).
+
+    // A model entity of dimension 0 (a geometrical point) will contain a mesh
+    // element of type point, as well as a mesh node. A model curve will contain
+    // line elements as well as its interior nodes, while its boundary nodes
+    // will be stored in the bounding model points. A model surface will contain
+    // triangular and/or quadrangular elements and all the nodes not classified
+    // on its boundary or on its embedded entities. A model volume will contain
+    // tetrahedra, hexahedra, etc. and all the nodes not classified on its
+    // boundary or on its embedded entities.
+
+    // Get the mesh nodes for the entity (dim, tag):
+    std::vector<std::size_t> nodeTags;
+    std::vector<double> nodeCoords, nodeParams;
+    gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+    cout << "Node coords size "<<endl;
+    //cout << "Node Coords "<<nodeCoords[0]<<", " << nodeCoords[1]<<", "<<nodeCoords[2]<<endl;
+
+    // Get the mesh elements for the entity (dim, tag):
+    std::vector<int> elemTypes;
+    std::vector<std::vector<std::size_t> > elemTags, elemNodeTags;
+    gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
+
+    // * Number of mesh nodes and elements:
+    int numElem = 0;
+    for(auto &tags : elemTags) numElem += tags.size();
+    if (dim ==2){
+      std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << /*numElem*/ elemTags.size()
+              << " elements\n";
+      cout << "Node coords size "<<nodeCoords.size()<<endl;    
+      //for(auto &tags : elemTags) {
+      //  numElem += tags.size();
+      //  for (t : )
+      //}
+    }
+
+
+    // * List all types of elements making up the mesh of the entity:
+    for(auto elemType : elemTypes) {
+      std::string name;
+      int d, order, numv, numpv;
+      std::vector<double> param;
+      gmsh::model::mesh::getElementProperties(elemType, name, d, order, numv,
+                                              param, numpv);
+      std::cout << " - Element type: " << name << ", order " << order << "\n";
+      std::cout << "   with " << numv << " nodes in param coord: (";
+      for(auto p : param) std::cout << p << " ";
+      std::cout << ")\n";
+    }
+    cout << "elem tag size: "<<elemTags.size()<<", element nodetag size "<<elemNodeTags.size()<<endl; 
+    //for (auto enode : elemNodeTags[0]){
+      //cout << elemNodeTags[0][enode]<<endl;}
+        
+    
+  }//entities
+
+
   vtkNew<vtkNamedColors> colors;
 
   std::array<std::array<double, 3>, 8> pts = {{{{0, 0, 0}},
@@ -314,10 +408,11 @@ int Mesh::createVTKPolyData() {
                                                        {{3, 0, 4, 7}}}};
 
   // We'll create the building blocks of polydata including data attributes.
-  vtkNew<vtkPolyData> cube;
-  vtkNew<vtkPoints> points;
-  vtkNew<vtkCellArray> polys;
-  vtkNew<vtkFloatArray> scalars;
+  mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
+  
+  points = vtkSmartPointer<vtkPoints>::New();
+  polys  = vtkSmartPointer<vtkCellArray>::New();
+  scalars = vtkSmartPointer<vtkFloatArray>::New();
 
   // Load the point, cell, and data attributes.
   for (auto i = 0ul; i < pts.size(); ++i)
@@ -330,18 +425,20 @@ int Mesh::createVTKPolyData() {
     polys->InsertNextCell(vtkIdType(i.size()), i.data());
   }
 
+  cout <<  "Setting data"<<endl;
   // We now assign the pieces to the vtkPolyData.
-  cube->SetPoints(points);
-  cube->SetPolys(polys);
-  cube->GetPointData()->SetScalars(scalars);
+  mesh_pdata->SetPoints(points);
+  mesh_pdata->SetPolys(polys);
+  mesh_pdata->GetPointData()->SetScalars(scalars);
 
   // Now we'll look at it.
-  vtkNew<vtkPolyDataMapper> cubeMapper;
-  cubeMapper->SetInputData(cube);
-  cubeMapper->SetScalarRange(cube->GetScalarRange());
+  mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
+  
+  mesh_Mapper->SetInputData(mesh_pdata);
+  mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
   //vtkNew<vtkActor> cubeActor;
   mesh_actor = vtkSmartPointer<vtkActor>::New();
-  mesh_actor->SetMapper(cubeMapper);
+  mesh_actor->SetMapper(mesh_Mapper);
 
   // The usual rendering stuff.
   //vtkNew<vtkCamera> camera;

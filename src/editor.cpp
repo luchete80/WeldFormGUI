@@ -35,6 +35,9 @@
 #include "geom/vtkOCCTGeom.h"
 #include "VtkViewer.h"
 
+
+#include "Part.h"
+
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
 
@@ -104,7 +107,7 @@ bool ImGui::ShowStyleSelector(const char* label)
     return false;
 }
 
-
+//// GET MMESH INFO
 void getCurrentModelInfo(){
   
   // Print the model name and dimension:
@@ -855,9 +858,15 @@ void Editor::drawGui() {
       //MergeFile(filePathName, errorIfMissing);
       gmsh::merge(filePathName);
 
-      gmsh::model::mesh::generate(1);
+      gmsh::model::mesh::generate(2);
       
-      getCurrentModelInfo();
+      m_model->getPart(0)->generateMesh();
+      m_model->getPart(0)->getMesh()->createVTKPolyData();
+      
+      //
+      viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
+      
+      //getCurrentModelInfo();
       //gmsh::write("t20.msh");    
     
     }

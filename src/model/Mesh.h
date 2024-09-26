@@ -55,13 +55,16 @@ protected:
   
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;
-/*
- 
-  vtkNew<vtkPolyData> cube;
-  vtkNew<vtkPoints> points;
-  vtkNew<vtkCellArray> polys;
-  vtkNew<vtkFloatArray> scalars;  
-*/  
+
+
+  vtkSmartPointer<vtkPolyData> mesh_pdata;
+  vtkSmartPointer<vtkPolyDataMapper> mesh_Mapper;
+
+
+  vtkSmartPointer<vtkPoints> points;
+  vtkSmartPointer<vtkCellArray> polys;
+  vtkSmartPointer<vtkFloatArray> scalars;  
+
   
 };
 
