@@ -31,6 +31,10 @@ add_subdirectory("src")
 add_subdirectory("tests")
 
 
+if (WIN32)
+include_directories ("${GMSH_DIR}/include")
+endif()
+
 
 #renderer
 #add_subdirectory("OpenGLWindow")
