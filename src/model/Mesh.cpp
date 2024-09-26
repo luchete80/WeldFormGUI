@@ -357,16 +357,32 @@ int Mesh::createVTKPolyData() {
 
     // * Number of mesh nodes and elements:
     int numElem = 0;
+    cout << "Element tags size "<<elemTags.size()<<endl;
     for(auto &tags : elemTags) numElem += tags.size();
     if (dim ==2){
-      std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << /*numElem*/ elemTags.size()
+      std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
               << " elements\n";
-      cout << "Node coords size "<<nodeCoords.size()<<endl;    
-      //for(auto &tags : elemTags) {
-      //  numElem += tags.size();
-      //  for (t : )
-      //}
-    }
+      cout << "Node coords size "<<nodeCoords.size()<<endl; 
+      cout << "Nodes inside nodeTags"<<endl;
+      
+      for (auto n: nodeTags){
+        cout << n<<" ";
+      }   
+      cout << endl;
+      
+      for(auto &tags : elemTags){ 
+        cout << "Element inside tags "<<endl;
+        for (int t=0;t<tags.size();t++)
+          cout <<tags[t]<<" ";
+        cout << endl;
+        
+        cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
+        for(auto ne: elemNodeTags[0])   { 
+          cout << ne << " ";//numElem += tags.size();
+        }
+        cout << endl;
+      }//elem tags
+    }// dim 2
 
 
     // * List all types of elements making up the mesh of the entity:
