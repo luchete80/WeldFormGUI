@@ -859,7 +859,7 @@ void Editor::drawGui() {
       gmsh::merge(filePathName);
 
       gmsh::model::mesh::generate(2);
-      
+      gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
       m_model->getPart(0)->getMesh()->createVTKPolyData();
       
