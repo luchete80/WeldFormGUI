@@ -858,6 +858,8 @@ void Editor::drawGui() {
       //MergeFile(filePathName, errorIfMissing);
       gmsh::merge(filePathName);
 
+      getCurrentModelInfo();
+      
       gmsh::model::mesh::generate(2);
       gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
@@ -866,7 +868,7 @@ void Editor::drawGui() {
       //
       viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
       
-      //getCurrentModelInfo();
+
       //gmsh::write("t20.msh");    
     
     }

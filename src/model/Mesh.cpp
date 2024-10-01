@@ -396,9 +396,16 @@ int Mesh::createVTKPolyData() {
         
         cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
         for(auto ne: elemNodeTags[0])   { 
-          cout << ne << " ";//numElem += tags.size();
+          cout << ne << " ";//numElem += tags.size();          
         }
         cout << endl;
+        
+        for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
+          std::array <int,3> conn;
+          for (int d=0;d<3;d++) conn[d] = elemNodeTags[0][3*ne+d];
+          
+          elnodes.push_back(conn);
+        }
       }//elem tags
     }// dim 2
 
@@ -421,6 +428,8 @@ int Mesh::createVTKPolyData() {
         
     
   }//entities
+  
+  cout << "Element Nodes size "<<elnodes.size()<<endl;
   
   //IF QUAD
   //https://examples.vtk.org/site/Cxx/GeometricObjects/Quad/
@@ -474,9 +483,19 @@ int Mesh::createVTKPolyData() {
   
   for (auto&& i : ordering)
   {
-    polys->InsertNextCell(vtkIdType(i.size()), i.data());
+    //polys->InsertNextCell(vtkIdType(i.size()), i.data());
   }
   
+  for (int e=0;e<elnodes.size();e++){
+    vtkNew<vtkTriangle> tri;
+    for (int nn=0;nn<3;nn++) {
+      tri->GetPointIds()->SetId(nn, elnodes[e][nn]-1);
+      cout <<elnodes[e][nn]<<", ";
+    }
+    cout <<endl;
+    polys->InsertNextCell(tri);
+
+  }
 
   cout <<  "Setting data"<<endl;
   // We now assign the pieces to the vtkPolyData.
