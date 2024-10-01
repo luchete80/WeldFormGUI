@@ -50,3 +50,5 @@
 2024092X - Adapting to MSWN creation
 20240925 - Preparing for create VTKpolydata from GMSH 
 20240930 - Added line_2d step example
+         - Begining to create 2D meshes from geometry.
+          

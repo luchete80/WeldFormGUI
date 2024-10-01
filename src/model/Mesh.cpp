@@ -1,5 +1,7 @@
 #include "Mesh.h"
 #include "Node.h"
+#include <vtkTriangle.h>
+#include <vtkProperty.h>
 
 #include <iostream>
 using namespace std;
@@ -323,6 +325,11 @@ int Mesh::createVTKPolyData() {
   std::vector<std::pair<int, int> > entities;
   gmsh::model::getEntities(entities);
 
+
+  std::vector <std::array<float,3>> pts; 
+
+  std::vector <std::array<int,3>> elnodes; 
+  
   for(auto e : entities) {
     cout<<" ---- \n"<<endl;
     // Dimension and tag of the entity:
@@ -347,7 +354,7 @@ int Mesh::createVTKPolyData() {
     std::vector<std::size_t> nodeTags;
     std::vector<double> nodeCoords, nodeParams;
     gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
-    cout << "Node coords size "<<endl;
+    //cout << "Node coords size "<<endl;
     //cout << "Node Coords "<<nodeCoords[0]<<", " << nodeCoords[1]<<", "<<nodeCoords[2]<<endl;
 
     // Get the mesh elements for the entity (dim, tag):
@@ -363,6 +370,17 @@ int Mesh::createVTKPolyData() {
       std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
               << " elements\n";
       cout << "Node coords size "<<nodeCoords.size()<<endl; 
+      
+      for (int n=0;n<nodeCoords.size()/3;n++){
+        //for (int d=0;d<3;d++){
+          //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+          //test[n][d]= nodeCoords[3*n+d];
+          //float coords[3];
+          std::array <float,3> coords;
+          for (int d=0;d<3;d++) coords[d] = nodeCoords[3*n+d];
+          pts.push_back(coords);
+        //}
+      }
       cout << "Nodes inside nodeTags"<<endl;
       
       for (auto n: nodeTags){
@@ -403,10 +421,26 @@ int Mesh::createVTKPolyData() {
         
     
   }//entities
+  
+  //IF QUAD
+  //https://examples.vtk.org/site/Cxx/GeometricObjects/Quad/
+  // Create a quad on the four points
+/*
+  vtkNew<vtkQuad> quad;
+  quad->GetPointIds()->SetId(0, 0);
+  quad->GetPointIds()->SetId(1, 1);
+  quad->GetPointIds()->SetId(2, 2);
+  quad->GetPointIds()->SetId(3, 3);
 
-
+  // Create a cell array to store the quad in
+  vtkNew<vtkCellArray> quads;
+  quads->InsertNextCell(quad);
+*/
+  vtkNew<vtkTriangle> quad;
+  
   vtkNew<vtkNamedColors> colors;
 
+  /*
   std::array<std::array<double, 3>, 8> pts = {{{{0, 0, 0}},
                                                {{1, 0, 0}},
                                                {{1, 1, 0}},
@@ -415,6 +449,7 @@ int Mesh::createVTKPolyData() {
                                                {{1, 0, 1}},
                                                {{1, 1, 1}},
                                                {{0, 1, 1}}}};
+  */
   // The ordering of the corner points on each face.
   std::array<std::array<vtkIdType, 4>, 6> ordering = {{{{0, 3, 2, 1}},
                                                        {{4, 5, 6, 7}},
@@ -436,10 +471,12 @@ int Mesh::createVTKPolyData() {
     points->InsertPoint(i, pts[i].data());
     scalars->InsertTuple1(i, i);
   }
+  
   for (auto&& i : ordering)
   {
     polys->InsertNextCell(vtkIdType(i.size()), i.data());
   }
+  
 
   cout <<  "Setting data"<<endl;
   // We now assign the pieces to the vtkPolyData.
@@ -455,32 +492,11 @@ int Mesh::createVTKPolyData() {
   //vtkNew<vtkActor> cubeActor;
   mesh_actor = vtkSmartPointer<vtkActor>::New();
   mesh_actor->SetMapper(mesh_Mapper);
+  mesh_actor->GetProperty()->SetColor(colors->GetColor3d("Silver").GetData());
 
-  // The usual rendering stuff.
-  //vtkNew<vtkCamera> camera;
-  //camera->SetPosition(1, 1, 1);
-  //camera->SetFocalPoint(0, 0, 0);
-/*
-  vtkNew<vtkRenderer> renderer;
-  vtkNew<vtkRenderWindow> renWin;
-  renWin->AddRenderer(renderer);
-  renWin->SetWindowName("Cube");
-*/
-  //vtkNew<vtkRenderWindowInteractor> iren;
-  //iren->SetRenderWindow(renWin);
-
-
-  
-  //renderer->AddActor(cubeActor);
-  //renderer->SetActiveCamera(camera);
-  //renderer->ResetCamera();
-  //renderer->SetBackground(colors->GetColor3d("Cornsilk").GetData());
-
-  //renWin->SetSize(600, 600);
-
-  //// interact with data
-  //renWin->Render();
-  //iren->Start();
+    mesh_actor->GetProperty()->EdgeVisibilityOn ();
+    mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
+    mesh_actor->Modified ();
 
   return EXIT_SUCCESS;
 }
