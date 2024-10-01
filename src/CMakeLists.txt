@@ -14,7 +14,8 @@ set(EXEC_NAME imgui_vtk)
 
 link_directories ("${GLFW_BINARY_DIR}/src")
 if (WIN32)
-link_directories ("${GMSH_LIB_DIR}")
+link_directories ("${GMSH_DIR}/lib")
+include_directories ("${GMSH_DIR}/include")
 endif()
 
 

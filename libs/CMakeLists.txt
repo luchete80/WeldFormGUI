@@ -9,6 +9,6 @@ add_subdirectory("LSDynaReader/src")
 #add_subdirectory("gmsh")
 add_subdirectory("gl3w")
 #add_subdirectory("imgui-vtk")
-include_directories("${GMSH_INC_DIR}")
+include_directories("${GMSH_DIR}/include")
 
 
