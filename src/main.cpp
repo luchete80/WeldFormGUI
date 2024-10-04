@@ -217,6 +217,7 @@ int main(int argc, char* argv[])
 	//cout << "creating app app"<<endl;
 	//pApp= new EditorApp();
 
+/*
     vtkNew<vtkNamedColors> colors;
     vtkNew<vtkArrowSource> arrowSource;
     arrowSource->Update();
@@ -227,10 +228,11 @@ int main(int argc, char* argv[])
     
     
     actor->SetMapper(mapper);
-    
+*/    
     //Axis axis;  
     axis.setInteractor(vtkViewer2.getInteractor());  
     vtkViewer2.addActor(axis.actor);
+
 
 /*    
     vtkOCCTGeom geom;

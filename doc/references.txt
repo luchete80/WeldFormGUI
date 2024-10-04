@@ -1,3 +1,12 @@
 To see 2D representation
 
 https://book.vtk.org/en/latest/VTKBook/05Chapter5.html
+
+
+Draw geometry VTK
+
+https://stackoverflow.com/questions/6306810/how-to-draw-primitives-points-lines-etc-in-vtk
+
+Pybind11 test
+https://github.com/pybind/pybind11
+https://stackoverflow.com/questions/42521830/call-a-python-function-from-c-using-pybind11
