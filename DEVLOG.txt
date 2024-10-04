@@ -52,4 +52,6 @@
 20240926 - Begining to add meshing
 20240930 - Added line_2d step example
          - Begining to create 2D meshes from geometry.
+         - Fixed Connectivity things
+         
           
