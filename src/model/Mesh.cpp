@@ -4,6 +4,8 @@
 #include <vtkProperty.h>
 
 #include <iostream>
+#include <map>
+
 using namespace std;
 
 void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
@@ -297,6 +299,9 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 // ADD VTK MECH
 // FROM https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
+#include <iostream>
+#include <fstream>
+
 int Mesh::createVTKPolyData() {
 
 
@@ -329,7 +334,37 @@ int Mesh::createVTKPolyData() {
   std::vector <std::array<float,3>> pts; 
 
   std::vector <std::array<int,3>> elnodes; 
+  std::map< int,int > nodetagpos;
+  int nodecount =0;
+
+  for(auto e : entities) {
+
+    int dim = e.first, tag = e.second;
+
+    // Get the mesh nodes for the entity (dim, tag):
+    std::vector<std::size_t> nodeTags;
+    std::vector<double> nodeCoords, nodeParams;
+    gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+
+
+    std::ofstream myfile;
+    myfile.open ("example.csv");
+    //if (dim ==2){
+
+      //cout << "Node coords size "<<nodeCoords.size()<<endl; 
+      
+      for (int n=0;n<nodeCoords.size()/3;n++){
+          nodecount++;
+        //}
+      }
+    //}//dim
+  }
+  cout << "Overall node count "<<nodecount<<endl;
   
+  int nc=0;
+  pts.resize(nodecount+1);
+  
+  gmsh::model::getEntities(entities);
   for(auto e : entities) {
     cout<<" ---- \n"<<endl;
     // Dimension and tag of the entity:
@@ -362,23 +397,38 @@ int Mesh::createVTKPolyData() {
     std::vector<std::vector<std::size_t> > elemTags, elemNodeTags;
     gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
 
+    std::ofstream myfile;
+    myfile.open ("example.csv");
+    
     // * Number of mesh nodes and elements:
     int numElem = 0;
     cout << "Element tags size "<<elemTags.size()<<endl;
     for(auto &tags : elemTags) numElem += tags.size();
-    if (dim ==2){
+    
       std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
               << " elements\n";
       cout << "Node coords size "<<nodeCoords.size()<<endl; 
       
       for (int n=0;n<nodeCoords.size()/3;n++){
-        //for (int d=0;d<3;d++){
-          //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+        for (int d=0;d<3;d++){
+          cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+        }
+        nodetagpos[nodeTags[n]]=nc;
+        
+        cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
           //test[n][d]= nodeCoords[3*n+d];
           //float coords[3];
           std::array <float,3> coords;
           for (int d=0;d<3;d++) coords[d] = nodeCoords[3*n+d];
-          pts.push_back(coords);
+          // IF REAL POSITIONS
+          //pts.push_back(coords);
+
+          if (nodeTags[n]<nodecount)
+            pts[nodeTags[n]]=coords;
+          else
+            cout << "ERROR IN NODE "<<nodeTags[n]<<endl;
+
+          nc++;
         //}
       }
       cout << "Nodes inside nodeTags"<<endl;
@@ -388,6 +438,7 @@ int Mesh::createVTKPolyData() {
       }   
       cout << endl;
       
+    if (dim ==2){
       for(auto &tags : elemTags){ 
         cout << "Element inside tags "<<endl;
         for (int t=0;t<tags.size();t++)
@@ -400,10 +451,17 @@ int Mesh::createVTKPolyData() {
         }
         cout << endl;
         
-        for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
+        for(int ne=0;ne<150;ne++)   { 
           std::array <int,3> conn;
-          for (int d=0;d<3;d++) conn[d] = elemNodeTags[0][3*ne+d];
-          
+          cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
+          cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
+          for (int d=0;d<3;d++) {
+            conn[d] = elemNodeTags[0][3*ne+d];
+            
+            //If defined with gmsh positions 
+            //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];*/
+
+          }
           elnodes.push_back(conn);
         }
       }//elem tags
@@ -489,7 +547,7 @@ int Mesh::createVTKPolyData() {
   for (int e=0;e<elnodes.size();e++){
     vtkNew<vtkTriangle> tri;
     for (int nn=0;nn<3;nn++) {
-      tri->GetPointIds()->SetId(nn, elnodes[e][nn]-1);
+      tri->GetPointIds()->SetId(nn, elnodes[e][nn]);
       cout <<elnodes[e][nn]<<", ";
     }
     cout <<endl;
@@ -504,6 +562,7 @@ int Mesh::createVTKPolyData() {
   mesh_pdata->GetPointData()->SetScalars(scalars);
 
   // Now we'll look at it.
+  cout << "Setting mapper "<<endl;
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
@@ -511,11 +570,12 @@ int Mesh::createVTKPolyData() {
   //vtkNew<vtkActor> cubeActor;
   mesh_actor = vtkSmartPointer<vtkActor>::New();
   mesh_actor->SetMapper(mesh_Mapper);
+  cout << "Changing props"<<endl;
   mesh_actor->GetProperty()->SetColor(colors->GetColor3d("Silver").GetData());
 
-    mesh_actor->GetProperty()->EdgeVisibilityOn ();
-    mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
-    mesh_actor->Modified ();
+  mesh_actor->GetProperty()->EdgeVisibilityOn ();
+  mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
+  mesh_actor->Modified ();
 
   return EXIT_SUCCESS;
 }
