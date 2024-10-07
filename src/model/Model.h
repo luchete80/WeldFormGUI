@@ -13,10 +13,15 @@ class Mesh;
 class Particle;
 class Geom;
 class BoundaryCondition;
+class Vec3_t;
+class Editor;
+class LSDynaWriter;
 
 enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
+  friend Editor;
+  friend LSDynaWriter;
 public:
   Model(){}
   Model(std::string );
@@ -31,6 +36,11 @@ public:
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}
+  virtual void AddBoxLength				(int tag, Vec3_t const &V, double Lx, double Ly, double Lz,double r, double Density,
+                                double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
+                                
+  virtual ~Model(){}
+                                
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
@@ -41,6 +51,8 @@ protected:
   std::vector <Node* >      m_node; //Mesh part refer to this
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
+  std::vector <Particle*>   Particles; //SPH
+  
   model_type m_modeltype;
   int m_mat_count;
   
@@ -53,6 +65,8 @@ public:
   FEMModel(){ m_modeltype = FEM_Model;}
   FEMModel(std::string );
   Mesh* getPartMesh(const int &i);
+           
+  ~FEMModel(){}
 protected:
 
 };

@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include "input_writer.h"
+#include "io/ModelWriter.h"
 #include "LSDynaWriter.h"
 
 //#include "SceneView.h"
@@ -34,6 +34,8 @@
 
 #include "geom/vtkOCCTGeom.h"
 #include "VtkViewer.h"
+
+#include "SPHModel.h"
 
 
 #include "Part.h"
@@ -275,7 +277,9 @@ void ShowExampleMenuFile(const Editor &editor)
         ImGui::EndMenu();
     }
     //If open
-    if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {InputWriter writer("Input.json",editor.getDomain());}
+    if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
+      //InputWriter writer("Input.json",editor.getDomain());
+      }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {}
     if (ImGui::MenuItem("Save As..")) {}
 
@@ -779,7 +783,7 @@ void Editor::drawGui() {
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               if (item_current == 2)//Plane
                 size[2] = 0.0;
-              m_domain.AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+              m_domain->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
               calcDomainCenter();
               cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
               is_sph_mesh = true;
@@ -891,7 +895,7 @@ void Editor::drawGui() {
           // float h = m_domain.Particles[0]->h/2.;
           // pn.Scale(h, h,h);  
           // Vec3_t v = m_domain.Particles[p]->x ;
-        LSDynaWriter writer(&m_domain, filePathName);
+        LSDynaWriter writer(m_domain, filePathName);
       }
       //m_model = new Model(filePathName);
       //m_renderer.addMesh(m_model->getPartMesh(0));
@@ -925,7 +929,7 @@ void Editor::drawGui() {
     if(is_fem_mesh)
       CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
     else
-      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, &m_domain);
+      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_domain);
     if(is_fem_mesh){
 
       //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
@@ -1628,12 +1632,12 @@ void Editor::calcDomainCenter(){
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain.Particles.size();p++)    {
-    m_domain_center.x += m_domain.Particles[p]->x(0);
-    m_domain_center.y += m_domain.Particles[p]->x(1);
-    m_domain_center.z += m_domain.Particles[p]->x(2);
+  for (int p=0;p<m_domain->Particles.size();p++)    {
+    m_domain_center.x += m_domain->Particles[p]->x(0);
+    m_domain_center.y += m_domain->Particles[p]->x(1);
+    m_domain_center.z += m_domain->Particles[p]->x(2);
   }
-  m_domain_center = m_domain_center/m_domain.Particles.size();
+  m_domain_center = m_domain_center/m_domain->Particles.size();
   
 }
 
@@ -1642,12 +1646,12 @@ void Editor::calcMeshCenter(){
   m_femsh_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain.Particles.size();p++)    {
-    m_femsh_center.x += m_domain.Particles[p]->x(0);
-    m_femsh_center.y += m_domain.Particles[p]->x(1);
-    m_femsh_center.z += m_domain.Particles[p]->x(2);
+  for (int p=0;p<m_domain->Particles.size();p++)    {
+    m_femsh_center.x += m_domain->Particles[p]->x(0);
+    m_femsh_center.y += m_domain->Particles[p]->x(1);
+    m_femsh_center.z += m_domain->Particles[p]->x(2);
   }
-  m_femsh_center = m_femsh_center/m_domain.Particles.size();
+  m_femsh_center = m_femsh_center/m_domain->Particles.size();
 }
 
 void Editor::addViewer(VtkViewer *v){

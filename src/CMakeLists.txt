@@ -20,13 +20,14 @@ endif()
 
 
 add_subdirectory("model")
+add_subdirectory("io")
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
-                            input_writer.cpp
+                            
                             material_dialog.cpp
                             set_dialog.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
@@ -189,7 +190,7 @@ target_link_libraries(${EXEC_NAME}
 
             model
 						#freetype
-
+            io
 					  #backend
 					  glfw3
 					  #common

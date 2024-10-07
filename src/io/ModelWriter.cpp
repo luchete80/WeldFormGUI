@@ -1,21 +1,31 @@
-#include "input_writer.h"
-#include <sstream>
-#include <fstream>
-#include "nlohmann/json.hpp"
+
+#include "ModelWriter.h"
 #include "Model.h"
+#include <iostream>
+#include <fstream>
+#include <iomanip> //setw
 #include "Material.h"
 
-using namespace std;
 
-using json = nlohmann::json;
+ModelWriter::ModelWriter(Model &model){
 
-InputWriter::InputWriter (const string &str, const SPHModel &dom) {
-  
+	//json j;
+	//i >> j;
 
-  std::ofstream of(str, std::ios::out);
-  
-  json j;
-  
+/*
+	nlohmann::json m_config 		= j["Configuration"];
+	nlohmann::json material 	= j["Materials"];
+	nlohmann::json domblock 	= j["DomainBlocks"];
+	nlohmann::json domzones 	= j["DomainZones"];
+	nlohmann::json amplitudes 	= j["Amplitudes"];
+	nlohmann::json rigbodies 		= j["RigidBodies"];
+  nlohmann::json contact_ 		= j["Contact"];
+	nlohmann::json bcs 			= j["BoundaryConditions"];
+	nlohmann::json ics 			= j["InitialConditions"];
+*/
+  std::ofstream o("pretty.json");
+
+/*  
   ostringstream oss;
   
   oss << "\"Configuration\":{ \" "            <<endl<<
@@ -55,13 +65,20 @@ InputWriter::InputWriter (const string &str, const SPHModel &dom) {
   oss << "}"                                   <<endl;    
 
 	of << oss.str();
+*/  
+
+  m_json["Configuration"]["hFactor"] = 1.2;
   
-  j["pi"] = 3.14;
-  if (dom.getMaterialCount()>0)
-    j["Materials"]["density0"]=dom.getMaterial(0)->getDensityConstant();
+  if (model.getMaterialCount()>0)
+  m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();
+
   
-  of << j <<endl;
-	of.close();
+  m_model = &model;
+  for (int p=0;model.getPartCount();p++){
+    }
   
+  o << std::setw(4) << m_json << std::endl;
   
+  o.close();
 }
+

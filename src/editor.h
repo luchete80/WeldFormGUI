@@ -33,7 +33,7 @@
 
 
 //#include "selector.h"
-#include "Domain.h"
+#include "SPHModel.h"
 //#include "action.h"
 
 #include "log.h"
@@ -109,7 +109,7 @@ public:
   //ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
   
-  const SPHModel & getDomain() const {return m_domain;}
+  Model * getDomain() {return m_domain;}
   
   void calcDomainCenter();
   void calcMeshCenter();
@@ -143,7 +143,7 @@ protected:
   
 
   long long m_start_time;
-  SPHModel m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
+  Model *m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
   Vector3f m_domain_center;
   Vector3f m_femsh_center;
   double m_dx;

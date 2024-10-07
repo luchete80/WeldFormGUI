@@ -2,7 +2,7 @@
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
 set( MODEL_SRCS         "Mesh.cpp"
-                        "Domain.cpp"
+                        "SPHModel.cpp"
                                "Element.cpp"
                                "Geom.cpp"
                                "Model.cpp"
