@@ -7,6 +7,6 @@ Draw geometry VTK
 
 https://stackoverflow.com/questions/6306810/how-to-draw-primitives-points-lines-etc-in-vtk
 
-Pybind11 test
-https://github.com/pybind/pybind11
-https://stackoverflow.com/questions/42521830/call-a-python-function-from-c-using-pybind11
+How to manually wrap
+https://intermediate-and-advanced-software-carpentry.readthedocs.io/en/latest/c++-wrapping.html
+
