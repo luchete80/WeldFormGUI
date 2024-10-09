@@ -56,4 +56,5 @@
 --------------------------------------------------------------------------------
 20241009 - Begining to Add python wrapping
          - Separating mesh from graphic mesh
+         - Separating model class from gmsh (passed to graphic mesh or even from meshimporter) 
           

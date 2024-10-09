@@ -55,6 +55,7 @@
 class SceneView;
 class ViewportWindow;
 class VtkViewer;
+class GraphicMesh;
   
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -212,6 +213,10 @@ protected:
   ViewportWindow *m_viewport_win;
   
   VtkViewer *viewer;
+  
+  //Visual meshes
+  //std::vector<GraphicMesh*> graphic_mesh;
+  GraphicMesh* graphic_mesh;
   
 };
 

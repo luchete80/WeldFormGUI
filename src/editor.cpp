@@ -39,6 +39,8 @@
 
 
 #include "Part.h"
+#include "GraphicMesh.h"
+
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -867,11 +869,15 @@ void Editor::drawGui() {
       m_model->getPart(0)->generateMesh();
       
       
-      //m_model->getPart(0)->getMesh()->createVTKPolyData();
-      
+      //  m_model->getPart(0)->getMesh()->createVTKPolyData();
+      //GraphicMesh *graphic_mesh = new GraphicMesh();
+      graphic_mesh = new GraphicMesh();
+      graphic_mesh->createVTKPolyData();
+      //graphic_mesh.push_back(new GraphicMesh());
       //
       //viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
-      
+      //viewer->addActor(graphic_mesh[0]->getActor());
+      viewer->addActor(graphic_mesh->getActor());
 
       //gmsh::write("t20.msh");    
     

@@ -4,6 +4,7 @@ project(imgui-vtk)
 include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
+include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -20,6 +21,7 @@ endif()
 
 
 add_subdirectory("model")
+add_subdirectory("graphicmesh")
 add_subdirectory("io")
 
 # In this CMakeLists.txt file, components are all built separately and linked together
@@ -186,6 +188,7 @@ target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES}
 
 target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
                                   #scene
+                                  
                                   )
 
 MESSAGE("LIBRARIES " ${VTK_LIBRARIES})
@@ -201,6 +204,7 @@ target_link_libraries(${EXEC_NAME}
             
 
             model
+            graphicmesh
 						#freetype
             io
 					  #backend

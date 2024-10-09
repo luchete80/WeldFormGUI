@@ -1,4 +1,4 @@
-#include "MeshViewer.h"
+#include "GraphicMesh.h"
 
 #include <vtkActor.h>
 #include <vtkCellArray.h>
@@ -8,7 +8,8 @@
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <gmsh.h>
-
+#include <vtkTriangle.h>
+#include <vtkProperty.h>
 
 #include <array>
 
@@ -18,7 +19,7 @@
 #include <iostream>
 #include <fstream>
 
-int MeshViewer::createVTKPolyData() {
+int GraphicMesh::createVTKPolyData() {
 
 
 

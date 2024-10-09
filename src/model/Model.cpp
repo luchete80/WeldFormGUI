@@ -5,7 +5,7 @@
 #include "Mesh.h"
 #include "Part.h"
 
-#include <gmsh.h>
+//#include <gmsh.h>
 //#include "GModel.h"
 //#include "Geom.h"
 
@@ -66,7 +66,7 @@ Model::Model(string name){
       int argc;
       char **argv;
       //gmsh::initialize(argc, argv);
-      gmsh::model::add("t20");
+      //gmsh::model::add("t20");
      /// gmsh::model::occ::importShapes(name, v);
      
      
