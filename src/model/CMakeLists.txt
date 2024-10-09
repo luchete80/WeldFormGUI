@@ -8,6 +8,7 @@ set( MODEL_SRCS         "Mesh.cpp"
                                "Model.cpp"
                                "Part.cpp"            )
 
-ADD_LIBRARY(model ${MODEL_SRCS})
+ADD_LIBRARY(model SHARED ${MODEL_SRCS})
 
-TARGET_LINK_LIBRARIES(model  lsdynareader)
+#TARGET_LINK_LIBRARIES(model  lsdynareader ${VTK_LIBRARIES} ${GMSH_LIBS})
+TARGET_LINK_LIBRARIES(model  lsdynareader  ${GMSH_LIBS})

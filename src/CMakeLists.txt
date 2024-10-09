@@ -115,7 +115,19 @@ find_package(VTK
 #  VTK::TestingRendering
 #  VTK::RenderingOpenGL2
 #  VTK::InteractionStyle
-  
+
+if (BUILD_PYTHON)
+  # -- Search for Python
+  FIND_PACKAGE(PythonInterp 3.8 REQUIRED)
+  FIND_PACKAGE(PythonLibs 3.8 REQUIRED)
+
+  # -- Search for Swig
+  FIND_PACKAGE(SWIG REQUIRED)
+  if (WIN32)
+    set (SWIG_DIR D:/Luciano/Numerico/Libs/swigwin-4.1.1/Lib)
+  endif()
+  add_subdirectory("python")
+endif()  
   
 if (NOT VTK_FOUND)
   message(FATAL_ERROR "VTK not found!")

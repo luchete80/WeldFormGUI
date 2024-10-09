@@ -1,5 +1,5 @@
-#ifndef _MESH_H_
-#define _MESH_H_
+#ifndef _GRAPHICMESH_H_
+#define _GRAPHICMESH_H_
 
 /////////////// FINITE ELEMENT MESH ///////////
 
@@ -12,19 +12,21 @@
 #include "Entity.h"
 #include "Set.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkActor.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+
+//https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
 class Node;
 class Model;
-class MeshViewer;
 
-
-class Mesh{
+class GraphicMesh{
   friend class Model;
-  friend class MeshViewer;
-  
 public:
-  Mesh(){}
+  GraphicMesh(){}
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
@@ -38,8 +40,8 @@ public:
   Element*  getElem(const int &i){return m_elem[i];} 
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
-  
-  //vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
+  int createVTKPolyData();
+  vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:
   int m_node_count;
   int m_elem_count;
@@ -50,7 +52,7 @@ protected:
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
   
-  /*
+  
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;
 
@@ -63,7 +65,7 @@ protected:
   vtkSmartPointer<vtkCellArray> polys;
   vtkSmartPointer<vtkFloatArray> scalars;  
 
-  */
+  
 };
 
 #endif

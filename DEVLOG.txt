@@ -53,5 +53,7 @@
 20240930 - Added line_2d step example
          - Begining to create 2D meshes from geometry.
          - Fixed Connectivity things
-         
+--------------------------------------------------------------------------------
+20241009 - Begining to Add python wrapping
+         - Separating mesh from graphic mesh
           

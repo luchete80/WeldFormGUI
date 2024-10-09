@@ -865,10 +865,12 @@ void Editor::drawGui() {
       gmsh::model::mesh::generate(2);
       gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
-      m_model->getPart(0)->getMesh()->createVTKPolyData();
+      
+      
+      //m_model->getPart(0)->getMesh()->createVTKPolyData();
       
       //
-      viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
+      //viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
       
 
       //gmsh::write("t20.msh");    
