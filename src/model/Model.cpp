@@ -17,6 +17,7 @@ using namespace LS_Dyna;
 Mesh* Model::getPartMesh(const int &i){ if (have_meshes) return m_part[i]->getMesh();}
   
 Model::Model(string name){
+  part_count = 0;
   m_mat_count = 0;
   have_meshes = false;
   cout << "Creating Model ..."<<endl;

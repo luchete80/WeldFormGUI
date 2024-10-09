@@ -23,7 +23,7 @@ class Model {
   friend Editor;
   friend LSDynaWriter;
 public:
-  Model(){}
+  Model(){part_count=0;}
   Model(std::string );
   Mesh* getPartMesh(const int &i);
   void addPart(Part *);
@@ -40,7 +40,8 @@ public:
                                 double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
                                 
   virtual ~Model(){}
-                                
+  
+  int part_count;
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
@@ -63,8 +64,8 @@ class FEMModel:
 public Model{
 public:
   FEMModel(){ m_modeltype = FEM_Model;}
-  FEMModel(std::string );
-  Mesh* getPartMesh(const int &i);
+  FEMModel(std::string ){};
+  Mesh* getPartMesh(const int &i){};
            
   ~FEMModel(){}
 protected:
