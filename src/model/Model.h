@@ -16,12 +16,14 @@ class BoundaryCondition;
 class Vec3_t;
 class Editor;
 class LSDynaWriter;
+class GraphicMesh;
 
 enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
   friend Editor;
   friend LSDynaWriter;
+  friend GraphicMesh;
 public:
   Model(){part_count=0;}
   Model(std::string );

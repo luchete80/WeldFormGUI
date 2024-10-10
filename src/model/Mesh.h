@@ -21,7 +21,7 @@ class MeshViewer;
 
 class Mesh{
   friend class Model;
-  friend class MeshViewer;
+  friend class GraphicMesh;
   
 public:
   Mesh(){}

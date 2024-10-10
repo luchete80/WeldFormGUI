@@ -57,4 +57,8 @@
 20241009 - Begining to Add python wrapping
          - Separating mesh from graphic mesh
          - Separating model class from gmsh (passed to graphic mesh or even from meshimporter) 
+20241010 - Added Graphic Mesh from mesh
+         - Addind model interface 
+         - Adding GLOBAL interface to access model
+         - Adding pybind first interface
           

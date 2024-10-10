@@ -9,6 +9,7 @@
 #include <vtkPoints.h>
 #include <gmsh.h>
 #include <vtkTriangle.h>
+#include <vtkQuad.h>
 #include <vtkProperty.h>
 
 #include <array>
@@ -18,6 +19,9 @@
 
 #include <iostream>
 #include <fstream>
+#include "Mesh.h"
+#include "Node.h"
+#include "Element.h"
 
 int GraphicMesh::createVTKPolyData() {
 
@@ -295,4 +299,74 @@ int GraphicMesh::createVTKPolyData() {
   mesh_actor->Modified ();
 
   return EXIT_SUCCESS;
+}
+
+int GraphicMesh::createVTKPolyData(Mesh *mesh){
+  
+  mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
+  
+  std::vector <std::array<float,3>> pts; 
+  
+  points = vtkSmartPointer<vtkPoints>::New();
+
+  for (int n=0;n<mesh->getNodeCount();n++){
+          std::array <float,3> coords;
+          for (int d=0;d<3;d++) coords[d] = mesh->m_node[n]->getPos()[d];
+          // IF REAL POSITIONS
+          pts.push_back(coords);
+  }
+  for (auto i = 0ul; i < pts.size(); ++i)
+  {
+    points->InsertPoint(i, pts[i].data());
+    scalars->InsertTuple1(i, i);
+  }
+
+  polys  = vtkSmartPointer<vtkCellArray>::New();
+
+  for (int e=0;e<mesh->getElemCount();e++){
+    int nc = mesh->getElem(e)->getNodeCount();
+    if (nc==3){
+      vtkNew<vtkTriangle> cell;
+      for (int nn=0;nn<nc;nn++) {
+        cell->GetPointIds()->SetId(nn, mesh->getElem(e)->getNodeId(nn)/*elnodes[e][nn]*/);
+        //cout <<elnodes[e][nn]<<", ";
+      }
+      polys->InsertNextCell(cell);
+    } else if (mesh->getElem(e)->getNodeCount()==4){
+      vtkNew<vtkQuad> cell;
+      for (int nn=0;nn<nc;nn++) {
+        cell->GetPointIds()->SetId(nn, mesh->getElem(e)->getNodeId(nn)/*elnodes[e][nn]*/);
+        //cout <<elnodes[e][nn]<<", ";
+      }
+      polys->InsertNextCell(cell);
+      }
+    //cout <<endl;
+  }
+  
+
+  
+  //REUSE THIS
+  cout <<  "Setting data"<<endl;
+  // We now assign the pieces to the vtkPolyData.
+  mesh_pdata->SetPoints(points);
+  mesh_pdata->SetPolys(polys);
+  //mesh_pdata->GetPointData()->SetScalars(scalars);
+
+  // Now we'll look at it.
+  cout << "Setting mapper "<<endl;
+  mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
+  
+  mesh_Mapper->SetInputData(mesh_pdata);
+  mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+  //vtkNew<vtkActor> cubeActor;
+  mesh_actor = vtkSmartPointer<vtkActor>::New();
+  mesh_actor->SetMapper(mesh_Mapper);
+  cout << "Changing props"<<endl;
+  //mesh_actor->GetProperty()->SetColor(colors->GetColor3d("Silver").GetData());
+
+  mesh_actor->GetProperty()->EdgeVisibilityOn ();
+  mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
+  mesh_actor->Modified ();
+  
+    
 }
