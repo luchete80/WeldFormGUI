@@ -871,7 +871,8 @@ void Editor::drawGui() {
       
       //  m_model->getPart(0)->getMesh()->createVTKPolyData();
       //GraphicMesh *graphic_mesh = new GraphicMesh();
-      graphic_mesh = new GraphicMesh();
+      //SHOULD BE REPLACED WITH 
+      graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
       //graphic_mesh.push_back(new GraphicMesh());
       //

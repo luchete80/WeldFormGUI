@@ -23,6 +23,8 @@
 
 */
 
+#include "global.h"
+
 
 #define COLOR_TEXTURE_UNIT_INDEX        0
 

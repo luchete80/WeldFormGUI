@@ -36,12 +36,13 @@ add_executable(${EXEC_NAME} main.cpp
                             Job.cpp
                             job_dialog.cpp
                             log.cpp
-                            
+                            global.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             geom/vtkOCCTGeom.cpp
                             
                             #graphics/axis.cpp
                             )
+add_library (global_sta STATIC global.cpp)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
