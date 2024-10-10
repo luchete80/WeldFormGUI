@@ -218,3 +218,13 @@ target_link_libraries(${EXEC_NAME}
             ${GMSH_LIBS}
             ${LINK_LIBRARIES}
 )
+
+
+file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
+
+find_package(pybind11 REQUIRED)
+pybind11_add_module(imgui-vtk 
+	${SOURCE_FILES}
+	${HEADER_FILES}
+	${PYTHON_FILES}
+)

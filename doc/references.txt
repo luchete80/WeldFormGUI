@@ -37,3 +37,5 @@ Then, you have to map the vtkPolydata in the swig .i file:
 
     if ( $1 == NULL ) { SWIG_fail; }
 }
+On pybind 11
+https://github.com/smrfeld/advanced_pybind11_features
