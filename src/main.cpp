@@ -126,7 +126,7 @@ Axis axis;
 int main(int argc, char* argv[])
 {
   // Setup pipeline
-  auto actor = SetupDemoPipeline();
+  //auto actor = SetupDemoPipeline();
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
 
   VtkViewer vtkViewer2;
   vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
-  vtkViewer2.addActor(actor);
+  //vtkViewer2.addActor(actor);
 
   // Our state
   bool show_demo_window = true;
