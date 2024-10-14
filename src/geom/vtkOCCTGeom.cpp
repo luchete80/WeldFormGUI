@@ -9,9 +9,9 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
  
   vtkNew<vtkOCCTReader> reader;
-  reader->RelativeDeflectionOn();
-  reader->SetLinearDeflection(0.1);
-  reader->SetAngularDeflection(0.5);
+  //reader->RelativeDeflectionOn();
+  //reader->SetLinearDeflection(0.1);
+  //reader->SetAngularDeflection(0.5);
   reader->ReadWireOn();
   reader->SetFileName(path.c_str());
   reader->SetFileFormat(format);
@@ -22,7 +22,6 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   mapper->SetInputDataObject(reader->GetOutput());
   actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
-  //actor->RotateY(90);
 
 
   /*
