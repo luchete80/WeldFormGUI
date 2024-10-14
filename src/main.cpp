@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
       bool ret = LoadTextureFromFile("buttons/extents.png", &my_image_texture, &my_image_width, &my_image_height);
       IM_ASSERT(ret);
 
-      //ImTextureID my_tex_id = io.Fonts->TexID;
+      //  ImTextureID my_tex_id = io.Fonts->TexID;
       //You can return anything but you should cast it as void
       if (ImGui::ImageButton("blah", (void *)my_image_texture, ImVec2(30, 30)))
         cout << "clicked"<<endl;
