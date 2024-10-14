@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 */    
     //Axis axis;  
     axis.setInteractor(vtkViewer2.getInteractor());  
-    vtkViewer2.addActor(axis.actor);
+    //vtkViewer2.addActor(axis.actor);
 
 
 /*    
