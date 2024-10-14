@@ -22,7 +22,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   mapper->SetInputDataObject(reader->GetOutput());
   actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
-  actor->RotateY(90);
+  //actor->RotateY(90);
 
 
   /*
