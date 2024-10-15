@@ -61,4 +61,8 @@
          - Addind model interface 
          - Adding GLOBAL interface to access model
          - Adding pybind first interface
-          
+20241014 - Removed example imgui-vtk things (Garbage)
+         - Removed axis actor from scene origin.
+         - 
+20241015 - Added VTK Geom Wireframe Mode
+         - Begining to change model writer

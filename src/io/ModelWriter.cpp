@@ -67,7 +67,12 @@ ModelWriter::ModelWriter(Model &model){
 	of << oss.str();
 */  
 
-  m_json["Configuration"]["hFactor"] = 1.2;
+  m_json["Configuration"]["modelType"] = "SPH";
+  m_json["Configuration"]["solver"]    = "WeldForm";
+  
+  //SHOULD BE AT SPH
+  //m_json["Configuration"]["hFactor"] = 1.2;
+  m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
   if (model.getMaterialCount()>0)
   m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();

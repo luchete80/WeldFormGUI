@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
 // SPDX-License-Identifier: BSD-3-Clause
 
-
+#include <vtkProperty.h>
 #include "vtkOCCTGeom.h"
 
 // int argc, char* argv are required for vtkRegressionTestImage
@@ -22,6 +22,8 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   mapper->SetInputDataObject(reader->GetOutput());
   actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
+  actor->GetProperty()->SetRepresentationToWireframe();
+
 
 
   /*

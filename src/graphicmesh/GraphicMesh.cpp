@@ -8,6 +8,7 @@
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <gmsh.h>
+#include <vtkLine.h>
 #include <vtkTriangle.h>
 #include <vtkQuad.h>
 #include <vtkProperty.h>
@@ -159,7 +160,10 @@ int GraphicMesh::createVTKPolyData() {
       }   
       cout << endl;
       
-    if (dim ==2){
+    if (dim ==1){ 
+      
+      
+      }else if (dim ==2){
       for(auto &tags : elemTags){ 
         cout << "Element inside tags "<<endl;
         for (int t=0;t<tags.size();t++)
@@ -172,7 +176,7 @@ int GraphicMesh::createVTKPolyData() {
         }
         cout << endl;
         
-        for(int ne=0;ne<150;ne++)   { 
+        for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
           std::array <int,3> conn;
           cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
           cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
