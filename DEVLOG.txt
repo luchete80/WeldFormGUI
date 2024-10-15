@@ -66,3 +66,5 @@
          - 
 20241015 - Added VTK Geom Wireframe Mode
          - Begining to change model writer
+         - Added 1D MESH. Changed element connectivity from array to vector (not fixed)
+         - Fixed Mesh visualization to wireframe in 1D case.
