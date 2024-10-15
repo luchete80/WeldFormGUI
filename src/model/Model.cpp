@@ -5,19 +5,22 @@
 #include "Mesh.h"
 #include "Part.h"
 
-#include <gmsh.h>
-#include "GModel.h"
+//#include <gmsh.h>
+//#include "GModel.h"
+//#include "Geom.h"
+
 //#include "drawContext.h"
 
 using namespace std;
 using namespace LS_Dyna;
 
-Mesh* Model::getPartMesh(const int &i){ if (have_meshes) m_part[i]->getMesh();}
+Mesh* Model::getPartMesh(const int &i){ if (have_meshes) return m_part[i]->getMesh();}
   
 Model::Model(string name){
+  part_count = 0;
   m_mat_count = 0;
   have_meshes = false;
-  
+  cout << "Creating Model ..."<<endl;
   cout << "Reading "<<name<<endl;
   string ext = name.substr(name.find_last_of(".")+1, name.length() - 1);
   cout << "extension: "<< ext<<endl;
@@ -63,9 +66,12 @@ Model::Model(string name){
         cout << "Loading file "<<name<<endl;
       int argc;
       char **argv;
-      gmsh::initialize(argc, argv);
-      gmsh::model::add("t20");
-      gmsh::model::occ::importShapes(name, v);
+      //gmsh::initialize(argc, argv);
+      //gmsh::model::add("t20");
+     /// gmsh::model::occ::importShapes(name, v);
+     
+     
+     
       //GModel *m = GModel::current();
       //m= gmsh::model::geo::list[0];
       // = GModel::list[0];
@@ -91,3 +97,12 @@ Model::Model(string name){
 void Model::addPart(Part *part){
   m_part.push_back(part);
 }
+
+void Model::addPart(Geom *geom){
+  m_part.push_back(new Part(geom));
+}
+
+void Model::addGeom(Geom *geom){
+  m_geom.push_back(geom);
+}
+

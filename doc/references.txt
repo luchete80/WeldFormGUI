@@ -1,0 +1,41 @@
+To see 2D representation
+
+https://book.vtk.org/en/latest/VTKBook/05Chapter5.html
+
+
+Draw geometry VTK
+
+https://stackoverflow.com/questions/6306810/how-to-draw-primitives-points-lines-etc-in-vtk
+
+How to manually wrap
+https://intermediate-and-advanced-software-carpentry.readthedocs.io/en/latest/c++-wrapping.html
+
+IMPORTANT
+https://stackoverflow.com/questions/8898041/mix-vtk-and-swig-python
+
+I succeed to wrapping functions whose arguments are vtkPolyData by doing this way:
+
+First, you have to include vtkPythonUtil in swig .i file:
+
+%{
+
+#include <vtkPythonUtil.h>
+
+}%
+Then, you have to map the vtkPolydata in the swig .i file:
+
+ %typemap(out) vtkPolyData* {
+
+    PyImport_ImportModule("vtk");
+
+    $result = vtkPythonUtil::GetObjectFromPointer ( (vtkPolyData*)$1 );
+ }
+
+%typemap(in) vtkPolyData* {
+
+    $1 = (vtkPolyData*) vtkPythonUtil::GetPointerFromObject ( $input, "vtkPolyData" );
+
+    if ( $1 == NULL ) { SWIG_fail; }
+}
+On pybind 11
+https://github.com/smrfeld/advanced_pybind11_features

@@ -4,7 +4,9 @@ project(imgui-vtk)
 include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
+include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
+include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image") #IN ORDER TO READ TEXTURES
 
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
@@ -13,27 +15,35 @@ set(APP_VERSION_MINOR 0)
 set(EXEC_NAME imgui_vtk)
 
 link_directories ("${GLFW_BINARY_DIR}/src")
+if (WIN32)
+link_directories ("${GMSH_DIR}/lib")
+include_directories ("${GMSH_DIR}/include")
+endif()
+
 
 add_subdirectory("model")
+add_subdirectory("graphicmesh")
+add_subdirectory("io")
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
-                            input_writer.cpp
+                            
                             material_dialog.cpp
                             set_dialog.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
                             Job.cpp
                             job_dialog.cpp
                             log.cpp
-                            
+                            global.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             geom/vtkOCCTGeom.cpp
                             
                             #graphics/axis.cpp
                             )
+add_library (global_sta STATIC global.cpp)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
@@ -62,6 +72,10 @@ target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
 target_link_libraries(${EXEC_NAME} imgui)
 
+set (GMSH_LIBS gmsh)
+#IF (WIN32)
+#  set (GMSH_LIBS gmsh)
+#endif()
 ## https://stackoverflow.com/questions/70790736/application-crashes-when-using-vtksmartvolumemappernew
 # VTK
 find_package(VTK 
@@ -105,7 +119,19 @@ find_package(VTK
 #  VTK::TestingRendering
 #  VTK::RenderingOpenGL2
 #  VTK::InteractionStyle
-  
+
+if (BUILD_PYTHON)
+  # -- Search for Python
+  FIND_PACKAGE(PythonInterp 3.8 REQUIRED)
+  FIND_PACKAGE(PythonLibs 3.8 REQUIRED)
+
+  # -- Search for Swig
+  FIND_PACKAGE(SWIG REQUIRED)
+  if (WIN32)
+    set (SWIG_DIR D:/Luciano/Numerico/Libs/swigwin-4.1.1/Lib)
+  endif()
+  add_subdirectory("python")
+endif()  
   
 if (NOT VTK_FOUND)
   message(FATAL_ERROR "VTK not found!")
@@ -164,6 +190,7 @@ target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES}
 
 target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
                                   #scene
+                                  
                                   )
 
 MESSAGE("LIBRARIES " ${VTK_LIBRARIES})
@@ -177,15 +204,28 @@ endif()
 
 target_link_libraries(${EXEC_NAME} 
             
-            shared
-            ${LINK_LIBRARIES}
-            model
-						#freetype
 
+            model
+            graphicmesh
+						#freetype
+            io
 					  #backend
 					  glfw3
 					  #common
 					  ${LIBS}
             ${RT_LIB}
             ${VTK_LIBRARIES}
+	    
+            ${GMSH_LIBS}
+            ${LINK_LIBRARIES}
+)
+
+
+file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
+
+find_package(pybind11 REQUIRED)
+pybind11_add_module(py_imgui-vtk 
+	${SOURCE_FILES}
+	${HEADER_FILES}
+	${PYTHON_FILES}
 )

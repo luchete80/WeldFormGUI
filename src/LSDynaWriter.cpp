@@ -2,14 +2,14 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
-#include "Domain.h"
+#include "Model.h"
 #include "LSDynaWriter.h"
 #include <iostream>
 using namespace std;
-
+#include "SPHModel.h"
 
 // TODO: CHANGE BY GENERIC MODEL
-LSDynaWriter:: LSDynaWriter(SPHModel *dom, const std::string& filename){
+LSDynaWriter:: LSDynaWriter(Model *dom, const std::string& filename){
     std::ofstream file(filename);
 
     if (!file.is_open()) {

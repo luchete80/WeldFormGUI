@@ -23,6 +23,8 @@
 
 */
 
+#include "global.h"
+
 
 #define COLOR_TEXTURE_UNIT_INDEX        0
 
@@ -33,7 +35,7 @@
 
 
 //#include "selector.h"
-#include "Domain.h"
+#include "SPHModel.h"
 //#include "action.h"
 
 #include "log.h"
@@ -49,10 +51,13 @@
 //#include "gMesh.h"
 #include "model/Model.h"
 #include "model/Mesh.h"
+#include "model/Geom.h"
+
 
 class SceneView;
 class ViewportWindow;
 class VtkViewer;
+class GraphicMesh;
   
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -83,6 +88,7 @@ public:
   int Init();
   void Run();
   int Terminate();
+  void Update();
   
 
   
@@ -106,7 +112,7 @@ public:
   //ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
   
-  const SPHModel & getDomain() const {return m_domain;}
+  Model * getDomain() {return m_domain;}
   
   void calcDomainCenter();
   void calcMeshCenter();
@@ -140,7 +146,7 @@ protected:
   
 
   long long m_start_time;
-  SPHModel m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
+  Model *m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
   Vector3f m_domain_center;
   Vector3f m_femsh_center;
   double m_dx;
@@ -183,6 +189,7 @@ protected:
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;
+  bool create_new_part;
   bool create_new_job;
   bool create_new_set;
 
@@ -194,7 +201,7 @@ protected:
   std::vector <Job *> m_jobs;
   
   Model *m_model;
-  bool is_model_open;
+  bool is_model;
   Material_ *selected_mat;
   
   //Action* m_currentaction;
@@ -208,6 +215,10 @@ protected:
   ViewportWindow *m_viewport_win;
   
   VtkViewer *viewer;
+  
+  //Visual meshes
+  //std::vector<GraphicMesh*> graphic_mesh;
+  GraphicMesh* graphic_mesh;
   
 };
 

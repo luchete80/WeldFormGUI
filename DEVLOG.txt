@@ -45,4 +45,24 @@
 -------------------------------------------------------------------------------
 20240906 - Added IMGU-VTK succesfully (Thanks to imgui-vtk project)
          - Added Import Step feature
+20240909 - Added Geo Class to manage gmsh geom
+         - Added import part
+2024092X - Adapting to MSWN creation
+20240925 - Preparing for create VTKpolydata from GMSH 
+20240926 - Begining to add meshing
+20240930 - Added line_2d step example
+         - Begining to create 2D meshes from geometry.
+         - Fixed Connectivity things
+--------------------------------------------------------------------------------
+20241009 - Begining to Add python wrapping
+         - Separating mesh from graphic mesh
+         - Separating model class from gmsh (passed to graphic mesh or even from meshimporter) 
+20241010 - Added Graphic Mesh from mesh
+         - Addind model interface 
+         - Adding GLOBAL interface to access model
+         - Adding pybind first interface
+20241014 - Removed example imgui-vtk things (Garbage)
+         - Removed axis actor from scene origin.
          - 
+20241015 - Added VTK Geom Wireframe Mode
+         - Begining to change model writer

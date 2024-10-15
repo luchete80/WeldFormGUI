@@ -2,6 +2,8 @@
 #include "Node.h"
 
 #include <iostream>
+#include <map>
+
 using namespace std;
 
 void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
@@ -273,4 +275,5 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 		
 		// // delete [] /*elnod_h, */nodel_count_h, nodel_h, nodel_loc_h,nodel_offset_h;
   
-}
+} // ADD BOX LENGTH
+

@@ -65,5 +65,5 @@ bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat
   matdlg->Draw("Material", p_open, mat);
 
     
-  
+  return true;
 }

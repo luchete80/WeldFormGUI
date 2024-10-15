@@ -68,7 +68,69 @@ cmake ../WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DVTK_DIR=D
 
 PUT VTK BINARYPATH 
 BUILD IT AS RELEASE!
-cmake [SOURCE_DIR] -DVTK_INCLUDE_DIR="/usr/local/include/vtk-9.3" -DCMAKE_BUILD_TYPE=RELEASE 
+cmake [SOURCE_DIR] -DVTK_INCLUDE_DIR="/usr/local/include/vtk-9.3" -DCMAKE_BUILD_TYPE=RELEASE -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON
 
 Should build VTK with
 cmake .......  -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON
+
+
+-- MS Windows Build Instructions
+
+- Download OpenCascade  7.8.0 built binaries
+
+https://github.com/Open-Cascade-SAS/OCCT/releases/tag/V7_8_0
+
+
+- Important, from compiled and installed OCCT library run "OCCT/env.bat" --BEFORE-- execute cmake.
+ 
+
+
+GMSH USED IS 4.13.0 (4.13.1 DOES NOT WORK ON MSWIN)
+
+You can put the following: ´´´
+set(DEFAULT OFF CACHE INTERNAL "Default value for enabled-by-default options")
+
+macro(opt OPTION HELP VALUE)
+  option(ENABLE_${OPTION} ${HELP} ${VALUE})
+  set(OPT_TEXI "${OPT_TEXI}\n@item ENABLE_${OPTION}\n${HELP} (default: ${VALUE})")
+endmacro()
+
+set (ENABLE_NETGEN OFF)
+set (ENABLE_POST OFF)
+set(CMAKE_BUILD_TYPE Release)
+#IF (WIN32)
+#set (ENABLE_BUILD_DYNAMIC OFF) #OR ENABLE_BUILD_LIB OR ENABLE_BUILD_SHARED
+#set (ENABLE_BUILD_LIB ON)
+#ELSE()
+set (ENABLE_BUILD_DYNAMIC ON) #OR ENABLE_BUILD_LIB OR ENABLE_BUILD_SHARED
+set (ENABLE_BUILD_LIB OFF)
+#ENDIF()
+set (HAVE_FLTK OFF)
+set (ENABLE_GRAPHICS OFF)
+set (ENABLE_MESH ON)
+set (ENABLE_PARSER OFF)
+´´´
+ATTENTION; IF OPENCASCADE VERSION IS GREATER OR EQUAL THAN 7.8.0,
+VTK version 9.3.1 does not have right targets.
+
+https://github.com/Kitware/VTK/blob/master/IO/OCCT/CMakeLists.txt
+
+if (OpenCASCADE_VERSION VERSION_GREATER_EQUAL "7.8.0")
+  set(opencascade_req_targets
+    TKDESTEP
+    TKDEIGES
+    TKernel
+    TKMath
+    TKMesh
+    TKBRep
+    TKXSBase
+    TKLCAF
+    TKXCAF)
+else()
+  set(opencascade_req_targets
+    TKSTEP
+    TKIGES
+    TKMesh
+    TKXDESTEP
+    TKXDEIGES)
+endif() 

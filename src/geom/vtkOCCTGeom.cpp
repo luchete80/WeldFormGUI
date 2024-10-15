@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
 // SPDX-License-Identifier: BSD-3-Clause
 
-
+#include <vtkProperty.h>
 #include "vtkOCCTGeom.h"
 
 // int argc, char* argv are required for vtkRegressionTestImage
@@ -9,9 +9,9 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
  
   vtkNew<vtkOCCTReader> reader;
-  reader->RelativeDeflectionOn();
-  reader->SetLinearDeflection(0.1);
-  reader->SetAngularDeflection(0.5);
+  //reader->RelativeDeflectionOn();
+  //reader->SetLinearDeflection(0.1);
+  //reader->SetAngularDeflection(0.5);
   reader->ReadWireOn();
   reader->SetFileName(path.c_str());
   reader->SetFileFormat(format);
@@ -22,7 +22,8 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   mapper->SetInputDataObject(reader->GetOutput());
   actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
-  actor->RotateY(90);
+  actor->GetProperty()->SetRepresentationToWireframe();
+
 
 
   /*
@@ -79,6 +80,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 
     return EXIT_SUCCESS;
     */
+    return EXIT_SUCCESS;
   }
 
 

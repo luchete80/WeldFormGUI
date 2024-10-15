@@ -1,6 +1,8 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
+#include "imgui.h"
+
 struct ExampleAppLog
 {
     ImGuiTextBuffer     Buf;

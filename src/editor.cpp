@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include "input_writer.h"
+#include "io/ModelWriter.h"
 #include "LSDynaWriter.h"
 
 //#include "SceneView.h"
@@ -34,6 +34,13 @@
 
 #include "geom/vtkOCCTGeom.h"
 #include "VtkViewer.h"
+
+#include "SPHModel.h"
+
+
+#include "Part.h"
+#include "GraphicMesh.h"
+
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -104,6 +111,137 @@ bool ImGui::ShowStyleSelector(const char* label)
     return false;
 }
 
+//// GET MMESH INFO
+void getCurrentModelInfo(){
+  
+  // Print the model name and dimension:
+  std::string name;
+  gmsh::model::getCurrent(name);
+  std::cout << "Model " << name << " (" << gmsh::model::getDimension()
+            << "D)\n";
+
+  // Geometrical data is made of elementary model `entities', called `points'
+  // (entities of dimension 0), `curves' (entities of dimension 1), `surfaces'
+  // (entities of dimension 2) and `volumes' (entities of dimension 3). As we
+  // have seen in the other C++ tutorials, elementary model entities are
+  // identified by their dimension and by a `tag': a strictly positive
+  // identification number. Model entities can be either CAD entities (from the
+  // built-in `geo' kernel or from the OpenCASCADE `occ' kernel) or `discrete'
+  // entities (defined by a mesh). `Physical groups' are collections of model
+  // entities and are also identified by their dimension and by a tag.
+
+  // Get all the elementary entities in the model, as a vector of (dimension,
+  // tag) pairs:
+  std::vector<std::pair<int, int> > entities;
+  gmsh::model::getEntities(entities);
+
+  for(auto e : entities) {
+    // Dimension and tag of the entity:
+    int dim = e.first, tag = e.second;
+
+    // Mesh data is made of `elements' (points, lines, triangles, ...), defined
+    // by an ordered list of their `nodes'. Elements and nodes are identified by
+    // `tags' as well (strictly positive identification numbers), and are stored
+    // ("classified") in the model entity they discretize. Tags for elements and
+    // nodes are globally unique (and not only per dimension, like entities).
+
+    // A model entity of dimension 0 (a geometrical point) will contain a mesh
+    // element of type point, as well as a mesh node. A model curve will contain
+    // line elements as well as its interior nodes, while its boundary nodes
+    // will be stored in the bounding model points. A model surface will contain
+    // triangular and/or quadrangular elements and all the nodes not classified
+    // on its boundary or on its embedded entities. A model volume will contain
+    // tetrahedra, hexahedra, etc. and all the nodes not classified on its
+    // boundary or on its embedded entities.
+
+    // Get the mesh nodes for the entity (dim, tag):
+    std::vector<std::size_t> nodeTags;
+    std::vector<double> nodeCoords, nodeParams;
+    gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+
+    // Get the mesh elements for the entity (dim, tag):
+    std::vector<int> elemTypes;
+    std::vector<std::vector<std::size_t> > elemTags, elemNodeTags;
+    gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
+
+    // Elements can also be obtained by type, by using `getElementTypes()'
+    // followed by `getElementsByType()'.
+
+    // Let's print a summary of the information available on the entity and its
+    // mesh.
+
+    // * Type of the entity:
+    std::string type;
+    gmsh::model::getType(dim, tag, type);
+    std::string name;
+    gmsh::model::getEntityName(dim, tag, name);
+    if(name.size()) name += " ";
+    std::cout << "Entity " << name << "(" << dim << "," << tag << ") of type "
+              << type << "\n";
+
+    // * Number of mesh nodes and elements:
+    int numElem = 0;
+    for(auto &tags : elemTags) numElem += tags.size();
+    std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
+              << " elements\n";
+
+    // * Upward and downward adjacencies:
+    std::vector<int> up, down;
+    gmsh::model::getAdjacencies(dim, tag, up, down);
+    if(up.size()) {
+      std::cout << " - Upward adjacencies: ";
+      for(auto e : up) std::cout << e << " ";
+      std::cout << "\n";
+    }
+    if(down.size()) {
+      std::cout << " - Downward adjacencies: ";
+      for(auto e : down) std::cout << e << " ";
+      std::cout << "\n";
+    }
+
+    // * Does the entity belong to physical groups?
+    std::vector<int> physicalTags;
+    gmsh::model::getPhysicalGroupsForEntity(dim, tag, physicalTags);
+    if(physicalTags.size()) {
+      std::cout << " - Physical group: ";
+      for(auto physTag : physicalTags) {
+        std::string n;
+        gmsh::model::getPhysicalName(dim, physTag, n);
+        if(n.size()) n += " ";
+        std::cout << n << "(" << dim << ", " << physTag << ") ";
+      }
+      std::cout << "\n";
+    }
+
+    // * Is the entity a partition entity? If so, what is its parent entity?
+    std::vector<int> partitions;
+    gmsh::model::getPartitions(dim, tag, partitions);
+    if(partitions.size()) {
+      std::cout << " - Partition tags:";
+      for(auto part : partitions) std::cout << " " << part;
+      int parentDim, parentTag;
+      gmsh::model::getParent(dim, tag, parentDim, parentTag);
+      std::cout << " - parent entity (" << parentDim << "," << parentTag
+                << ")\n";
+    }
+
+    // * List all types of elements making up the mesh of the entity:
+    for(auto elemType : elemTypes) {
+      std::string name;
+      int d, order, numv, numpv;
+      std::vector<double> param;
+      gmsh::model::mesh::getElementProperties(elemType, name, d, order, numv,
+                                              param, numpv);
+      std::cout << " - Element type: " << name << ", order " << order << "\n";
+      std::cout << "   with " << numv << " nodes in param coord: (";
+      for(auto p : param) std::cout << p << " ";
+      std::cout << ")\n";
+    }
+  }
+  
+  
+}
+
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
 void ShowExampleMenuFile(const Editor &editor)
@@ -117,7 +255,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.stp,.json,.k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step|.STEP|.stp|.STP|.json|.k", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -141,7 +279,9 @@ void ShowExampleMenuFile(const Editor &editor)
         ImGui::EndMenu();
     }
     //If open
-    if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {InputWriter writer("Input.json",editor.getDomain());}
+    if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
+      //InputWriter writer("Input.json",editor.getDomain());
+      }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {}
     if (ImGui::MenuItem("Save As..")) {}
 
@@ -374,10 +514,46 @@ void Editor::drawGui() {
         bool open_ = ImGui::TreeNode("Parts");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
+            
+            string test;
+            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+          }
+          if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
+          }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
             ImGui::EndPopup();          
         }
+
+        //cout << "Model part count "<<m_model->getPartCount()<<endl;      
+        for (int i = 0; i < m_model->getPartCount(); i++)
+        {
+          // Use SetNextItemOpen() so set the default state of a node to be open. We could
+          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+          if (i == 0)
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d", i))
+          {
+            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+              m_show_mat_dlg_edit = true;
+              selected_mat = m_mats[i];}
+            if (ImGui::BeginPopupContextItem())
+            {
+              if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                m_show_mat_dlg_edit = true;
+                selected_mat = m_mats[i];
+              }
+              ImGui::EndPopup();
+            }                    
+              ImGui::SameLine();
+              if (ImGui::SmallButton("button")) {}
+              ImGui::TreePop();
+          }
+        }
+      
         if (open_)
         {
            // your tree code stuff
@@ -609,7 +785,7 @@ void Editor::drawGui() {
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               if (item_current == 2)//Plane
                 size[2] = 0.0;
-              m_domain.AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+              m_domain->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
               calcDomainCenter();
               cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
               is_sph_mesh = true;
@@ -649,13 +825,17 @@ void Editor::drawGui() {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
       cout << "file path name "<<filePathName<<endl;
-      m_model = new Model(filePathName);
+      //m_model = new Model(filePathName);
+      cout << "Adding part "<<endl;
+      string test;
+      m_model->addGeom(new Geom(test));
+      m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));
       is_fem_mesh = true;
       }
       // action
-      
+      create_new_part = true;
       
       //test 
       bool errorIfMissing;
@@ -673,7 +853,8 @@ void Editor::drawGui() {
       std::vector<std::pair<int, int> > v;
      //try {
         cout << "Loading file "<<filePathName<<endl;
-        //gmsh::model::occ::importShapes(filePathName, v);
+        gmsh::model::occ::importShapes(filePathName, v);
+        cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
       //} catch(...) {
       //  gmsh::logger::write("Could not load STEP file: bye!");
       //  gmsh::finalize();
@@ -681,7 +862,26 @@ void Editor::drawGui() {
       //}
       
       //MergeFile(filePathName, errorIfMissing);
-      //gmsh::merge(filePathName);
+      gmsh::merge(filePathName);
+
+      gmsh::model::mesh::generate(2);
+      gmsh::write("test.msh");
+      m_model->getPart(0)->generateMesh();
+      
+      
+      //  m_model->getPart(0)->getMesh()->createVTKPolyData();
+      //GraphicMesh *graphic_mesh = new GraphicMesh();
+      //SHOULD BE REPLACED WITH 
+      graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+      graphic_mesh->createVTKPolyData();
+      //graphic_mesh.push_back(new GraphicMesh());
+      //
+      //viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
+      //viewer->addActor(graphic_mesh[0]->getActor());
+      viewer->addActor(graphic_mesh->getActor());
+
+      //gmsh::write("t20.msh");    
+    
     }
     
     // close
@@ -704,7 +904,7 @@ void Editor::drawGui() {
           // float h = m_domain.Particles[0]->h/2.;
           // pn.Scale(h, h,h);  
           // Vec3_t v = m_domain.Particles[p]->x ;
-        LSDynaWriter writer(&m_domain, filePathName);
+        LSDynaWriter writer(m_domain, filePathName);
       }
       //m_model = new Model(filePathName);
       //m_renderer.addMesh(m_model->getPartMesh(0));
@@ -724,8 +924,9 @@ void Editor::drawGui() {
   //ExampleAppLog logtest;
   ShowExampleAppLog(&show_app_log, &logtest);
   //cout << "log tst "<<logtest.test<<endl;
-  create_new_mat = false;
-  create_new_set = false;
+  create_new_mat  = false;
+  create_new_set  = false;
+  create_new_part = false;
 
   Material_ mat;
   Job job;
@@ -737,7 +938,7 @@ void Editor::drawGui() {
     if(is_fem_mesh)
       CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
     else
-      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, &m_domain);
+      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_domain);
     if(is_fem_mesh){
 
       //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
@@ -765,9 +966,13 @@ void Editor::drawGui() {
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }
+  
+
+  
   ImGui::End();
 
-}
+} //GUI
+
 
 static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mods) {   
     editor->Key(key, scancode, action, mods);
@@ -1063,6 +1268,8 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
+  m_model = new Model();
+  
 }
 
 int Editor::Init(){
@@ -1343,6 +1550,7 @@ int Editor::Init(){
   
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
   */
+  return 1;
 }//Editor::Init()
 
 
@@ -1353,7 +1561,7 @@ int Editor::Terminate(){
     // // glfw: terminate, clearing all previously allocated GLFW resources.
     // // ------------------------------------------------------------------
     // glfwTerminate();
-    // return 0;
+     return 0;
 }
 
 
@@ -1433,12 +1641,12 @@ void Editor::calcDomainCenter(){
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain.Particles.size();p++)    {
-    m_domain_center.x += m_domain.Particles[p]->x(0);
-    m_domain_center.y += m_domain.Particles[p]->x(1);
-    m_domain_center.z += m_domain.Particles[p]->x(2);
+  for (int p=0;p<m_domain->Particles.size();p++)    {
+    m_domain_center.x += m_domain->Particles[p]->x(0);
+    m_domain_center.y += m_domain->Particles[p]->x(1);
+    m_domain_center.z += m_domain->Particles[p]->x(2);
   }
-  m_domain_center = m_domain_center/m_domain.Particles.size();
+  m_domain_center = m_domain_center/m_domain->Particles.size();
   
 }
 
@@ -1447,12 +1655,12 @@ void Editor::calcMeshCenter(){
   m_femsh_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain.Particles.size();p++)    {
-    m_femsh_center.x += m_domain.Particles[p]->x(0);
-    m_femsh_center.y += m_domain.Particles[p]->x(1);
-    m_femsh_center.z += m_domain.Particles[p]->x(2);
+  for (int p=0;p<m_domain->Particles.size();p++)    {
+    m_femsh_center.x += m_domain->Particles[p]->x(0);
+    m_femsh_center.y += m_domain->Particles[p]->x(1);
+    m_femsh_center.z += m_domain->Particles[p]->x(2);
   }
-  m_femsh_center = m_femsh_center/m_domain.Particles.size();
+  m_femsh_center = m_femsh_center/m_domain->Particles.size();
 }
 
 void Editor::addViewer(VtkViewer *v){
