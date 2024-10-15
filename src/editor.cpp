@@ -868,19 +868,13 @@ void Editor::drawGui() {
       gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
       
-      
-      //  m_model->getPart(0)->getMesh()->createVTKPolyData();
-      //GraphicMesh *graphic_mesh = new GraphicMesh();
-      //SHOULD BE REPLACED WITH 
+
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
-      //graphic_mesh.push_back(new GraphicMesh());
-      //
-      //viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
-      //viewer->addActor(graphic_mesh[0]->getActor());
+
       viewer->addActor(graphic_mesh->getActor());
 
-      //gmsh::write("t20.msh");    
+
     
     }
     
