@@ -72,4 +72,5 @@
          - Beginning to add command/scripting console    
          - Changing resolution to max monitor size (like Full Screen but resizable).
          - Added view menu 
+         - Begining to generate part->mesh from GMSH global interface (SHOULD DELETE MODEL AFTER MESH? OR TRY AS SEPARATE MODELS?) 
          

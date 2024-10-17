@@ -402,12 +402,12 @@ int main(int argc, char* argv[])
     //bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 
       ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,ImVec2(0,0));
-      if (ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(30, 30))){
+      if (ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(24, 24))){
       cout << "Extents"<<endl;
       }
         
       ImGui::SameLine();
-      if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(30, 30)))
+      if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(24, 24)))
         cout << "clicked"<<endl;
       
       ImGui::PopStyleVar();  
