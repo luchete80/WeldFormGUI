@@ -203,12 +203,12 @@ int main(int argc, char* argv[])
 #endif
 
 
-  //const GLFWvidmode* modes = glfwGetVideoMode(glfwGetPrimaryMonitor()/*, &count*/);
-  //cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
+  const GLFWvidmode* modes = glfwGetVideoMode(glfwGetPrimaryMonitor()/*, &count*/);
+  cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
 
   // Create window with graphics context
-  //GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
-  GLFWwindow* window = glfwCreateWindow(800, 600, "WeldForm GUI", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
+  //GLFWwindow* window = glfwCreateWindow(800, 600, "WeldForm GUI", NULL, NULL);
   if (window == NULL){
     return 1;
   }
@@ -308,6 +308,7 @@ int main(int argc, char* argv[])
           
     editor->addViewer(&vtkViewer2);
   // Main loop
+
   while (!glfwWindowShouldClose(window))
   {
     // Poll and handle events (inputs, window resize, etc.)
@@ -394,12 +395,22 @@ int main(int argc, char* argv[])
 
       ImTextureID my_tex_id = io.Fonts->TexID;
       //You can return anything but you should cast it as void
-      
-      ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(30, 30));
+      // frame_padding < 0: uses FramePadding from style (default)
+    // frame_padding = 0: no framing
+    // frame_padding > 0: set framing size
+    // The color used are the button colors.
+    //bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+
+      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,ImVec2(0,0));
+      if (ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(30, 30))){
+      cout << "Extents"<<endl;
+      }
+        
       ImGui::SameLine();
       if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(30, 30)))
         cout << "clicked"<<endl;
-        
+      
+      ImGui::PopStyleVar();  
       if (ImGui::Button("VTK Background: Black")){
         renderer->SetBackground(0, 0, 0);
       }

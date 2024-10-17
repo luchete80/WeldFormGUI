@@ -25,6 +25,7 @@ class Mesh{
   
 public:
   Mesh(){}
+  void genFromGmshModel();
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
@@ -49,7 +50,7 @@ protected:
   
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
-  
+  int                     m_gmsh_id; //GMSH entity ID 
   /*
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;

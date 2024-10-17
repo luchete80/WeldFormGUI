@@ -877,6 +877,8 @@ void Editor::drawGui() {
       gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
       
+      //m_model->getPart(0)->genFromGmshModel()
+      
 
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();

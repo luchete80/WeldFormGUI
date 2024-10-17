@@ -60,9 +60,12 @@ int GraphicMesh::createVTKPolyData() {
   std::map< int,int > nodetagpos;
   int nodecount =0;
 
+  cout << "Entity count "<<entities.size()<<endl;
+  int dim_count[] = {0,0,0};
   for(auto e : entities) {
 
     int dim = e.first, tag = e.second;
+    dim_count[dim]++;
 
     // Get the mesh nodes for the entity (dim, tag):
     std::vector<std::size_t> nodeTags;
@@ -86,7 +89,7 @@ int GraphicMesh::createVTKPolyData() {
   
   int nc=0;
   pts.resize(nodecount+1);
-  
+  cout << "Entities by dimension: "<<dim_count[0]<< ", "<<dim_count[1]<< ", "<<dim_count[2]<< endl;
   gmsh::model::getEntities(entities);
   for(auto e : entities) {
     cout<<" ---- \n"<<endl;

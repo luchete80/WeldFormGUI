@@ -5,6 +5,9 @@
 #include "Mesh.h"
 #include "Part.h"
 
+
+#include "gmsh.h"
+
 //#include <gmsh.h>
 //#include "GModel.h"
 //#include "Geom.h"
