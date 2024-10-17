@@ -321,7 +321,7 @@ int GraphicMesh::createVTKPolyData() {
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
-  //mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+  mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
   //vtkNew<vtkActor> cubeActor;
   mesh_actor = vtkSmartPointer<vtkActor>::New();
   mesh_actor->SetMapper(mesh_Mapper);

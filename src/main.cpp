@@ -293,7 +293,14 @@ int main(int argc, char* argv[])
     //widget->SetInteractor(renderWindowInteractor);
     vtkViewer2.addActor(geom.actor);
 */
-    
+
+
+      GLuint my_image_texture = 0;
+      int my_image_width = 0;
+      int my_image_height = 0;
+      bool ret = LoadTextureFromFile("buttons/extents.png", &my_image_texture, &my_image_width, &my_image_height);
+      IM_ASSERT(ret);
+          
     editor->addViewer(&vtkViewer2);
   // Main loop
   while (!glfwWindowShouldClose(window))
@@ -377,15 +384,14 @@ int main(int argc, char* argv[])
 
       auto renderer = vtkViewer2.getRenderer();
       
-      GLuint my_image_texture = 0;
-      int my_image_width = 0;
-      int my_image_height = 0;
-      bool ret = LoadTextureFromFile("buttons/extents.png", &my_image_texture, &my_image_width, &my_image_height);
-      IM_ASSERT(ret);
 
-      //  ImTextureID my_tex_id = io.Fonts->TexID;
+
+      ImTextureID my_tex_id = io.Fonts->TexID;
       //You can return anything but you should cast it as void
-      if (ImGui::ImageButton("blah", (void *)my_image_texture, ImVec2(30, 30)))
+      
+      ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(30, 30));
+      ImGui::SameLine();
+      if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(30, 30)))
         cout << "clicked"<<endl;
         
       if (ImGui::Button("VTK Background: Black")){
