@@ -303,7 +303,7 @@ int main(int argc, char* argv[])
       GLuint my_image_texture = 0;
       int my_image_width = 0;
       int my_image_height = 0;
-      bool ret = LoadTextureFromFile("buttons/extents.png", &my_image_texture, &my_image_width, &my_image_height);
+      bool ret = LoadTextureFromFile("buttons/xy.png", &my_image_texture, &my_image_width, &my_image_height);
       IM_ASSERT(ret);
           
     editor->addViewer(&vtkViewer2);

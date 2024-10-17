@@ -472,7 +472,9 @@ void Mesh::genFromGmshModel() {
   }//entities
   
   cout << "Element Nodes size "<<elnodes.size()<<endl;
-
+  
+  for (int p=0;p<pts.size();p++)
+    m_node.push_back(new Node(pts[p][0],pts[p][1],pts[p][2],p));
 
   //TEMPLATIZE
   for (int e=0;e<elnodes.size();e++){
