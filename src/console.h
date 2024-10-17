@@ -1,4 +1,6 @@
 //From imgui
+#include <cstdlib>
+
 struct ExampleAppConsole
 {
     char                  InputBuf[256];
@@ -12,7 +14,7 @@ struct ExampleAppConsole
 
     ExampleAppConsole()
     {
-        IMGUI_DEMO_MARKER("Examples/Console");
+        //IMGUI_DEMO_MARKER("Examples/Console");
         ClearLog();
         memset(InputBuf, 0, sizeof(InputBuf));
         HistoryPos = -1;
@@ -202,6 +204,7 @@ struct ExampleAppConsole
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
+        system(command_line);
         for (int i = History.Size - 1; i >= 0; i--)
             if (Stricmp(History[i], command_line) == 0)
             {

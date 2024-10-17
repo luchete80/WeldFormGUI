@@ -41,6 +41,8 @@
 #include "Part.h"
 #include "GraphicMesh.h"
 
+#include "console.h"
+
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -960,8 +962,11 @@ void Editor::drawGui() {
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }
-  
-
+    
+  if (m_show_app_console) {
+    static ExampleAppConsole console;
+    console.Draw("Example: Console", &m_show_app_console);    
+    }            //ShowExampleAppConsole(&m_show_app_console);
   
   ImGui::End();
 
@@ -1262,6 +1267,7 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
+  m_show_app_console = true;
   m_model = new Model();
   
 }
