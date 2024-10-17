@@ -202,13 +202,13 @@ int main(int argc, char* argv[])
   const char* glsl_version = "#version 130";
 #endif
 
-//  const GLFWvidmode* modes = glfwGetVideoModes(glfwGetPrimaryMonitor()/*, &count*/);
-  const GLFWvidmode* modes = glfwGetVideoMode(glfwGetPrimaryMonitor()/*, &count*/);
-  cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
-  //cout << "Height and Width size "<<return_struct.Width<<", " <<return_struct.Height<<endl;
+
+  //const GLFWvidmode* modes = glfwGetVideoMode(glfwGetPrimaryMonitor()/*, &count*/);
+  //cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
 
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
+  //GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(800, 600, "WeldForm GUI", NULL, NULL);
   if (window == NULL){
     return 1;
   }

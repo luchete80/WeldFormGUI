@@ -1267,7 +1267,7 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
-  m_show_app_console = true;
+  m_show_app_console = false;
   m_model = new Model();
   
 }
