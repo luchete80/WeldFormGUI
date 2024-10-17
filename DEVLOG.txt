@@ -71,5 +71,5 @@
 20241017 - Fixed Buttons going black (every frame was reading img)     
          - Beginning to add command/scripting console    
          - Changing resolution to max monitor size (like Full Screen but resizable).
-         
+         - Added view menu 
          

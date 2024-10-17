@@ -376,7 +376,8 @@ int main(int argc, char* argv[])
     ImGui::End();
 
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
-    ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+    //ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(400, 200),ImGuiCond_FirstUseEver);
     if (vtk_2_open){
 
       ImGui::Begin("Model Viewer", &vtk_2_open, VtkViewer::NoScrollFlags());

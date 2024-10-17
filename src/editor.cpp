@@ -344,13 +344,13 @@ void ShowExampleMenuFile(const Editor &editor)
 // Note the difference between BeginMainMenuBar() and BeginMenuBar():
 // - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-/*static */void ShowExampleAppMainMenuBar(const Editor &editor)
+/*static */void ShowExampleAppMainMenuBar(Editor *editor)
 {
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            ShowExampleMenuFile(editor);
+            ShowExampleMenuFile(*editor);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -361,6 +361,13 @@ void ShowExampleMenuFile(const Editor &editor)
             if (ImGui::MenuItem("Cut", "CTRL+X")) {}
             if (ImGui::MenuItem("Copy", "CTRL+C")) {}
             if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View"))
+        {
+            if (ImGui::MenuItem("Console", "CTRL+Z")) {editor->changeShowConsole();}
+            ImGui::Separator();
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -912,13 +919,13 @@ void Editor::drawGui() {
     ImGuiFileDialog::Instance()->Close();
   }
   
-  ShowExampleAppMainMenuBar(*this);
+  ShowExampleAppMainMenuBar(this);
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
   
   //ExampleAppLog logtest;
-  ShowExampleAppLog(&show_app_log, &logtest);
+  //ShowExampleAppLog(&show_app_log, &logtest);
   //cout << "log tst "<<logtest.test<<endl;
   create_new_mat  = false;
   create_new_set  = false;
@@ -1267,7 +1274,7 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
-  m_show_app_console = false;
+  m_show_app_console = true;
   m_model = new Model();
   
 }

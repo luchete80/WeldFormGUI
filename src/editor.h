@@ -116,6 +116,8 @@ public:
   
   void calcDomainCenter();
   void calcMeshCenter();
+  void setShowConsole(bool &b){m_show_app_console=b;}
+  void changeShowConsole(){m_show_app_console=!m_show_app_console;}
 protected:
 
   GLFWwindow* window;
