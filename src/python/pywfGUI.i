@@ -7,9 +7,10 @@
 %module model
 
 %{
-
+ #include "App.h"
 #include "Model.h"
 #include "Part.h"
+#include "App.h"
 //#include "global.h" 
 
 %}
@@ -23,5 +24,6 @@
 /* Let's just grab the original header file here */
 %include "Model.h"
 %include "Part.h"
+%include "App.h"
 //%include "global.h"
 

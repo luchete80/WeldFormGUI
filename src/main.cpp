@@ -56,6 +56,10 @@
 #include "stb_image.h"
 #include <Python.h>
 
+#include "App/App.h"
+
+//using App;
+
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -311,6 +315,8 @@ int main(int argc, char* argv[])
   // Main loop
   
   Py_Initialize();
+  App::initApp(); //singleton
+
 
   while (!glfwWindowShouldClose(window))
   {

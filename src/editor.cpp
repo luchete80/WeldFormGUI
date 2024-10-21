@@ -43,6 +43,7 @@
 
 #include "console.h"
 
+#include "App.h"
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -878,7 +879,7 @@ void Editor::drawGui() {
       m_model->getPart(0)->generateMesh();
       
       //m_model->getPart(0)->genFromGmshModel()
-      
+      GetApplication().setActiveModel(m_model);
 
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();

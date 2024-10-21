@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 project(imgui-vtk)
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
+include_directories("${CMAKE_SOURCE_DIR}/src/App")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
@@ -20,7 +21,7 @@ link_directories ("${GMSH_DIR}/lib")
 include_directories ("${GMSH_DIR}/include")
 endif()
 
-
+add_subdirectory("App")
 add_subdirectory("model")
 add_subdirectory("graphicmesh")
 add_subdirectory("io")
@@ -207,7 +208,7 @@ endif()
 
 target_link_libraries(${EXEC_NAME} 
             
-
+            app
             model
             graphicmesh
 						#freetype
