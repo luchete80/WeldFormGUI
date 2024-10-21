@@ -1,6 +1,9 @@
 //From imgui
 #include <cstdlib>
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 struct ExampleAppConsole
 {
     char                  InputBuf[256];
@@ -205,6 +208,8 @@ struct ExampleAppConsole
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
         system(command_line);
+        PyRun_SimpleString(command_line);
+                       
         for (int i = History.Size - 1; i >= 0; i--)
             if (Stricmp(History[i], command_line) == 0)
             {

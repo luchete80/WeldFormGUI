@@ -54,6 +54,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <Python.h>
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
@@ -308,6 +309,8 @@ int main(int argc, char* argv[])
           
     editor->addViewer(&vtkViewer2);
   // Main loop
+  
+  Py_Initialize();
 
   while (!glfwWindowShouldClose(window))
   {

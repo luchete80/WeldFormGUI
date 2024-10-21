@@ -14,9 +14,9 @@
 
 %}
 
-%inline %{
+//%inline %{
 //extern Model *curr_Model;
-%}
+//%}
 
 %template () std::vector<Part*>;
 

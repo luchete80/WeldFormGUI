@@ -107,6 +107,9 @@ find_package(VTK
   QUIET
 )
 
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 #IOCCT
 #DEPENDS
 #  VTK::CommonExecutionModel
@@ -218,6 +221,7 @@ target_link_libraries(${EXEC_NAME}
 	    
             ${GMSH_LIBS}
             ${LINK_LIBRARIES}
+            ${PYTHON_LIBRARIES}
 )
 
 
