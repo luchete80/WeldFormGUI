@@ -207,7 +207,7 @@ struct ExampleAppConsole
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
-        system(command_line);
+        //system(command_line);
         PyRun_SimpleString(command_line);
                        
         for (int i = History.Size - 1; i >= 0; i--)
@@ -238,7 +238,7 @@ struct ExampleAppConsole
         }
         else
         {
-            AddLog("Unknown command: '%s'\n", command_line);
+            //AddLog("Unknown command: '%s'\n", command_line);
         }
 
         // On command input, we scroll to bottom even if AutoScroll==false

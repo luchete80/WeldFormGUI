@@ -8,9 +8,7 @@ m_msh(mesh){
 
 Part::Part(Geom* geom){
   
-}
-
-void Part::generateMesh(){
+}void Part::generateMesh(){
   this->m_msh = new Mesh;
   this->m_msh->genFromGmshModel();
 }

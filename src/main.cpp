@@ -315,9 +315,10 @@ int main(int argc, char* argv[])
   // Main loop
   
   Py_Initialize();
+
   App::initApp(); //singleton
 
-
+  PyRun_SimpleString("from model import *");
   while (!glfwWindowShouldClose(window))
   {
     // Poll and handle events (inputs, window resize, etc.)

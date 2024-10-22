@@ -75,4 +75,5 @@
          - Begining to generate part->mesh from GMSH global interface (SHOULD DELETE MODEL AFTER MESH? OR TRY AS SEPARATE MODELS?) 
          
 20241021 - Adding python console
-         - CREATING APP SINGLETON. This is based on FreeCAD. 
+         - CREATING APP SINGLETON. This is based on FreeCAD.
+20241022 - First Succesful python console commands!! 

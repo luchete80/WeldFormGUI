@@ -879,8 +879,9 @@ void Editor::drawGui() {
       m_model->getPart(0)->generateMesh();
       
       //m_model->getPart(0)->genFromGmshModel()
-      GetApplication().setActiveModel(m_model);
-
+      getApp().setActiveModel(m_model);
+      PyRun_SimpleString("GetApplication().getActiveModel()");
+        
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
 
