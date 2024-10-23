@@ -27,7 +27,12 @@ class Mesh;
 class GraphicMesh{
   friend class Model;
 public:
-  GraphicMesh(){}
+  GraphicMesh(){  
+    m_needs_polydata = true;
+    m_needs_actor = true;
+    mesh_actor = nullptr;
+    mesh_pdata = nullptr;
+  } //To create polydata and actor
   GraphicMesh(Mesh *Mesh);
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector < std::vector <int> >      elnod_h);
@@ -48,7 +53,12 @@ public:
   //int createVTKPolyData_Quad(std::vector <std::array<float,3>>, std::vector <std::array<int,4>> elnodes);
   
   vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
+  Mesh* getMesh() {return m_mesh;}
+  bool & isPolydataNeeded(){return m_needs_polydata;}
+  bool & isActorNeeded(){return m_needs_polydata;}
 protected:
+  bool                  m_needs_polydata;
+  bool                  m_needs_actor;
   Mesh*                 m_mesh;
   int m_node_count;
   int m_elem_count;

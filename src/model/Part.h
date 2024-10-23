@@ -18,6 +18,7 @@ public:
   Part(Mesh *mesh);
   Part(Geom*);
   Mesh* getMesh(){return m_msh;}
+  
   void generateMesh();
   virtual Part_Type getType(){return m_type;}
 protected:

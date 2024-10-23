@@ -27,8 +27,7 @@
 int GraphicMesh::createVTKPolyData() {
 
 
-
-
+  //m_needs_update = true;
   // Print the model name and dimension:
   std::string name;
   gmsh::model::getCurrent(name);
@@ -417,8 +416,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
 }
 
 
-  GraphicMesh::GraphicMesh(Mesh *Mesh){
-    
-    
-    
-  }
+GraphicMesh::GraphicMesh(Mesh *mesh){
+    m_needs_actor = true;
+    mesh_actor = nullptr;
+    createVTKPolyData(*mesh);
+  
+}

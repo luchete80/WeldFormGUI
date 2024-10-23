@@ -3,8 +3,11 @@
 
 #include "Model.h"
 #include <iostream>
+#include <vector>
 
 using namespace std;
+
+class GraphicMesh;
 
 class App{
 
@@ -14,8 +17,10 @@ public:
 
   void setActiveModel(Model *);
   bool isUpdateNeeded();
-  void setUpdateNeeded(){_updateNeeded=true;}
+  void Update(){_updateNeeded=true;}
+  void checkUpdate();
   static void initApp();
+  void updateMeshes(); 
 //protected:
   explicit App(){
     _activeModel  = nullptr;
@@ -25,7 +30,7 @@ private:
   static App *_pcSingleton;  
   Model *_activeModel;
   bool _updateNeeded;
-
+  std::vector <GraphicMesh *> m_graphicmeshes;
 }; 
 
 
