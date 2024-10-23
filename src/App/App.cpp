@@ -4,6 +4,8 @@
 #include "Part.h"
 #include "Mesh.h"
 
+//#include "VtkViewer.h"
+
 using namespace std; 
 
 App * App::_pcSingleton = nullptr;
@@ -42,6 +44,9 @@ void App::checkUpdate(){
 }
 
 void App::updateMeshes(){
+  cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
+  cout << "mesh address "<<_activeModel->getPart(0)->getMesh()<<endl;
+  
   for (int p=0;p<_activeModel->getPartCount();p++){
     bool not_found = true;
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
@@ -52,8 +57,11 @@ void App::updateMeshes(){
         
         }
       if (not_found){
-      
-        m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
+        cout << "Creating Graphic Mesh for part "<<p<<endl;
+        if (_activeModel->getPart(p)->getMesh()!=nullptr)
+          m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
+        else 
+          cout << "ERROR: Part mesh is null pointer"<<endl;
       }
       } //part
       

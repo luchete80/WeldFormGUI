@@ -45,7 +45,7 @@ public:
   const int & getElemCount()const {return m_elem_count;}
   Node*     getNode(const int &i){return m_node[i];} 
   Element*  getElem(const int &i){return m_elem[i];} 
-  
+  bool & isActorNeeded(){return m_needs_actor;}
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   int createVTKPolyData(); //FROM EXTERNAL VALUES
   int createVTKPolyData(Mesh &);
@@ -55,7 +55,7 @@ public:
   vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
   Mesh* getMesh() {return m_mesh;}
   bool & isPolydataNeeded(){return m_needs_polydata;}
-  bool & isActorNeeded(){return m_needs_polydata;}
+
 protected:
   bool                  m_needs_polydata;
   bool                  m_needs_actor;

@@ -8,6 +8,7 @@
 using namespace std;
 
 class GraphicMesh;
+//class VtkViewer;
 
 class App{
 
@@ -26,6 +27,8 @@ public:
     _activeModel  = nullptr;
     _updateNeeded = false;}
   ~App(){}
+  int  getGraphicMeshCount(){return m_graphicmeshes.size();}
+  GraphicMesh * getGraphicMesh(int &i){return m_graphicmeshes[i];}
 private:
   static App *_pcSingleton;  
   Model *_activeModel;

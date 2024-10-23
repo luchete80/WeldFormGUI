@@ -38,6 +38,7 @@ public:
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}
+  Part & getPartRef(const int &i) {return *m_part[i];}
   virtual void AddBoxLength				(int tag, Vec3_t const &V, double Lx, double Ly, double Lz,double r, double Density,
                                 double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
                                 

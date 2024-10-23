@@ -334,7 +334,9 @@ int GraphicMesh::createVTKPolyData() {
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->GetProperty()->SetRepresentationToWireframe();
   mesh_actor->Modified ();
-
+  
+  m_needs_actor = false;
+  
   return EXIT_SUCCESS;
 }
 
@@ -411,7 +413,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->GetProperty()->EdgeVisibilityOn ();
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
-  
+
+  m_needs_actor = false; //To Show
+    
   return EXIT_SUCCESS;    
 }
 

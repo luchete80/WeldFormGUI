@@ -57,6 +57,7 @@
 #include <Python.h>
 
 #include "App/App.h"
+#include "GraphicMesh.h"
 
 //using App;
 
@@ -451,6 +452,12 @@ int main(int argc, char* argv[])
     }
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
+    for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
+        if (getApp().getGraphicMesh(gm)->isActorNeeded()){
+          vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          
+        }
+    }
     
 
     ImGui::Render();

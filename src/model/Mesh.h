@@ -33,6 +33,8 @@ public:
                      std::vector <Element* > m_elem);
   //void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
+  void addPlane(double x0, double y0, double lx, double ly, double d);
+  
   const int & getNodeCount()const {return m_node_count;}
   const int & getElemCount()const {return m_elem_count;}
   Node*     getNode(const int &i){return m_node[i];} 
