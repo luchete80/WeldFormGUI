@@ -36,7 +36,7 @@ private:
 
 
 inline App &getApp(){
-    cout << "app "<<App::_pcSingleton<<endl;
+    //cout << "app "<<App::_pcSingleton<<endl;
     return *App::_pcSingleton;
 }
 

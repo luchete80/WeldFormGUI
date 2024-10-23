@@ -29,7 +29,7 @@ class GraphicMesh{
 public:
   GraphicMesh(){  
     m_needs_polydata = true;
-    m_needs_actor = true;
+    m_needs_actor = true; //needs actor to be shown
     mesh_actor = nullptr;
     mesh_pdata = nullptr;
   } //To create polydata and actor

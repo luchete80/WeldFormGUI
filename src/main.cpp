@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
       ImGui::End();
     }
     
-    getApp().checkUpdate();
+    getApp().checkUpdate(); //To new Graphics Meshed and so on
     
 
     ImGui::Render();

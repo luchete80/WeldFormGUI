@@ -10,6 +10,7 @@
  #include "App.h"
 #include "Model.h"
 #include "Part.h"
+#include "Mesh.h"
 #include "App.h"
 //#include "global.h" 
 
@@ -25,5 +26,6 @@
 %include "Model.h"
 %include "Part.h"
 %include "App.h"
+%include "Mesh.h"
 //%include "global.h"
 
