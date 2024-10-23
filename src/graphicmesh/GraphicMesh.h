@@ -43,7 +43,7 @@ public:
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   int createVTKPolyData(); //FROM EXTERNAL VALUES
-  int createVTKPolyData(Mesh *);
+  int createVTKPolyData(Mesh &);
   //int createVTKPolyData_Tri(std::vector <std::array<float,3>>, std::vector <std::array<int,3>> elnodes);
   //int createVTKPolyData_Quad(std::vector <std::array<float,3>>, std::vector <std::array<int,4>> elnodes);
   

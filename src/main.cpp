@@ -315,8 +315,10 @@ int main(int argc, char* argv[])
   // Main loop
   
   Py_Initialize();
-
+  
   App::initApp(); //singleton
+  
+  //getApp().setActiveModel(m_model);
 
   PyRun_SimpleString("from model import *");
   while (!glfwWindowShouldClose(window))

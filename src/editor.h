@@ -146,7 +146,7 @@ protected:
   //Renderer ground_mesh;
   
   Mesh   *m_fem_msh;
-  bool    is_fem_mesh;
+  //bool    is_fem_mesh;
   bool    is_sph_mesh;
   
 

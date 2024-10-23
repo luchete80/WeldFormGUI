@@ -802,12 +802,18 @@ void Editor::drawGui() {
             }
             
             if (ImGui::Button("Create FEM")){
-              m_fem_msh = new Mesh();
+              
+              Mesh *m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              
-              //m_renderer.addMesh(m_fem_msh);
-              
-              is_fem_mesh = true;
+              m_model->addPart(new Part(m_fem_msh));
+                            
+              //CHANGE TO MESH CONSTRUCTOR
+              graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+              graphic_mesh->createVTKPolyData(*m_fem_msh);
+
+              //viewer->addActor(graphic_mesh->getActor());
+                            
+              //is_fem_mesh = true;
             }
     }
 
@@ -842,8 +848,9 @@ void Editor::drawGui() {
       m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));
-      is_fem_mesh = true;
+      //is_fem_mesh = true;
       }
+      // action
       // action
       create_new_part = true;
       

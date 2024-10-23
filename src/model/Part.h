@@ -1,16 +1,20 @@
 #ifndef _PART_H_
 #define _PART_H_
 
+#include "Entity.h"
+
 class Mesh;
 class Geom;
 
 enum Part_Type {Elastic=0, Rigid};
 
-class Part {
+class Part :
+public Entity{
   
 public:
-  int id;
+  Part(int &id);
   Part(){}
+  Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
   Part(Geom*);
   Mesh* getMesh(){return m_msh;}

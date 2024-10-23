@@ -1,10 +1,11 @@
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
-set( MODEL_SRCS         "Mesh.cpp"
+set( MODEL_SRCS         "Entity.cpp"
+                        "Mesh.cpp"
                         "SPHModel.cpp"
-                               "Element.cpp"
-                               "Geom.cpp"
+                        "Element.cpp"
+                        "Geom.cpp"
                                "Model.cpp"
                                "Part.cpp"            )
 

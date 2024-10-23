@@ -5,7 +5,8 @@ class Mesh;
 
 class Entity {
 public:
-
+  Entity(){}
+  Entity(int &id){m_id=id;}
 
 protected:
   unsigned int m_id;
