@@ -27,7 +27,7 @@ class Model {
 public:
   Model(){part_count=0;}
   Model(std::string );
-  Mesh* getPartMesh(const int &i);
+  //Mesh* getPartMesh(const int &i);
   void addPart(Part *);
   void addPart(Geom *);
   void addGeom(Geom* );
@@ -67,7 +67,7 @@ public Model{
 public:
   FEMModel(){ m_modeltype = FEM_Model;}
   FEMModel(std::string ){};
-  Mesh* getPartMesh(const int &i){};
+  //Mesh* getPartMesh(const int &i){};
            
   ~FEMModel(){}
 protected:

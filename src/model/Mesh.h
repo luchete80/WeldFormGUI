@@ -26,12 +26,12 @@ class Mesh{
 public:
   Mesh(){}
   void genFromGmshModel();
-  void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
-                    std::vector < std::vector <int> >      elnod_h);
+  //void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
+  //                  std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
   void assignValues( std::vector <Node*>     m_node, //LOCATED ON MODEL SPACE!!!!
                      std::vector <Element* > m_elem);
-  void addNode();
+  //void addNode();
   void addBoxLength(Vector3f L, Vector3f V, double r);
   const int & getNodeCount()const {return m_node_count;}
   const int & getElemCount()const {return m_elem_count;}

@@ -8,11 +8,13 @@
 
 using namespace std;
 
+/*
 void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector <int>      elnod){
   
 
 }
+*/
 
 void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
                     std::vector <Element*> e){

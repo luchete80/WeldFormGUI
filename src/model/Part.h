@@ -2,6 +2,7 @@
 #define _PART_H_
 
 #include "Entity.h"
+#include "Mesh.h"
 
 class Mesh;
 class Geom;
