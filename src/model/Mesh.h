@@ -17,7 +17,7 @@ class Element;
 class Node;
 class Model;
 class MeshViewer;
-
+class Part; //If selected to identify
 
 class Mesh{
   friend class Model;
@@ -36,7 +36,8 @@ public:
   const int & getNodeCount()const {return m_node_count;}
   const int & getElemCount()const {return m_elem_count;}
   Node*     getNode(const int &i){return m_node[i];} 
-  Element*  getElem(const int &i){return m_elem[i];} 
+  Element*  getElem(const int &i){return m_elem[i];}
+  Part& getPart(){return *m_part;}
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   
@@ -51,6 +52,7 @@ protected:
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
   int                     m_gmsh_id; //GMSH entity ID 
+  Part*                   m_part;
   /*
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;

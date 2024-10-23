@@ -22,11 +22,13 @@
 class Element;
 class Node;
 class Model;
+class Mesh;
 
 class GraphicMesh{
   friend class Model;
 public:
   GraphicMesh(){}
+  GraphicMesh(Mesh *Mesh);
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
@@ -47,6 +49,7 @@ public:
   
   vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:
+  Mesh*                 m_mesh;
   int m_node_count;
   int m_elem_count;
   std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!

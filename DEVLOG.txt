@@ -77,3 +77,4 @@
 20241021 - Adding python console
          - CREATING APP SINGLETON. This is based on FreeCAD.
 20241022 - First Succesful python console commands!! 
+20241023 - Removed old m_domain, now ALL IS m_model (should be on App??)

@@ -11,16 +11,20 @@ class App{
 public:  
   friend App &getApp();
   Model &getActiveModel();
-  Model *_activeModel;
+
   void setActiveModel(Model *);
   bool isUpdateNeeded();
+  void setUpdateNeeded(){_updateNeeded=true;}
   static void initApp();
 //protected:
   explicit App(){
-    _activeModel=nullptr;}
+    _activeModel  = nullptr;
+    _updateNeeded = false;}
   ~App(){}
 private:
   static App *_pcSingleton;  
+  Model *_activeModel;
+  bool _updateNeeded;
 
 }; 
 

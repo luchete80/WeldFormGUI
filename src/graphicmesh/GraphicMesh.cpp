@@ -408,3 +408,10 @@ int GraphicMesh::createVTKPolyData(Mesh *mesh){
   
     
 }
+
+
+  GraphicMesh::GraphicMesh(Mesh *Mesh){
+    
+    
+    
+  }

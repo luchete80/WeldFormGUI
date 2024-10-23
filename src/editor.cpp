@@ -795,10 +795,10 @@ void Editor::drawGui() {
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               if (item_current == 2)//Plane
                 size[2] = 0.0;
-              m_domain->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
-              calcDomainCenter();
-              cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
-              is_sph_mesh = true;
+              m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+              //calcDomainCenter();
+              //cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
+              //is_sph_mesh = true;
             }
             
             if (ImGui::Button("Create FEM")){
@@ -907,11 +907,8 @@ void Editor::drawGui() {
       
       cout << "Exporting file "<<filePathName<<endl;
       if (is_sph_mesh){    
-        // for (int p=0;p<m_domain.Particles.size();p++){    
-          // float h = m_domain.Particles[0]->h/2.;
-          // pn.Scale(h, h,h);  
-          // Vec3_t v = m_domain.Particles[p]->x ;
-        LSDynaWriter writer(m_domain, filePathName);
+ 
+        //LSDynaWriter writer(m_model, filePathName);
       }
       //m_model = new Model(filePathName);
       //m_renderer.addMesh(m_model->getPartMesh(0));
@@ -941,7 +938,8 @@ void Editor::drawGui() {
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
-    
+  
+  /*   
     if(is_fem_mesh)
       CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
     else
@@ -950,11 +948,12 @@ void Editor::drawGui() {
 
       //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
     } else if (is_sph_mesh){
-      
+     
     } //IF IS GEOMETRY??
-
+*/ 
     //cout << "SET TYPE"<<m_setdlg.set_type<<endl;
   }//show_set_mat
+  
   if (create_new_mat) {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!
@@ -1652,17 +1651,17 @@ void Editor::calcDomainCenter(){
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain->Particles.size();p++)    {
-    m_domain_center.x += m_domain->Particles[p]->x(0);
-    m_domain_center.y += m_domain->Particles[p]->x(1);
-    m_domain_center.z += m_domain->Particles[p]->x(2);
-  }
-  m_domain_center = m_domain_center/m_domain->Particles.size();
+  //for (int p=0;p<m_domain->Particles.size();p++)    {
+    //m_domain_center.x += m_domain->Particles[p]->x(0);
+    //m_domain_center.y += m_domain->Particles[p]->x(1);
+    //m_domain_center.z += m_domain->Particles[p]->x(2);
+  //}
+  //m_domain_center = m_domain_center/m_domain->Particles.size();
   
 }
 
 void Editor::calcMeshCenter(){
-  
+  /*
   m_femsh_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
@@ -1672,6 +1671,7 @@ void Editor::calcMeshCenter(){
     m_femsh_center.z += m_domain->Particles[p]->x(2);
   }
   m_femsh_center = m_femsh_center/m_domain->Particles.size();
+  */
 }
 
 void Editor::addViewer(VtkViewer *v){

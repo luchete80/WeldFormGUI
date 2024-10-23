@@ -8,8 +8,18 @@ public:
 
 
 protected:
+  unsigned int m_id;
+  char *       m_name;
+};
+
+class MeshEntity {
+public:
+
+
+protected:
   Mesh *m_mesh;
   unsigned int m_id;
 };
+
 
 #endif
