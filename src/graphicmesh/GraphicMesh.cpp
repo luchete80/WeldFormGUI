@@ -346,7 +346,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
   std::vector <std::array<float,3>> pts; 
   
   points = vtkSmartPointer<vtkPoints>::New();
-
+  cout << "Node count "<<mesh.getNodeCount()<<endl;
   for (int n=0;n<mesh.getNodeCount();n++){
     cout << "Node "<<n<<endl;
           std::array <float,3> coords;
@@ -362,10 +362,11 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
     //scalars->InsertTuple1(i, i);
   }
   cout << "Done"<<endl;
-/*
+
   polys  = vtkSmartPointer<vtkCellArray>::New();
 
   for (int e=0;e<mesh.getElemCount();e++){
+    cout << "Elem "<<e<<endl;
     int nc = mesh.getElem(e)->getNodeCount();
     if (nc==3){
       vtkNew<vtkTriangle> cell;
@@ -374,7 +375,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
 
       }
       polys->InsertNextCell(cell);
-    } else if (mesh.getElem(e)->getNodeCount()==4){
+    } else if (mesh.getElem(e)->getNodeCount()==4){ //CHECK ALSO DIMENSION
       vtkNew<vtkQuad> cell;
       for (int nn=0;nn<nc;nn++) {
         cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
@@ -411,8 +412,8 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->GetProperty()->EdgeVisibilityOn ();
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
-  */
-    
+  
+  return EXIT_SUCCESS;    
 }
 
 

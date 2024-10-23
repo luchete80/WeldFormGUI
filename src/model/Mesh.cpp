@@ -43,7 +43,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
     int m_dim = 2;
     
     if (L[2] > 0.0) m_dim = 3;
-    
+    cout << "Dimension set to "<<m_dim<<endl;
     
     nel[0] = (int)(L[0]/(2.0*r));
     nel[1] = (int)(L[1]/(2.0*r));
@@ -67,11 +67,14 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
     
 
     // // // write (*,*) "Creating Mesh ...", "Elements ", neL.y, ", ",neL.z
-  m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
-  if (m_dim == 2)
+  
+  if (m_dim == 2){
     m_elem_count = nel[0]*nel[1];
-  else 
+    m_node_count = (nel[0] +1) * (nel[1]+1);
+  } else { 
     m_elem_count = nel[0]*nel[1]*nel[2];
+    m_node_count = (nel[0] +1) * (nel[1]+1) * (nel[2]+1);
+  }
   cout << "Mesh created. Element count: "<< nel[0]<<", "<<nel[1]<<", "<<nel[2]<<endl;
 
   // // //thisAllocateNodes((nel[0] +1) * (nel[1]+1) * (nel[2]+1));
