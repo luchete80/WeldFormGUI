@@ -14,7 +14,7 @@
 #include "Node.h"
 #include "Element.h"
 #include "Mesh.h"
-//#include "Part.h"
+#include "Part.h"
 #include "App.h"
 //#include "global.h" 
 
@@ -32,5 +32,5 @@
 %include "Element.h"
 //%include "Entity.h"
 %include "Mesh.h"
-//%include "Part.h"
+%include "Part.h"
 %include "App.h"

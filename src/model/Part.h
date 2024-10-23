@@ -4,7 +4,6 @@
 #include "Entity.h"
 #include "Mesh.h"
 
-class Mesh;
 class Geom;
 
 enum Part_Type {Elastic=0, Rigid};
