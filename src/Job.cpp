@@ -70,17 +70,21 @@ void Job::UpdateOutput(){
   ifstream file;
 	file.open("temp.out");
 
+  int l = 0;
 	if (file.is_open()) {
 		//cout << "[I] Found input file " << fileName << endl;
   string line;
   m_log = "";
+
   while(getline(file, line))
     m_log += line + "\n";
+    cout << line.c_str()<<endl;
+    l++;
 	} else {
 		cout << "[E] Input file " << "temp.out" << " could not be found!!" << endl;
 	}
-  
-
+  cout << "File size "<<l<<endl;
+  cout << m_log<<endl;
   
   file.close();  
   

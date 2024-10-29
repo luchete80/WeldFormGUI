@@ -8,7 +8,7 @@
 
 %{
  #include "App.h"
-//#include "Entity.h"
+#include "Entity.h"
 
 #include "Model.h"
 #include "Node.h"
@@ -30,7 +30,7 @@
 %include "Model.h"
 %include "Node.h"
 %include "Element.h"
-//%include "Entity.h"
+%include "Entity.h"
 %include "Mesh.h"
 %include "Part.h"
 %include "App.h"

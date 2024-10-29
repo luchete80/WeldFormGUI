@@ -7,6 +7,7 @@ class Entity {
 public:
   Entity(){}
   Entity(int &id){m_id=id;}
+  unsigned int & getId(){return m_id;}
 
 protected:
   unsigned int m_id;
