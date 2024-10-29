@@ -20,7 +20,9 @@ void App::initApp(){
   }
 }
 
-bool App::isUpdateNeeded(){
+bool & App::isUpdateNeeded(){
+  
+  return _updateNeeded;
   }
 
 

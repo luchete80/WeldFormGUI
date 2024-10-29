@@ -170,6 +170,7 @@ else()
 
   VTK::TestingCore
   VTK::TestingRendering
+  
   #VTK::FiltersGeneral
   )
 endif()
@@ -220,7 +221,8 @@ target_link_libraries(${EXEC_NAME}
             ${RT_LIB}
             ${VTK_LIBRARIES}
 	    
-            ${GMSH_LIBS}
+            #${GMSH_LIBS}
+            gmsh
             ${LINK_LIBRARIES}
             ${PYTHON_LIBRARIES}
 )

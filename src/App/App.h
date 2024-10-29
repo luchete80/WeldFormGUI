@@ -17,7 +17,7 @@ public:
   Model &getActiveModel();
 
   void setActiveModel(Model *);
-  bool isUpdateNeeded();
+  bool& isUpdateNeeded();
   void Update(){_updateNeeded=true;}
   void checkUpdate();
   static void initApp();
