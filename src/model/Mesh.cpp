@@ -5,7 +5,7 @@
 #include <map>
 
 #include <gmsh.h>
-
+#include <array>
 using namespace std;
 
 /*
