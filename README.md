@@ -19,9 +19,9 @@ You need opencocct-V7_5_0
 Windows 
 
 I prefer to install using nmake, not MSVC project files. 
-cmake ..\WeldFormGUI -G "NMake Makefiles"
+cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
 
--DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include 
+-DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include \
 
 -DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
 
