@@ -39,6 +39,7 @@ const Vector3f& Mesh::getNodePos(const int &i)const{
 
 void Mesh::addPlane(double x0, double y0, double lx, double ly, double d){
   addBoxLength(Vector3f(x0,y0,0.0),Vector3f(lx,ly,0.0), d/2.0);
+  
   }
   
   

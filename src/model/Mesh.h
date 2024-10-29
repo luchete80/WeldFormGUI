@@ -12,6 +12,8 @@
 #include "Entity.h"
 #include "Set.h"
 
+//ALSO COULD BE DISTINGHUISED BY ELEMENT NODES COUNT
+enum Mesh_Type {FEM=0,SPH};
 
 class Element;
 class Node;
@@ -24,7 +26,7 @@ class Mesh{
   friend class GraphicMesh;
   
 public:
-  Mesh(){}
+  Mesh(){m_type = FEM;}
   void genFromGmshModel();
   //void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
   //                  std::vector < std::vector <int> >      elnod_h);
@@ -42,7 +44,8 @@ public:
   Part& getPart(){return *m_part;}
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
-  
+  Mesh_Type& getType(){return m_type;}
+    
   //vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:
   int m_node_count;
@@ -55,6 +58,7 @@ protected:
   std::vector <Node*>     m_set_node;
   int                     m_gmsh_id; //GMSH entity ID 
   Part*                   m_part;
+  Mesh_Type               m_type;
   /*
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;
@@ -69,6 +73,20 @@ protected:
   vtkSmartPointer<vtkFloatArray> scalars;  
 
   */
+};
+
+class FEMMesh:
+  public Mesh{
+    
+};
+
+
+class SPHMesh:
+  public Mesh{
+
+public:
+SPHMesh(){m_type=SPH;}
+    
 };
 
 #endif

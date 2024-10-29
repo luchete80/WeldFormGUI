@@ -17,6 +17,13 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 
+
+// SPH
+//https://examples.vtk.org/site/Cxx/Filtering/Glyph3D/
+#include <vtkCubeSource.h>
+#include <vtkSphereSource.h>
+#include <vtkGlyph3D.h>
+
 //https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
@@ -47,15 +54,15 @@ public:
   Element*  getElem(const int &i){return m_elem[i];} 
   bool & isActorNeeded(){return m_needs_actor;}
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
-  int createVTKPolyData(); //FROM EXTERNAL VALUES
-  int createVTKPolyData(Mesh &);
+  virtual int createVTKPolyData(); //FROM EXTERNAL VALUES
+  virtual int createVTKPolyData(Mesh &);
   //int createVTKPolyData_Tri(std::vector <std::array<float,3>>, std::vector <std::array<int,3>> elnodes);
   //int createVTKPolyData_Quad(std::vector <std::array<float,3>>, std::vector <std::array<int,4>> elnodes);
   
   vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
   Mesh* getMesh() {return m_mesh;}
   bool & isPolydataNeeded(){return m_needs_polydata;}
-
+  void setPoints(Mesh &mesh); //NOT VIRTUAL
 protected:
   bool                  m_needs_polydata;
   bool                  m_needs_actor;
@@ -77,12 +84,25 @@ protected:
   vtkSmartPointer<vtkPolyData> mesh_pdata;
   vtkSmartPointer<vtkPolyDataMapper> mesh_Mapper;
 
-
+  
+  //GENERAL FROM BASE CLASS
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellArray> polys;
   vtkSmartPointer<vtkFloatArray> scalars;  
 
   
+};
+
+class GraphicSPHMesh:
+public GraphicMesh {
+public:
+  GraphicSPHMesh();
+  GraphicSPHMesh(Mesh*);
+  virtual int createVTKPolyData(Mesh &mesh);
+  
+protected:
+  vtkSmartPointer<vtkGlyph3D> m_glyph3D;  
+
 };
 
 #endif

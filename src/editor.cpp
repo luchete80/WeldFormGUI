@@ -795,14 +795,29 @@ void Editor::drawGui() {
               cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
               if (item_current == 2)//Plane
                 size[2] = 0.0;
-              m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+              //m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+
+              Mesh *m_sph_msh = new SPHMesh();
+              m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
+              m_model->addPart(new Part(m_sph_msh));
+
+              getApp().setActiveModel(m_model);
+              //getApp().Update(); //CRASHES
+              
+              graphic_mesh = new GraphicSPHMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+              graphic_mesh->createVTKPolyData(*m_sph_msh);
+
+              viewer->addActor(graphic_mesh->getActor());
+              
               //calcDomainCenter();
               //cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
               //is_sph_mesh = true;
-            }
+            } //CREATE SPH
             
             if (ImGui::Button("Create FEM")){
               
+              
+ 
               Mesh *m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
               cout << "size[2]"<<endl;
@@ -888,6 +903,8 @@ void Editor::drawGui() {
       
       //m_model->getPart(0)->genFromGmshModel()
       getApp().setActiveModel(m_model);
+      //getApp().Update(); ///CRASHES
+      
       PyRun_SimpleString("GetApplication().getActiveModel()");
         
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL

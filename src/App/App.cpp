@@ -50,7 +50,7 @@ void App::updateMeshes(){
   for (int p=0;p<_activeModel->getPartCount();p++){
     bool not_found = true;
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
-        if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){
+        if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
             not_found = false;
           
           }
@@ -58,12 +58,20 @@ void App::updateMeshes(){
         }
       if (not_found){
         cout << "Creating Graphic Mesh for part "<<p<<endl;
-        if (_activeModel->getPart(p)->getMesh()!=nullptr)
+        if (_activeModel->getPart(p)->getMesh()!=nullptr){
+          if (_activeModel->getPart(p)->getMesh()->getType()==SPH){
+            cout << "Creating SPH graphic mesh-----"<<endl;
+            m_graphicmeshes.push_back( new GraphicSPHMesh()); ///THIS READS FROM GLOBAL GMSH MODEL
+            m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*_activeModel->getPart(p)->getMesh());
+
+            //viewer->addActor(graphic_mesh->getActor());  
+          }
+          else
           m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
-        else 
+        }else 
           cout << "ERROR: Part mesh is null pointer"<<endl;
       }
-      } //part
+  } //part loop
       
   _updateNeeded = false;    
 }
