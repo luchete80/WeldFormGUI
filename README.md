@@ -16,6 +16,15 @@ sudo apt-get install xorg-dev libglu1-mesa-dev
 You need opencocct-V7_5_0
 
 
+Windows 
+
+I prefer to install using nmake, not MSVC project files. 
+cmake ..\WeldFormGUI -G "NMake Makefiles"
+
+-DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include 
+
+-DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
+
 
 
 Integrate FreetypeGL
