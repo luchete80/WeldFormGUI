@@ -6,7 +6,7 @@ Graphical User Interface to generate model and export solver input
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/image_01.png)
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/image_02.png
 
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/python_GUI_python.gif)
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/python_GUI.gif)
 
 ## Build Instructions
 
@@ -44,17 +44,12 @@ https://gitlab.onelab.info/gmsh/gmsh/-/wikis/Gmsh-compilation
 
 WeldFormGUI uses gmsh and "contrib/netgen/libsrc/occ"
 
-On Ubuntu
 curl -L -o occt.tgz "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_5_0;sf=tgz"
 tar zxf occt.tgz
 cd occt-V7_5_0
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_MODULE_Draw=0 -DBUILD_MODULE_Visualization=0 -DBUILD_MODULE_ApplicationFramework=0 ..
-
-On MSWIN
-https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_5_0.tar.gz
-
 # Notes:
 # * if you installed dependencies (e.g. Freetype) in non-standard locations, add the option -DCMAKE_PREFIX_PATH=path-of-installed-dependencies
 # * if you don't have root access, add -DCMAKE_INSTALL_PREFIX=path-to-install
@@ -68,14 +63,6 @@ This renders VTK to a FBO
 https://github.com/trlsmax/imgui-vtk
 
 MUST SPECIFY IMGUI AND GLFW3 DIRS TO IMUI-VTK
-
-
-To build VTK with OCC in MSWIN
-cmake ..\VTK-9.3.1 -DVTK_MODULE_ENABLE_VTK_IOOCCT=YES -DOpenCASCADE_DIR={$PUT_OCC_NMAKE_INSTALL_DIR}/CMake
-
-Finally, on MSWIN
-
-cmake ../WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DVTK_DIR=D:\Luciano\Numerico\Libs\VTK -DOpenCASCADE_DIR=D:\Luciano\Numerico\Libs\OCCT\cmake
 
 PUT VTK BINARYPATH 
 BUILD IT AS RELEASE!
