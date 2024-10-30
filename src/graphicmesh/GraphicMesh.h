@@ -30,9 +30,11 @@ class Element;
 class Node;
 class Model;
 class Mesh;
+class VtkViewer;
 
 class GraphicMesh{
   friend class Model;
+  //friend class VtkViewer;
 public:
   GraphicMesh(){  
     m_needs_polydata = true;
@@ -56,6 +58,7 @@ public:
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   virtual int createVTKPolyData(); //FROM EXTERNAL VALUES
   virtual int createVTKPolyData(Mesh &);
+  void setActorNeeded(bool an){m_needs_actor=an;}
   //int createVTKPolyData_Tri(std::vector <std::array<float,3>>, std::vector <std::array<int,3>> elnodes);
   //int createVTKPolyData_Quad(std::vector <std::array<float,3>>, std::vector <std::array<int,4>> elnodes);
   

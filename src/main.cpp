@@ -453,11 +453,14 @@ int main(int argc, char* argv[])
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
+      //cout << "is actor needed for mesh "<<gm<<": "<<getApp().getGraphicMesh(gm)->isActorNeeded()<<endl;
         if (getApp().getGraphicMesh(gm)->isActorNeeded()){
+          cout << "Adding Actor"<<endl;
           vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
           
         }
-      cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;
+      //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;
     }
     
 

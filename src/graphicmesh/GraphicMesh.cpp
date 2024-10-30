@@ -15,6 +15,7 @@
 
 #include <array>
 
+//#include "VtkViewer.h"
 // ADD VTK MECH
 // FROM https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
@@ -363,7 +364,7 @@ int GraphicMesh::createVTKPolyData() {
   mesh_actor->GetProperty()->SetRepresentationToWireframe();
   mesh_actor->Modified ();
   
-  m_needs_actor = false;
+  //m_needs_actor = false; //NEEDS TO BE ADDED!
   
   return EXIT_SUCCESS;
 }
@@ -451,7 +452,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
 
-  m_needs_actor = false; //To Show
+  //m_needs_actor = false; //Need stril to be added to renderer To Show
     
   return EXIT_SUCCESS;    
 }
@@ -511,7 +512,7 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
 
-  m_needs_actor = false; //To Show
+  m_needs_actor = true; //To Show
     
   return EXIT_SUCCESS;    
 }

@@ -9,7 +9,7 @@ using namespace std;
 
 class GraphicMesh;
 //class VtkViewer;
-
+//SHOULD ALSO BEE OF INTEREST TO HAVE A REFERENCE TO THE RENDERER
 class App{
 
 public:  

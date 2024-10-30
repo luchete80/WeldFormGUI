@@ -65,13 +65,15 @@ void App::updateMeshes(){
             cout << "Creating SPH graphic mesh-----"<<endl;
             m_graphicmeshes.push_back( new GraphicSPHMesh()); ///THIS READS FROM GLOBAL GMSH MODEL
             m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*_activeModel->getPart(p)->getMesh());
-
+            //ACTOR IS NOT ASSIGNED (THIS IS DONE IN ORDER TO NOT ADD VTK CODE HERE)
             //viewer->addActor(graphic_mesh->getActor());  
           }
           else
           m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
         }else 
           cout << "ERROR: Part mesh is null pointer"<<endl;
+      
+        cout << "Graphic mesh count is "<<m_graphicmeshes.size()<<endl;
       }
   } //part loop
       
