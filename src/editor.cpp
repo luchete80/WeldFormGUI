@@ -1308,6 +1308,7 @@ Editor::Editor(){
   */
   m_show_app_console = true;
   m_model = new Model();
+  getApp().setActiveModel(m_model);
   
 }
 

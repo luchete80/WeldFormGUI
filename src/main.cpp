@@ -272,8 +272,7 @@ int main(int argc, char* argv[])
   bool vtk_2_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   
-  cout << "Creating Editor"<<endl;
-  Editor* editor = new Editor();
+
   cout << "Done. "<<endl;
   cout << "Initialize gmsh"<<endl;
   gmsh::initialize(argc, argv);
@@ -312,13 +311,17 @@ int main(int argc, char* argv[])
       bool ret = LoadTextureFromFile("buttons/xy.png", &my_image_texture, &my_image_width, &my_image_height);
       IM_ASSERT(ret);
           
-    editor->addViewer(&vtkViewer2);
+
   // Main loop
   
   Py_Initialize();
   
   App::initApp(); //singleton
-  
+  ///AFTER APP INITIALIZATIO
+  cout << "Creating Editor"<<endl;
+  Editor* editor = new Editor();
+    editor->addViewer(&vtkViewer2);  
+    
   //getApp().setActiveModel(m_model);
 
   PyRun_SimpleString("from model import *");

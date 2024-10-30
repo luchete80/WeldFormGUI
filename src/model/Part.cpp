@@ -17,6 +17,9 @@ Entity(id){
 Part::Part(Mesh *mesh):
 m_msh(mesh){
   
+  if (mesh==nullptr){
+    cout << "ERROR, NULL mesh pointer"<<endl;
+  }
 }
 
 Part::Part(Geom* geom){
