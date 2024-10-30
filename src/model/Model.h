@@ -27,7 +27,7 @@ class Model {
 public:
   Model(){part_count=0;}
   Model(std::string );
-  Mesh* getPartMesh(const int &i);
+  //Mesh* getPartMesh(const int &i);
   void addPart(Part *);
   void addPart(Geom *);
   void addGeom(Geom* );
@@ -38,6 +38,7 @@ public:
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}
+  Part & getPartRef(const int &i) {return *m_part[i];}
   virtual void AddBoxLength				(int tag, Vec3_t const &V, double Lx, double Ly, double Lz,double r, double Density,
                                 double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
                                 
@@ -67,7 +68,7 @@ public Model{
 public:
   FEMModel(){ m_modeltype = FEM_Model;}
   FEMModel(std::string ){};
-  Mesh* getPartMesh(const int &i){};
+  //Mesh* getPartMesh(const int &i){};
            
   ~FEMModel(){}
 protected:

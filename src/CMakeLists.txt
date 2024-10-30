@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 project(imgui-vtk)
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
+include_directories("${CMAKE_SOURCE_DIR}/src/App")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
@@ -20,7 +21,7 @@ link_directories ("${GMSH_DIR}/lib")
 include_directories ("${GMSH_DIR}/include")
 endif()
 
-
+add_subdirectory("App")
 add_subdirectory("model")
 add_subdirectory("graphicmesh")
 add_subdirectory("io")
@@ -107,6 +108,9 @@ find_package(VTK
   QUIET
 )
 
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 #IOCCT
 #DEPENDS
 #  VTK::CommonExecutionModel
@@ -166,6 +170,7 @@ else()
 
   VTK::TestingCore
   VTK::TestingRendering
+  
   #VTK::FiltersGeneral
   )
 endif()
@@ -204,7 +209,7 @@ endif()
 
 target_link_libraries(${EXEC_NAME} 
             
-
+            app
             model
             graphicmesh
 						#freetype
@@ -216,16 +221,18 @@ target_link_libraries(${EXEC_NAME}
             ${RT_LIB}
             ${VTK_LIBRARIES}
 	    
-            ${GMSH_LIBS}
+            #${GMSH_LIBS}
+            gmsh
             ${LINK_LIBRARIES}
+            ${PYTHON_LIBRARIES}
 )
 
 
 file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
 
-find_package(pybind11 REQUIRED)
-pybind11_add_module(py_imgui-vtk 
-	${SOURCE_FILES}
-	${HEADER_FILES}
-	${PYTHON_FILES}
-)
+#find_package(pybind11 REQUIRED)
+#pybind11_add_module(py_imgui-vtk 
+#	${SOURCE_FILES}
+#	${HEADER_FILES}
+#	${PYTHON_FILES}
+#)

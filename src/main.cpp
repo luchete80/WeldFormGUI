@@ -54,6 +54,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <Python.h>
+
+#include "App/App.h"
+#include "GraphicMesh.h"
+
+//using App;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
@@ -202,8 +208,13 @@ int main(int argc, char* argv[])
   const char* glsl_version = "#version 130";
 #endif
 
+
+  const GLFWvidmode* modes = glfwGetVideoMode(glfwGetPrimaryMonitor()/*, &count*/);
+  cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
+
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui VTKViewer Example", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
+  //GLFWwindow* window = glfwCreateWindow(800, 600, "WeldForm GUI", NULL, NULL);
   if (window == NULL){
     return 1;
   }
@@ -261,8 +272,7 @@ int main(int argc, char* argv[])
   bool vtk_2_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   
-  cout << "Creating Editor"<<endl;
-  Editor* editor = new Editor();
+
   cout << "Done. "<<endl;
   cout << "Initialize gmsh"<<endl;
   gmsh::initialize(argc, argv);
@@ -293,9 +303,28 @@ int main(int argc, char* argv[])
     //widget->SetInteractor(renderWindowInteractor);
     vtkViewer2.addActor(geom.actor);
 */
-    
-    editor->addViewer(&vtkViewer2);
+
+
+      GLuint my_image_texture = 0;
+      int my_image_width = 0;
+      int my_image_height = 0;
+      bool ret = LoadTextureFromFile("buttons/xy.png", &my_image_texture, &my_image_width, &my_image_height);
+      IM_ASSERT(ret);
+          
+
   // Main loop
+  
+  Py_Initialize();
+  
+  App::initApp(); //singleton
+  ///AFTER APP INITIALIZATIO
+  cout << "Creating Editor"<<endl;
+  Editor* editor = new Editor();
+    editor->addViewer(&vtkViewer2);  
+    
+  //getApp().setActiveModel(m_model);
+
+  PyRun_SimpleString("from model import *");
   while (!glfwWindowShouldClose(window))
   {
     // Poll and handle events (inputs, window resize, etc.)
@@ -364,7 +393,8 @@ int main(int argc, char* argv[])
     ImGui::End();
 
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
-    ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+    //ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(400, 200),ImGuiCond_FirstUseEver);
     if (vtk_2_open){
 
       ImGui::Begin("Model Viewer", &vtk_2_open, VtkViewer::NoScrollFlags());
@@ -377,17 +407,26 @@ int main(int argc, char* argv[])
 
       auto renderer = vtkViewer2.getRenderer();
       
-      GLuint my_image_texture = 0;
-      int my_image_width = 0;
-      int my_image_height = 0;
-      bool ret = LoadTextureFromFile("buttons/extents.png", &my_image_texture, &my_image_width, &my_image_height);
-      IM_ASSERT(ret);
 
-      //  ImTextureID my_tex_id = io.Fonts->TexID;
+
+      ImTextureID my_tex_id = io.Fonts->TexID;
       //You can return anything but you should cast it as void
-      if (ImGui::ImageButton("blah", (void *)my_image_texture, ImVec2(30, 30)))
-        cout << "clicked"<<endl;
+      // frame_padding < 0: uses FramePadding from style (default)
+    // frame_padding = 0: no framing
+    // frame_padding > 0: set framing size
+    // The color used are the button colors.
+    //bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+
+      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,ImVec2(0,0));
+      if (ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(24, 24))){
+      cout << "Extents"<<endl;
+      }
         
+      ImGui::SameLine();
+      if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(24, 24)))
+        cout << "clicked"<<endl;
+      
+      ImGui::PopStyleVar();  
       if (ImGui::Button("VTK Background: Black")){
         renderer->SetBackground(0, 0, 0);
       }
@@ -415,7 +454,17 @@ int main(int argc, char* argv[])
       ImGui::End();
     }
     
-
+    getApp().checkUpdate(); //To new Graphics Meshed and so on
+    for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
+      //cout << "is actor needed for mesh "<<gm<<": "<<getApp().getGraphicMesh(gm)->isActorNeeded()<<endl;
+        if (getApp().getGraphicMesh(gm)->isActorNeeded()){
+          cout << "Adding Actor"<<endl;
+          vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
+          
+        }
+      //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;
+    }
     
 
     ImGui::Render();

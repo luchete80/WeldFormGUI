@@ -17,16 +17,32 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 
+
+// SPH
+//https://examples.vtk.org/site/Cxx/Filtering/Glyph3D/
+#include <vtkCubeSource.h>
+#include <vtkSphereSource.h>
+#include <vtkGlyph3D.h>
+
 //https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
 class Element;
 class Node;
 class Model;
+class Mesh;
+class VtkViewer;
 
 class GraphicMesh{
   friend class Model;
+  //friend class VtkViewer;
 public:
-  GraphicMesh(){}
+  GraphicMesh(){  
+    m_needs_polydata = true;
+    m_needs_actor = true; //needs actor to be shown
+    mesh_actor = nullptr;
+    mesh_pdata = nullptr;
+  } //To create polydata and actor
+  GraphicMesh(Mesh *Mesh);
   void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers
@@ -38,15 +54,22 @@ public:
   const int & getElemCount()const {return m_elem_count;}
   Node*     getNode(const int &i){return m_node[i];} 
   Element*  getElem(const int &i){return m_elem[i];} 
-  
+  bool & isActorNeeded(){return m_needs_actor;}
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
-  int createVTKPolyData(); //FROM EXTERNAL VALUES
-  int createVTKPolyData(Mesh *);
+  virtual int createVTKPolyData(); //FROM EXTERNAL VALUES
+  virtual int createVTKPolyData(Mesh &);
+  void setActorNeeded(bool an){m_needs_actor=an;}
   //int createVTKPolyData_Tri(std::vector <std::array<float,3>>, std::vector <std::array<int,3>> elnodes);
   //int createVTKPolyData_Quad(std::vector <std::array<float,3>>, std::vector <std::array<int,4>> elnodes);
   
   vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
+  Mesh* getMesh() {return m_mesh;}
+  bool & isPolydataNeeded(){return m_needs_polydata;}
+  void setPoints(Mesh &mesh); //NOT VIRTUAL
 protected:
+  bool                  m_needs_polydata;
+  bool                  m_needs_actor;
+  Mesh*                 m_mesh;
   int m_node_count;
   int m_elem_count;
   std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!
@@ -64,12 +87,25 @@ protected:
   vtkSmartPointer<vtkPolyData> mesh_pdata;
   vtkSmartPointer<vtkPolyDataMapper> mesh_Mapper;
 
-
+  
+  //GENERAL FROM BASE CLASS
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellArray> polys;
   vtkSmartPointer<vtkFloatArray> scalars;  
 
   
+};
+
+class GraphicSPHMesh:
+public GraphicMesh {
+public:
+  GraphicSPHMesh();
+  GraphicSPHMesh(Mesh*);
+  virtual int createVTKPolyData(Mesh &mesh);
+  
+protected:
+  vtkSmartPointer<vtkGlyph3D> m_glyph3D;  
+
 };
 
 #endif

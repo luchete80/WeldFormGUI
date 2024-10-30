@@ -111,11 +111,16 @@ public:
   
   //ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
+
+
+  //Model * getDomain() {return m_domain;}
   
-  Model * getDomain() {return m_domain;}
+  Model & getModel(){return *m_model;}
   
   void calcDomainCenter();
   void calcMeshCenter();
+  void setShowConsole(bool &b){m_show_app_console=b;}
+  void changeShowConsole(){m_show_app_console=!m_show_app_console;}
 protected:
 
   GLFWwindow* window;
@@ -141,12 +146,12 @@ protected:
   //Renderer ground_mesh;
   
   Mesh   *m_fem_msh;
-  bool    is_fem_mesh;
+  //bool    is_fem_mesh;
   bool    is_sph_mesh;
   
 
   long long m_start_time;
-  Model *m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
+  //Model *m_domain; /////TODO: MODIFY, CONVERT TO POINTER TO BASE CLASS
   Vector3f m_domain_center;
   Vector3f m_femsh_center;
   double m_dx;

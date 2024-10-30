@@ -41,6 +41,9 @@
 #include "Part.h"
 #include "GraphicMesh.h"
 
+#include "console.h"
+
+#include "App.h"
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -342,13 +345,13 @@ void ShowExampleMenuFile(const Editor &editor)
 // Note the difference between BeginMainMenuBar() and BeginMenuBar():
 // - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-/*static */void ShowExampleAppMainMenuBar(const Editor &editor)
+/*static */void ShowExampleAppMainMenuBar(Editor *editor)
 {
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            ShowExampleMenuFile(editor);
+            ShowExampleMenuFile(*editor);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -359,6 +362,13 @@ void ShowExampleMenuFile(const Editor &editor)
             if (ImGui::MenuItem("Cut", "CTRL+X")) {}
             if (ImGui::MenuItem("Copy", "CTRL+C")) {}
             if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View"))
+        {
+            if (ImGui::MenuItem("Console", "CTRL+Z")) {editor->changeShowConsole();}
+            ImGui::Separator();
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -773,31 +783,57 @@ void Editor::drawGui() {
             static double radius = 0.01;
             ImGui::InputDouble("Particle Radius",&radius); 
             if (ImGui::Button("Create SPH")){
-             cout << "radius "<<radius<<endl;
-             cout << "size 0"<<size[0]<<endl;
-            if (item_current == 2)//Plane
-                cout << "PLANE!"<<endl;
-              double L = 0.5;
-              double H = 0.5;
-              m_dx = 0.05;
-              double rho = 1.;
-              double h = 1.2*radius;
-              cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
+               cout << "radius "<<radius<<endl;
+               cout << "size 0"<<size[0]<<endl;
               if (item_current == 2)//Plane
-                size[2] = 0.0;
-              m_domain->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
-              calcDomainCenter();
-              cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
-              is_sph_mesh = true;
-            }
+                  cout << "PLANE!"<<endl;
+                double L = 0.5;
+                double H = 0.5;
+                m_dx = 0.05;
+                double rho = 1.;
+                double h = 1.2*radius;
+                cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
+                if (item_current == 2)//Plane
+                  size[2] = 0.0;
+                //m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+
+                Mesh *m_sph_msh = new SPHMesh();
+                m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
+                m_model->addPart(new Part(m_sph_msh));
+
+                getApp().setActiveModel(m_model);
+                getApp().Update(); //CRASHES
+                
+                //graphic_mesh = new GraphicSPHMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+                //graphic_mesh->createVTKPolyData(*m_sph_msh);
+
+                //viewer->addActor(graphic_mesh->getActor());
+                
+                //calcDomainCenter();
+                //cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
+                //is_sph_mesh = true;
+            } //CREATE SPH
             
             if (ImGui::Button("Create FEM")){
-              m_fem_msh = new Mesh();
+              
+              
+ 
+              Mesh *m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              
-              //m_renderer.addMesh(m_fem_msh);
-              
-              is_fem_mesh = true;
+              cout << "size[2]"<<endl;
+              cout << "Adding part" <<endl;
+              m_model->addPart(new Part(m_fem_msh));
+              cout << "set upate"<<endl;
+              getApp().setActiveModel(m_model);
+              getApp().Update(); //Create Graphic Mesh
+              cout << "Done"<<endl;
+              //CHANGE TO MESH CONSTRUCTOR
+              //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+              //graphic_mesh->createVTKPolyData(*m_fem_msh);
+
+              //viewer->addActor(graphic_mesh->getActor());
+                            
+              //is_fem_mesh = true;
             }
     }
 
@@ -832,8 +868,9 @@ void Editor::drawGui() {
       m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));
-      is_fem_mesh = true;
+      //is_fem_mesh = true;
       }
+      // action
       // action
       create_new_part = true;
       
@@ -868,19 +905,18 @@ void Editor::drawGui() {
       gmsh::write("test.msh");
       m_model->getPart(0)->generateMesh();
       
+      //m_model->getPart(0)->genFromGmshModel()
+      getApp().setActiveModel(m_model);
+      //getApp().Update(); ///CRASHES
       
-      //  m_model->getPart(0)->getMesh()->createVTKPolyData();
-      //GraphicMesh *graphic_mesh = new GraphicMesh();
-      //SHOULD BE REPLACED WITH 
+      PyRun_SimpleString("GetApplication().getActiveModel()");
+        
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
-      //graphic_mesh.push_back(new GraphicMesh());
-      //
-      //viewer->addActor(m_model->getPart(0)->getMesh()->getActor());
-      //viewer->addActor(graphic_mesh[0]->getActor());
+
       viewer->addActor(graphic_mesh->getActor());
 
-      //gmsh::write("t20.msh");    
+
     
     }
     
@@ -900,11 +936,8 @@ void Editor::drawGui() {
       
       cout << "Exporting file "<<filePathName<<endl;
       if (is_sph_mesh){    
-        // for (int p=0;p<m_domain.Particles.size();p++){    
-          // float h = m_domain.Particles[0]->h/2.;
-          // pn.Scale(h, h,h);  
-          // Vec3_t v = m_domain.Particles[p]->x ;
-        LSDynaWriter writer(m_domain, filePathName);
+ 
+        //LSDynaWriter writer(m_model, filePathName);
       }
       //m_model = new Model(filePathName);
       //m_renderer.addMesh(m_model->getPartMesh(0));
@@ -916,13 +949,13 @@ void Editor::drawGui() {
     ImGuiFileDialog::Instance()->Close();
   }
   
-  ShowExampleAppMainMenuBar(*this);
+  ShowExampleAppMainMenuBar(this);
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
   
   //ExampleAppLog logtest;
-  ShowExampleAppLog(&show_app_log, &logtest);
+  //ShowExampleAppLog(&show_app_log, &logtest);
   //cout << "log tst "<<logtest.test<<endl;
   create_new_mat  = false;
   create_new_set  = false;
@@ -934,7 +967,8 @@ void Editor::drawGui() {
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
-    
+  
+  /*   
     if(is_fem_mesh)
       CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
     else
@@ -943,11 +977,12 @@ void Editor::drawGui() {
 
       //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
     } else if (is_sph_mesh){
-      
+     
     } //IF IS GEOMETRY??
-
+*/ 
     //cout << "SET TYPE"<<m_setdlg.set_type<<endl;
   }//show_set_mat
+  
   if (create_new_mat) {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!
@@ -966,8 +1001,11 @@ void Editor::drawGui() {
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }
-  
-
+    
+  if (m_show_app_console) {
+    static ExampleAppConsole console;
+    console.Draw("Example: Console", &m_show_app_console);    
+    }            //ShowExampleAppConsole(&m_show_app_console);
   
   ImGui::End();
 
@@ -1268,7 +1306,9 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
+  m_show_app_console = true;
   m_model = new Model();
+  getApp().setActiveModel(m_model);
   
 }
 
@@ -1641,17 +1681,17 @@ void Editor::calcDomainCenter(){
   m_domain_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
-  for (int p=0;p<m_domain->Particles.size();p++)    {
-    m_domain_center.x += m_domain->Particles[p]->x(0);
-    m_domain_center.y += m_domain->Particles[p]->x(1);
-    m_domain_center.z += m_domain->Particles[p]->x(2);
-  }
-  m_domain_center = m_domain_center/m_domain->Particles.size();
+  //for (int p=0;p<m_domain->Particles.size();p++)    {
+    //m_domain_center.x += m_domain->Particles[p]->x(0);
+    //m_domain_center.y += m_domain->Particles[p]->x(1);
+    //m_domain_center.z += m_domain->Particles[p]->x(2);
+  //}
+  //m_domain_center = m_domain_center/m_domain->Particles.size();
   
 }
 
 void Editor::calcMeshCenter(){
-  
+  /*
   m_femsh_center = 0.0;
   //Converting from Vec3_t to Vector3f
   //SELECT IF DOMAIN IS SPH
@@ -1661,6 +1701,7 @@ void Editor::calcMeshCenter(){
     m_femsh_center.z += m_domain->Particles[p]->x(2);
   }
   m_femsh_center = m_femsh_center/m_domain->Particles.size();
+  */
 }
 
 void Editor::addViewer(VtkViewer *v){

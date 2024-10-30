@@ -66,3 +66,19 @@
          - 
 20241015 - Added VTK Geom Wireframe Mode
          - Begining to change model writer
+         - Added 1D MESH. Changed element connectivity from array to vector (not fixed)
+         - Fixed Mesh visualization to wireframe in 1D case.
+20241017 - Fixed Buttons going black (every frame was reading img)     
+         - Beginning to add command/scripting console    
+         - Changing resolution to max monitor size (like Full Screen but resizable).
+         - Added view menu 
+         - Begining to generate part->mesh from GMSH global interface (SHOULD DELETE MODEL AFTER MESH? OR TRY AS SEPARATE MODELS?) 
+         
+20241021 - Adding python console
+         - CREATING APP SINGLETON. This is based on FreeCAD.
+20241022 - First Succesful python console commands!! 
+20241023 - Removed old m_domain, now ALL IS m_model (should be on App??)
+20241029 - FIXED "Show Results", now is showing the entire log.
+         - Added SPH Mesh Creation (SHOULD)
+20241030 - FIXED generating part from Console via Python Commands.
+           

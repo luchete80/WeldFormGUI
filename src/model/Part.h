@@ -1,19 +1,28 @@
 #ifndef _PART_H_
 #define _PART_H_
 
-class Mesh;
+#include "Entity.h"
+#include "Mesh.h"
+#include <iostream>
+
+using namespace std;
+
 class Geom;
 
 enum Part_Type {Elastic=0, Rigid};
 
-class Part {
+class Part :
+public Entity{
   
 public:
-  int id;
+  Part(int &id);
   Part(){}
+  Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
   Part(Geom*);
-  Mesh* getMesh(){return m_msh;}
+  Mesh* getMesh(){if (m_msh != nullptr) {cout << "Address "<<m_msh<<endl;return m_msh;} else cout << "MESH POINTER "<<endl;}
+  Mesh & getRef(){return *m_msh;}
+  void setMesh(Mesh* m);
   void generateMesh();
   virtual Part_Type getType(){return m_type;}
 protected:

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="210mm"
+   viewBox="0 0 210 210"
+   version="1.1"
+   id="svg834"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="view_plane_xy.svg"
+   inkscape:export-filename="/home/weldform-pc/Numerico/WeldFormGUI/resources/xy.png"
+   inkscape:export-xdpi="3.870476"
+   inkscape:export-ydpi="3.870476"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview836"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.66368547"
+     inkscape:cx="442.22755"
+     inkscape:cy="420.37986"
+     inkscape:window-width="1850"
+     inkscape:window-height="1016"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs831" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.309801px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 11.298919,66.655676 C 12.287103,64.861278 40.868926,16.822395 40.868926,16.822395 L 68.804913,66.448321 H 52.448526 V 164.03825 H 29.265565 L 28.718537,66.545373 Z"
+       id="path1175"
+       sodipodi:nodetypes="cccccccc" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.292697px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 149.83111,148.00076 c 1.7944,0.88208 49.83328,26.39495 49.83328,26.39495 L 150.03846,199.3321 V 184.73195 H 52.448526 v -20.6937 l 97.492884,-0.4883 z"
+       id="path1175-7"
+       sodipodi:nodetypes="cccccccc" />
+    <rect
+       style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.244;stroke-dasharray:0.061, 0.061"
+       id="rect3007"
+       width="54.604462"
+       height="51.509869"
+       x="17.145092"
+       y="145.1434" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:113.203px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.83008"
+       x="79.001244"
+       y="135.46648"
+       id="text5675"><tspan
+         sodipodi:role="line"
+         id="tspan5673"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:113.203px;font-family:Ubuntu;-inkscape-font-specification:'Ubuntu, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dcdcdc;fill-opacity:1;stroke-width:2.83008"
+         x="79.001244"
+         y="135.46648">Z</tspan></text>
+  </g>
+</svg>

@@ -4,7 +4,9 @@ Graphical User Interface to generate model and export solver input
 
 
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/image_01.png)
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/image_02.png)
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/image_02.png
+
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/main/python_GUI_python.gif)
 
 ## Build Instructions
 
@@ -15,6 +17,15 @@ sudo apt-get install xorg-dev libglu1-mesa-dev
 
 You need opencocct-V7_5_0
 
+
+Windows 
+
+I prefer to install using nmake, not MSVC project files. 
+cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
+
+-DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include \
+
+-DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
 
 
 

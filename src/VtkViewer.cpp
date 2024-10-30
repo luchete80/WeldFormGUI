@@ -127,7 +127,7 @@ void VtkViewer::init(){
 
 	renderer = vtkSmartPointer<vtkRenderer>::New();
 	renderer->ResetCamera();
-	renderer->SetBackground(0.2,0.2,0.4);
+	renderer->SetBackground(0.2,0.2,0.8);
   renderer->SetBackground2(0.8,0.8,0.8);
   renderer->GradientBackgroundOn();
 

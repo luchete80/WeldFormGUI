@@ -102,9 +102,11 @@ void JobShowDialog::Draw(){
 
   str = m_job->getLog();
 
-  ImGui::Text("State %s", str.c_str()  );  
-  //ImGui::TextUnformatted();
-
+  //ImGui::Text("State %s", str.c_str()  );  
+  
+  ImGui::PushTextWrapPos();
+  ImGui::TextUnformatted(str.c_str());
+  ImGui::PopTextWrapPos();
   
   if (ImGui::Button("Close")){m_show=false;}
 
