@@ -12,7 +12,7 @@ public:
   ModelWriter(Model &Model);
   //ModelWriter(char *fname);
   
-  ~ModelWriter();  
+  ~ModelWriter(){};  
 
 protected:
   char  *m_filename;

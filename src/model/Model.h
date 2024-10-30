@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <string>
+
+using namespace std;
 
 class Element;
 class Node;
@@ -42,7 +45,10 @@ public:
   virtual void AddBoxLength				(int tag, Vec3_t const &V, double Lx, double Ly, double Lz,double r, double Density,
                                 double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
                                 
+  bool & getHasName(){return m_hasname;}
   virtual ~Model(){}
+  void setName (string n){m_name=n;m_hasname=true;}
+  string getName(){return m_name;}
   
   int part_count;
 protected:
@@ -61,12 +67,22 @@ protected:
   int m_mat_count;
   
   bool have_meshes;
+  
+  //IO AND SETTING THINGS
+  bool m_hasname;
+  string m_name;
 };
 
 class FEMModel:
 public Model{
 public:
-  FEMModel(){ m_modeltype = FEM_Model;}
+  FEMModel(){ 
+    m_modeltype = FEM_Model;
+    m_hasname = false;
+    m_name = "";
+    m_mat_count=0;
+  
+  }
   FEMModel(std::string ){};
   //Mesh* getPartMesh(const int &i){};
            

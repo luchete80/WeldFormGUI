@@ -74,9 +74,9 @@ ModelWriter::ModelWriter(Model &model){
   //m_json["Configuration"]["hFactor"] = 1.2;
   m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
-  if (model.getMaterialCount()>0)
-  m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();
-
+  if (model.getMaterialCount()>0){
+    m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();  
+  }
   
   m_model = &model;
   for (int p=0;model.getPartCount();p++){

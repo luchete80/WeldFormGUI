@@ -319,8 +319,8 @@ int main(int argc, char* argv[])
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO
   cout << "Creating Editor"<<endl;
-  Editor* editor = new Editor();
-    editor->addViewer(&vtkViewer2);  
+  Editor* editor = new Editor();//THIS RELIES ON THE App Singleton!! ALWAIS GENERATE IT FIRST AND THE CALL EDITOR, otherwise crashes
+  editor->addViewer(&vtkViewer2);  
     
   //getApp().setActiveModel(m_model);
 
