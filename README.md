@@ -49,7 +49,7 @@ https://www.swig.org/download.html
 
 https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.0/swigwin-4.3.0.zip/download?use_mirror=sitsa
  
-
+dlls, py and pyd files should be at exe directory (example src/)
 
 Integrate FreetypeGL
 
