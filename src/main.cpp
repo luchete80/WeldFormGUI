@@ -321,10 +321,10 @@ int main(int argc, char* argv[])
   cout << "Creating Editor"<<endl;
   Editor* editor = new Editor();//THIS RELIES ON THE App Singleton!! ALWAIS GENERATE IT FIRST AND THE CALL EDITOR, otherwise crashes
   editor->addViewer(&vtkViewer2);  
-    
+  cout << "Done "<<endl;
   //getApp().setActiveModel(m_model);
 
-  PyRun_SimpleString("from model import *");
+  //PyRun_SimpleString("from model import *");
   while (!glfwWindowShouldClose(window))
   {
     // Poll and handle events (inputs, window resize, etc.)
@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
 
     
     editor->drawGui();
-    
+
     /*
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 

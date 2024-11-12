@@ -46,6 +46,8 @@ void App::checkUpdate(){
 }
 
 void App::updateMeshes(){
+  
+  if (_activeModel!= nullptr){
   cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
   cout << "mesh address "<<_activeModel->getPart(0)->getMesh()<<endl;
   
@@ -77,7 +79,11 @@ void App::updateMeshes(){
       }
   } //part loop
       
-  _updateNeeded = false;    
+  _updateNeeded = false;   
+  
+} else {
+  cout <<"ERROR: No active model"<<endl;
+  }
 }
 
 

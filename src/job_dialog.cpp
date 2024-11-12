@@ -87,6 +87,8 @@ void  JobDialog::Draw(){
 }
 
 void JobShowDialog::Draw(){
+  
+  if (m_job!=nullptr){
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
   //create_job = false; 
   if (!ImGui::Begin("Job Progress", nullptr)){
@@ -111,6 +113,7 @@ void JobShowDialog::Draw(){
   if (ImGui::Button("Close")){m_show=false;}
 
   ImGui::End();
+  }
 }
 /*
 void JobShowDialog::Draw(const char* title, bool* p_open, Job *job){

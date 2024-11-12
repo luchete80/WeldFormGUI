@@ -425,6 +425,13 @@ void Editor::drawGui() {
       ImGui::EndMenuBar();
   }
 
+
+
+  /////////////////////////// TREEEEEE
+  
+  
+
+
 // //IMGUI_DEMO_MARKER("Configuration");
     if (ImGui::CollapsingHeader("Configuration"))
     {
@@ -514,6 +521,8 @@ void Editor::drawGui() {
             ImGui::TreePop();
         }
     }
+    
+    
 
     //if (ImGui::CollapsingHeader("New Domain")){
     // //IMGUI_DEMO_MARKER("Widgets/Trees");
@@ -521,6 +530,8 @@ void Editor::drawGui() {
     if (ImGui::BeginTabBar("TABS", tab_bar_flags)){
     if (ImGui::BeginTabItem("Model")) { 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+    
     if (ImGui::TreeNode("Model"))
     {
 
@@ -661,6 +672,8 @@ void Editor::drawGui() {
         ImGui::TreePop();
         
     } //MODEL TREE
+    
+
 
         bool open_ = ImGui::TreeNode("Jobs");
         if (ImGui::BeginPopupContextItem())
@@ -670,10 +683,14 @@ void Editor::drawGui() {
                            
           ImGui::EndPopup();
         }
+
         m_jobdlg.ShowIfEnabled();
+
         m_jobshowdlg.ShowIfEnabled();
+
         for (int i = 0; i < m_jobs.size(); i++)
         {
+          
           if (i == 0)
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
@@ -706,14 +723,21 @@ void Editor::drawGui() {
             if (ImGui::SmallButton("button")) {}
             ImGui::TreePop();
           }//Is hovered
-        }
+          
+          
+        }//Jobs
+    
         if (open_)
         {
            // your tree code stuff
            ImGui::TreePop();
         }
         
-    ImGui::EndTabItem(); }
+    ImGui::EndTabItem(); 
+    
+    } //END MODEL TAB
+    
+    
     if (ImGui::BeginTabItem("Results")) { 
       bool open_ = ImGui::TreeNode("History");      
       if (ImGui::BeginPopupContextItem())
@@ -745,6 +769,7 @@ void Editor::drawGui() {
       ImGui::EndTabBar();
     }
     ////////////////////// END TAB BAR ///////////////////////////////////
+    
     
     
     if (ImGui::CollapsingHeader("New Domain")){
@@ -849,6 +874,8 @@ void Editor::drawGui() {
       }
       
     }
+    
+    
 
   // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))

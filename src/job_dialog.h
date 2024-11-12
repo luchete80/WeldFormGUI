@@ -31,7 +31,7 @@ struct JobShowDialog:
 public ObjDialog{
   
   // //void    AddLog(const char* fmt, ...);
-  
+  JobShowDialog(){m_job = nullptr;}
   Job *m_job;
   
   const bool & isEntityCreated()const{return create_entity;}  
