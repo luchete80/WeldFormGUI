@@ -105,6 +105,8 @@ find_package(VTK
   TestingRendering
   FiltersGeneral
   
+  CommonSystem #APP
+  vtksys
   QUIET
 )
 
