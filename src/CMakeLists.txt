@@ -208,6 +208,30 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
 endif()
 
+if (WIN32)
+
+target_link_libraries(${EXEC_NAME} 
+            
+            app_st
+            model
+            graphicmesh_st
+						#freetype
+            io
+					  #backend
+					  glfw3
+					  #common
+					  ${LIBS}
+            ${RT_LIB}
+            ${VTK_LIBRARIES}
+	    
+            #${GMSH_LIBS}
+            gmsh
+            ${LINK_LIBRARIES}
+            ${PYTHON_LIBRARIES}
+)
+
+else()
+
 target_link_libraries(${EXEC_NAME} 
             
             app
@@ -228,6 +252,7 @@ target_link_libraries(${EXEC_NAME}
             ${PYTHON_LIBRARIES}
 )
 
+endif()
 
 file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
 
