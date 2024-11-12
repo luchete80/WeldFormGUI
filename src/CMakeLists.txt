@@ -112,7 +112,7 @@ find_package(VTK
 
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
-
+message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})
 #IOCCT
 #DEPENDS
 #  VTK::CommonExecutionModel
