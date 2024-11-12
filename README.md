@@ -27,6 +27,14 @@ cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
 
 -DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
 
+Example: 
+cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DVTK_INCLUDE_DIR="/usr/local/include/vtk-9.3" \
+
+-DCMAKE_BUILD_TYPE=RELEASE -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON \
+-DCMAKE_PREFIX_PATH=D:\Luciano\Numerico\Libs\occt-vc143-64\cmake\
+-DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include \
+-DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
+
 
 
 Integrate FreetypeGL

@@ -170,7 +170,6 @@ else()
 
   VTK::TestingCore
   VTK::TestingRendering
-  
   #VTK::FiltersGeneral
   )
 endif()
