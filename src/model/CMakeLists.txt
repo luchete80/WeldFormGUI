@@ -11,5 +11,8 @@ set( MODEL_SRCS         "Entity.cpp"
 
 ADD_LIBRARY(model SHARED ${MODEL_SRCS})
 
+ADD_LIBRARY(model_st ${MODEL_SRCS})
 #TARGET_LINK_LIBRARIES(model  lsdynareader ${VTK_LIBRARIES} ${GMSH_LIBS})
 TARGET_LINK_LIBRARIES(model  lsdynareader gmsh)
+
+TARGET_LINK_LIBRARIES(model_st  lsdynareader gmsh)

@@ -19,6 +19,7 @@ You need opencocct-V7_5_0
 
 
 Windows 
+-------------------
 
 I prefer to install using nmake, not MSVC project files. 
 cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
@@ -27,7 +28,10 @@ cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
 
 -DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311
 
-Example: 
+Example:
+
+1 - If build_python=ON do: set PATH=%PATH%;PATH\TO\SWIGWIN\EXE
+Being PATH\TO\SWIGWIN\EXE path in which swig.exe is (see below downloads. )
 cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
                                           -DVTK_INCLUDE_DIR=D:\Luciano\Numerico\Libs\vtk-9.3.1_install
                                           -DCMAKE_BUILD_TYPE=RELEASE -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON \
@@ -36,6 +40,15 @@ cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
                                           -DPYTHON_INCLUDE_DIRS=C:\Users\54113\AppData\Local\Programs\Python\Python311\include \
                                           -DPYTHON_LIBRARY=C:\Users\54113\AppData\Local\Programs\Python\Python311\libs\python311.lib \
                                           -DGMSH_DIR=D:\Luciano\Numerico\Libs\gmsh-4.13.0_install
+                                          -DBUILD_PYTHON=ON
+I have used 
+swigwin-4.1.1
+=D:/Luciano/Numerico/Libs/swigwin-4.1.1/Lib
+From
+https://www.swig.org/download.html
+
+https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.0/swigwin-4.3.0.zip/download?use_mirror=sitsa
+ 
 
 
 Integrate FreetypeGL
