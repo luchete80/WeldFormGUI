@@ -15,6 +15,7 @@ if(WIN32)
     set(BUILD_SHARED_LIBS TRUE)
 endif()
 
+
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
@@ -33,6 +34,10 @@ add_subdirectory("graphicmesh")
 add_subdirectory("io")
 
 add_subdirectory("App")
+
+
+add_executable (app_test  test.cpp)
+target_link_libraries(app_test app)
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
@@ -220,21 +225,17 @@ if (WIN32)
 
 target_link_libraries(${EXEC_NAME} 
             
-            app 
-            model
-            #graphicmesh_
-						#freetype
+            app
+
             io
-					  #backend
+            
 					  glfw3
-					  #common
-					  ${LIBS}
+
             ${RT_LIB}
             ${VTK_LIBRARIES}
 	    
-            #${GMSH_LIBS}
             gmsh
-            ${LINK_LIBRARIES}
+
             ${PYTHON_LIBRARIES}
 )
 
