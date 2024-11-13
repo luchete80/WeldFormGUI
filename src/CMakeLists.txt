@@ -238,7 +238,7 @@ target_link_libraries(${EXEC_NAME}
             
             app
             model
-            graphicmesh
+            graphicmesh_
 						#freetype
             io
 					  #backend
