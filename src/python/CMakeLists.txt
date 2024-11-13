@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include/GLFW)
 
 
 if (WIN32)
-SWIG_LINK_LIBRARIES(dnlPython app_st graphicmesh_st model_st ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
+SWIG_LINK_LIBRARIES(dnlPython app model_st ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
                                     
                                     ${GMSH_LIBS}) 
 else()

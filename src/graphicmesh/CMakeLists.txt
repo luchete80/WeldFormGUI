@@ -44,8 +44,12 @@ find_package(VTK
 #message ("VTK LIBS:" ${VTK_LIBRARIES})
 
 #endif()
-ADD_LIBRARY(graphicmesh_ SHARED ${MESHVIEWER_SRCS})
 
+if (WIN32)
+ADD_LIBRARY(graphicmesh_ ${MESHVIEWER_SRCS})
+else()
+ADD_LIBRARY(graphicmesh_ SHARED ${MESHVIEWER_SRCS})
+endif()
 #ADD_LIBRARY(graphicmesh_st ${MESHVIEWER_SRCS})
 
 TARGET_LINK_LIBRARIES(graphicmesh_  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
