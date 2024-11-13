@@ -10,7 +10,10 @@ using namespace std;
 
 App * App::_pcSingleton = nullptr;
 
-
+/*static */ App &getApp(){
+    //cout << "app "<<App::_pcSingleton<<endl;
+    return *App::_pcSingleton;
+}
 
 void App::initApp(){
   cout << "Initializing App"<<endl;

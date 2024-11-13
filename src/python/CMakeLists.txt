@@ -42,15 +42,15 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/imgui)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include/GLFW)
 
 
-if (WIN32)
-SWIG_LINK_LIBRARIES(dnlPython app model_st ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
+#if (WIN32)
+#SWIG_LINK_LIBRARIES(dnlPython app model_st ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
                                     
-                                    ${GMSH_LIBS}) 
-else()
+                                   # ${GMSH_LIBS}) 
+#else()
 SWIG_LINK_LIBRARIES(dnlPython app model ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
                                     
                                     ${GMSH_LIBS}) 
-endif()
+#endif()
 #ADD_CUSTOM_COMMAND(TARGET _dnlPython POST_BUILD
 #                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
 #                   ${CMAKE_BINARY_DIR}/dnlPython/dnlPython.py

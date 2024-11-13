@@ -15,7 +15,7 @@ if(WIN32)
     set(BUILD_SHARED_LIBS TRUE)
 endif()
 
- 
+
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
@@ -40,34 +40,34 @@ add_subdirectory("App")
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
-# together, please see CMakeLists-alt.txt
-add_executable(${EXEC_NAME} main.cpp 
-                            editor.cpp
+# # together, please see CMakeLists-alt.txt
+# add_executable(${EXEC_NAME} main.cpp 
+                            # editor.cpp
                             
-                            material_dialog.cpp
-                            set_dialog.cpp
-                            ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
-                            Job.cpp
-                            job_dialog.cpp
-                            log.cpp
-                            global.cpp
-                            ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
-                            geom/vtkOCCTGeom.cpp
+                            # material_dialog.cpp
+                            # set_dialog.cpp
+                            # ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
+                            # Job.cpp
+                            # job_dialog.cpp
+                            # log.cpp
+                            # global.cpp
+                            # ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
+                            # geom/vtkOCCTGeom.cpp
                             
-                            #graphics/axis.cpp
-                            )
-add_library (global_sta STATIC global.cpp)
+                            # #graphics/axis.cpp
+                            # )
+# add_library (global_sta STATIC global.cpp)
 
-# OpenGL
-find_package(OpenGL REQUIRED)
-target_link_libraries(${EXEC_NAME} OpenGL::GL)
-if (APPLE)
-	# Ignore macOS OpenGL deprecation warnings
-	target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
-endif()
+# # OpenGL
+# find_package(OpenGL REQUIRED)
+# target_link_libraries(${EXEC_NAME} OpenGL::GL)
+# if (APPLE)
+	# # Ignore macOS OpenGL deprecation warnings
+	# target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
+# endif()
 
 
-target_link_libraries(${EXEC_NAME} gl3w)
+# target_link_libraries(${EXEC_NAME} gl3w)
 
 # GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -83,7 +83,7 @@ set(imgui_backend ${imgui_dir}/backends/imgui_impl_glfw.cpp ${imgui_dir}/backend
 add_library(imgui STATIC ${imgui_src} ${imgui_backend})
 target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
-target_link_libraries(${EXEC_NAME} imgui)
+# target_link_libraries(${EXEC_NAME} imgui)
 
 set (GMSH_LIBS gmsh)
 #IF (WIN32)
@@ -164,37 +164,37 @@ if (NOT VTK_FOUND)
   return()
 endif()
 
-if (VTK_VERSION VERSION_LESS "9.0.0")
-  include(${VTK_USE_FILE})
-else()
-  # vtk_module_autoinit is needed
-  vtk_module_autoinit(
-    TARGETS ${EXEC_NAME}
-    MODULES ${VTK_LIBRARIES}
-  VTK::CommonCore
-  VTK::CommonColor
-  VTK::CommonDataModel
-  VTK::FiltersCore
-  VTK::FiltersSources
-  VTK::InteractionStyle
-  VTK::InteractionWidgets
-  VTK::RenderingAnnotation
-  VTK::RenderingCore
-  VTK::RenderingContextOpenGL2
-  VTK::RenderingFreeType
-  VTK::RenderingGL2PSOpenGL2
-  VTK::RenderingOpenGL2
-  VTK::FiltersHybrid
-  #DisplayCoordinateAxes
-  VTK::IOCore
-  VTK::IOGeometry
-  VTK::IOOCCT
+# if (VTK_VERSION VERSION_LESS "9.0.0")
+  # include(${VTK_USE_FILE})
+# else()
+  # # vtk_module_autoinit is needed
+  # vtk_module_autoinit(
+    # TARGETS ${EXEC_NAME}
+    # MODULES ${VTK_LIBRARIES}
+  # VTK::CommonCore
+  # VTK::CommonColor
+  # VTK::CommonDataModel
+  # VTK::FiltersCore
+  # VTK::FiltersSources
+  # VTK::InteractionStyle
+  # VTK::InteractionWidgets
+  # VTK::RenderingAnnotation
+  # VTK::RenderingCore
+  # VTK::RenderingContextOpenGL2
+  # VTK::RenderingFreeType
+  # VTK::RenderingGL2PSOpenGL2
+  # VTK::RenderingOpenGL2
+  # VTK::FiltersHybrid
+  # #DisplayCoordinateAxes
+  # VTK::IOCore
+  # VTK::IOGeometry
+  # VTK::IOOCCT
 
-  VTK::TestingCore
-  VTK::TestingRendering
-  #VTK::FiltersGeneral
-  )
-endif()
+  # VTK::TestingCore
+  # VTK::TestingRendering
+  # #VTK::FiltersGeneral
+  # )
+# endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})
 
@@ -214,61 +214,61 @@ target_link_libraries(imgui_vtk_viewer ${VTK_LIBRARIES}
 #add_library(scene STATIC ${imgui_vtk_viewer_dir}/graphics/axis.cpp)
 #target_link_libraries(scene ${VTK_LIBRARIES} gl3w)
 
-target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
-                                  #scene
+# target_link_libraries(${EXEC_NAME} imgui_vtk_viewer 
+                                  # #scene
                                   
-                                  )
+                                  # )
 
-MESSAGE("LIBRARIES " ${VTK_LIBRARIES})
+# MESSAGE("LIBRARIES " ${VTK_LIBRARIES})
 
-# GLFW is built from source in this example
-# But if you link dynamically, you may need to link some native libraries on macOS:
-# target_link_libraries(${EXEC_NAME} "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
-if (UNIX AND NOT APPLE)
-  target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
-endif()
+# # GLFW is built from source in this example
+# # But if you link dynamically, you may need to link some native libraries on macOS:
+# # target_link_libraries(${EXEC_NAME} "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
+# if (UNIX AND NOT APPLE)
+  # target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
+# endif()
 
-if (WIN32)
+# if (WIN32)
 
-target_link_libraries(${EXEC_NAME} 
+# target_link_libraries(${EXEC_NAME} 
             
-            app
+            # app
 
-            io
+            # io
             
-					  glfw3
+					  # glfw3
 
-            ${RT_LIB}
-            ${VTK_LIBRARIES}
+            # ${RT_LIB}
+            # ${VTK_LIBRARIES}
 	    
-            gmsh
+            # gmsh
 
-            ${PYTHON_LIBRARIES}
-)
+            # ${PYTHON_LIBRARIES}
+# )
 
-else()
+# else()
 
-target_link_libraries(${EXEC_NAME} 
+# target_link_libraries(${EXEC_NAME} 
             
-            app
-            model
-            graphicmesh_
-						#freetype
-            io
-					  #backend
-					  glfw3
-					  #common
-					  ${LIBS}
-            ${RT_LIB}
-            ${VTK_LIBRARIES}
+            # app
+            # model
+            # graphicmesh_
+						# #freetype
+            # io
+					  # #backend
+					  # glfw3
+					  # #common
+					  # ${LIBS}
+            # ${RT_LIB}
+            # ${VTK_LIBRARIES}
 	    
-            #${GMSH_LIBS}
-            gmsh
-            ${LINK_LIBRARIES}
-            ${PYTHON_LIBRARIES}
-)
+            # #${GMSH_LIBS}
+            # gmsh
+            # ${LINK_LIBRARIES}
+            # ${PYTHON_LIBRARIES}
+# )
 
-endif()
+# endif()
 
 file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
 

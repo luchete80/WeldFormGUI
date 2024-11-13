@@ -9,12 +9,15 @@
 //#define MY_DLL_API __declspec(dllexport)
 
 
+
 using namespace std;
 
 class GraphicMesh;
 //class VtkViewer;
 //SHOULD ALSO BEE OF INTEREST TO HAVE A REFERENCE TO THE RENDERER
-class App{
+///SINGLETON
+
+class /*__declspec(dllexport)*/  App{
 
 public:  
   friend App &getApp();
@@ -43,10 +46,8 @@ private:
 
 
 
-inline App &getApp(){
-    //cout << "app "<<App::_pcSingleton<<endl;
-    return *App::_pcSingleton;
-}
+/*static */ 
+App &getApp();
 
 
 #endif
