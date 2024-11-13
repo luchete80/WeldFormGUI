@@ -5,6 +5,10 @@
 #include <iostream>
 #include <vector>
 
+
+//#define MY_DLL_API __declspec(dllexport)
+
+
 using namespace std;
 
 class GraphicMesh;
@@ -29,6 +33,7 @@ public:
   ~App(){}
   int  getGraphicMeshCount(){return m_graphicmeshes.size();}
   GraphicMesh * getGraphicMesh(int &i){return m_graphicmeshes[i];}
+
 private:
   static App *_pcSingleton;  
   Model *_activeModel;

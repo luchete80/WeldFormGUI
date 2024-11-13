@@ -1,3 +1,8 @@
+if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
+
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
@@ -45,11 +50,11 @@ find_package(VTK
 
 #endif()
 
-if (WIN32)
-ADD_LIBRARY(graphicmesh_ ${MESHVIEWER_SRCS})
-else()
+#if (WIN32)
+#ADD_LIBRARY(graphicmesh_ ${MESHVIEWER_SRCS})
+#"else()
 ADD_LIBRARY(graphicmesh_ SHARED ${MESHVIEWER_SRCS})
-endif()
+#endif()
 #ADD_LIBRARY(graphicmesh_st ${MESHVIEWER_SRCS})
 
 TARGET_LINK_LIBRARIES(graphicmesh_  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR

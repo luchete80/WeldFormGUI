@@ -1,3 +1,7 @@
+if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
@@ -6,7 +10,7 @@ if (WIN32) #WIH CAPS ON!
 MESSAGE ("----------------------------THIS IS WIN")
 set( APP_SRCS         "App.cpp"
                       "../graphicmesh/GraphicMesh.cpp"
-            )
+         )
 find_package(VTK 
   CONFIG REQUIRED 
   COMPONENTS 
@@ -52,7 +56,10 @@ include_directories("${VTK_INCLUDE_DIR}")
 
 #TARGET_LINK_LIBRARIES(model  lsdynareader ${VTK_LIBRARIES} ${GMSH_LIBS})
 IF (WIN32)
-ADD_LIBRARY(app OBJECT ${APP_SRCS})
+
+ADD_LIBRARY(app SHARED ${APP_SRCS})
+target_compile_definitions(app PUBLIC BUILDING_MY_DLL)
+
 TARGET_LINK_LIBRARIES(app   model ${VTK_LIBRARIES} gmsh)
 
 #TARGET_LINK_LIBRARIES(app_st  graphicmesh_st )

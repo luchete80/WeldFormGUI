@@ -9,6 +9,12 @@ include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
 include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image") #IN ORDER TO READ TEXTURES
 
+
+if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
+
 set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
@@ -214,9 +220,9 @@ if (WIN32)
 
 target_link_libraries(${EXEC_NAME} 
             
-            app
+            app 
             model
-            #graphicmesh
+            #graphicmesh_
 						#freetype
             io
 					  #backend
@@ -238,7 +244,7 @@ target_link_libraries(${EXEC_NAME}
             
             app
             model
-            graphicmesh
+            graphicmesh_
 						#freetype
             io
 					  #backend
