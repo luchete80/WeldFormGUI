@@ -21,8 +21,9 @@ include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/geo")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/graphics")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/mesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/gmsh/src/numeric")
-
+if(win32)
 include_directories("${VTK_INCLUDE_DIR}")
+endif()
 set (gl3w_dir "${CMAKE_SOURCE_DIR}/libs/gl3w")
 set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAILS!
 #libs
