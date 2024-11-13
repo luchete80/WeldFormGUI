@@ -152,7 +152,7 @@ if (BUILD_PYTHON)
 endif()  
   
 add_executable (app_test  test.cpp)
-target_link_libraries(app_test app ${PYTHON_LIBRARIES})  
+target_link_libraries(app_test app model ${PYTHON_LIBRARIES})  
   
 if (NOT VTK_FOUND)
   message(FATAL_ERROR "VTK not found!")
