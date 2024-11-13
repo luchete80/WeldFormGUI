@@ -21,10 +21,12 @@ link_directories ("${GMSH_DIR}/lib")
 include_directories ("${GMSH_DIR}/include")
 endif()
 
-add_subdirectory("App")
+
 add_subdirectory("model")
 add_subdirectory("graphicmesh")
 add_subdirectory("io")
+
+add_subdirectory("App")
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
@@ -212,7 +214,7 @@ if (WIN32)
 
 target_link_libraries(${EXEC_NAME} 
             
-            app_st
+            app
             model
             graphicmesh_st
 						#freetype

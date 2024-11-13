@@ -8,7 +8,7 @@ message ("VTK LIBS:" ${VTK_LIBRARIES})
 
 include_directories("${VTK_INCLUDE_DIR}")
 
-if (win32)
+#if (win32)
 #SEPARATE FINDING LIBS
 find_package(VTK 
   CONFIG REQUIRED 
@@ -40,10 +40,13 @@ find_package(VTK
   vtksys
   QUIET
 )
-endif()
-ADD_LIBRARY(graphicmesh SHARED ${MESHVIEWER_SRCS})
 
-ADD_LIBRARY(graphicmesh_st ${MESHVIEWER_SRCS})
+#message ("VTK LIBS:" ${VTK_LIBRARIES})
 
-TARGET_LINK_LIBRARIES(graphicmesh  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
-TARGET_LINK_LIBRARIES(graphicmesh_st  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
+#endif()
+ADD_LIBRARY(graphicmesh_ SHARED ${MESHVIEWER_SRCS})
+
+#ADD_LIBRARY(graphicmesh_st ${MESHVIEWER_SRCS})
+
+TARGET_LINK_LIBRARIES(graphicmesh_  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
+#TARGET_LINK_LIBRARIES(graphicmesh_st  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
