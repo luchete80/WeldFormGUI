@@ -36,8 +36,7 @@ add_subdirectory("io")
 add_subdirectory("App")
 
 
-add_executable (app_test  test.cpp)
-target_link_libraries(app_test app)
+
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
@@ -151,6 +150,9 @@ if (BUILD_PYTHON)
   endif()
   add_subdirectory("python")
 endif()  
+  
+add_executable (app_test  test.cpp)
+target_link_libraries(app_test app ${PYTHON_LIBRARIES})  
   
 if (NOT VTK_FOUND)
   message(FATAL_ERROR "VTK not found!")
