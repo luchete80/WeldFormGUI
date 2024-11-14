@@ -55,15 +55,15 @@ include_directories("${VTK_INCLUDE_DIR}")
 #ADD_LIBRARY(app_st  ${APP_SRCS})
 
 #TARGET_LINK_LIBRARIES(model  lsdynareader ${VTK_LIBRARIES} ${GMSH_LIBS})
-IF (WIN32)
+#IF (WIN32)
 
-ADD_LIBRARY(app SHARED ${APP_SRCS})
-target_compile_definitions(app PUBLIC BUILDING_MY_DLL)
+#ADD_LIBRARY(app SHARED ${APP_SRCS})
+#target_compile_definitions(app PUBLIC BUILDING_MY_DLL)
 
-TARGET_LINK_LIBRARIES(app   model ${VTK_LIBRARIES} gmsh)
+#TARGET_LINK_LIBRARIES(app   model ${VTK_LIBRARIES} gmsh)
 
 #TARGET_LINK_LIBRARIES(app_st  graphicmesh_st )
-ELSE()
+#ELSE()
 ADD_LIBRARY(app SHARED ${APP_SRCS})
 TARGET_LINK_LIBRARIES(app  model graphicmesh_)
-ENDIF()
+#ENDIF()

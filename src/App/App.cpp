@@ -75,6 +75,7 @@ void App::updateMeshes(){
           }
           else
           m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
+          cout << "Created FEM mesh"<<endl; 
         }else 
           cout << "ERROR: Part mesh is null pointer"<<endl;
       

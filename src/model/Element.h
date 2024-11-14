@@ -37,12 +37,16 @@ protected:
 class Quad:
 public Element {
 public:
-  Quad(){
-    m_nodecount = 4;m_node.resize(4);}
-  Quad(std::vector<Node*>nv){
-    initValues(nv);
-    
+  void init(){
+        m_nodecount = 4;m_node.resize(4);
   }
+  Quad(){
+    init();}
+  Quad(std::vector<Node*>nv){
+    initValues(nv);   
+  }
+  //Asumme existence of ech node
+  Quad(Node *n0, Node *n1, Node *n2, Node *n3); //Good fo python binding 
 
 };
 

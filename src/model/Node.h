@@ -11,7 +11,7 @@ struct Node
 
 public:
   Node(){}
-  Node(const double &x, const double &y, const double &z, const int &id = 0){
+  Node(const double &x, const double &y, const double &z = 0, const int &id = 0){
     m_pos = Vector3f(x,y,z);
     m_id = id;
   }  

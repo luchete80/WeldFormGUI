@@ -414,10 +414,12 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
       polys->InsertNextCell(cell);
     } else if (mesh.getElem(e)->getNodeCount()==4){ //CHECK ALSO DIMENSION
       vtkNew<vtkQuad> cell;
+      cout << "gm mesh node "<<endl;
       for (int nn=0;nn<nc;nn++) {
         cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
-
+        cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
       }
+      cout <<endl;
       polys->InsertNextCell(cell);
       }
     //cout <<endl;

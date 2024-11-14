@@ -82,4 +82,7 @@
          - Added SPH Mesh Creation (SHOULD)
 20241030 - FIXED generating part from Console via Python Commands.
          - Begining to add Save Model
-           
+------------------------------------------------------------------------------------
+20241113 - Python scripting console is working on Windows!!!!!
+         - Mesh class added addNode methods!!!  This allows to generate meshes via python
+         

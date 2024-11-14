@@ -16,6 +16,35 @@ void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
 }
 */
 
+void Mesh::addNode(double x, double y, double z, int id){
+  int max = 0;
+  if (id ==-1){
+    for (int i=0;i<m_node.size();i++){
+        if (m_node[i]->getId()>max)
+          max = m_node[i]->getId();
+    }
+    id = max+1;
+  }
+  cout << "adding Node "<<"id "<<id << "x: "<<x<<", y: "<<y<<", z: "<<z<<endl;
+  m_node.push_back(new Node(x,y,z,id));
+  m_node_count++;
+}
+  
+void Mesh::addNode(Node *node){
+  m_node.push_back(node);
+}
+
+void Mesh::addElement(Element *el, bool alloc){
+    m_elem.push_back(new Element(*el));
+
+}
+
+void Mesh::addQuad(int v0, int v1, int v2, int v3){
+//CHACK IF ELEMENT DOES NOT EXIST
+  m_elem.push_back(new Quad(m_node[v0],m_node[v1],m_node[v2],m_node[v3]));
+  m_elem_count++;
+}
+
 void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
                     std::vector <Element*> e){
   m_node.resize(n.size());

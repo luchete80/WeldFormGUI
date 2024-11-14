@@ -460,6 +460,7 @@ int main(int argc, char* argv[])
         if (getApp().getGraphicMesh(gm)->isActorNeeded()){
           cout << "Adding Actor"<<endl;
           vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          cout << "added "<<endl;
           getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
           
         }
