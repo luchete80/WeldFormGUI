@@ -40,7 +40,7 @@ public:
   void addBoxLength(Vector3f L, Vector3f V, double r);
   void addPlane(double x0, double y0, double lx, double ly, double d);
   
-  void addNode(double x, double y, double z, int id = -1);
+  void addNode(double x, double y, double z = 0, int id = -1);
   void addNode(Node *node);
   void addElement(Element *, bool alloc = true);
   void addQuad(int v0, int v1, int v2, int v3);
