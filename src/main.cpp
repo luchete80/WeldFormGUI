@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
 
   // Main loop
   
-  Py_Initialize();
+  Py_Initialize(); 
   
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO

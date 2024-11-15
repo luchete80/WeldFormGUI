@@ -17,7 +17,7 @@
 #include "Part.h"
 #include "App.h"
 //#include "global.h" 
-
+ 
 %}
 
 //%inline %{

@@ -16,6 +16,8 @@ public:
     m_id = id;
   }  
   const Vector3f & getPos()const {return m_pos;}
+  const double & getPos(int i)const {return m_pos[i];}
+
   const int & getId()const{return m_id;}
 
 protected:
