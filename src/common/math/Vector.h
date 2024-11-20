@@ -13,14 +13,14 @@ struct Vector2i
 
 struct Vector2f
 {
-    float x;
-    float y;
+    double x;
+    double y;
 
     Vector2f()
     {
     }
 
-    Vector2f(float _x, float _y)
+    Vector2f(double _x, double _y)
     {
         x = _x;
         y = _y;
@@ -30,27 +30,27 @@ struct Vector2f
 
 struct Vector3f
 {
-    float x;
-    float y;
-    float z;
+    double x;
+    double y;
+    double z;
 
     Vector3f() {}
 
-    Vector3f(float _x, float _y, float _z)
+    Vector3f(double _x, double _y, double _z)
     {
         x = _x;
         y = _y;
         z = _z;
     }
 
-    Vector3f(const float* pFloat)
+    Vector3f(const double* pdouble)
     {
-        x = pFloat[0];
-        y = pFloat[0];
-        z = pFloat[0];
+        x = pdouble[0];
+        y = pdouble[0];
+        z = pdouble[0];
     }
 
-    Vector3f(float f)
+    Vector3f(double f)
     {
         x = y = z = f;
     }
@@ -73,7 +73,7 @@ struct Vector3f
         return *this;
     }
 
-    Vector3f& operator*=(float f)
+    Vector3f& operator*=(double f)
     {
         x *= f;
         y *= f;
@@ -82,7 +82,7 @@ struct Vector3f
         return *this;
     }
 
-    Vector3f& operator/(float f)
+    Vector3f& operator/(double f)
     {
         x /= f;
         y /= f;
@@ -91,7 +91,7 @@ struct Vector3f
         return *this;
     }
 
-    operator const float*() const
+    operator const double*() const
     {
         return &(x);
     }
@@ -101,7 +101,7 @@ struct Vector3f
 
     Vector3f& Normalize(){}
 
-    void Rotate(float Angle, const Vector3f& Axis){}
+    void Rotate(double Angle, const Vector3f& Axis){}
 
     void Print() const
     {
@@ -112,16 +112,16 @@ struct Vector3f
 
 struct Vector4f
 {
-    float x;
-    float y;
-    float z;
-    float w;
+    double x;
+    double y;
+    double z;
+    double w;
 
     Vector4f()
     {
     }
 
-    Vector4f(float _x, float _y, float _z, float _w)
+    Vector4f(double _x, double _y, double _z, double _w)
     {
         x = _x;
         y = _y;
@@ -165,7 +165,7 @@ inline Vector3f operator-(const Vector3f& l, const Vector3f& r)
     return Ret;
 }
 
-inline Vector3f operator*(const Vector3f& l, float f)
+inline Vector3f operator*(const Vector3f& l, double f)
 {
     Vector3f Ret(l.x * f,
                  l.y * f,
