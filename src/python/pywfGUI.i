@@ -9,7 +9,7 @@
 %{
  #include "App.h"
 #include "Entity.h"
-
+#include "src/common/math/Vector.h"
 #include "Model.h"
 #include "Node.h"
 #include "Element.h"
@@ -27,6 +27,7 @@
 %template () std::vector<Part*>;
 
 /* Let's just grab the original header file here */
+%include "src/common/math/Vector.h"
 %include "Model.h"
 %include "Node.h"
 %include "Element.h"

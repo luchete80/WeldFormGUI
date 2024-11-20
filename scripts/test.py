@@ -58,3 +58,10 @@ sphere_segment(msh,1,1.0,0.0,0.0,0.0,5);
 p = Part(msh);
 getApp().getActiveModel().addPart(p);
 getApp().Update();
+
+
+from Sphere import *;
+msh = Mesh();
+sphere_segment(msh,1,1.0,0.0,0.0,0.0,5);
+print(msh.getNode(0).getId());
+print(msh.getNode(0).getPos().x)

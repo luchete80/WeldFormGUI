@@ -316,6 +316,7 @@ int main(int argc, char* argv[])
   
   Py_Initialize(); 
   
+  
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO
   cout << "Creating Editor"<<endl;
@@ -388,9 +389,10 @@ int main(int argc, char* argv[])
     
     // 4. Show a simple VtkViewer Instance (Always Open)
     ImGui::SetNextWindowSize(ImVec2(360, 240), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Vtk Viewer 1", nullptr, VtkViewer::NoScrollFlags());
+    
+    //ImGui::Begin("Vtk Viewer 1", nullptr, VtkViewer::NoScrollFlags());
     //vtkViewer1.render(); // default render size = ImGui::GetContentRegionAvail()
-    ImGui::End();
+    //ImGui::End();
 
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
     //ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
