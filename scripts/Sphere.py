@@ -177,7 +177,8 @@ def sphere(msh,id, radius, ox,oy,oz, divisions):
           existin_vtx[face][i][j] = n 
           
           for k in range (n): #CHECK IF THERE IS AN EXISTENT NODE THERE
-            if ( abs(x - nodes[k][0])<1.0e-4 and abs(y - nodes[k][1])<1.0e-4 and abs(z - nodes[k][2])<1.0e-4 ):
+            #if ( abs(x - nodes[k][0])<1.0e-4 and abs(y - nodes[k][1])<1.0e-4 and abs(z - nodes[k][2])<1.0e-4 ):
+            if ( abs(x - msh.getNode(k).getPos(0))<1.0e-4 and abs(y - msh.getNode(k).getPos().y)<1.0e-4 and abs(z - msh.getNode(k).getPos().z)<1.0e-4 ):
               # print ("FOUND SIMILAR X in node ", k ,"face", face, "i, j ", i, j, "pos: ", x,y,z)
               rep = rep + 1
               put_node = False
