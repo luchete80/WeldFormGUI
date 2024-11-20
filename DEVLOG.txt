@@ -85,4 +85,4 @@
 ------------------------------------------------------------------------------------
 20241113 - Python scripting console is working on Windows!!!!!
          - Mesh class added addNode methods!!!  This allows to generate meshes via python
-         
+20241119 - Fixed getNode(X).getPos() to python, added Vec3f to SWIG.
