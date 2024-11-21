@@ -4,6 +4,43 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+
+//THIS IS FOR CHANGE STD OUTPUT , NOT PYTHON ONSOLAE
+class CustomBuffer : public std::streambuf {
+public:
+    CustomBuffer(char* buffer, std::size_t size) {
+        // Set the buffer's put area
+        setp(buffer, buffer + size - 1); // Leave space for null terminator
+    }
+
+protected:
+    // Override overflow to handle buffer overflow
+    int_type overflow(int_type ch) override {
+        if (ch != EOF) {
+            if (pptr() < epptr()) {
+                *pptr() = static_cast<char>(ch);
+                pbump(1);
+                return ch;
+            } else {
+                return EOF; // Buffer full
+            }
+        }
+        return EOF;
+    }
+
+    // Override sync to add a null terminator
+    int sync() override {
+        if (pptr() != nullptr) {
+            *pptr() = '\0'; // Null-terminate the string
+        }
+        return 0; // Success
+    }
+};
+
+void initPython(){
+PyObject* ioModule = PyImport_ImportModule("io");
+}
+
 struct ExampleAppConsole
 {
     char                  InputBuf[256];
@@ -14,7 +51,11 @@ struct ExampleAppConsole
     ImGuiTextFilter       Filter;
     bool                  AutoScroll;
     bool                  ScrollToBottom;
-
+    
+    //ONLY FOR STD OUTPUT
+    CustomBuffer*          customBuffer;
+    char buffer[256];
+    
     ExampleAppConsole()
     {
         //IMGUI_DEMO_MARKER("Examples/Console");
@@ -30,6 +71,12 @@ struct ExampleAppConsole
         AutoScroll = true;
         ScrollToBottom = false;
         //AddLog("Welcome to Dear ImGui!");
+        
+        //ONLY FOR STDOUT
+        //cout << "Redirecting "<<endl;
+        //customBuffer  = new CustomBuffer(buffer, 256);
+        //std::streambuf* originalCoutBuffer = std::cout.rdbuf(customBuffer);
+        //cout << "end"<<endl;
     }
     ~ExampleAppConsole()
     {
@@ -208,7 +255,71 @@ struct ExampleAppConsole
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
         //system(command_line);
+    ///////////////////// BEFORE /////////////////////////////////////////////////
+    PyObject* ioModule = PyImport_ImportModule("io");
+    if (!ioModule) {
+        std::cerr << "Failed to import io module!" << std::endl;
+        Py_Finalize();
+        cout << "ERROR!!"<<endl;
+        //return 1;
+    } 
+    PyObject* stringIOClass = PyObject_GetAttrString(ioModule, "StringIO");
+    Py_DECREF(ioModule);
+    if (!stringIOClass) {
+        std::cerr << "Failed to get StringIO class!" << std::endl;
+        Py_Finalize();
+         cout << "ERROR!!"<<endl;
+        //return 1;
+    }    
+    
+    // Create a StringIO object
+    PyObject* stringIO = PyObject_CallObject(stringIOClass, nullptr);
+    Py_DECREF(stringIOClass);
+    if (!stringIO) {
+       cout << "ERROR!!"<<endl;
+        std::cerr << "Failed to create StringIO object!" << std::endl;
+        Py_Finalize();
+       // return 1;
+    }
+
+    // Redirect sys.stdout and sys.stderr to the StringIO object
+    PyObject* sysModule = PyImport_ImportModule("sys");
+    if (!sysModule) {
+        std::cerr << "Failed to import sys module!" << std::endl;
+        Py_DECREF(stringIO);
+        Py_Finalize();
+         cout << "ERROR!!"<<endl;
+      //  return 1;
+    }
+    PyObject* originalStdout = PyObject_GetAttrString(sysModule, "stdout");
+    PyObject* originalStderr = PyObject_GetAttrString(sysModule, "stderr");
+    PyObject_SetAttrString(sysModule, "stdout", stringIO);
+    PyObject_SetAttrString(sysModule, "stderr", stringIO);
+    
+    ////////////////////////
         PyRun_SimpleString(command_line);
+        
+////////////////////////////////////////////////////////////////////////
+ /// AFTER
+/////////////////////////////////////////////////
+    PyObject* getValueMethod = PyObject_GetAttrString(stringIO, "getvalue");
+    PyObject* output = PyObject_CallObject(getValueMethod, nullptr);
+    Py_DECREF(getValueMethod);
+
+    char* outputBuffer = nullptr;
+    if (output) {
+        // Convert Python string to a C-style string
+        const char* outputCStr = PyUnicode_AsUTF8(output);
+        if (outputCStr) {
+            // Allocate and copy the buffer
+            outputBuffer = strdup(outputCStr); // Dynamically allocate memory for char*
+        }
+        Py_DECREF(output);
+    } else {
+        std::cerr << "Failed to retrieve output from StringIO!" << std::endl;
+    }
+    AddLog(outputBuffer);
+ //////////////////////////////////
                        
         for (int i = History.Size - 1; i >= 0; i--)
             if (Stricmp(History[i], command_line) == 0)

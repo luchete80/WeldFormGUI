@@ -88,3 +88,5 @@
 20241119 - Fixed getNode(X).getPos() to python, added Vec3f to SWIG.
 20241121 - Added several Node, Element, and Node functions to python wrap.
          -Begining with python exporter.
+         - Main widows allows now Docking. All tasks are in 1 main windows.
+         - Python console redirected!!!!!
