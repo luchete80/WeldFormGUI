@@ -216,8 +216,11 @@ int main(int argc, char* argv[])
   cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
 
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
-  //imGUI issue #7529, and #3680
+  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height-80, "WeldForm GUI", NULL, NULL);
+  
+  //glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_TRUE);
+  glfwSetWindowPos(window, 1, 30);
+
   if (window == NULL){
     return 1;
   }
