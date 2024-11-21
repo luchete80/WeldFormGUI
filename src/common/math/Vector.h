@@ -3,8 +3,9 @@
 
 ///// IF PYTHON HBUILD
 ///// SWIG SEARCHES FOR floor
+#ifdef __GNU__
 #include <cmath>
-
+#endif
 struct Vector2i
 {
     int x;
@@ -97,9 +98,15 @@ struct Vector3f
     }
 
 
-    Vector3f Cross(const Vector3f& v) const{}
+    Vector3f Cross(const Vector3f& v) const{
+      Vector3f ret; // TO CHANGE
+      
+      return ret;
+    }
 
-    Vector3f& Normalize(){}
+    Vector3f& Normalize(){
+      return *this; //TO CHANGE
+    }
 
     void Rotate(double Angle, const Vector3f& Axis){}
 

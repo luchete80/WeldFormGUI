@@ -18,7 +18,8 @@
 
 #ifndef MATH_3D_H
 #define	MATH_3D_H
-
+#ifdef __GNU__
+#endif
 #include <stdio.h>
 #ifdef WIN32
 #define _USE_MATH_DEFINES

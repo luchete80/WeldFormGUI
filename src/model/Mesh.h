@@ -6,7 +6,7 @@
 
 #include <vector>
 //#include <glm/gtc/matrix_transform.hpp>
-#include "../common/math/math.h"
+#include "../common/math/math_.h" //// DO NOT CALL IT MATH BECAUSE OF SWIG PROBLEMS
 #include "Element.h"
 
 #include "Entity.h"
