@@ -265,7 +265,10 @@ int main(int argc, char* argv[])
   //vtkViewer1.addActor(actor);
   
   VtkViewer vtkViewer2;
-  vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
+  //vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
+
+  vtkViewer2.getRenderer()->SetBackground(0.2,0.2,0.4);
+  vtkViewer2.getRenderer()->SetBackground2(0.8,0.8,0.8);
   //vtkViewer2.addActor(actor);
 
   // Our state
