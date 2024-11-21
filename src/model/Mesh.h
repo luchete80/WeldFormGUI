@@ -43,7 +43,7 @@ public:
   void addNode(double x, double y, double z = 0, int id = -1);
   void addNode(Node *node);
   void addElement(Element *, bool alloc = true);
-  void addQuad(int v0, int v1, int v2, int v3, id = -1);
+  void addQuad(int v0, int v1, int v2, int v3, int id = -1);
   
   const int & getNodeCount()const {return m_node_count;}
   const int & getElemCount()const {return m_elem_count;}
