@@ -7,10 +7,10 @@ class Entity {
 public:
   Entity(){}
   Entity(int &id){m_id=id;}
-  unsigned int & getId(){return m_id;}
+  const int & getId()const{return m_id;} ///REMEMBER TO RETURN AS CONST &, CONSIDERING SWIG WRAPPING
 
 protected:
-  unsigned int m_id;
+  int m_id;
   char *       m_name;
 };
 
@@ -20,7 +20,7 @@ public:
 
 protected:
   Mesh *m_mesh;
-  unsigned int m_id;
+  int m_id;
 };
 
 

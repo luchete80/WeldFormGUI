@@ -16,7 +16,10 @@ public Entity{
   
 public:
   Part(int &id);
-  Part(){}
+  Part(){
+    m_id = -1;
+    m_msh = nullptr;
+  }
   Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
   Part(Geom*);

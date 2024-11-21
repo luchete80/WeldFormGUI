@@ -34,6 +34,9 @@ public:
   void addPart(Part *);
   void addPart(Geom *);
   void addGeom(Geom* );
+  Node * getNode(const int &n) {return m_node[n];}
+  int getNodeCount() {return m_node.size();}
+  int getElemCount() {return m_elem.size();}
   Geom* getLastGeom(){return m_geom[m_geom.size()-1];}
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}

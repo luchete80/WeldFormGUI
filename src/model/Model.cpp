@@ -99,6 +99,12 @@ Model::Model(string name){
 
 void Model::addPart(Part *part){
   m_part.push_back(part);
+  for (int n=0;n<part->getMesh()->getNodeCount();n++){
+    //Check if ID is not repeated
+    m_node.push_back(part->getMesh()->getNode(n));
+  
+  }
+  
 }
 
 void Model::addPart(Geom *geom){

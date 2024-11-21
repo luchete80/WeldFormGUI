@@ -4,19 +4,20 @@
 
 using namespace std; 
 
-Part::Part(int &id, Mesh *m):
-Entity(id),
-m_msh(m){
+Part::Part(int &id, Mesh *m)
+//:Entity(id),
+:m_msh(m){
   
   }
 
-Part::Part(int &id):
-Entity(id){
+Part::Part(int &id)
+//:Entity(id)
+{
   }
 
 Part::Part(Mesh *mesh):
 m_msh(mesh){
-  
+  m_id = -1;
   if (mesh==nullptr){
     cout << "ERROR, NULL mesh pointer"<<endl;
   }

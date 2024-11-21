@@ -3,10 +3,12 @@
 
 // #include <glm>
 #include "../common/math/math.h"
+#include "Entity.h"
+
 class Element;
 
 struct Node
-//:public Vector3f
+:public Entity
 {
 
 public:
