@@ -107,15 +107,15 @@ class Node(Vector):
     self.id = id
     
     
-    
 
-
+#CANNOT IMPORT NUMPY SO I FLATTEN INDICES
 #def sphere_ok(msh):
 #def __init__(self, id, radius, ox,oy,oz, divisions):
 def sphere(msh,id, radius, ox,oy,oz, divisions):
     nodes = []
     elnod = []
-    existin_vtx = np.zeros((6, divisions+1, divisions+1)).astype(int)
+    existin_vtx_ = []
+    #existin_vtx = np.zeros((6, divisions+1, divisions+1)).astype(int)
     rep = 0
     # print ("existing vtk ", existin_vtx)
     print ("Creating Sphere mesh")
@@ -144,7 +144,9 @@ def sphere(msh,id, radius, ox,oy,oz, divisions):
     step = 1.0 / divisions
     step3 = Vector(step, step, step)
     
-    
+    for i in range(6*(divisions+1)*(divisions+1)):
+      existin_vtx_.append(0)
+      
     n = 0
     for face in range (6): #CUBE FACES 
       origin = CubeToSphere_origins[face]
@@ -174,15 +176,22 @@ def sphere(msh,id, radius, ox,oy,oz, divisions):
           # print ("z , z corrected ", rz,z)
           
           # print ("node ", n, ", coords " ,x,y,z)
-          existin_vtx[face][i][j] = n 
+          
+          # return (z * xMax * yMax) + (y * xMax) + x;
+          #z: face, x = i, y = j
+          ind = face*(divisions+1)*(divisions+1)+j*(divisions+1)+i
+          existin_vtx_[ind] = n 
+          #existin_vtx[face][i][j] = n 
           
           for k in range (n): #CHECK IF THERE IS AN EXISTENT NODE THERE
             #if ( abs(x - nodes[k][0])<1.0e-4 and abs(y - nodes[k][1])<1.0e-4 and abs(z - nodes[k][2])<1.0e-4 ):
+            #if ( abs(x - msh.getNode(k).getPos(0))<1.0e-4 and abs(y - nodes[k][1])<1.0e-4 and abs(z - nodes[k][2])<1.0e-4 ):
             if ( abs(x - msh.getNode(k).getPos(0))<1.0e-4 and abs(y - msh.getNode(k).getPos().y)<1.0e-4 and abs(z - msh.getNode(k).getPos().z)<1.0e-4 ):
               # print ("FOUND SIMILAR X in node ", k ,"face", face, "i, j ", i, j, "pos: ", x,y,z)
               rep = rep + 1
               put_node = False
-              existin_vtx[face][i][j] = k 
+              #existin_vtx[face][i][j] = k 
+              existin_vtx_[ind] = k
           
 
           if (put_node):
@@ -214,7 +223,15 @@ def sphere(msh,id, radius, ox,oy,oz, divisions):
           # print ("connectivity: ",(divisions+1)*ey+ex,(divisions+1)*ey + ex+1,(divisions+1)*(ey+1)+ex+1,(divisions+1)*(ey+1)+ex)  
           # print ("connectivity: ",existin_vtx[face][ex][ey], existin_vtx[face][ex+1][ey], existin_vtx[face][ex+1][ey+1], existin_vtx[face][ex][ey+1])
           #self.elnod.append((existin_vtx[face][ex][ey], existin_vtx[face][ex+1][ey], existin_vtx[face][ex+1][ey+1], existin_vtx[face][ex][ey+1]))
-          msh.addQuad(existin_vtx[face][ex][ey], existin_vtx[face][ex+1][ey], existin_vtx[face][ex+1][ey+1], existin_vtx[face][ex][ey+1])
+          
+          #msh.addQuad(existin_vtx[face][ex][ey], existin_vtx[face][ex+1][ey], existin_vtx[face][ex+1][ey+1], existin_vtx[face][ex][ey+1])
+          i0 = face*(divisions+1)*(divisions+1)+j*(divisions+1)+i
+          i1 = face*(divisions+1)*(divisions+1)+j*(divisions+1)+(i+1)
+          i2 = face*(divisions+1)*(divisions+1)+(j+1)*(divisions+1)+(i+1)
+          i3 = face*(divisions+1)*(divisions+1)+(j+1)*(divisions+1)+(i+1)                    
+          msh.addQuad(existin_vtx_[i0], existin_vtx_[i1], existin_vtx_[i2], existin_vtx_[i3])
+          
+          
           e = e + 1
     #msh.elem_count = e
     

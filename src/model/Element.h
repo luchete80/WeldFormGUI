@@ -2,15 +2,19 @@
 #define _ELEMENT_H_
 
 #include <vector>
+#include "Entity.h"
+
 class Node;
 class Model;
-class Element {
+class Element:
+public Entity{ 
   
 friend class Model;
 friend class Mesh;
 //enum elem_type ={2D_Plane_Stress, 2D_Plane_Strain, 3D_Solid};
 
 public:
+  using Entity::getId; //SWIG
   Element(){}
   Element(std::vector<Node*>nv){
     m_nodecount = nv.size();

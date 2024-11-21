@@ -39,7 +39,16 @@ void Mesh::addElement(Element *el, bool alloc){
 
 }
 
-void Mesh::addQuad(int v0, int v1, int v2, int v3){
+void Mesh::addQuad(int v0, int v1, int v2, int v3, int id){
+  
+  if (id ==-1){
+  int max=0;
+  for (int i=0;i<m_elem.size();i++){
+      if (m_elem[i]->getId()>max)
+        max = m_node[i]->getId();
+  }
+    id = max+1;
+  }
 //CHACK IF ELEMENT DOES NOT EXIST
   m_elem.push_back(new Quad(m_node[v0],m_node[v1],m_node[v2],m_node[v3]));
   m_elem_count++;
