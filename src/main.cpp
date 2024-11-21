@@ -1,6 +1,9 @@
 // Standard Library
 #include <iostream>
 
+
+/////https://github.com/trlsmax/imgui-vtk/tree/master
+
 // OpenGL Loader
 // This can be replaced with another loader, e.g. glad, but
 // remember to also change the corresponding initialize call!
@@ -214,7 +217,7 @@ int main(int argc, char* argv[])
 
   // Create window with graphics context
   GLFWwindow* window = glfwCreateWindow(modes->width, modes->height, "WeldForm GUI", NULL, NULL);
-  //GLFWwindow* window = glfwCreateWindow(800, 600, "WeldForm GUI", NULL, NULL);
+  //imGUI issue #7529, and #3680
   if (window == NULL){
     return 1;
   }
@@ -245,8 +248,7 @@ int main(int argc, char* argv[])
     
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows'
-  
-  
+
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
 
@@ -261,7 +263,7 @@ int main(int argc, char* argv[])
   // Initialize VtkViewer objects
   //VtkViewer vtkViewer1;
   //vtkViewer1.addActor(actor);
-
+  
   VtkViewer vtkViewer2;
   vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
   //vtkViewer2.addActor(actor);
@@ -339,10 +341,11 @@ int main(int argc, char* argv[])
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
+    
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
     
     editor->drawGui();
-
+    
     /*
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 
