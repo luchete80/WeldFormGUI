@@ -568,7 +568,7 @@ void Editor::drawGui() {
             {
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_mat_dlg_edit = true;
-                selected_mat = m_mats[i];
+                //selected_mat = m_mats[i];
               }
               ImGui::EndPopup();
             }                    
@@ -1038,6 +1038,7 @@ void Editor::drawGui() {
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
     cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
+    m_show_mat_dlg = false;
 
   } else if (m_matdlg.cancel_action)     m_show_mat_dlg=false;
   
