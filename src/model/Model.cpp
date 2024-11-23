@@ -98,6 +98,17 @@ Model::Model(string name){
 }
 
 void Model::addPart(Part *part){
+  int id = part->getId();
+  if (id>-1){
+
+  }
+  else {
+    std::vector<Entity*> nlist(m_part.begin(),m_part.end());
+    part->setId(getMaxId(nlist));
+    
+    //TEST
+    //processObjects<Entity>(m_part);
+  }
   m_part.push_back(part);
   for (int n=0;n<part->getMesh()->getNodeCount();n++){
     //Check if ID is not repeated
