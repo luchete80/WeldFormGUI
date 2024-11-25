@@ -258,7 +258,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step|.STEP|.stp|.STP|.json|.k", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");

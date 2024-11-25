@@ -53,6 +53,8 @@ void GraphicMesh::setPoints(Mesh &mesh){
   cout << "Done"<<endl;  
 }
 
+///// IF IMPORTING FROM GEOM
+/// ASOCIATE WITH GEOM!
 int GraphicMesh::createVTKPolyData() {
 
 
@@ -329,7 +331,7 @@ int GraphicMesh::createVTKPolyData() {
       cout <<endl;
       polys->InsertNextCell(tri);
     } else if (ne ==2){
-      cout << "Inserting element 1D"<<endl; 
+      //cout << "Inserting element 1D"<<endl; 
       vtkNew<vtkLine> tri;
       for (int nn=0;nn<elnodes[e].size();nn++) {
         tri->GetPointIds()->SetId(nn, elnodes[e][nn]);

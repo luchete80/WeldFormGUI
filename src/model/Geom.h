@@ -10,7 +10,8 @@ public:
 
   std::string m_filename; //
   std::string m_name;
-
+  double scale; //Is scale
+  
 };
 
 #endif
