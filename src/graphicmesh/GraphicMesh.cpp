@@ -37,7 +37,7 @@ void GraphicMesh::setPoints(Mesh &mesh){
   points = vtkSmartPointer<vtkPoints>::New();
   cout << "Node count "<<mesh.getNodeCount()<<endl;
   for (int n=0;n<mesh.getNodeCount();n++){
-    cout << "Node "<<n<<endl;
+    //cout << "Node "<<n<<endl;
           std::array <float,3> coords;
           for (int d=0;d<3;d++) coords[d] = mesh.m_node[n]->getPos()[d];
           // IF REAL POSITIONS
@@ -46,7 +46,7 @@ void GraphicMesh::setPoints(Mesh &mesh){
   cout << "Inserting nodes"<<endl;
   for (auto i = 0ul; i < pts.size(); ++i)
   {
-    cout << "Node"<<i<<endl;
+    //cout << "Node"<<i<<endl;
     points->InsertPoint(i, pts[i].data());
     //scalars->InsertTuple1(i, i);
   }
@@ -392,7 +392,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
   cout << "Inserting nodes"<<endl;
   for (auto i = 0ul; i < pts.size(); ++i)
   {
-    cout << "Node"<<i<<endl;
+    //cout << "Node"<<i<<endl;
     points->InsertPoint(i, pts[i].data());
     //scalars->InsertTuple1(i, i);
   }
@@ -403,7 +403,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
   polys  = vtkSmartPointer<vtkCellArray>::New();
 
   for (int e=0;e<mesh.getElemCount();e++){
-    cout << "Elem "<<e<<endl;
+    //cout << "Elem "<<e<<endl;
     int nc = mesh.getElem(e)->getNodeCount();
     if (nc==3){
       vtkNew<vtkTriangle> cell;
@@ -414,10 +414,10 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
       polys->InsertNextCell(cell);
     } else if (mesh.getElem(e)->getNodeCount()==4){ //CHECK ALSO DIMENSION
       vtkNew<vtkQuad> cell;
-      cout << "gm mesh node "<<endl;
+      //cout << "gm mesh node "<<endl;
       for (int nn=0;nn<nc;nn++) {
         cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
-        cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
+        //cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
       }
       cout <<endl;
       polys->InsertNextCell(cell);
@@ -466,6 +466,7 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   setPoints(mesh);
 
   if (mesh.getType() == SPH){
+    cout << "Creating SPH Graphic Mesh "<<endl;
     vtkNew<vtkSphereSource> cubeSource;
     cubeSource->SetRadius(0.01);
     m_glyph3D = vtkSmartPointer<vtkGlyph3D>::New();

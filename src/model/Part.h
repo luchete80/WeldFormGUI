@@ -23,7 +23,12 @@ public:
   Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
   Part(Geom*);
-  Mesh* getMesh(){if (m_msh != nullptr) {cout << "Address "<<m_msh<<endl;return m_msh;} else cout << "MESH POINTER "<<endl;}
+  Mesh* getMesh(){
+    if (m_msh != nullptr) {
+      //cout << "Address "<<m_msh<<endl;
+    return m_msh;
+    }else cout << "MESH POINTER "<<endl;
+  }
   Mesh & getRef(){return *m_msh;}
   void setMesh(Mesh* m);
   void generateMesh();

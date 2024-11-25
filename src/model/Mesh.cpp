@@ -427,7 +427,7 @@ void Mesh::genFromGmshModel() {
       
       for (int n=0;n<nodeCoords.size()/3;n++){
         for (int d=0;d<3;d++){
-          cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+          //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
         }
         nodetagpos[nodeTags[n]]=nc;
         

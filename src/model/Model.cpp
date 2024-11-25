@@ -98,13 +98,25 @@ Model::Model(string name){
 }
 
 void Model::addPart(Part *part){
+  cout << "Adding part"<<endl;
   int id = part->getId();
+  cout << "ID GET"<<endl;
+  std::vector<Entity*> nlist(m_part.begin(),m_part.end());
+  cout << "Max ID "<<getMaxId(nlist);
   if (id>-1){
-
+    
   }
   else {
-    std::vector<Entity*> nlist(m_part.begin(),m_part.end());
-    part->setId(getMaxId(nlist));
+    int id = part->getId();
+    cout << "part id "<<id <<endl;
+    if (m_part.size()>0){
+      //cout << m_part[0]->getId()<<endl;
+      //cout << "max id "<<endl;
+      //cout << "Max ID "<<getMaxId(nlist);
+      //part->setId(getMaxId(nlist));
+    }
+    
+    //cout << "SET ID "<<endl;
     
     //TEST
     //processObjects<Entity>(m_part);
@@ -113,7 +125,7 @@ void Model::addPart(Part *part){
   for (int n=0;n<part->getMesh()->getNodeCount();n++){
     //Check if ID is not repeated
     m_node.push_back(part->getMesh()->getNode(n));
-  
+    
   }
   
 }

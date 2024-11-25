@@ -55,6 +55,7 @@ void App::updateMeshes(){
   cout << "mesh address "<<_activeModel->getPart(0)->getMesh()<<endl;
   
   for (int p=0;p<_activeModel->getPartCount();p++){
+    cout << "Checking app parts "<<endl;
     bool not_found = true;
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
         if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh

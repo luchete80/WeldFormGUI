@@ -827,8 +827,9 @@ void Editor::drawGui() {
 
                 Mesh *m_sph_msh = new SPHMesh();
                 m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
+                cout << "Box created, adding part to model "<<endl;
                 m_model->addPart(new Part(m_sph_msh));
-
+                cout << "Part Added "<<endl;
                 getApp().setActiveModel(m_model);
                 getApp().Update(); //CRASHES
                 
@@ -1638,6 +1639,9 @@ int Editor::Init(){
   return 1; // IF THIS IS NOT HERE CRASHES!!!!
   */
   return 1;
+  m_show_mat_dlg = false;
+  m_show_mat_dlg_edit = false;
+  create_new_mat = false;
 }//Editor::Init()
 
 

@@ -33,15 +33,17 @@ protected:
 
 /// CREATE ALSO TEMPLATE
 
-int & getMaxId(std::vector<Entity*> ent);
+int getMaxId(std::vector<Entity*> ent);
 
 // Function to operate on a vector of Base pointers
+/*
 template <typename T>
-void processObjects(const std::vector<std::unique_ptr<T>>& objects) {
+void processObjects(const std::vector< std::unique_ptr<T> > & objects) {
     for (const auto& obj : objects) {
         obj->doSomething(); // Polymorphic call
     }
 }
+*/
 /*
 template <typename T>
 void processObjects2(const std::vector< *T >& objects) {

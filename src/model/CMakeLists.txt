@@ -7,6 +7,7 @@ set( MODEL_SRCS         "Entity.cpp"
                         "Element.cpp"
                         "Geom.cpp"
                                "Model.cpp"
+                               "SPHMesh.cpp"
                                "Part.cpp"            )
 
 ADD_LIBRARY(model SHARED ${MODEL_SRCS})

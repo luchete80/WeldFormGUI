@@ -37,7 +37,7 @@ public:
   void assignValues( std::vector <Node*>     m_node, //LOCATED ON MODEL SPACE!!!!
                      std::vector <Element* > m_elem);
   //void addNode();
-  void addBoxLength(Vector3f L, Vector3f V, double r);
+  virtual void addBoxLength(Vector3f L, Vector3f V, double r);
   void addPlane(double x0, double y0, double lx, double ly, double d);
   
   void addNode(double x, double y, double z = 0, int id = -1);
@@ -94,7 +94,7 @@ class SPHMesh:
 
 public:
 SPHMesh(){m_type=SPH;}
-    
+  virtual void addBoxLength(Vector3f L, Vector3f V, double r);
 };
 
 #endif
