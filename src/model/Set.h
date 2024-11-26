@@ -2,11 +2,13 @@
 #define _SET_H_
 
 #include <vector>
+#include "Entity.h"
 
 class Mesh;
 
 template <typename T>
-class Set {
+class Set:
+public Entity{
   
 public:
   int id;
@@ -18,5 +20,15 @@ protected:
   Mesh* m_msh;
   std::vector <T*> m_item;
 };
+
+
+class NodeSet
+:public Set<Node>{
+
+public:
+  
+  
+  
+  };
 
 #endif

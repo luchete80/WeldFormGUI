@@ -46,6 +46,7 @@
 #include "Material.h"
 
 #include "job_dialog.h"
+#include "bc_dialog.h"
 
 
 //#include "gMesh.h"
@@ -189,8 +190,10 @@ protected:
   JobShowDialog   m_jobshowdlg;
   CreateSetDialog m_setdlg;
   
-  bool m_show_mat_dlg; //create
-  bool m_show_job_dlg; //create
+  BCDialog        m_bcdlg;
+  
+  bool m_show_mat_dlg; //REMOVE, CGHANGE TO 
+
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
   bool create_new_mat;

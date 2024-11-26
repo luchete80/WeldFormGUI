@@ -3,10 +3,12 @@
 
 
 #include "Material.h"
+#include "Dialog.h"
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-struct MaterialDialog{
+struct MaterialDialog:
+public Dialog{
   
   //void    AddLog(const char* fmt, ...);
   double m_density_const; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)
@@ -19,6 +21,7 @@ struct MaterialDialog{
   const bool & isMaterialCreated()const{return create_material;}
   void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
 };
+
 
 //Returns true if NEW material is created or if changes are saved, if no
 //if no material is created, pointer is null

@@ -9,57 +9,7 @@
 
 using namespace std;
 
-void  BCDialog::Draw(const char* title, bool* p_open, Material_ *mat){
-
-  create_bc = false; 
-  if (!ImGui::Begin(title, p_open))
-  {
-      ImGui::End();
-      return;
-  }
-  //Vec3_t size;
-
-  ImGui::InputDouble("Density ", &m_density_const, 0.00f, 1.0f, "%.4f");  
-  ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
-  ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
-
-  if (ImGui::Button("Create")) {create_material = true;}
-  ImGui::SameLine();
-  if (ImGui::Button("Cancel")) {
-    cancel_action = false;
-  }
-  ImGui::End();
-  
-  //m_density_const = dens;
-}
-
-Material_ ShowCreateBCDialog(bool* p_open, BCDialog *bcdlg, bool *create){
-  
-  Material_ ret;
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  // ImGui::Begin("test", p_open);
-  // ImGui::End();
-  
-  bcdlg->Draw("Material", p_open);
-  
-  if (matdlg->isMaterialCreated()){
-    *create =true;
-    ret.setDensityConstant(matdlg->m_density_const);
-    
-    if (matdlg->m_elastic_const != 0.0 && matdlg->m_elastic_const != 0.0){
-      Elastic_ el(matdlg->m_elastic_const ,matdlg->m_elastic_const);
-      ret = Material_(el);
-    } else {
-      cout << "Material elastic constants should not be zero;"<<endl;
-    };
-  }
-  //cout << "density "<<    ret.getDensityConstant()<<endl;
-  return ret;
-}
-
-bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat){
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  matdlg->Draw("Material", p_open, mat);
+void  BCDialog::Draw(){
 
     
   

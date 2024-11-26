@@ -62,7 +62,7 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
 
 bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat){
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  matdlg->Draw("Material", p_open, mat);
+  matdlg->Draw("MaterialDlg", p_open, mat);
 
     
   return true;

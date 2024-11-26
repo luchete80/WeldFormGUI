@@ -58,7 +58,8 @@ void  JobDialog::Draw(){
   if (ImGui::Button("Create")) {create_entity = true;}
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
-    cancel_action = false;
+    cancel_action = false; //REMOVE
+    m_show=false;
   }
   
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImportJob")) 

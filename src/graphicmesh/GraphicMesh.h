@@ -32,6 +32,8 @@ class Model;
 class Mesh;
 class VtkViewer;
 
+//INHERIT SPH & FEM
+
 class GraphicMesh{
   friend class Model;
   //friend class VtkViewer;
@@ -92,6 +94,8 @@ protected:
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellArray> polys;
   vtkSmartPointer<vtkFloatArray> scalars;  
+  
+
 
   
 };
@@ -100,12 +104,14 @@ class GraphicSPHMesh:
 public GraphicMesh {
 public:
   GraphicSPHMesh();
+  //GraphicSPHMesh(const double & radius);
   GraphicSPHMesh(Mesh*);
   virtual int createVTKPolyData(Mesh &mesh);
   
 protected:
   vtkSmartPointer<vtkGlyph3D> m_glyph3D;  
 
+  float m_radius;
 };
 
 #endif

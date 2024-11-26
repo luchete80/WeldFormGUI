@@ -1,0 +1,6 @@
+Dialogs inherit from Dialog.h
+
+inherit Draw() function
+The flags are m_show and are called from editor.cpp with
+
+m_jobdlg.ShowIfEnabled();

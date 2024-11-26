@@ -43,7 +43,7 @@ add_subdirectory("App")
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
-                            
+                            bc_dialog.cpp
                             material_dialog.cpp
                             set_dialog.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp

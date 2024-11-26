@@ -466,11 +466,12 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
   
   setPoints(mesh);
+  m_radius = 0.5;
 
   if (mesh.getType() == SPH){
     cout << "Creating SPH Graphic Mesh "<<endl;
     vtkNew<vtkSphereSource> cubeSource;
-    cubeSource->SetRadius(0.01);
+    cubeSource->SetRadius(m_radius);
     m_glyph3D = vtkSmartPointer<vtkGlyph3D>::New();
     
     m_glyph3D->SetSourceConnection(cubeSource->GetOutputPort());
@@ -543,7 +544,8 @@ GraphicSPHMesh::GraphicSPHMesh(Mesh *mesh)
 */
 }
 
-GraphicSPHMesh::GraphicSPHMesh(){
+GraphicSPHMesh::GraphicSPHMesh()
+{
   
   
   

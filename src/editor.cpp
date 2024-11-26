@@ -824,7 +824,7 @@ void Editor::drawGui() {
                 if (item_current == 2)//Plane
                   size[2] = 0.0;
                 //m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
-
+                double m_radius = 1.0;
                 Mesh *m_sph_msh = new SPHMesh();
                 m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
                 cout << "Box created, adding part to model "<<endl;
@@ -1007,12 +1007,13 @@ void Editor::drawGui() {
   create_new_mat  = false;
   create_new_set  = false;
   create_new_part = false;
+  
 
   Material_ mat;
   Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
-  else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
+  //else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
   else if (m_show_set_dlg) {
   
   /*   
@@ -1357,7 +1358,7 @@ Editor::Editor(){
   m_show_app_console = true;
   m_model = new Model();
   getApp().setActiveModel(m_model);
-  
+  Init();
 }
 
 int Editor::Init(){
@@ -1636,12 +1637,13 @@ int Editor::Init(){
   scr_width = SCR_WIDTH;
   scr_height = SCR_HEIGHT;
   
-  return 1; // IF THIS IS NOT HERE CRASHES!!!!
   */
-  return 1;
+
   m_show_mat_dlg = false;
   m_show_mat_dlg_edit = false;
   create_new_mat = false;
+ 
+  return 1;
 }//Editor::Init()
 
 
