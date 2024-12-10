@@ -570,6 +570,9 @@ void Editor::drawGui() {
                 m_show_mat_dlg_edit = true;
                 //selected_mat = m_mats[i];
               }
+              else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
+                m_model->delPart(i);
+              }
               ImGui::EndPopup();
             }                    
               ImGui::SameLine();

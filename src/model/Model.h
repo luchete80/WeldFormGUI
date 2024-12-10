@@ -54,6 +54,7 @@ public:
   string getName(){return m_name;}
   
   int part_count;
+  void delPart(const int &p){m_part.erase(m_part.begin()+p);};
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
