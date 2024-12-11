@@ -154,3 +154,7 @@ else()
     TKXDESTEP
     TKXDEIGES)
 endif() 
+
+RESOURCES
+----------------------------------
+Button images should be moved to the binarie lib in order not to crash

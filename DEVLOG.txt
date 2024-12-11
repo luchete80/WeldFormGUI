@@ -90,3 +90,5 @@
          -Begining with python exporter.
          - Main widows allows now Docking. All tasks are in 1 main windows.
          - Python console redirected!!!!!
+20241211 - Working with double click.
+         - Put button images into resources.

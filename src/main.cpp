@@ -316,8 +316,10 @@ int main(int argc, char* argv[])
       GLuint my_image_texture = 0;
       int my_image_width = 0;
       int my_image_height = 0;
+      cout << "Opening button images.."<<endl;
       bool ret = LoadTextureFromFile("buttons/xy.png", &my_image_texture, &my_image_width, &my_image_height);
       IM_ASSERT(ret);
+      cout << "Done."<<endl;
           
 
   // Main loop
