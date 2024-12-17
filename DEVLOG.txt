@@ -92,3 +92,4 @@
          - Python console redirected!!!!!
 20241211 - Working with double click.
          - Put button images into resources.
+20241217 - App is updated automatically after a python command

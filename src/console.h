@@ -3,7 +3,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
+#include "App.h"
 
 //THIS IS FOR CHANGE STD OUTPUT , NOT PYTHON ONSOLAE
 class CustomBuffer : public std::streambuf {
@@ -298,7 +298,7 @@ struct ExampleAppConsole
     
     ////////////////////////
         PyRun_SimpleString(command_line);
-        
+      getApp().Update(); //
 ////////////////////////////////////////////////////////////////////////
  /// AFTER
 /////////////////////////////////////////////////

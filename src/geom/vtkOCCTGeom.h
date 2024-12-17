@@ -1,5 +1,8 @@
 // SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
 // SPDX-License-Identifier: BSD-3-Clause
+#ifndef _VTKOCCGEOM_
+#define _VTKOCCGEOM_
+
 #include <iostream>
 
 #include <vtkActor.h>
@@ -15,9 +18,12 @@
 #include <vtkNew.h>
 #include "vtkOCCTReader.h"
 
+class Mesh;
+//TODO: ASSOCIATE WITH A MESH! 
 class vtkOCCTGeom{
 protected:
   //vtkSmartPointer<vtkOCCTReader> occtreader;
+  Mesh *m_mesh;
 public:
   vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}
@@ -89,3 +95,4 @@ int TestOCCTReader(int argc, char* argv[])
   return EXIT_SUCCESS;
 }*/
 
+#endif

@@ -572,6 +572,7 @@ void Editor::drawGui() {
               }
               else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
                 m_model->delPart(i);
+                getApp().Update(); //CRASHES
               }
               ImGui::EndPopup();
             }                    
@@ -913,10 +914,11 @@ void Editor::drawGui() {
       gmsh::model::add("t20");
 
 
-      vtkOCCTGeom geom;
-      geom.TestReader(filePathName, vtkOCCTReader::Format::STEP);
+      vtkOCCTGeom *geom = new vtkOCCTGeom;
+      geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
       //widget->SetInteractor(renderWindowInteractor);
-      viewer->addActor(geom.actor);
+      viewer->addActor(geom->actor);
+      //RELATE TO THE PART VIA APP!
       
 
         // Load a STEP file (using `importShapes' instead of `merge' allows to
@@ -937,7 +939,7 @@ void Editor::drawGui() {
 
       gmsh::model::mesh::generate(2);
       gmsh::write("test.msh");
-      m_model->getPart(0)->generateMesh();
+      m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
       
       //m_model->getPart(0)->genFromGmshModel()
       getApp().setActiveModel(m_model);
@@ -947,10 +949,10 @@ void Editor::drawGui() {
         
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
-
+      
       viewer->addActor(graphic_mesh->getActor());
 
-
+      getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
     
     }
     

@@ -48,19 +48,24 @@ void App::checkUpdate(){
   }
 }
 
+////TODO: CHANGE TO CHECK FOR MESH->getPart()
+////
 void App::updateMeshes(){
   
+  std::vector <bool> is_part;
+  is_part.resize(m_graphicmeshes.size()); //to delete graphic mesh is part is not present
+   
   if (_activeModel!= nullptr){
   cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
   cout << "mesh address "<<_activeModel->getPart(0)->getMesh()<<endl;
   
   for (int p=0;p<_activeModel->getPartCount();p++){
-    cout << "Checking app parts "<<endl;
+    cout << "Checking app new parts "<<endl;
     bool not_found = true;
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
         if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
             not_found = false;
-          
+            is_part[gm] = true;
           }
         
         }
@@ -83,12 +88,33 @@ void App::updateMeshes(){
         cout << "Graphic mesh count is "<<m_graphicmeshes.size()<<endl;
       }
   } //part loop
+    //NOT WORKING
+    /*
+  //Second loop fo deleted parts
+    cout << "Looking for "<<m_graphicmeshes.size()<<" meshes and "<<_activeModel->getPartCount()<< " parts "<<endl;
+    for (int gm=0;gm<m_graphicmeshes.size();gm++){
+      bool del_part = true;
+      for (int p=0;p<_activeModel->getPartCount();p++){
+      if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
+        del_part = false;
+        }
+      }
+      if (del_part){
+        cout<<"Deleting graphic mesh for unexisting part"<<endl; 
+        m_graphicmeshes.erase(m_graphicmeshes.begin()+gm);
+      }
+    }
+  */
       
   _updateNeeded = false;   
   
 } else {
   cout <<"ERROR: No active model"<<endl;
   }
+}
+
+void App::updateGeoms(){
+
 }
 
 

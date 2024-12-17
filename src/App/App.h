@@ -4,6 +4,7 @@
 #include "Model.h"
 #include <iostream>
 #include <vector>
+#include "geom/vtkOCCTGeom.h"
 
 
 //#define MY_DLL_API __declspec(dllexport)
@@ -29,6 +30,7 @@ public:
   void checkUpdate();
   static void initApp();
   void updateMeshes(); 
+  void updateGeoms(); 
 //protected:
   explicit App(){
     _activeModel  = nullptr;
@@ -42,6 +44,7 @@ private:
   Model *_activeModel;
   bool _updateNeeded;
   std::vector <GraphicMesh *> m_graphicmeshes;
+  std::vector <vtkOCCTGeom*> m_geoms;
 }; 
 
 
