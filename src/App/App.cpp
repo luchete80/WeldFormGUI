@@ -74,7 +74,7 @@ void App::updateMeshes(){
         if (_activeModel->getPart(p)->getMesh()!=nullptr){
           if (_activeModel->getPart(p)->getMesh()->getType()==SPH){
             cout << "Creating SPH graphic mesh-----"<<endl;
-            m_graphicmeshes.push_back( new GraphicSPHMesh()); ///THIS READS FROM GLOBAL GMSH MODEL
+            m_graphicmeshes.push_back( new GraphicSPHMesh(_activeModel->getPart(p)->getMesh())); ///THIS READS FROM GLOBAL GMSH MODEL
             m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*_activeModel->getPart(p)->getMesh());
             //ACTOR IS NOT ASSIGNED (THIS IS DONE IN ORDER TO NOT ADD VTK CODE HERE)
             //viewer->addActor(graphic_mesh->getActor());  
@@ -89,22 +89,25 @@ void App::updateMeshes(){
       }
   } //part loop
     //NOT WORKING
-    /*
+  
   //Second loop fo deleted parts
     cout << "Looking for "<<m_graphicmeshes.size()<<" meshes and "<<_activeModel->getPartCount()<< " parts "<<endl;
     for (int gm=0;gm<m_graphicmeshes.size();gm++){
       bool del_part = true;
       for (int p=0;p<_activeModel->getPartCount();p++){
+        cout << "sm mesh ptr "<<m_graphicmeshes[gm]->getMesh()<<", "<<" part msh pointer "<<_activeModel->getPart(p)->getMesh()<<endl;
       if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
+        cout <<"Found one part with corresponding mesh"<<endl;
         del_part = false;
         }
       }
       if (del_part){
         cout<<"Deleting graphic mesh for unexisting part"<<endl; 
+        ///REMOVE ACTOR 
         m_graphicmeshes.erase(m_graphicmeshes.begin()+gm);
       }
     }
-  */
+  
       
   _updateNeeded = false;   
   

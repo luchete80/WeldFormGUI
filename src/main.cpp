@@ -475,6 +475,7 @@ int main(int argc, char* argv[])
           vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
           cout << "added "<<endl;
           getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
+          getApp().getGraphicMesh(gm)->setViewer(&vtkViewer2);
           
         }
       //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;

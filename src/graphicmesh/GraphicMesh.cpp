@@ -15,7 +15,7 @@
 
 #include <array>
 
-//#include "VtkViewer.h"
+#include "VtkViewer.h"
 // ADD VTK MECH
 // FROM https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
@@ -524,9 +524,13 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
 }
 
 
-GraphicMesh::GraphicMesh(Mesh *mesh){
+GraphicMesh::GraphicMesh(Mesh *mesh):
+m_mesh(mesh)
+{
     m_needs_actor = true;
     mesh_actor = nullptr;
+    m_needs_viewer = true;
+    m_viewer = nullptr;
     createVTKPolyData(*mesh);
   
 }

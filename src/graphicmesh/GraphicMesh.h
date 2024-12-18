@@ -36,7 +36,7 @@ class VtkViewer;
 
 class GraphicMesh{
   friend class Model;
-  //friend class VtkViewer;
+  friend class VtkViewer;
 public:
   GraphicMesh(){  
     m_needs_polydata = true;
@@ -68,10 +68,14 @@ public:
   Mesh* getMesh() {return m_mesh;}
   bool & isPolydataNeeded(){return m_needs_polydata;}
   void setPoints(Mesh &mesh); //NOT VIRTUAL
+  void setViewer(VtkViewer* v){m_viewer = v;}
+  
+  
 protected:
   bool                  m_needs_polydata;
   bool                  m_needs_actor;
   Mesh*                 m_mesh;
+  bool                  m_needs_viewer;
   int m_node_count;
   int m_elem_count;
   std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!
@@ -80,6 +84,7 @@ protected:
   
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
+  VtkViewer*              m_viewer;
   
   
   //VTK THING, for visualization

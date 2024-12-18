@@ -12,7 +12,8 @@ message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})
 
 include_directories("${VTK_INCLUDE_DIR}")
-
+include_directories(imgui_dir)
+include_directories("${CMAKE_SOURCE_DIR}/libs/imgui")
 #if (win32)
 #SEPARATE FINDING LIBS
 find_package(VTK 
