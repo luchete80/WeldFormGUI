@@ -7,6 +7,7 @@
 
 
 #include "gmsh.h"
+#include "ModelWriter.h"
 
 //#include <gmsh.h>
 //#include "GModel.h"

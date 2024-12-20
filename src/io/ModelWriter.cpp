@@ -1,6 +1,7 @@
 
 #include "ModelWriter.h"
 #include "Model.h"
+#include "Part.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip> //setw
@@ -66,7 +67,8 @@ ModelWriter::ModelWriter(Model &model){
 
 	of << oss.str();
 */  
-
+  cout << "Saving model"<<endl;
+  
   m_json["Configuration"]["modelType"] = "SPH";
   m_json["Configuration"]["solver"]    = "WeldForm";
   
@@ -77,11 +79,14 @@ ModelWriter::ModelWriter(Model &model){
   if (model.getMaterialCount()>0){
     m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();  
   }
-  
+  /*
   m_model = &model;
-  for (int p=0;model.getPartCount();p++){
+  cout << "Loop thorough parts..."<<endl;
+  for (std::vector<Part*>::iterator it = model.m_part.begin(); it != model.m_part.end(); ++it){
+    //if (it->getType() == )
+    //m_json["Parts"][] 
     }
-  
+  */
   o << std::setw(4) << m_json << std::endl;
   
   o.close();

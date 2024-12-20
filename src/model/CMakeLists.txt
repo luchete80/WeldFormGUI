@@ -1,6 +1,8 @@
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
+include_directories("../io")
+include_directories("${CMAKE_SOURCE_DIR}/io")
 set( MODEL_SRCS         "BoundaryCondition.cpp" 
                         "Entity.cpp"
                         "Mesh.cpp"
