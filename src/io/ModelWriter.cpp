@@ -77,7 +77,9 @@ ModelWriter::ModelWriter(Model &model){
   m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
   if (model.getMaterialCount()>0){
+    cout << "Writing materials .."<<endl;
     m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();  
+    cout << "Done."<<endl;
   }
   /*
   m_model = &model;

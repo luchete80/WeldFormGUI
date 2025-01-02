@@ -1041,10 +1041,11 @@ void Editor::drawGui() {
     //SHOULD NOT BE CALLED AGAIN!!!!!!
     //cout << "temp dens" <<m_matdlg.m_density_const<<endl;
     m_mats.push_back(new Material_(mat));
-    
+    getApp().getActiveModel().addMaterial(&mat);
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
     cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
+    
     m_show_mat_dlg = false;
 
   } else if (m_matdlg.cancel_action)     m_show_mat_dlg=false;

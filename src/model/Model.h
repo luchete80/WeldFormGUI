@@ -43,6 +43,7 @@ public:
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}
   const Material_* getMaterial (const int &m)const{return m_mat[m];}
+  void addMaterial(Material_*m){m_mat.push_back(m);} //Existent material
   const int & getMaterialCount()const{return m_mat_count;}
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}

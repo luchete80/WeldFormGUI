@@ -95,3 +95,5 @@
 20241217 - App is updated automatically after a python command
 20241218 - Adde vtkviewer pointer to graphicmesh
          - Fixed Constructor to set mesh pointer, FIXED for removing mesh
+--------------------------------------------------------------------------------------
+20250102 - Fixed crashing at saving (material bad ptr)
