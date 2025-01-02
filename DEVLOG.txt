@@ -97,3 +97,6 @@
          - Fixed Constructor to set mesh pointer, FIXED for removing mesh
 --------------------------------------------------------------------------------------
 20250102 - Fixed crashing at saving (material bad ptr)
+         - Adding model reader
+         - Fixing saving model
+         

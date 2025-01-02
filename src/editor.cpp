@@ -286,8 +286,11 @@ void ShowExampleMenuFile(const Editor &editor)
       //InputWriter writer("Input.json",editor.getDomain());
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
-      }
+      if (!(getApp().getActiveModel().getHasName()))
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
+      
+      ModelWriter(getApp().getActiveModel()); //Once it has name
+    }
     
     if (ImGui::MenuItem("Save As..")) {}
 
@@ -969,7 +972,7 @@ void Editor::drawGui() {
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      ModelWriter(getApp().getActiveModel());
+      getApp().getActiveModel().setName(filePathName);
     }
     // close
     ImGuiFileDialog::Instance()->Close();

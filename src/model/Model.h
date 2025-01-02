@@ -30,7 +30,11 @@ class Model {
   friend GraphicMesh;
   friend ModelWriter;
 public:
-  Model(){part_count=0;}
+  Model(){part_count=0;
+    m_hasname = false;
+    m_name = "";
+    m_mat_count=0;    
+  }
   Model(std::string );
   //Mesh* getPartMesh(const int &i);
   void addPart(Part *);

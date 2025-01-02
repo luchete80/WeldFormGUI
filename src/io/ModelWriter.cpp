@@ -24,7 +24,7 @@ ModelWriter::ModelWriter(Model &model){
 	nlohmann::json bcs 			= j["BoundaryConditions"];
 	nlohmann::json ics 			= j["InitialConditions"];
 */
-  std::ofstream o("pretty.json");
+  std::ofstream o(model.getName());
 
 /*  
   ostringstream oss;
