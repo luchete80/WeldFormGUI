@@ -57,7 +57,6 @@ void App::updateMeshes(){
    
   if (_activeModel!= nullptr){
   cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
-  //cout << "mesh address "<<_activeModel->getPart(0)->getMesh()<<endl;
   
   for (int p=0;p<_activeModel->getPartCount();p++){
     cout << "Checking app new parts "<<endl;
