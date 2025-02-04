@@ -13,6 +13,10 @@ Graphical User Interface to generate model and export solver input
 On ubuntu 
 sudo apt-get install xorg-dev libglu1-mesa-dev
 
+###AFTER BUILD
+Run scripts/copiar.sh or copy.bat
+Copy all libraries to src
+
 ## Geometry import
 
 You need opencocct-V7_5_0
