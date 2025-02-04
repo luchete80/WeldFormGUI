@@ -20,7 +20,14 @@ You need opencocct-V7_5_0
 
 Windows 
 -------------------
+![Here] (https://drive.google.com/drive/folders/1G3-PlMuYbhK1kk348GgOowFqRdjI44Cn?usp=drive_link) you can fin precompiled libaries.
+This includes: 
+- gmsh-4.13.0
+- OCCT-7.5.0
+- swigwin-4.3.0
+- VTK9.3.1-vs2019  
 
+You need also python if you want to include scripts.
 I prefer to install using nmake, not MSVC project files. 
 cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
 
