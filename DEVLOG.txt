@@ -99,4 +99,5 @@
 20250102 - Fixed crashing at saving (material bad ptr)
          - Adding model reader
          - Fixing saving model
+20250204 - Fixing App (linking with graphic mesh)
          

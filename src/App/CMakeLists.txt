@@ -9,7 +9,7 @@ include_directories("../../")
 if (WIN32) #WIH CAPS ON!
 MESSAGE ("----------------------------THIS IS WIN")
 set( APP_SRCS         "App.cpp"
-                      "../graphicmesh/GraphicMesh.cpp"
+                      #"../graphicmesh/GraphicMesh.cpp"
          )
 find_package(VTK 
   CONFIG REQUIRED 
