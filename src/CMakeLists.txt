@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
-project(imgui-vtk)
-
 include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/App")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")

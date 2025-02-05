@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.4.3) #TODO: CHECK
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+project(imgui-vtk)
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/src")
