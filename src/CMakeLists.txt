@@ -119,9 +119,7 @@ find_package(VTK
   QUIET
 )
 
-find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIRS})
-message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})
+
 #IOCCT
 #DEPENDS
 #  VTK::CommonExecutionModel
@@ -136,10 +134,13 @@ message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})
 #  VTK::InteractionStyle
 
 if (BUILD_PYTHON)
+  find_package(PythonLibs REQUIRED)
+  include_directories(${PYTHON_INCLUDE_DIRS})
+  message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})
   # -- Search for Python
-  FIND_PACKAGE(PythonInterp 3.11 REQUIRED)
-  FIND_PACKAGE(PythonLibs 3.11 REQUIRED)
-  
+  FIND_PACKAGE(PythonInterp 3.13 REQUIRED)
+  FIND_PACKAGE(PythonLibs 3.13 REQUIRED)
+
   set(PYTHON_LIBRARY_DEBUG ${PYTHON_LIBRARY})
 
   # -- Search for Swig
