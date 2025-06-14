@@ -2,7 +2,9 @@
 #include <cstdlib>
 
 #define PY_SSIZE_T_CLEAN
+#ifdef BUILD_PYTHON
 #include <Python.h>
+#endif
 #include "App.h"
 
 //THIS IS FOR CHANGE STD OUTPUT , NOT PYTHON ONSOLAE
@@ -38,7 +40,9 @@ protected:
 };
 
 void initPython(){
+#ifdef BUILD_PYTHON
 PyObject* ioModule = PyImport_ImportModule("io");
+#endif
 }
 
 struct ExampleAppConsole
@@ -256,6 +260,8 @@ struct ExampleAppConsole
         HistoryPos = -1;
         //system(command_line);
     ///////////////////// BEFORE /////////////////////////////////////////////////
+    
+    #ifdef BUILD_PYTHON
     PyObject* ioModule = PyImport_ImportModule("io");
     if (!ioModule) {
         std::cerr << "Failed to import io module!" << std::endl;
@@ -354,6 +360,8 @@ struct ExampleAppConsole
 
         // On command input, we scroll to bottom even if AutoScroll==false
         ScrollToBottom = true;
+        
+        #endif
     }
 
     // In C++11 you'd be better off using lambdas for this sort of forwarding callbacks
@@ -365,6 +373,7 @@ struct ExampleAppConsole
 
     int     TextEditCallback(ImGuiInputTextCallbackData* data)
     {
+        #ifdef BUILD_PYTHON
         //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
         switch (data->EventFlag)
         {
@@ -461,6 +470,7 @@ struct ExampleAppConsole
                 }
             }
         }
+        #endif
         return 0;
     }
 };

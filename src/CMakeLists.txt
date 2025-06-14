@@ -134,6 +134,7 @@ find_package(VTK
 #  VTK::InteractionStyle
 
 if (BUILD_PYTHON)
+  add_definitions(-DBUILD_PYTHON)
   find_package(PythonLibs REQUIRED)
   include_directories(${PYTHON_INCLUDE_DIRS})
   message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})

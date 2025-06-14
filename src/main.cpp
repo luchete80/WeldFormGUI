@@ -57,7 +57,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <Python.h>
+
+// #ifdef BUILD_PYTHON
+// #include <Python.h>
+// #endif
 
 #include "App/App.h"
 #include "GraphicMesh.h"
@@ -323,9 +326,9 @@ int main(int argc, char* argv[])
           
 
   // Main loop
-  
+  #ifdef BUILD_PYTHON
   Py_Initialize(); 
-  
+  #endif
   
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO
