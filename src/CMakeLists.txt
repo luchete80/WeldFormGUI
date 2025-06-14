@@ -5,7 +5,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
 include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image") #IN ORDER TO READ TEXTURES
-
+include_directories("${CMAKE_SOURCE_DIR}/libs/gl3w/include")
 
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
