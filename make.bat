@@ -1,3 +1,5 @@
+set PATH=%PATH%;%LIB_DIR%\swigwin-4.3.0
+
 cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ^
 -DVTK_INCLUDE_DIR=%LIB_DIR%\vtk-9.3.1_install -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON ^
 -DCMAKE_PREFIX_PATH=%LIB_DIR%\OCCT\cmake ^
