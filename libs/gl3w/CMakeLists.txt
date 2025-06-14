@@ -32,32 +32,32 @@ else()
 	set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} OpenGL::GL OpenGL::GLU)
 endif()
 # add command to create the header and source files
-add_custom_command(
-	OUTPUT
-		"${SOURCE_DIR}/gl3w.c"
-		"${HEADER_DIR}/GL/gl3w.h"
-		"${HEADER_DIR}/GL/glcorearb.h"
-		"${HEADER_DIR}/KHR/khrplatform.h"
-	COMMAND "${PYTHON_EXECUTABLE}" ${CMAKE_CURRENT_SOURCE_DIR}/gl3w_gen.py
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gl3w_gen.py
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+# add_custom_command(
+	# OUTPUT
+		# "${SOURCE_DIR}/gl3w.c"
+		# "${HEADER_DIR}/GL/gl3w.h"
+		# "${HEADER_DIR}/GL/glcorearb.h"
+		# "${HEADER_DIR}/KHR/khrplatform.h"
+	# COMMAND "${PYTHON_EXECUTABLE}" ${CMAKE_CURRENT_SOURCE_DIR}/gl3w_gen.py
+	# DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gl3w_gen.py
+	# WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+# )
 
 # add pseudo target that depends on the generated files
-add_custom_target(
-	gl3w_gen ALL
-	DEPENDS
-		"${SOURCE_DIR}/gl3w.c"
-		"${HEADER_DIR}/GL/gl3w.h"
-		"${HEADER_DIR}/GL/glcorearb.h"
-		"${HEADER_DIR}/KHR/khrplatform.h"
-)
+# add_custom_target(
+	# gl3w_gen ALL
+	# DEPENDS
+		# "${SOURCE_DIR}/gl3w.c"
+		# "${HEADER_DIR}/GL/gl3w.h"
+		# "${HEADER_DIR}/GL/glcorearb.h"
+		# "${HEADER_DIR}/KHR/khrplatform.h"
+# )
 
 # create gl3w target
 add_library(${PROJECT_NAME} INTERFACE)
 
 # make gl3w target depend on the generator target
-add_dependencies(${PROJECT_NAME} gl3w_gen)
+#add_dependencies(${PROJECT_NAME} gl3w_gen)
 
 include(GNUInstallDirs)
 
