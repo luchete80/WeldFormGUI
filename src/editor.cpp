@@ -949,6 +949,8 @@ void Editor::drawGui() {
       //getApp().Update(); ///CRASHES
       #ifdef BUILD_PYTHON
       PyRun_SimpleString("GetApplication().getActiveModel()");
+      #else
+        getApp().getActiveModel();
       #endif
       graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
       graphic_mesh->createVTKPolyData();
