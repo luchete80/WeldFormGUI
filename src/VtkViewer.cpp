@@ -181,8 +181,14 @@ void VtkViewer::render(const ImVec2 size){
 }
 
 void VtkViewer::addActor(const vtkSmartPointer<vtkProp>& actor){
+  cout << "Adding to renderer"<<endl;
 	renderer->AddActor(actor);
-	renderer->ResetCamera();
+	cout <<"Done"<<endl;
+  if (renderer !=nullptr){
+    renderer->ResetCamera();
+  }else
+    cout << "ERROR: Null renderer."<<endl;
+  cout << "Camera reset"<<endl;
 }
 
 void VtkViewer::addActors(const vtkSmartPointer<vtkPropCollection>& actors){

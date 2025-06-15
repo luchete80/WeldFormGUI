@@ -116,71 +116,6 @@ bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_wi
     return ret;
 }
 
-//#include "graphics/axis.h"
-/*
-// int argc, char* argv are required for vtkRegressionTestImage
-static int TestReader(const std::string& path, unsigned int format)
-{
-  vtkNew<vtkOCCTReader> reader;
-  reader->RelativeDeflectionOn();
-  reader->SetLinearDeflection(0.1);
-  reader->SetAngularDeflection(0.5);
-  reader->ReadWireOn();
-  reader->SetFileName(path.c_str());
-  reader->SetFileFormat(format);
-  reader->Update();
-
-  vtkNew<vtkCompositePolyDataMapper> mapper;
-  mapper->SetInputDataObject(reader->GetOutput());
-
-  vtkNew<vtkActor> actor;
-  actor->SetMapper(mapper);
-  actor->RotateY(90);
-
-  vtkNew<vtkRenderer> renderer;
-  vtkNew<vtkRenderWindow> renderWindow;
-  vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
-  renderWindow->AddRenderer(renderer);
-  renderer->AddActor(actor);
-  renderWindowInteractor->SetRenderWindow(renderWindow);
-
-  renderWindow->SetSize(400, 400);
-  renderer->ResetCamera();
-  renderWindow->Render();
-
-  int retVal;
-  //int retVal = vtkRegressionTestImage(renderWindow);
-//  if (retVal == vtkRegressionTester::DO_INTERACTOR)
-//    renderWindowInteractor->Start();
-  
-
-  return retVal;
-}
-*/
-
-/*
-int TestOCCTReader(int argc, char* argv[])
-{
-  if (argc < 3)
-  {
-    return EXIT_FAILURE;
-  }
-
-  if (!TestReader(
-        argc, argv, std::string{ argv[2] } += "/Data/wall.stp", vtkOCCTReader::Format::STEP))
-  {
-    return EXIT_FAILURE;
-  }
-
-  if (!TestReader(
-        argc, argv, std::string{ argv[2] } += "/Data/wall.iges", vtkOCCTReader::Format::IGES))
-  {
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
-}
-*/
 static void glfw_error_callback(int error, const char* description)
 {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -337,8 +272,10 @@ int main(int argc, char* argv[])
   editor->addViewer(&vtkViewer2);  
   cout << "Done "<<endl;
   //getApp().setActiveModel(m_model);
-
+  
+  #ifdef BUILD_PYTHON
   //PyRun_SimpleString("from model import *");
+  #endif
   while (!glfwWindowShouldClose(window))
   {
     // Poll and handle events (inputs, window resize, etc.)
@@ -474,8 +411,16 @@ int main(int argc, char* argv[])
     for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
       //cout << "is actor needed for mesh "<<gm<<": "<<getApp().getGraphicMesh(gm)->isActorNeeded()<<endl;
         if (getApp().getGraphicMesh(gm)->isActorNeeded()){
+        vtkSmartPointer<vtkActor> act = getApp().getGraphicMesh(gm)->getActor();
+        if (act != nullptr)
+          std::cout << "Actor class: " << act->GetClassName() << std::endl;
+        else
+          std::cout << "Null actor pointer!" << std::endl;
           cout << "Adding Actor"<<endl;
-          vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          if (getApp().getGraphicMesh(gm)->getActor() != nullptr)
+            vtkViewer2.addActor(getApp().getGraphicMesh(gm)->getActor());
+          else 
+            cout <<"ERROR:Null mesh ptr"<<endl;
           cout << "added "<<endl;
           getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
           getApp().getGraphicMesh(gm)->setViewer(&vtkViewer2);
