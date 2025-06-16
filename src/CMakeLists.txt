@@ -229,25 +229,6 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(${EXEC_NAME} ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CMAKE_DL_LIBS})
 endif()
 
-if (WIN32)
-
-target_link_libraries(${EXEC_NAME} 
-            
-            app
-
-            io
-            
-					  glfw3
-
-            ${RT_LIB}
-            ${VTK_LIBRARIES}
-	    
-            gmsh
-
-            ${PYTHON_LIBRARIES}
-)
-
-else()
 
 target_link_libraries(${EXEC_NAME} 
             
@@ -269,13 +250,3 @@ target_link_libraries(${EXEC_NAME}
             ${PYTHON_LIBRARIES}
 )
 
-endif()
-
-file (GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/model/*.cpp")
-
-#find_package(pybind11 REQUIRED)
-#pybind11_add_module(py_imgui-vtk 
-#	${SOURCE_FILES}
-#	${HEADER_FILES}
-#	${PYTHON_FILES}
-#)
