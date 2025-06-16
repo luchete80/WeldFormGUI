@@ -350,7 +350,7 @@ int GraphicMesh::createVTKPolyData() {
   mesh_pdata->GetPointData()->SetScalars(scalars);
 
   // Now we'll look at it.
-  cout << "Setting mapper "<<endl;
+  cout << "--Setting mapper "<<endl;
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
@@ -367,6 +367,7 @@ int GraphicMesh::createVTKPolyData() {
   mesh_actor->Modified ();
   
   //m_needs_actor = false; //NEEDS TO BE ADDED!
+  cout << "Created polydata from empty"<<endl;
   
   return EXIT_SUCCESS;
 }
@@ -421,7 +422,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
         cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
         //cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
       }
-      cout <<endl;
+      //cout <<endl;
       polys->InsertNextCell(cell);
       }
     //cout <<endl;
@@ -441,7 +442,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
 
 
   // Now we'll look at it.
-  cout << "Setting mapper "<<endl;
+  cout << "SSSSSetting mapper "<<endl;
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
@@ -457,7 +458,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
   mesh_actor->Modified ();
 
   //m_needs_actor = false; //Need stril to be added to renderer To Show
-    
+  cout << "Created polydata from mesh"<<endl;
   return EXIT_SUCCESS;    
 }
 
@@ -501,7 +502,7 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
 
   //TODO: REUSE THIS
   // Now we'll look at it.
-  cout << "Setting mapper "<<endl;
+  cout << "--Setting mapper "<<endl;
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
@@ -519,7 +520,8 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->Modified ();
 
   m_needs_actor = true; //To Show
-    
+
+  cout << "Created polydata from empty"<<endl;    
   return EXIT_SUCCESS;    
 }
 
