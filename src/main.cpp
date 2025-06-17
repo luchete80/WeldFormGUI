@@ -58,9 +58,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-// #ifdef BUILD_PYTHON
-// #include <Python.h>
-// #endif
+#ifdef BUILD_PYTHON
+#include <Python.h>
+#endif
 
 #include "App/App.h"
 #include "GraphicMesh.h"
