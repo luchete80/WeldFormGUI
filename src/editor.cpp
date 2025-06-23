@@ -577,7 +577,21 @@ void Editor::drawGui() {
               else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
                 m_model->delPart(i);
                 getApp().Update(); //CRASHES
+              } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
+                  
+                  gmsh::model::mesh::generate(2);
+                  gmsh::write("test.msh");
+                  m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
+                  
+
+                  graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+                  graphic_mesh->createVTKPolyData();
+                  
+                  viewer->addActor(graphic_mesh->getActor());
+                
               }
+              
+               
               ImGui::EndPopup();
             }                    
               ImGui::SameLine();
@@ -613,7 +627,7 @@ void Editor::drawGui() {
           }
           ImGui::EndPopup();
         }
-
+        if (open_){
         for (int i = 0; i < m_mats.size(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -639,10 +653,7 @@ void Editor::drawGui() {
               ImGui::TreePop();
           }
         }
-            
-        if (open_)
-        {
-           // your tree code stuff
+                       // your tree code stuff
            ImGui::TreePop();
         }
         //-----------------------------------------------------
@@ -935,25 +946,23 @@ void Editor::drawGui() {
         //return 0;
       //}
       
-      //MergeFile(filePathName, errorIfMissing);
       gmsh::merge(filePathName);
 
-      gmsh::model::mesh::generate(2);
-      gmsh::write("test.msh");
-      m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
+      //gmsh::model::mesh::generate(2);
+      //gmsh::write("test.msh");
+      //m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
       
-      //m_model->getPart(0)->genFromGmshModel()
       getApp().setActiveModel(m_model);
-      //getApp().Update(); ///CRASHES
+
       #ifdef BUILD_PYTHON
       PyRun_SimpleString("GetApplication().getActiveModel()");
       #else
         getApp().getActiveModel();
       #endif
-      graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-      graphic_mesh->createVTKPolyData();
+      //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+      //graphic_mesh->createVTKPolyData();
       
-      viewer->addActor(graphic_mesh->getActor());
+      //viewer->addActor(graphic_mesh->getActor());
 
       getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
     

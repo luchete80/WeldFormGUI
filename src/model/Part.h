@@ -19,6 +19,7 @@ public:
   Part(){
     m_id = -1;
     m_msh = nullptr;
+    m_ismeshed = false;
   }
   Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
@@ -33,10 +34,12 @@ public:
   void setMesh(Mesh* m);
   void generateMesh();
   virtual Part_Type getType(){return m_type;}
+  const bool isMeshed () const{return m_ismeshed;}
 protected:
   Mesh* m_msh;
   Part_Type m_type;
   Geom* m_geom;
+  bool m_ismeshed;
   
 };
 

@@ -69,6 +69,8 @@ void App::updateMeshes(){
         
         }
       if (not_found){
+        if (_activeModel->getPart(p)->isMeshed()){
+          
         cout << "Creating Graphic Mesh for part "<<p<<endl;
         if (_activeModel->getPart(p)->getMesh()!=nullptr){
           if (_activeModel->getPart(p)->getMesh()->getType()==SPH){
@@ -86,6 +88,7 @@ void App::updateMeshes(){
       
         cout << "Graphic mesh count is "<<m_graphicmeshes.size()<<endl;
       }
+    }//is meshed
   } //part loop
     //NOT WORKING
   

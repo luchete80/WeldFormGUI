@@ -21,6 +21,8 @@ m_msh(mesh){
   if (mesh==nullptr){
     cout << "ERROR, NULL mesh pointer"<<endl;
   }
+  m_ismeshed = true;
+  
 }
 
 Part::Part(Geom* geom){
