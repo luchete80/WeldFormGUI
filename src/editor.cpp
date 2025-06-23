@@ -552,7 +552,8 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
             ImGui::EndPopup();          
         }
-
+        
+        if (open_){
         //cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
         {
@@ -585,9 +586,6 @@ void Editor::drawGui() {
           }
         }
       
-        if (open_)
-        {
-           // your tree code stuff
            ImGui::TreePop();
         }
         //-----------------------
