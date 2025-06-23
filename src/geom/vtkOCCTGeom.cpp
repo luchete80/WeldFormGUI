@@ -22,7 +22,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   mapper->SetInputDataObject(reader->GetOutput());
   actor = vtkSmartPointer <vtkActor>::New();
   actor->SetMapper(mapper);
-  actor->GetProperty()->SetRepresentationToWireframe();
+  //actor->GetProperty()->SetRepresentationToWireframe();
   actor->GetProperty()->SetLineWidth(1.0);
 
 
