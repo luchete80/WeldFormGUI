@@ -24,7 +24,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
   actor->SetMapper(mapper);
   //actor->GetProperty()->SetRepresentationToWireframe();
   actor->GetProperty()->SetLineWidth(1.0);
-
+  actor->GetProperty()->SetOpacity(0.5); // 50% transparente 
 
   /*
   vtkNew<vtkRenderer> renderer;

@@ -518,7 +518,10 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->GetProperty()->EdgeVisibilityOn ();
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
-
+  //// IF VTK later than 9.3?
+  //mesh_actor->GetProperty()->SetDepthTest(false);
+  mesh_actor->GetMapper()->SetResolveCoincidentTopology(VTK_RESOLVE_OFF);
+  
   m_needs_actor = true; //To Show
 
   cout << "Created polydata from empty"<<endl;    
