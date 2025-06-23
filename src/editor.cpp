@@ -581,7 +581,7 @@ void Editor::drawGui() {
                   
                   gmsh::model::mesh::generate(2);
                   gmsh::write("test.msh");
-                  m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
+                  m_model->getPart(i)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
                   
 
                   graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
@@ -948,9 +948,6 @@ void Editor::drawGui() {
       
       gmsh::merge(filePathName);
 
-      //gmsh::model::mesh::generate(2);
-      //gmsh::write("test.msh");
-      //m_model->getPart(0)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
       
       getApp().setActiveModel(m_model);
 
@@ -959,10 +956,6 @@ void Editor::drawGui() {
       #else
         getApp().getActiveModel();
       #endif
-      //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-      //graphic_mesh->createVTKPolyData();
-      
-      //viewer->addActor(graphic_mesh->getActor());
 
       getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
     
