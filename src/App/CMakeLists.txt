@@ -67,3 +67,13 @@ include_directories("${VTK_INCLUDE_DIR}")
 ADD_LIBRARY(app SHARED ${APP_SRCS})
 TARGET_LINK_LIBRARIES(app  model graphicmesh_)
 #ENDIF()
+
+# Set destination dir
+set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src)
+
+add_custom_command(TARGET app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:app>
+        ${LIB_OUTPUT_DIR}/$<TARGET_FILE_NAME:app>
+    COMMENT "Copying model to bin/"
+)

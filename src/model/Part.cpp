@@ -26,8 +26,10 @@ m_msh(mesh){
 }
 
 Part::Part(Geom* geom){
-  
-}void Part::generateMesh(){
+  m_ismeshed = false;
+}
+
+void Part::generateMesh(){
   this->m_msh = new Mesh;
   this->m_msh->genFromGmshModel();
 }

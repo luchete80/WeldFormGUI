@@ -60,3 +60,13 @@ ADD_LIBRARY(graphicmesh_ SHARED ${MESHVIEWER_SRCS})
 
 TARGET_LINK_LIBRARIES(graphicmesh_  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
 #TARGET_LINK_LIBRARIES(graphicmesh_st  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
+
+# Set destination dir
+set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src)
+
+add_custom_command(TARGET graphicmesh_ POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:graphicmesh_>
+        ${LIB_OUTPUT_DIR}/$<TARGET_FILE_NAME:graphicmesh_>
+    COMMENT "Copying model to bin/"
+)
