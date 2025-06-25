@@ -34,9 +34,9 @@ int Job::Run(){
   returnCode = system(str.c_str());  
 
   #ifdef _WIN32
-  str = "START /B solvers\\WeldForm " + m_path_file + "> log.txt" ;
+  str = "START /B solvers\\WeldFormFEM " + m_path_file + "> log.txt" ;
   #elif linux
-  str = "nohup solvers/WeldForm " + m_path_file + " > log.txt 2>&1  &";
+  str = "nohup solvers/WeldFormFEM " + m_path_file + " > log.txt 2>&1  &";
   //echo $!
   #endif
 
