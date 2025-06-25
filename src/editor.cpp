@@ -1687,7 +1687,7 @@ void Editor::processInput(GLFWwindow *window)
       std::string filename = "out_0.000010.vtk";
       ResultFrame *frame = new ResultFrame(filename);
       
-    
+      viewer->addActor(frame->actor);
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
