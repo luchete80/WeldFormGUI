@@ -1,6 +1,17 @@
 #ifndef _RESULTS_H_
 #define _RESULTS_H_
 
+#include <vtkUnstructuredGridReader.h>
+#include <vtkDataSetMapper.h>
+#include <vtkActor.h>
+
+#include <sstream>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <filesystem> // C++17 for checking file existence
+
+
 class ResultPart {
 public:
     std::string name;

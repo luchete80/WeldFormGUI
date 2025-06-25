@@ -1,4 +1,3 @@
-
 #include <GLFW/glfw3.h>
 
 #include "imgui.h"
@@ -44,6 +43,8 @@
 #include "console.h"
 
 #include "App.h"
+
+#include "results_simple.h"
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -1678,6 +1679,16 @@ void Editor::processInput(GLFWwindow *window)
       
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       cout << "Pressed A"<<endl;
+    
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
+      
+      cout << "Opening file "<<endl;
+      
+      std::string filename = "out_0.000010.vtk";
+      ResultFrame *frame = new ResultFrame(filename);
+      
+    
+    }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
       box_select_mode = !box_select_mode;

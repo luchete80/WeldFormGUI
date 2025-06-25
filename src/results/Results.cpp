@@ -1,13 +1,4 @@
 #include "Results.h"
-#include <vtkUnstructuredGridReader.h>
-#include <vtkDataSetMapper.h>
-#include <vtkActor.h>
-
-#include <sstream>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <filesystem> // C++17 for checking file existence
 
 namespace fs = std::filesystem;
 

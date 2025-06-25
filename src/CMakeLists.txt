@@ -3,6 +3,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/App")
 include_directories("${CMAKE_SOURCE_DIR}/src/physics")
 include_directories("${CMAKE_SOURCE_DIR}/src/model")
 include_directories("${CMAKE_SOURCE_DIR}/src/graphicmesh")
+include_directories("${CMAKE_SOURCE_DIR}/src/results")
 include_directories("${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4")
 include_directories("${CMAKE_SOURCE_DIR}/libs/stb_image") #IN ORDER TO READ TEXTURES
 include_directories("${CMAKE_SOURCE_DIR}/libs/gl3w/include")

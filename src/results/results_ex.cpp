@@ -8,12 +8,9 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
 
-int main(int argc, char *argv[])
+int openresults(std::string filename])
 {
-    if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " your_file.vtk" << std::endl;
-        return EXIT_FAILURE;
-    }
+
 
     std::string filename = argv[1];
 
@@ -22,6 +19,8 @@ int main(int argc, char *argv[])
         vtkSmartPointer<vtkUnstructuredGridReader>::New();
     reader->SetFileName(filename.c_str());
     reader->Update();
+    
+    reader->GetOutput()->GetPointData()->SetActiveScalars("VonMises");
 
     // Create contour filter
     vtkSmartPointer<vtkContourFilter> contour =
