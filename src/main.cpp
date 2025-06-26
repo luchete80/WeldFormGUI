@@ -65,6 +65,7 @@
 #include "App/App.h"
 #include "GraphicMesh.h"
 
+#include "results_simple.h"
 //using App;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
@@ -273,6 +274,15 @@ int main(int argc, char* argv[])
   cout << "Done "<<endl;
   //getApp().setActiveModel(m_model);
   
+          //~ std::string filename = "out_0.000010.vtk";
+      //~ ResultFrame *frame = new ResultFrame(filename);
+    //~ frame->printAvailableFields();
+    
+    //~ // Mostrar el campo DISP (magnitud del vector)
+    //~ frame->setActiveScalarField("DISP");
+          
+      //~ vtkViewer2.addActor(frame->actor);
+      
   #ifdef BUILD_PYTHON
   //PyRun_SimpleString("from model import *");
   #endif

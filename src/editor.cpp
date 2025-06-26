@@ -261,6 +261,9 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Import", "Ctrl+O")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
+    if (ImGui::MenuItem("Open Result", "Ctrl+O")){
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".vtk", ".");
+    }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
     }
@@ -965,7 +968,39 @@ void Editor::drawGui() {
     // close
     ImGuiFileDialog::Instance()->Close();
   }
-  
+
+  // display
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenRes")) 
+  {
+    // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+      
+      cout << "file path name "<<filePathName<<endl;
+
+      ResultFrame *frame = new ResultFrame(filePathName);
+      frame->printAvailableFields();
+      frame->setActiveScalarField("DISP");      
+      frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
+      viewer->addActor(frame->actor);      
+      
+      getApp().setActiveModel(m_model);
+
+      #ifdef BUILD_PYTHON
+      PyRun_SimpleString("GetApplication().getActiveModel()");
+      #else
+        getApp().getActiveModel();
+      #endif
+
+      getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+    
+    }
+    
+    // close
+    ImGuiFileDialog::Instance()->Close();
+  }  
   
   ////// FILE SAVE
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgSave")) 
@@ -1686,7 +1721,7 @@ void Editor::processInput(GLFWwindow *window)
       
       std::string filename = "out_0.000010.vtk";
       ResultFrame *frame = new ResultFrame(filename);
-      
+      frame->setActiveScalarField("DISP");      
       viewer->addActor(frame->actor);
     }
 
