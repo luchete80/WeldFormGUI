@@ -4,7 +4,7 @@ Graphical User Interface to generate model and export solver input
 
 
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_01.png)
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_02.png
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_02.png)
 
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/python_GUI.gif)
 
