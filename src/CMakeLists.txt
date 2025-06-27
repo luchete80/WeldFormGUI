@@ -136,20 +136,84 @@ find_package(VTK
 
 if (BUILD_PYTHON)
   add_definitions(-DBUILD_PYTHON)
-  find_package(PythonLibs REQUIRED)
-  include_directories(${PYTHON_INCLUDE_DIRS})
-  message ("PYTHON LIB DIR: " ${PYTHON_LIBRARIES})
-  # -- Search for Python
-  FIND_PACKAGE(PythonInterp 3.10 REQUIRED)
-  FIND_PACKAGE(PythonLibs 3.10 REQUIRED)
+  
+  # Usar la versión moderna de Python
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+  
+  message("PYTHON VERSION: ${Python3_VERSION}")
+  message("PYTHON INCLUDE DIRS: ${Python3_INCLUDE_DIRS}")
+  message("PYTHON LIBRARIES: ${Python3_LIBRARIES}")
+  
+  # Configurar las variables para compatibilidad
+  set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+  set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+  target_include_directories(${EXEC_NAME} PRIVATE ${Python3_INCLUDE_DIRS})
 
-  set(PYTHON_LIBRARY_DEBUG ${PYTHON_LIBRARY})
-
-  # -- Search for Swig
-  FIND_PACKAGE(SWIG REQUIRED)
-  if (WIN32)
-    set (SWIG_DIR D:/Luciano/Numerico/Libs/swigwin-4.1.1/Lib)
+  # Verificar si Python.h existe
+  find_file(PYTHON_H_FILE Python.h PATHS ${PYTHON_INCLUDE_DIRS})
+  if(PYTHON_H_FILE)
+    message(STATUS "Python.h found at: ${PYTHON_H_FILE}")
+  else()
+    message(FATAL_ERROR "Python.h not found in any include directory")
   endif()
+  message(STATUS "=== DIAGNÓSTICO PYTHON ===")
+  message(STATUS "Python3_VERSION: ${Python3_VERSION}")
+  message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+  message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+  message(STATUS "Python3_LIBRARY_DIRS: ${Python3_LIBRARY_DIRS}")
+  message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+  
+  # Mostrar todas las propiedades del target
+  get_target_property(LINK_LIBS ${EXEC_NAME} LINK_LIBRARIES)
+  message(STATUS "Current LINK_LIBRARIES: ${LINK_LIBS}")
+
+  # Configuración específica para Python 3.13
+  if(Python3_VERSION VERSION_GREATER_EQUAL "3.13")
+    message(STATUS "Configurando para Python 3.13+")
+    # Python 3.13 requiere definiciones especiales
+    add_definitions(-DPy_BUILD_CORE_MODULE)
+    add_definitions(-DPy_LIMITED_API)
+  endif()
+  
+# CRÍTICO: Force to use python release onevery mode (Error looking for python313t)
+  if(WIN32)
+    set_target_properties(${EXEC_NAME} PROPERTIES
+      LINK_FLAGS "/NODEFAULTLIB:python313t.lib /NODEFAULTLIB:python313t_d.lib"
+    )
+    
+    # También aplicar a configuraciones específicas
+    set_property(TARGET ${EXEC_NAME} PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:python313t.lib /NODEFAULTLIB:python313t_d.lib")
+    set_property(TARGET ${EXEC_NAME} PROPERTY LINK_FLAGS_RELEASE "")
+    set_property(TARGET ${EXEC_NAME} PROPERTY LINK_FLAGS_RELWITHDEBINFO "/NODEFAULTLIB:python313t.lib /NODEFAULTLIB:python313t_d.lib")
+    set_property(TARGET ${EXEC_NAME} PROPERTY LINK_FLAGS_MINSIZEREL "/NODEFAULTLIB:python313t.lib /NODEFAULTLIB:python313t_d.lib")
+  endif()
+  
+  # -- Search for Swig
+  if(NOT DEFINED SWIG_DIR)
+      if(DEFINED ENV{SWIG_LIB})
+          set(SWIG_DIR "$ENV{SWIG_LIB}" CACHE PATH "Path to SWIG library files")
+          message(STATUS "Using SWIG_LIB from environment: ${SWIG_DIR}")
+      else()
+          message(WARNING "SWIG_DIR not set and SWIG_LIB environment variable not found!")
+          message(WARNING "Please set either:")
+          message(WARNING "1. SWIG_DIR in CMake (e.g., -DSWIG_DIR=/path/to/swig/Lib)")
+          message(WARNING "2. SWIG_LIB environment variable")
+      endif()
+  endif()
+
+  find_package(SWIG REQUIRED)
+  include(${SWIG_USE_FILE})
+
+  # Verify SWIG version
+  if(SWIG_VERSION VERSION_LESS "4.3.0")
+      message(WARNING "Found SWIG ${SWIG_VERSION} - Recommend upgrading to 4.3.0+")
+  endif()
+
+  message(STATUS "SWIG Found:")
+  message(STATUS "  - Executable: ${SWIG_EXECUTABLE}")
+  message(STATUS "  - Version: ${SWIG_VERSION}")
+  message(STATUS "  - Library Path: ${SWIG_DIR}")
+
   add_subdirectory("python")
 endif()  
   

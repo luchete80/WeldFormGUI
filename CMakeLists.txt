@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(imgui-vtk)
 
 include_directories("${CMAKE_SOURCE_DIR}")

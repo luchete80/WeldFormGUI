@@ -104,5 +104,8 @@
          - Created Geometry with no mesh! 
          - Created Mesh button. Still need to create mesh dialog.
 20250626 - Added First Results
-
+20250627 - Fixed python error build in MSWIN
+         - Deleted old SWIG dependencies in CMakeLists
+         - Fixed SWIG configuration.
+         
          

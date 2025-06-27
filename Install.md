@@ -20,12 +20,25 @@ set PYTHON_LIB=C:\Users\54113\AppData\Local\Programs\Python\Python311 (WHERE PYT
 
 Finally Run make.bat (on this dir)
 
+#PREVIOUS TO RUN
+Set OCCT env vars: 
+> D:\Luciano\Numerico\libs\OCCT_7.8.0\occt-vc143-64\env.bat
+Then, on the same console, run the cmake command!
+
 
 MANUAL OPTION
 
 1 - If build_python=ON do: 
 
-set PATH=%PATH%;PATH\TO\SWIGWIN\EXE Being PATH\TO\SWIGWIN\EXE path in which swig.exe is (see below downloads. ) 
+> set PATH=%PATH%;PATH\TO\SWIGWIN\EXE Being PATH\TO\SWIGWIN\EXE path in which swig.exe is (see below downloads. ) 
+> cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
+> -DVTK_INCLUDE_DIR=%LIB_DIR%\vtk-9.3.1_install -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON \
+> -DCMAKE_PREFIX_PATH=%LIB_DIR%\OCCT\cmake
+> -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON
+> -DGMSH_DIR=%LIB_DIR%\gmsh-4.13.0_install -DBUILD_PYTHON=ON 
+
+If manually set python (better to let the system find it)
+
 > cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE \
 > -DVTK_INCLUDE_DIR=%LIB_DIR%\vtk-9.3.1_install -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON \
 > -DCMAKE_PREFIX_PATH=%LIB_DIR%\OCCT\cmake
@@ -33,6 +46,7 @@ set PATH=%PATH%;PATH\TO\SWIGWIN\EXE Being PATH\TO\SWIGWIN\EXE path in which swig
 > -DPYTHON_INCLUDE_DIRS=%PYTHON_LIB%\include
 > -DPYTHON_LIBRARY=%PYTHON_LIB%\libs\python311.lib
 > -DGMSH_DIR=%LIB_DIR%\gmsh-4.13.0_install -DBUILD_PYTHON=ON 
+
 
 I have used swigwin-4.1.1 =%LIB_DIR%/swigwin-4.1.1/Lib From https://www.swig.org/download.html
 
@@ -87,3 +101,14 @@ set (ENABLE_NETGEN OFF) set (ENABLE_POST OFF) set(CMAKE_BUILD_TYPE Release) #IF 
 https://github.com/Kitware/VTK/blob/master/IO/OCCT/CMakeLists.txt
 
 if (OpenCASCADE_VERSION VERSION_GREATER_EQUAL "7.8.0") set(opencascade_req_targets TKDESTEP TKDEIGES TKernel TKMath TKMesh TKBRep TKXSBase TKLCAF TKXCAF) else() set(opencascade_req_targets TKSTEP TKIGES TKMesh TKXDESTEP TKXDEIGES) endif()
+
+#Common errors
+
+> "Dont Know how to do xxxx.cxx"
+
+
+
+> cmake -G "NMake Makefiles" ^
+>      -DSWIG_EXECUTABLE=D:\Luciano\Numerico\libs\swigwin-4.3.0\swig.exe ^
+>      -DSWIG_DIR=D:\Luciano\Numerico\libs\swigwin-4.3.0\Lib ^
+>      -DCMAKE_SWIG_FLAGS="-I D:\Luciano\Numerico\libs\swigwin-4.3.0\Lib" ..

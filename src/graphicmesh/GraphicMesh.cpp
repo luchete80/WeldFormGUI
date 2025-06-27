@@ -391,15 +391,27 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
           for (int d=0;d<3;d++) coords[d] = mesh.m_node[n]->getPos()[d];
           // IF REAL POSITIONS
           pts.push_back(coords);
-  }
-  cout << "Inserting nodes"<<endl;
-  for (auto i = 0ul; i < pts.size(); ++i)
-  {
-    //cout << "Node"<<i<<endl;
-    points->InsertPoint(i, pts[i].data());
-    //scalars->InsertTuple1(i, i);
-  }
-  cout << "Done"<<endl;
+    for (int d=0; d<3; d++) {
+        coords[d] = mesh.m_node[n]->getPos()[d];
+        cout << "Raw coord " << d << ": " << coords[d] << endl;
+    }
+
+    points->InsertPoint(n, coords.data());
+    // Verify what was actually inserted
+    double inserted[3];
+    points->GetPoint(n, inserted);
+    cout << "Inserted coord: " 
+         << inserted[0] << ", " << inserted[1] << ", " << inserted[2] << endl;
+    }
+
+  // cout << "Inserting nodes"<<endl;
+  // for (auto i = 0ul; i < pts.size(); ++i)
+  // {
+    // //cout << "Node"<<i<<endl;
+    // points->InsertPoint(i, pts[i].data());
+    // //scalars->InsertTuple1(i, i);
+  // }
+  // cout << "Done"<<endl;
 
   if (mesh.getType()==FEM){
   cout << "Mesh Type is FEM"<<endl;
@@ -411,7 +423,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
     if (nc==3){
       vtkNew<vtkTriangle> cell;
       for (int nn=0;nn<nc;nn++) {
-        cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
+        cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn)-1); //EXTERNAL ID IS FROM 1
 
       }
       polys->InsertNextCell(cell);
@@ -419,8 +431,8 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
       vtkNew<vtkQuad> cell;
       //cout << "gm mesh node "<<endl;
       for (int nn=0;nn<nc;nn++) {
-        cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn));
-        //cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
+        cell->GetPointIds()->SetId(nn, mesh.getElem(e)->getNodeId(nn)-1);//EXTERNAL ID IS FROM 1
+        cout <<  mesh.getElem(e)->getNodeId(nn) <<", ";
       }
       //cout <<endl;
       polys->InsertNextCell(cell);
