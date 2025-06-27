@@ -12,7 +12,7 @@ p = Part(msh);
 getApp().getActiveModel().addPart(p);
 getApp().Update(); #NOT NECESARY
 
-from model import *;
+#from model import *;
 msh2 = Mesh();
 msh2.addNode(0,0,1); 
 msh2.addNode(1,0,1); 

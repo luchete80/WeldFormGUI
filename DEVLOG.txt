@@ -107,5 +107,5 @@
 20250627 - Fixed python error build in MSWIN
          - Deleted old SWIG dependencies in CMakeLists
          - Fixed SWIG configuration.
-         
+         - Fixed connectiviy on mesh created.
          

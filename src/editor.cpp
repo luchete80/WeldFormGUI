@@ -943,13 +943,17 @@ void Editor::drawGui() {
      //try {
         cout << "Loading file "<<filePathName<<endl;
         gmsh::model::occ::importShapes(filePathName, v);
-        cout << "Dimension: "<<gmsh::model::getDimension()<<endl;
+        gmsh::model::occ::synchronize();  // Critical for dimension detection
+        int model_dim = gmsh::model::getDimension();
+        
+        cout << "Dimension: "<<model_dim<<endl;
       //} catch(...) {
       //  gmsh::logger::write("Could not load STEP file: bye!");
       //  gmsh::finalize();
         //return 0;
       //}
-      
+      if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
       gmsh::merge(filePathName);
 
       
