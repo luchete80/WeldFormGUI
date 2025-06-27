@@ -108,4 +108,5 @@
          - Deleted old SWIG dependencies in CMakeLists
          - Fixed SWIG configuration.
          - Fixed connectiviy on mesh created.
+         - Added automatic STEP mesh dimension detection
          
