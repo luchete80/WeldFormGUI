@@ -7,10 +7,17 @@
 #include <iomanip> //setw
 #include "Material.h"
 
+#include <nlohmann/json.hpp>
 
-ModelWriter::ModelWriter(Model &model){
 
-	//json j;
+using json = nlohmann::json;
+
+ModelWriter::ModelWriter(Model& model) : m_model(model) {}
+
+void ModelWriter::writeToFile(){
+  json m_json;
+  
+  //json j;
 	//i >> j;
 
 /*
@@ -24,7 +31,13 @@ ModelWriter::ModelWriter(Model &model){
 	nlohmann::json bcs 			= j["BoundaryConditions"];
 	nlohmann::json ics 			= j["InitialConditions"];
 */
-  std::ofstream o(model.getName());
+  //std::ofstream o(m_model.getName());
+  std::ofstream o("WOW.json");
+  std::string filename = m_model.getName();
+  if (!m_model.getHasName()) cout << "Not has name!"<<endl;
+  std::cout << "Writing to file: " << filename << std::endl;
+
+  //cout << "Exporting Model "<< <<"to json "<<endl;
 
 /*  
   ostringstream oss;
@@ -76,9 +89,9 @@ ModelWriter::ModelWriter(Model &model){
   //m_json["Configuration"]["hFactor"] = 1.2;
   m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
-  if (model.getMaterialCount()>0){
+  if (m_model.getMaterialCount()>0){
     cout << "Writing materials .."<<endl;
-    m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();  
+    m_json["Materials"]["density0"]=m_model.getMaterial(0)->getDensityConstant();  
     cout << "Done."<<endl;
   }
   /*
@@ -93,4 +106,3 @@ ModelWriter::ModelWriter(Model &model){
   
   o.close();
 }
-

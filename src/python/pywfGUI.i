@@ -17,7 +17,8 @@
 #include "Part.h"
 #include "App.h"
 //#include "global.h" 
- 
+#include "../io/ModelWriter.h"
+
 %}
 
 //%inline %{
@@ -35,3 +36,5 @@
 %include "Mesh.h"
 %include "Part.h"
 %include "App.h"
+%include "../io/ModelWriter.h"  // ✅ This is what exposes ModelWriter to Python
+%newobject ModelWriter::ModelWriter;

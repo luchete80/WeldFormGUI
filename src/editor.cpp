@@ -292,8 +292,10 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
       if (!(getApp().getActiveModel().getHasName()))
         ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
-      
-      ModelWriter(getApp().getActiveModel()); //Once it has name
+      else 
+        cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
+      cout << "Adress"<<&getApp().getActiveModel()<<endl;
+      //ModelWriter(getApp().getActiveModel()); //Once it has name
     }
     
     if (ImGui::MenuItem("Save As..")) {}
@@ -1015,7 +1017,9 @@ void Editor::drawGui() {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       getApp().getActiveModel().setName(filePathName);
+      cout << "Setting model name: "<<filePathName<<"address "<<&getApp().getActiveModel()<<endl;
     }
+    ModelWriter(getApp().getActiveModel()); //Once it has name
     // close
     ImGuiFileDialog::Instance()->Close();
   }

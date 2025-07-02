@@ -14,6 +14,6 @@ add_custom_command(TARGET io POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:io>
         ${LIB_OUTPUT_DIR}/$<TARGET_FILE_NAME:io>
-    COMMENT "Copying model to bin/"
+    COMMENT "Copying io to bin/"
 )
 

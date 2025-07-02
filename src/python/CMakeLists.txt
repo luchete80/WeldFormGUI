@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include/GLFW)
 #else()
 SWIG_LINK_LIBRARIES(dnlPython app model ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
                                     
-                                    ${GMSH_LIBS}) 
+                                    ${GMSH_LIBS} io) 
 #endif()
 #ADD_CUSTOM_COMMAND(TARGET _dnlPython POST_BUILD
 #                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -52,3 +52,17 @@ SWIG_LINK_LIBRARIES(dnlPython app model ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}
 
 SOURCE_GROUP(base             REGULAR_EXPRESSION ".*\\.(C|i|h)")
 SOURCE_GROUP(generated        REGULAR_EXPRESSION ".*\\.(cxx|py)")
+
+set(PYTHON_WRAPPER_OUTPUT_DIR ${CMAKE_BINARY_DIR})
+
+# Copy the Python extension and .py wrapper after build
+add_custom_command(TARGET _dnlPython POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${PYTHON_WRAPPER_OUTPUT_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy #copy_if_different
+      $<TARGET_FILE:_dnlPython>
+      ${PYTHON_WRAPPER_OUTPUT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy #copy_if_different
+      ${CMAKE_CURRENT_BINARY_DIR}/dnlPython.py
+      ${PYTHON_WRAPPER_OUTPUT_DIR}
+  COMMENT "Copying SWIG Python wrapper (.py) and extension module (.pyd/.so) to python folder"
+)
