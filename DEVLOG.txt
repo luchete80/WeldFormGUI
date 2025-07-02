@@ -109,4 +109,4 @@
          - Fixed SWIG configuration.
          - Fixed connectiviy on mesh created.
          - Added automatic STEP mesh dimension detection
-         
+20250702 - Added Model Writer python wrapper.
