@@ -34,8 +34,6 @@ add_subdirectory("io")
 add_subdirectory("App")
 
 
-
-
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
@@ -61,7 +59,27 @@ add_library (global_sta STATIC global.cpp)
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXEC_NAME} OpenGL::GL)
 
-target_link_libraries(${EXEC_NAME} TKernel TKMath TKBRep TKTopAlgo)
+#if (GEOMS_PRIM)
+target_link_libraries(${EXEC_NAME} 
+  TKernel        # Core kernel, Standard namespace, memory management
+  TKMath         # Math functions
+  TKGeomBase     # Basic geometry types (gp_Pnt, gp_Trsf...)
+  TKGeomAlgo     # Geometry algorithms
+  TKBRep         # Boundary representation
+  TKPrim         # Primitives (like cylinders)
+  TKTopAlgo      # Topological algorithms
+  TKShHealing    # Shape healing
+  TKStdL         # Standard library with implementation (needed for Standard::Free and others)
+  TKBinL         # Binary streaming
+  TKService      # Services used internally
+  TKMesh
+  # Add others only if your code uses them:
+  # TKMesh, TKXCAF, TKSTEP, etc.
+  TKDESTEP
+  )
+  #
+#endif()
+  
 if (APPLE)
 	# Ignore macOS OpenGL deprecation warnings
 	target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
@@ -125,7 +143,9 @@ find_package(VTK
 
 find_package(OpenCASCADE REQUIRED)
 include_directories(${OpenCASCADE_INCLUDE_DIR})
+message ("OCCT DIR: " ${THIRDPARTY_DIR})
 
+set (GEOMS_PRIM ON) ####PRIMITIVES
 
 #IOCCT
 #DEPENDS

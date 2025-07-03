@@ -885,6 +885,13 @@ void Editor::drawGui() {
               //viewer->addActor(graphic_mesh->getActor());
                             
               //is_fem_mesh = true;
+              
+              vtkOCCTGeom *geom = new vtkOCCTGeom;
+              geom->LoadCylinder(0.1,0.1);
+              //widget->SetInteractor(renderWindowInteractor);
+              viewer->addActor(geom->actor);
+              
+              
             }
     }
 

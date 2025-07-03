@@ -110,3 +110,6 @@
          - Fixed connectiviy on mesh created.
          - Added automatic STEP mesh dimension detection
 20250702 - Added Model Writer python wrapper.
+20250703 - Added First Geom Primitives creation.
+         - Creating cilynder and export to step.
+         - This requires to link executable to several OCC files.

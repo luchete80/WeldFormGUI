@@ -21,10 +21,13 @@ set PYTHON_LIB=C:\Users\54113\AppData\Local\Programs\Python\Python311 (WHERE PYT
 Finally Run make.bat (on this dir)
 
 #PREVIOUS TO RUN
-Set OCCT env vars: 
+1. Set OCCT env vars: 
 > D:\Luciano\Numerico\libs\OCCT_7.8.0\occt-vc143-64\env.bat
 Then, on the same console, run the cmake command!
 
+2. Delete the VTK inside 3rd party OCC libs
+
+3. Add to path the OCC cmae dir: D:\Luciano\Numerico\libs\OCCT_7.8.0\occt-vc143-64\cmake
 
 MANUAL OPTION
 
@@ -46,6 +49,10 @@ If manually set python (better to let the system find it)
 > -DPYTHON_INCLUDE_DIRS=%PYTHON_LIB%\include
 > -DPYTHON_LIBRARY=%PYTHON_LIB%\libs\python311.lib
 > -DGMSH_DIR=%LIB_DIR%\gmsh-4.13.0_install -DBUILD_PYTHON=ON 
+
+2 - IMPORTANT! If Geometry primitives are required (Draw cylinder, plane):
+Put occ 3rd-party libraries here: D:\work\3rd-party_packages\win64  
+Or you will have to set them manually.  
 
 
 I have used swigwin-4.1.1 =%LIB_DIR%/swigwin-4.1.1/Lib From https://www.swig.org/download.html

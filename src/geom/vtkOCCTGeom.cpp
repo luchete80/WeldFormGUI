@@ -16,6 +16,9 @@
 #include <vtkActor.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
+#include <BRepTools.hxx>
+#include <STEPControl_Writer.hxx>
+#include <IFSelect_ReturnStatus.hxx>
 
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
@@ -122,6 +125,22 @@ int vtkOCCTGeom::TestOCCTReader(int argc, char* argv[])
 */
 
 
+void WriteSTEP(const TopoDS_Shape& shape, const std::string& filename)
+{
+    STEPControl_Writer writer;
+    IFSelect_ReturnStatus status = writer.Transfer(shape, STEPControl_AsIs);
+    if (status != IFSelect_RetDone) {
+        std::cerr << "Error: STEP transfer failed." << std::endl;
+        return;
+    }
+    status = writer.Write(filename.c_str());
+    if (status != IFSelect_RetDone) {
+        std::cerr << "Error: STEP write failed." << std::endl;
+        return;
+    }
+}
+
+
 void vtkOCCTGeom::LoadCylinder(double radius, double height)
 {
     try {
@@ -145,6 +164,12 @@ void vtkOCCTGeom::LoadCylinder(double radius, double height)
         actor->SetMapper(mapper);
         actor->GetProperty()->SetOpacity(0.5);
         actor->GetProperty()->SetLineWidth(1.0);
+
+        //BRepTools::Write(shape, "cylinder.step");
+        
+        WriteSTEP(shape, "cylinder.step");
+
+        
     }
     catch (const Standard_Failure& e) {
         std::cerr << "OpenCASCADE error: " << e.GetMessageString() << std::endl;

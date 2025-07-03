@@ -67,6 +67,8 @@
 
 #include "results_simple.h"
 //using App;
+#include "geom/vtkOCCTGeom.h"
+#include "geom/ShapeToPolyData.h"
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
@@ -282,6 +284,8 @@ int main(int argc, char* argv[])
     //~ frame->setActiveScalarField("DISP");
           
       //~ vtkViewer2.addActor(frame->actor);
+
+
       
   #ifdef BUILD_PYTHON
   //PyRun_SimpleString("from model import *");
