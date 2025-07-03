@@ -51,6 +51,7 @@ add_executable(${EXEC_NAME} main.cpp
                             global.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             geom/vtkOCCTGeom.cpp
+                            geom/ShapeToPolyData.cpp
                             
                             #graphics/axis.cpp
                             )
@@ -59,6 +60,8 @@ add_library (global_sta STATIC global.cpp)
 # OpenGL
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXEC_NAME} OpenGL::GL)
+
+target_link_libraries(${EXEC_NAME} TKernel TKMath TKBRep TKTopAlgo)
 if (APPLE)
 	# Ignore macOS OpenGL deprecation warnings
 	target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
@@ -119,6 +122,9 @@ find_package(VTK
   vtksys
   QUIET
 )
+
+find_package(OpenCASCADE REQUIRED)
+include_directories(${OpenCASCADE_INCLUDE_DIR})
 
 
 #IOCCT

@@ -4,6 +4,19 @@
 #include <vtkProperty.h>
 #include "vtkOCCTGeom.h"
 
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <TopoDS_Shape.hxx>
+
+//#include <vtkOCCTShapeToPolyData.h> // Ensure this utility is available!
+#include <vtkCompositePolyDataMapper.h>
+
+#include "ShapeToPolyData.h"
+
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <vtkActor.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
+
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
@@ -108,3 +121,35 @@ int vtkOCCTGeom::TestOCCTReader(int argc, char* argv[])
 }
 */
 
+
+void vtkOCCTGeom::LoadCylinder(double radius, double height)
+{
+    try {
+        // Create OCC cylinder
+        TopoDS_Shape shape = BRepPrimAPI_MakeCylinder(radius, height).Shape();
+        
+        // Convert to VTK polydata with reasonable deflection
+        const double deflection = radius / 20.0;
+        vtkSmartPointer<vtkPolyData> polyData = ShapeToPolyData(shape, deflection);
+        
+        if (!polyData || polyData->GetNumberOfPoints() == 0) {
+            std::cerr << "Error: Failed to create polyData from shape" << std::endl;
+            return;
+        }
+        
+        // Create mapper and actor
+        vtkNew<vtkPolyDataMapper> mapper;
+        mapper->SetInputData(polyData);
+        
+        actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        actor->GetProperty()->SetOpacity(0.5);
+        actor->GetProperty()->SetLineWidth(1.0);
+    }
+    catch (const Standard_Failure& e) {
+        std::cerr << "OpenCASCADE error: " << e.GetMessageString() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Unknown error in LoadCylinder" << std::endl;
+    }
+}

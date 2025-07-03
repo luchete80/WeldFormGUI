@@ -421,9 +421,9 @@ void Mesh::genFromGmshModel() {
     cout << "Element tags size "<<elemTags.size()<<endl;
     for(auto &tags : elemTags) numElem += tags.size();
     
-      std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
-              << " elements\n";
-      cout << "Node coords size "<<nodeCoords.size()<<endl; 
+      // std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
+              // << " elements\n";
+      // cout << "Node coords size "<<nodeCoords.size()<<endl; 
       
       for (int n=0;n<nodeCoords.size()/3;n++){
         for (int d=0;d<3;d++){
@@ -431,7 +431,7 @@ void Mesh::genFromGmshModel() {
         }
         nodetagpos[nodeTags[n]]=nc;
         
-        cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
+        // cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
           //test[n][d]= nodeCoords[3*n+d];
           //float coords[3];
           std::array <float,3> coords;
@@ -447,7 +447,7 @@ void Mesh::genFromGmshModel() {
           nc++;
         //}
       }
-      cout << "Nodes inside nodeTags"<<endl;
+      //cout << "Nodes inside nodeTags"<<endl;
       
       for (auto n: nodeTags){
         cout << n<<" ";
@@ -461,8 +461,8 @@ void Mesh::genFromGmshModel() {
       cout << "Generating graphic mesh 1D "<<endl;
         for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
           std::vector <int> conn; conn.resize(2);
-          cout << "Local "  << elemNodeTags[0][2*ne] << ", "<<elemNodeTags[0][2*ne+1] <<endl;
-          cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]] << endl;
+          //cout << "Local "  << elemNodeTags[0][2*ne] << ", "<<elemNodeTags[0][2*ne+1] <<endl;
+          //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]] << endl;
           for (int d=0;d<2;d++) {
             conn[d] = elemNodeTags[0][2*ne+d];
             
@@ -475,23 +475,23 @@ void Mesh::genFromGmshModel() {
         
       }else if (dim ==2){
       for(auto &tags : elemTags){ 
-        cout << "Element inside tags "<<endl;
-        for (int t=0;t<tags.size();t++)
-          cout <<tags[t]<<" ";
-        cout << endl;
+        //cout << "Element inside tags "<<endl;
+        //for (int t=0;t<tags.size();t++)
+        //  cout <<tags[t]<<" ";
+        //cout << endl;
         
-        cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
-        for(auto ne: elemNodeTags[0])   { 
-          cout << ne << " ";//numElem += tags.size();          
-        }
-        cout << endl;
+        //cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
+        //for(auto ne: elemNodeTags[0])   { 
+          //cout << ne << " ";//numElem += tags.size();          
+        //}
+        //cout << endl;
         
         for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
           //std::array <int,3> conn;
           std::vector<int> conn;
           conn.resize(3);
-          cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
-          cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
+          //cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
+          //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
           for (int d=0;d<3;d++) {
             conn[d] = elemNodeTags[0][3*ne+d];
             
@@ -512,10 +512,10 @@ void Mesh::genFromGmshModel() {
       std::vector<double> param;
       gmsh::model::mesh::getElementProperties(elemType, name, d, order, numv,
                                               param, numpv);
-      std::cout << " - Element type: " << name << ", order " << order << "\n";
-      std::cout << "   with " << numv << " nodes in param coord: (";
-      for(auto p : param) std::cout << p << " ";
-      std::cout << ")\n";
+      //std::cout << " - Element type: " << name << ", order " << order << "\n";
+      //std::cout << "   with " << numv << " nodes in param coord: (";
+      //for(auto p : param) std::cout << p << " ";
+      //std::cout << ")\n";
     }
     cout << "elem tag size: "<<elemTags.size()<<", element nodetag size "<<elemNodeTags.size()<<endl; 
     //for (auto enode : elemNodeTags[0]){

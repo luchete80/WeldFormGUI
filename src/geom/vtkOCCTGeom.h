@@ -30,6 +30,7 @@ public:
   int readFile(int argc, char* argv[]);
 
   int TestReader(const std::string& path, unsigned int format);
+  void LoadCylinder(double radius, double height);
   ~vtkOCCTGeom(){}
 };
 
