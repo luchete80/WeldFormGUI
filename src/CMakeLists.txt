@@ -33,6 +33,20 @@ add_subdirectory("io")
 
 add_subdirectory("App")
 
+#Read OCC_LIB_BIN from environment variable, fallback to empty string
+#if(DEFINED ENV{OCC_LIB_BIN})
+#  set(OCC_LIB_BIN $ENV{OCC_LIB_BIN})
+#else()
+#  set(OCC_LIB_BIN "")
+#endif()
+
+# If OCC_LIB_BIN is set, add it to linker search paths
+if(OCC_LIB_BIN)
+  message(STATUS "Using OCC_LIB_BIN: ${OCC_LIB_BIN}")
+  link_directories(${OCC_LIB_BIN})
+else()
+  message(WARNING "OCC_LIB_BIN not set; linker may fail if libs are not in standard paths")
+endif()
 
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
@@ -146,6 +160,8 @@ include_directories(${OpenCASCADE_INCLUDE_DIR})
 message ("OCCT DIR: " ${THIRDPARTY_DIR})
 
 set (GEOMS_PRIM ON) ####PRIMITIVES
+
+
 
 #IOCCT
 #DEPENDS

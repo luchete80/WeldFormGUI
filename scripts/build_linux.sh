@@ -1,0 +1,4 @@
+export LIB_DIR=$HOME/Numerico/Libs
+export 
+
+cmake ../WeldFormGUI -DVTK_INCLUDE_DIR=$LIB_DIR/vtk-9.3.1 -DVTK_MODULE_ENABLE_VTK_IOOCCT=ON -DCMAKE_PREFIX_PATH

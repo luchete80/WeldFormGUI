@@ -886,13 +886,15 @@ void Editor::drawGui() {
                             
               //is_fem_mesh = true;
               
+            }
+            if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
               geom->LoadCylinder(0.1,0.1);
               //widget->SetInteractor(renderWindowInteractor);
               viewer->addActor(geom->actor);
               
-              
             }
+
     }
 
 
