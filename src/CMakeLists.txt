@@ -89,7 +89,8 @@ target_link_libraries(${EXEC_NAME}
   TKMesh
   # Add others only if your code uses them:
   # TKMesh, TKXCAF, TKSTEP, etc.
-  TKDESTEP
+  #TKDESTEP #7.8.0
+  TKSTEP  #7.5.0
   )
   #
 #endif()
