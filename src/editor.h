@@ -52,7 +52,7 @@
 //#include "gMesh.h"
 #include "model/Model.h"
 #include "model/Mesh.h"
-#include "model/Geom.h"
+#include "geom/Geom.h"
 
 
 class SceneView;

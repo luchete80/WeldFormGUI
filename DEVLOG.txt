@@ -113,3 +113,4 @@
 20250703 - Added First Geom Primitives creation.
          - Creating cilynder and export to step.
          - This requires to link executable to several OCC files.
+20250706 - Separate geom and adding scripting for it.

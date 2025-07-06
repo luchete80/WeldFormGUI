@@ -11,7 +11,8 @@ find_package(OpenCASCADE REQUIRED)
 include_directories(${OpenCASCADE_INCLUDE_DIR})
 
 set( GEOM_SRCS         "vtkOCCTGeom.cpp" 
-                       "ShapeToPolyData.cpp")
+                       "ShapeToPolyData.cpp"
+                       "Geom.cpp")
 
 message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})
@@ -54,9 +55,9 @@ find_package(VTK
 
 ADD_LIBRARY(geom SHARED ${GEOM_SRCS})
 
-TARGET_LINK_LIBRARIES(geom  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
+TARGET_LINK_LIBRARIES(geom  ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
 #TARGET_LINK_LIBRARIES(graphicmesh_st  model ${VTK_LIBRARIES} gmsh) #GMSH_LIBS WITH ERROR
-
+  
 target_link_libraries(geom
   TKernel        # Core kernel, Standard namespace, memory management
   TKMath         # Math functions
