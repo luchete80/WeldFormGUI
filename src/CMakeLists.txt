@@ -28,6 +28,7 @@ endif()
 
 
 add_subdirectory("model")
+add_subdirectory("geom")
 add_subdirectory("graphicmesh")
 add_subdirectory("io")
 
@@ -89,8 +90,8 @@ target_link_libraries(${EXEC_NAME}
   TKMesh
   # Add others only if your code uses them:
   # TKMesh, TKXCAF, TKSTEP, etc.
-  #TKDESTEP #7.8.0
-  TKSTEP  #7.5.0
+  TKDESTEP #7.8.0
+  #TKSTEP  #7.5.0
   )
   #
 #endif()

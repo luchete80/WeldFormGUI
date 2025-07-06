@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/glfw-3.3.4/include/GLFW)
 #else()
 SWIG_LINK_LIBRARIES(dnlPython app model ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES}             
                                     
-                                    ${GMSH_LIBS} io) 
+                                    ${GMSH_LIBS} io geom) 
 #endif()
 #ADD_CUSTOM_COMMAND(TARGET _dnlPython POST_BUILD
 #                   COMMAND ${CMAKE_COMMAND} -E copy_if_different

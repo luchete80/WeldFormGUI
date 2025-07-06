@@ -22,3 +22,9 @@ print("Node count: ", msh2.getNodeCount());
 msh2.addQuad(0,1,2,3);
 p2 = Part(msh2);
 getApp().getActiveModel().addPart(p2);
+
+####
+from model import *
+geom = vtkOCCTGeom ()
+geom.LoadCylinder(0.1,0.1)
+getApp().Update()

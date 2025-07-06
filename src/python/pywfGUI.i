@@ -18,7 +18,7 @@
 #include "App.h"
 //#include "global.h" 
 #include "../io/ModelWriter.h"
-
+#include "geom/vtkOCCTGeom.h"
 %}
 
 //%inline %{
@@ -38,3 +38,4 @@
 %include "App.h"
 %include "../io/ModelWriter.h"  // ✅ This is what exposes ModelWriter to Python
 %newobject ModelWriter::ModelWriter;
+%include "geom/vtkOCCTGeom.h"
