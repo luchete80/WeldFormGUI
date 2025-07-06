@@ -19,7 +19,11 @@ public:
 
   void createVisual(); // Crea visual si no existe
   void deleteVisual(); // Borra el actor del visualizador
-    
+
+  vtkActor* getActor() {
+    if (!visual) return nullptr;
+    return visual->actor;
+  }   
   
 };
 

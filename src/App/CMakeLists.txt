@@ -5,6 +5,7 @@ endif()
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
+include_directories("../geom")
 
 if (WIN32) #WIH CAPS ON!
 MESSAGE ("----------------------------THIS IS WIN")

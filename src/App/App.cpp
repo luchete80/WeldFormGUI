@@ -118,8 +118,50 @@ void App::updateMeshes(){
   }
 }
 
-void App::updateGeoms(){
 
+
+/* -------------------------------------------------------------------------- */
+/* 1) Register an existing Geom created elsewhere (Python, UI, etc.)          */
+Geom* App::addOrphanGeometry(Geom* g)
+{
+    // if (!g) return nullptr;
+
+    // // wrap raw ptr into shared_ptr so we own the memory
+    // m_orphanGeoms.emplace_back(g);
+    // _updateNeeded = true;                // force a sync at next frame
+    // return g;
 }
 
+/* -------------------------------------------------------------------------- */
+/* 2) Convenience: load geometry from file and auto‑create visual+actor       */
+Geom* App::loadGeometry(const std::string& file)
+{
+    // auto geom = new Geom(file);          // ctor loads the STEP/BREP
+    // addOrphanGeometry(geom);
+    // return geom;
+}
 
+/* -------------------------------------------------------------------------- */
+/* 3) Sync orphan geometries with viewer                                      */
+void App::updateGeoms()
+{
+    // if (!viewer) return;                 // you must have assigned viewer first
+    // if (m_orphanGeoms.empty()) return;
+
+    // for (auto& gPtr : m_orphanGeoms)
+    // {
+        // auto* g = gPtr.get();
+        // if (!g) continue;
+
+        // // If the actor is not in the scene yet, add it
+        // if (!viewer->containsActor(g->actor()))
+        // {
+            // std::cout << "Adding actor for orphan geometry: "
+                      // << g->m_name << std::endl;
+
+            // viewer->addActor(g->actor());
+        // }
+    // }
+
+    // _updateNeeded = false;
+}

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include "geom/vtkOCCTGeom.h"
-
+#include "geom/Geom.h"
 
 //#define MY_DLL_API __declspec(dllexport)
 
@@ -38,6 +38,10 @@ public:
   ~App(){}
   int  getGraphicMeshCount(){return m_graphicmeshes.size();}
   GraphicMesh * getGraphicMesh(int &i){return m_graphicmeshes[i];}
+  
+  Geom* addOrphanGeometry(Geom* g);
+  Geom* loadGeometry(const std::string& file);
+  
 
 private:
   static App *_pcSingleton;  
@@ -45,6 +49,9 @@ private:
   bool _updateNeeded;
   std::vector <GraphicMesh *> m_graphicmeshes;
   std::vector <vtkOCCTGeom*> m_geoms;
+    //std::vector<std::shared_ptr<Geometry>> m_orphanGeometries;
+  std::vector <Geom*> m_orphangeoms;
+
 }; 
 
 
