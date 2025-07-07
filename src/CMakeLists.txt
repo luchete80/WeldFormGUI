@@ -86,9 +86,9 @@ list(GET OCC_VERSION_LIST 2 OCC_PATCH)
 
 # Convert to integer for comparison
 math(EXPR OCC_VERSION_NUM "${OCC_MAJOR} * 10000 + ${OCC_MINOR} * 100 + ${OCC_PATCH}")
-
+message ("OCC_VERSION_NUM: " ${OCC_VERSION_NUM})
 # Example threshold for version 7.5.0
-#set(OCC_750_VERSION_NUM 70500)
+set(OCC_750_VERSION_NUM 70500)
 
 
 #if (GEOMS_PRIM)
@@ -112,13 +112,13 @@ target_link_libraries(${EXEC_NAME}
   )
   #
 #~ #endif()
-if(OCC_VERSION_NUM GREATER OCC_750_VERSION_NUM)
-    message(STATUS "Using TKSTEP (OCC > 7.5.0)")
-    target_link_libraries(${EXEC_NAME}  PRIVATE TKDESTEP)
-else()
-    message(STATUS "Using TKDSTEP (OCC <= 7.5.0)")
-    target_link_libraries(${EXEC_NAME}  TKSTEP)
-endif()
+# if(OCC_VERSION_NUM GREATER OCC_750_VERSION_NUM)
+    # message(STATUS "Using TKDESTEP (OCC > 7.5.0)")
+    # target_link_libraries(${EXEC_NAME}  TKDESTEP)
+# else()
+    # message(STATUS "Using TKSTEP (OCC <= 7.5.0)")
+    # #target_link_libraries(${EXEC_NAME}  TKSTEP)
+# endif()
   
 #~ if (APPLE)
 	#~ # Ignore macOS OpenGL deprecation warnings

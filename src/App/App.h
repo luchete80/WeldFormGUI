@@ -33,6 +33,7 @@ public:
   static void initApp();
   void updateMeshes(); 
   void updateGeoms(); 
+  std::unordered_map<Geom*, vtkOCCTGeom*> & getGeomToVisual(){return geomToVisual;}
 //protected:
   explicit App(){
     _activeModel  = nullptr;

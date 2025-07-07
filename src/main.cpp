@@ -443,13 +443,16 @@ int main(int argc, char* argv[])
       //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;
     }
 
-    //~ for (auto& [geom, visual] : getApp().geomToVisual) {
-        //~ if (!visual->isRendered && visual->actor) {
-            //~ vtkViewer2.addActor(visual->actor);   // Add to renderer
-            //~ visual->isRendered = true;            // Mark as rendered
-        //~ }
-    //~ }
+    std::unordered_map<Geom*, vtkOCCTGeom*>& geomMap = getApp().getGeomToVisual();
+    for (std::unordered_map<Geom*, vtkOCCTGeom*>::iterator it = geomMap.begin(); it != geomMap.end(); ++it) {
+        Geom* geom = it->first;
+        vtkOCCTGeom* visual = it->second;
 
+        if (!visual->isRendered && visual->actor) {
+            vtkViewer2.addActor(visual->actor);
+            visual->isRendered = true;
+        }
+    }
     ImGui::Render();
 
     int display_w, display_h;

@@ -24,7 +24,12 @@ p2 = Part(msh2);
 getApp().getActiveModel().addPart(p2);
 
 ####
-from model import *
-geom = vtkOCCTGeom ()
-geom.LoadCylinder(0.1,0.1)
+from model import *;
+geom = vtkOCCTGeom ();
+geom.LoadCylinder(0.1,0.1);
 getApp().Update()
+
+
+from model import *;
+geom = vtkOCCTGeom ();
+geom.LoadCylinder(0.1,0.1);
