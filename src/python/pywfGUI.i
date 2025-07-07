@@ -50,14 +50,14 @@ class TopoDS_Shape;
 %include "geom/vtkOCCTGeom.h"
 //%include "geom/Geom.h"
   
-class Geom {
-public:
-    Geom();
-    Geom(std::string fname);
-    ~Geom();
-
-    void readFile(std::string file);
-};
+//class Geom {
+//public:
+//    Geom();
+//    Geom(std::string fname);
+//    ~Geom();
+//
+//    void readFile(std::string file);
+//};
 
 
 // Force destructor wrapper generation if needed
