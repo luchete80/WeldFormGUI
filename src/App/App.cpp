@@ -149,7 +149,7 @@ void App::updateGeoms(/*vtkViewer* viewer*/) {
     for (Geom* g : m_orphangeoms) {
         // Check if already visualized
         if (geomToVisual.find(g) == geomToVisual.end()) {
-            std::cout << "Creating visual for: " << g->m_name << std::endl;
+            //std::cout << "Creating visual for: " << g->m_name << std::endl;
 
             vtkOCCTGeom* visual = new vtkOCCTGeom();
             visual->SetGeometry(g);         // Use the shape from Geom

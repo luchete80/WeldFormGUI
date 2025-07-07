@@ -5,7 +5,7 @@ INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 include_directories(${PYTHON_INCLUDE_DIRS})
 
-FILE(GLOB SRCS *.h *.cpp)
+FILE(GLOB SRCS Dummy.h *.h *.cpp)
 FILE(GLOB ISRCS *.i)
 
 SET(CMAKE_SWIG_FLAGS "-Wall")
@@ -58,11 +58,20 @@ set(PYTHON_WRAPPER_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 # Copy the Python extension and .py wrapper after build
 add_custom_command(TARGET _dnlPython POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${PYTHON_WRAPPER_OUTPUT_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy #copy_if_different
+  # Copy the compiled Python extension module (.so or .pyd)
+  COMMAND ${CMAKE_COMMAND} -E copy
       $<TARGET_FILE:_dnlPython>
       ${PYTHON_WRAPPER_OUTPUT_DIR}
-  COMMAND ${CMAKE_COMMAND} -E copy #copy_if_different
+
+  # Copy the SWIG-generated Python wrapper
+  COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_BINARY_DIR}/dnlPython.py
+      ${PYTHON_WRAPPER_OUTPUT_DIR}
+
+  # Copy your own model.py file
+  COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_BINARY_DIR}/model.py
       ${PYTHON_WRAPPER_OUTPUT_DIR}
   COMMENT "Copying SWIG Python wrapper (.py) and extension module (.pyd/.so) to python folder"
 )
+

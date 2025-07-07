@@ -9,14 +9,17 @@ class Geom{
 protected:
   TopoDS_Shape m_shape;       // Lógica CAD
 public:
-  Geom(std::string fname);
-  void readFile(std::string file);  
+  Geom(){}
+  Geom(std::string fname){}
+  void readFile(std::string file){}  
 
-  std::string m_filename; //
-  std::string m_name;
-  double scale; //Is scale
+  //std::string m_filename; //
+  //std::string m_name;
+  //double scale; //Is scale
 
   const TopoDS_Shape& getShape() const { return m_shape; }
+  //const double & getScale()const{return scale;}
+  ~Geom(){}
     
 };
 

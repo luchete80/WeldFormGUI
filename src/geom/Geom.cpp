@@ -1,6 +1,9 @@
 #include "Geom.h"
+#include <TopoDS_Shape.hxx> // OpenCascade shape
 
-Geom::Geom(std::string fname){
+// Geom::Geom(std::string fname){
   
-  scale = 1.0;
-}
+  // scale = 1.0;
+// }
+
+
