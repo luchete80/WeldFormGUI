@@ -124,44 +124,42 @@ void App::updateMeshes(){
 /* 1) Register an existing Geom created elsewhere (Python, UI, etc.)          */
 Geom* App::addOrphanGeometry(Geom* g)
 {
-    // if (!g) return nullptr;
+    if (!g) return nullptr;
 
-    // // wrap raw ptr into shared_ptr so we own the memory
-    // m_orphanGeoms.emplace_back(g);
-    // _updateNeeded = true;                // force a sync at next frame
-    // return g;
+    // wrap raw ptr into shared_ptr so we own the memory
+    m_orphangeoms.emplace_back(g);
+    _updateNeeded = true;                // force a sync at next frame
+    return g;
 }
 
 /* -------------------------------------------------------------------------- */
 /* 2) Convenience: load geometry from file and auto‑create visual+actor       */
 Geom* App::loadGeometry(const std::string& file)
 {
-    // auto geom = new Geom(file);          // ctor loads the STEP/BREP
-    // addOrphanGeometry(geom);
-    // return geom;
+    Geom* geom = new Geom(file);          // ctor loads the STEP/BREP
+    addOrphanGeometry(geom);
+    return geom;
 }
 
 /* -------------------------------------------------------------------------- */
 /* 3) Sync orphan geometries with viewer                                      */
-void App::updateGeoms()
-{
-    // if (!viewer) return;                 // you must have assigned viewer first
-    // if (m_orphanGeoms.empty()) return;
+void App::updateGeoms(/*vtkViewer* viewer*/) {
+    std::cout << "Updating orphan geometries: " << m_orphangeoms.size() << std::endl;
 
-    // for (auto& gPtr : m_orphanGeoms)
-    // {
-        // auto* g = gPtr.get();
-        // if (!g) continue;
+    for (Geom* g : m_orphangeoms) {
+        // Check if already visualized
+        if (geomToVisual.find(g) == geomToVisual.end()) {
+            std::cout << "Creating visual for: " << g->m_name << std::endl;
 
-        // // If the actor is not in the scene yet, add it
-        // if (!viewer->containsActor(g->actor()))
-        // {
-            // std::cout << "Adding actor for orphan geometry: "
-                      // << g->m_name << std::endl;
+            vtkOCCTGeom* visual = new vtkOCCTGeom();
+            visual->SetGeometry(g);         // Use the shape from Geom
+            visual->BuildVTKData();              // Build VTK actor
 
-            // viewer->addActor(g->actor());
-        // }
-    // }
+            geomToVisual[g] = visual;            // Store in the map
 
-    // _updateNeeded = false;
+            //~ if (viewer) {
+                //~ viewer->addActor(visual->actor); // Add actor to the viewer (optional here)
+            //~ }
+        }
+    }
 }

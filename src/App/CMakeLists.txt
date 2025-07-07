@@ -3,6 +3,9 @@ if(WIN32)
     set(BUILD_SHARED_LIBS TRUE)
 endif()
 
+find_package(OpenCASCADE REQUIRED)
+include_directories(${OpenCASCADE_INCLUDE_DIR})
+
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
 include_directories("../geom")

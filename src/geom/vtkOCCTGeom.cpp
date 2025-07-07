@@ -4,8 +4,6 @@
 #include <vtkProperty.h>
 #include "vtkOCCTGeom.h"
 
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <TopoDS_Shape.hxx>
 
 //#include <vtkOCCTShapeToPolyData.h> // Ensure this utility is available!
 #include <vtkCompositePolyDataMapper.h>
@@ -19,6 +17,7 @@
 #include <BRepTools.hxx>
 #include <STEPControl_Writer.hxx>
 #include <IFSelect_ReturnStatus.hxx>
+#include "Geom.h"
 
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
@@ -178,3 +177,19 @@ void vtkOCCTGeom::LoadCylinder(double radius, double height)
         std::cerr << "Unknown error in LoadCylinder" << std::endl;
     }
 }
+
+void vtkOCCTGeom::SetGeometry(Geom* g) {
+  geom = g;
+}
+
+  void vtkOCCTGeom::BuildVTKData(/*double deflection = 0.01*/) {
+  double deflection = 0.01;
+    if (!geom) return;
+
+    vtkSmartPointer<vtkPolyData> poly = ShapeToPolyData(geom->getShape(), deflection);
+    vtkNew<vtkPolyDataMapper> mapper;
+    mapper->SetInputData(poly);
+
+    actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+  }

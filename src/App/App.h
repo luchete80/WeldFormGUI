@@ -6,7 +6,7 @@
 #include <vector>
 #include "geom/vtkOCCTGeom.h"
 #include "geom/Geom.h"
-
+#include <unordered_map>
 //#define MY_DLL_API __declspec(dllexport)
 
 
@@ -14,6 +14,8 @@
 using namespace std;
 
 class GraphicMesh;
+class VtkViewer;
+
 //class VtkViewer;
 //SHOULD ALSO BEE OF INTEREST TO HAVE A REFERENCE TO THE RENDERER
 ///SINGLETON
@@ -51,6 +53,7 @@ private:
   std::vector <vtkOCCTGeom*> m_geoms;
     //std::vector<std::shared_ptr<Geometry>> m_orphanGeometries;
   std::vector <Geom*> m_orphangeoms;
+  std::unordered_map<Geom*, vtkOCCTGeom*> geomToVisual;
 
 }; 
 

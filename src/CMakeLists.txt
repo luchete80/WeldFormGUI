@@ -74,6 +74,23 @@ add_library (global_sta STATIC global.cpp)
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXEC_NAME} OpenGL::GL)
 
+
+# Split version string into components
+find_package(OpenCASCADE REQUIRED)
+message(STATUS "OCC Version: ${OpenCASCADE_VERSION}")
+
+string(REPLACE "." ";" OCC_VERSION_LIST ${OpenCASCADE_VERSION})
+list(GET OCC_VERSION_LIST 0 OCC_MAJOR)
+list(GET OCC_VERSION_LIST 1 OCC_MINOR)
+list(GET OCC_VERSION_LIST 2 OCC_PATCH)
+
+# Convert to integer for comparison
+math(EXPR OCC_VERSION_NUM "${OCC_MAJOR} * 10000 + ${OCC_MINOR} * 100 + ${OCC_PATCH}")
+
+# Example threshold for version 7.5.0
+#set(OCC_750_VERSION_NUM 70500)
+
+
 #if (GEOMS_PRIM)
 target_link_libraries(${EXEC_NAME} 
   TKernel        # Core kernel, Standard namespace, memory management
@@ -90,16 +107,23 @@ target_link_libraries(${EXEC_NAME}
   TKMesh
   # Add others only if your code uses them:
   # TKMesh, TKXCAF, TKSTEP, etc.
-  TKDESTEP #7.8.0
+  #TKDESTEP #7.8.0
   #TKSTEP  #7.5.0
   )
   #
-#endif()
-  
-if (APPLE)
-	# Ignore macOS OpenGL deprecation warnings
-	target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
+#~ #endif()
+if(OCC_VERSION_NUM GREATER OCC_750_VERSION_NUM)
+    message(STATUS "Using TKSTEP (OCC > 7.5.0)")
+    target_link_libraries(${EXEC_NAME}  PRIVATE TKDESTEP)
+else()
+    message(STATUS "Using TKDSTEP (OCC <= 7.5.0)")
+    target_link_libraries(${EXEC_NAME}  TKSTEP)
 endif()
+  
+#~ if (APPLE)
+	#~ # Ignore macOS OpenGL deprecation warnings
+	#~ target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
+#~ endif()
 
 
 target_link_libraries(${EXEC_NAME} gl3w)
@@ -157,7 +181,6 @@ find_package(VTK
   QUIET
 )
 
-find_package(OpenCASCADE REQUIRED)
 include_directories(${OpenCASCADE_INCLUDE_DIR})
 message ("OCCT DIR: " ${THIRDPARTY_DIR})
 

@@ -16,7 +16,12 @@
 #include <vtkTestUtilities.h>
 
 #include <vtkNew.h>
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <TopoDS_Shape.hxx>
+
 #include "vtkOCCTReader.h"
+
+class Geom;
 
 class Mesh;
 //TODO: ASSOCIATE WITH A MESH! 
@@ -24,6 +29,8 @@ class vtkOCCTGeom{
 protected:
   //vtkSmartPointer<vtkOCCTReader> occtreader;
   Mesh *m_mesh;
+  Geom *geom = nullptr;   // Non-owning pointer (In geom is the real thing)
+
 public:
   vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}
@@ -31,6 +38,11 @@ public:
 
   int TestReader(const std::string& path, unsigned int format);
   void LoadCylinder(double radius, double height);
+
+  void SetGeometry(Geom* g);
+
+  void BuildVTKData();
+
   ~vtkOCCTGeom(){}
 };
 

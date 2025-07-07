@@ -73,9 +73,25 @@ target_link_libraries(geom
   TKMesh
   # Add others only if your code uses them:
   # TKMesh, TKXCAF, TKSTEP, etc.
-  TKDESTEP #7.8.0
+  #TKDESTEP #7.8.0
   #TKSTEP  #7.5.0
   )
+  
+  string(REPLACE "." ";" OCC_VERSION_LIST ${OpenCASCADE_VERSION})
+list(GET OCC_VERSION_LIST 0 OCC_MAJOR)
+list(GET OCC_VERSION_LIST 1 OCC_MINOR)
+list(GET OCC_VERSION_LIST 2 OCC_PATCH)
+
+# Convert to integer for comparison
+math(EXPR OCC_VERSION_NUM "${OCC_MAJOR} * 10000 + ${OCC_MINOR} * 100 + ${OCC_PATCH}")
+
+if(OCC_VERSION_NUM GREATER OCC_750_VERSION_NUM)
+    message(STATUS "Using TKSTEP (OCC > 7.5.0)")
+    target_link_libraries(geom  PRIVATE TKDESTEP)
+else()
+    message(STATUS "Using TKDSTEP (OCC <= 7.5.0)")
+    target_link_libraries(geom  TKSTEP)
+endif()
 
 # Set destination dir
 set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src)
