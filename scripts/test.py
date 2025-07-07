@@ -33,3 +33,4 @@ getApp().Update()
 from model import *;
 geom = vtkOCCTGeom ();
 geom.LoadCylinder(0.1,0.1);
+getApp().addOrphanGeometry(geom)
