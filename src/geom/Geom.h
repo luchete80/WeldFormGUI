@@ -17,8 +17,7 @@ public:
   double scale; //Is scale
 
   const TopoDS_Shape& getShape() const { return m_shape; }
-  
-  
+    
 };
 
 #endif

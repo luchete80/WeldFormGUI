@@ -154,7 +154,8 @@ void App::updateGeoms(/*vtkViewer* viewer*/) {
             vtkOCCTGeom* visual = new vtkOCCTGeom();
             visual->SetGeometry(g);         // Use the shape from Geom
             visual->BuildVTKData();              // Build VTK actor
-
+            visual->isRendered = false;
+            
             geomToVisual[g] = visual;            // Store in the map
 
             //~ if (viewer) {

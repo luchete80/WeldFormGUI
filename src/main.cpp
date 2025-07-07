@@ -442,7 +442,13 @@ int main(int argc, char* argv[])
         }
       //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;
     }
-    
+
+    //~ for (auto& [geom, visual] : getApp().geomToVisual) {
+        //~ if (!visual->isRendered && visual->actor) {
+            //~ vtkViewer2.addActor(visual->actor);   // Add to renderer
+            //~ visual->isRendered = true;            // Mark as rendered
+        //~ }
+    //~ }
 
     ImGui::Render();
 

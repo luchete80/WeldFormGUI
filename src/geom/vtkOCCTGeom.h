@@ -43,6 +43,9 @@ public:
 
   void BuildVTKData();
 
+
+  bool isRendered = false;
+
   ~vtkOCCTGeom(){}
 };
 
