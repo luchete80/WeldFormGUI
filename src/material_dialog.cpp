@@ -24,6 +24,20 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
   ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
 
+  const char* items[] = { "Constant", "Hollomon", "GMT", "Sinh"};
+
+  if (ImGui::CollapsingHeader("Plastic")){
+    static int item_current = 0;
+    {
+  //MUST BE SAVED CURRENT STATE
+  ImGui::Combo("Yield Criteria", &item_current, items, IM_ARRAYSIZE(items) ) ;
+  // if (ImGui::Button("Hollomon")){
+      
+    
+  // }
+  }//Yield Criteria
+  }//Plastic
+  
   if (ImGui::Button("Create")) {create_material = true;}
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
