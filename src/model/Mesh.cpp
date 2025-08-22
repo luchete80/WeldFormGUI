@@ -248,10 +248,10 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
             n[5] = m_node[nb1 + nnodz + 1];    
             n[6] = m_node[nb2 + nnodz + 1];   
             n[7] = m_node[nb2 + nnodz    ];         
-            cout << "largest ind "<<nb2 + nnodz + 1<<endl;
-            for (int i=0;i<8;i++)
-              cout << n[i]->getId()<<", ";
-            cout <<endl;
+            //cout << "largest ind "<<nb2 + nnodz + 1<<endl;
+            // for (int i=0;i<8;i++)
+              // cout << n[i]->getId()<<", ";
+            // cout <<endl;
             m_elem.push_back(new Element(n));
             
              

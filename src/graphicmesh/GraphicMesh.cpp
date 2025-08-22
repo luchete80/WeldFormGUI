@@ -386,22 +386,22 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
   points = vtkSmartPointer<vtkPoints>::New();
   cout << "Node count "<<mesh.getNodeCount()<<endl;
   for (int n=0;n<mesh.getNodeCount();n++){
-    cout << "Node "<<n<<endl;
+    //cout << "Node "<<n<<endl;
           std::array <float,3> coords;
           for (int d=0;d<3;d++) coords[d] = mesh.m_node[n]->getPos()[d];
           // IF REAL POSITIONS
           pts.push_back(coords);
     for (int d=0; d<3; d++) {
         coords[d] = mesh.m_node[n]->getPos()[d];
-        cout << "Raw coord " << d << ": " << coords[d] << endl;
+        //cout << "Raw coord " << d << ": " << coords[d] << endl;
     }
 
     points->InsertPoint(n, coords.data());
     // Verify what was actually inserted
     double inserted[3];
     points->GetPoint(n, inserted);
-    cout << "Inserted coord: " 
-         << inserted[0] << ", " << inserted[1] << ", " << inserted[2] << endl;
+    //cout << "Inserted coord: " 
+    //     << inserted[0] << ", " << inserted[1] << ", " << inserted[2] << endl;
     }
 
   // cout << "Inserting nodes"<<endl;
@@ -454,7 +454,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh)
 
 
   // Now we'll look at it.
-  cout << "SSSSSetting mapper "<<endl;
+  cout << "Setting mapper "<<endl;
   mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
   
   mesh_Mapper->SetInputData(mesh_pdata);
