@@ -1,0 +1,39 @@
+{
+  "model": {
+    "parts": [
+      {
+        "id": 1,
+        "name": "cylinder",
+        "material": "steel",
+        "mesh": {
+          "nodes": [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0]
+          ],
+          "elements": [
+            {"id": 1, "type": "tri3", "connectivity": [0,1,2]}
+          ]
+        },
+        "geometry": {
+          "source": "cylinder.step",
+          "representation": "BRep",
+          "bounding_box": [[0,0,0],[10,10,10]]
+        }
+      }
+    ],
+    "materials": [
+      {
+        "name": "steel",
+        "elastic": {"E": 210e9, "nu": 0.3, "rho": 7850}
+      }
+    ],
+    "boundary_conditions": [
+      {"type": "fixed", "nodes": [0,1,2]}
+    ],
+    "solver_settings": {
+      "time_step": 1e-6,
+      "end_time": 0.01
+    }
+  }
+}

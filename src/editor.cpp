@@ -1028,7 +1028,8 @@ void Editor::drawGui() {
       getApp().getActiveModel().setName(filePathName);
       cout << "Setting model name: "<<filePathName<<"address "<<&getApp().getActiveModel()<<endl;
     }
-    ModelWriter(getApp().getActiveModel()); //Once it has name
+    ModelWriter mw(getApp().getActiveModel()); //Once it has name
+    mw.writeToFile();
     // close
     ImGuiFileDialog::Instance()->Close();
   }
