@@ -2,12 +2,18 @@
 #define _GEOM_H_
 
 #include <string>
-#include <TopoDS_Shape.hxx> // OpenCascade shape
+#include <TopoDS_Shape.hxx>
+
+#include <BRepPrimAPI_MakeBox.hxx>
+
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
 
 //// SHOULD INHERIT FROM SOME SHAPEGEOM  
 class Geom{
 protected:
-  TopoDS_Shape m_shape;       // Lógica CAD
+  TopoDS_Shape *m_shape;       // Lógica CAD
   std::string m_fileName;   // el STEP/IGES original
   
 public:
@@ -19,7 +25,12 @@ public:
   //std::string m_name;
   //double scale; //Is scale
 
-  const TopoDS_Shape& getShape() const { return m_shape; }
+  void LoadRectangle(double dx, double dy);
+  
+  const TopoDS_Shape& getShape() const { return *m_shape; }
+  
+  void genPlane(const double &edgelength);
+  
   //const double & getScale()const{return scale;}
   ~Geom(){}
     

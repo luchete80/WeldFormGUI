@@ -890,10 +890,19 @@ void Editor::drawGui() {
             }
             if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
-              geom->LoadCylinder(0.1,0.1);
+
+              Geom *geo = new Geom();
+              cout << "Creating rectangle"<<endl;
+              geo->LoadRectangle(0.1,0.1);
+              cout << "Done. Creating vtkmesh"<<endl;
+              geom->LoadFromShape(geo->getShape(), 0.01);
+              cout << "Done."<<endl;
+              //geom->LoadCylinder(0.1,0.1);
+              
               //widget->SetInteractor(rendersWindowInteractor);
               viewer->addActor(geom->actor);
-              Geom *geo();
+              
+                                          
               int pc = m_model->getPartCount();
               std::string name = "part_" + std::to_string(pc) + ".step";
               //m_model->addPart(geo);

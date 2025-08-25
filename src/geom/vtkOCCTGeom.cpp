@@ -193,3 +193,31 @@ void vtkOCCTGeom::SetGeometry(Geom* g) {
     actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
   }
+  
+  
+void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
+{
+    try {
+        // Convert OCC shape to VTK polydata
+        vtkSmartPointer<vtkPolyData> polyData = ShapeToPolyData(shape, deflection);
+
+        if (!polyData || polyData->GetNumberOfPoints() == 0) {
+            std::cerr << "Error: Failed to create polyData from shape" << std::endl;
+            return;
+        }
+
+        // Create mapper and actor
+        vtkNew<vtkPolyDataMapper> mapper;
+        mapper->SetInputData(polyData);
+
+        actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        actor->GetProperty()->SetOpacity(0.5);
+        actor->GetProperty()->SetLineWidth(1.0);
+
+    } catch (const Standard_Failure& e) {
+        std::cerr << "OpenCASCADE error: " << e.GetMessageString() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error in LoadFromShape" << std::endl;
+    }
+}
