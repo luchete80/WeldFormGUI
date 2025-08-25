@@ -30,7 +30,7 @@ protected:
   //vtkSmartPointer<vtkOCCTReader> occtreader;
   Mesh *m_mesh;
   Geom *geom = nullptr;   // Non-owning pointer (In geom is the real thing)
-
+  TopoDS_Shape m_shape;
 public:
   vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}

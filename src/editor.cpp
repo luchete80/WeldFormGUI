@@ -256,9 +256,9 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Open", "Ctrl+O")) {
         // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".json", ".");
     }
-    if (ImGui::MenuItem("Import", "Ctrl+O")){
+    if (ImGui::MenuItem("Import", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
@@ -551,7 +551,7 @@ void Editor::drawGui() {
             ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
             
             string test;
-            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+            cout << "Model part count "<<m_model->getPartCount()<<endl;
           }
           if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
           }
@@ -559,6 +559,7 @@ void Editor::drawGui() {
             ImGui::EndPopup();          
         }
         
+        /////////////////////// PART TREE
         if (open_){
         //cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
@@ -890,8 +891,12 @@ void Editor::drawGui() {
             if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
               geom->LoadCylinder(0.1,0.1);
-              //widget->SetInteractor(renderWindowInteractor);
+              //widget->SetInteractor(rendersWindowInteractor);
               viewer->addActor(geom->actor);
+              Geom *geo();
+              int pc = m_model->getPartCount();
+              std::string name = "part_" + std::to_string(pc) + ".step";
+              //m_model->addPart(geo);
               
             }
 
@@ -912,6 +917,9 @@ void Editor::drawGui() {
   // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
     // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")){
+    cout << "Open"<<endl;
+  }
 
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImport")) 
@@ -943,6 +951,9 @@ void Editor::drawGui() {
 
       vtkOCCTGeom *geom = new vtkOCCTGeom;
       geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
+      
+      //m_model->addPart(geo);
+      
       //widget->SetInteractor(renderWindowInteractor);
       viewer->addActor(geom->actor);
       //RELATE TO THE PART VIA APP!

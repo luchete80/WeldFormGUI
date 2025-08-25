@@ -4,13 +4,15 @@
 #include <string>
 #include <TopoDS_Shape.hxx> // OpenCascade shape
 
-
+//// SHOULD INHERIT FROM SOME SHAPEGEOM  
 class Geom{
 protected:
   TopoDS_Shape m_shape;       // Lógica CAD
+  std::string m_fileName;   // el STEP/IGES original
+  
 public:
   Geom(){}
-  Geom(std::string fname){}
+  Geom(std::string fname){m_fileName = fname;}
   void readFile(std::string file){}  
 
   //std::string m_filename; //

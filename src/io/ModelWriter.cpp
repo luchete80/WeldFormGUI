@@ -80,7 +80,7 @@ void ModelWriter::writeToFile(){
 
 	of << oss.str();
 */  
-  cout << "Saving model"<<endl;
+  cout << "Saving model/s"<<endl;
   
   m_json["Configuration"]["modelType"] = "SPH";
   m_json["Configuration"]["solver"]    = "WeldForm";
@@ -94,14 +94,48 @@ void ModelWriter::writeToFile(){
     m_json["Materials"]["density0"]=m_model.getMaterial(0)->getDensityConstant();  
     cout << "Done."<<endl;
   }
-  /*
-  m_model = &model;
+
+
   cout << "Loop thorough parts..."<<endl;
-  for (std::vector<Part*>::iterator it = model.m_part.begin(); it != model.m_part.end(); ++it){
-    //if (it->getType() == )
-    //m_json["Parts"][] 
+  for (std::vector<Part*>::iterator it = m_model.m_part.begin(); it != m_model.m_part.end(); ++it){
+   Part* part = *it;
+
+      json jpart;
+      jpart["id"] = part->getId();
+      //~ jpart["name"] = part->getName();
+      //~ jpart["material"] = part->getMaterialName();
+
+      //~ // Mesh
+      //~ jpart["mesh"] = json::object();
+      //~ jpart["mesh"]["nodes"] = json::array();
+      //~ for (auto& node : part->getNodes()) {
+          //~ jpart["mesh"]["nodes"].push_back({node.x, node.y, node.z});
+      //~ }
+      if (part->isMeshed()){
+      //~ jpart["mesh"]["elements"] = json::array();
+      //~ for (auto& elem : part->getElements()) {
+          //~ json jelem;
+          //~ jelem["id"] = elem.id;
+          //~ jelem["type"] = elem.type;
+          //~ jelem["connectivity"] = elem.connectivity; // suponiendo que es vector<int>
+          //~ jpart["mesh"]["elements"].push_back(jelem);
+      //~ }
     }
-  */
+
+      //~ // Geometry (si existe)
+      if (part->isGeom()) {
+          cout << "Part has geom"<<endl;
+          //~ jpart["geometry"]["source"] = part->getGeometryFile();
+          jpart["geometry"]["representation"] = "BRep";
+          //~ jpart["geometry"]["bounding_box"] = {
+              //~ {part->getBBoxMinX(), part->getBBoxMinY(), part->getBBoxMinZ()},
+              //~ {part->getBBoxMaxX(), part->getBBoxMaxY(), part->getBBoxMaxZ()}
+          //~ };
+      }
+
+      m_json["model"]["parts"].push_back(jpart);
+    }
+
   o << std::setw(4) << m_json << std::endl;
   
   o.close();
