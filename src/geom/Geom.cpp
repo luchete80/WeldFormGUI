@@ -1,6 +1,21 @@
 #include "Geom.h"
 #include <TopoDS_Shape.hxx> // OpenCascade shape
 
+#include <TopoDS_Shape.hxx>
+
+#include <BRepPrimAPI_MakeBox.hxx>
+
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+
+
+//Export STEP
+#include <STEPControl_Writer.hxx>
+#include <STEPControl_StepModelType.hxx>
+#include <IFSelect_ReturnStatus.hxx>
+
+
 // Geom::Geom(std::string fname){
   
   // scale = 1.0;
@@ -27,3 +42,29 @@
     // Crear face a partir del wire
     m_shape = new TopoDS_Shape (face);
   }
+
+
+bool Geom::ExportSTEP() {
+    if (!m_shape) {
+        std::cerr << "Error: no hay geometría cargada en m_shape." << std::endl;
+        return false;
+    }
+
+    STEPControl_Writer writer;
+    
+    // Transferir la forma al writer
+    IFSelect_ReturnStatus status = writer.Transfer(*m_shape, STEPControl_AsIs);
+    if (status != IFSelect_RetDone) {
+        std::cerr << "Error al transferir la geometría al writer." << std::endl;
+        return false;
+    }
+
+    // Grabar el archivo STEP
+    status = writer.Write(m_fileName.c_str());
+    if (status != IFSelect_RetDone) {
+        std::cerr << "Error al escribir el archivo STEP." << std::endl;
+        return false;
+    }
+
+    return true;
+}

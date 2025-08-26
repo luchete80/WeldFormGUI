@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip> //setw
 #include "Material.h"
+#include "Geom.h"
 
 #include <nlohmann/json.hpp>
 
@@ -125,7 +126,7 @@ void ModelWriter::writeToFile(){
       //~ // Geometry (si existe)
       if (part->isGeom()) {
           cout << "Part has geom"<<endl;
-          //~ jpart["geometry"]["source"] = part->getGeometryFile();
+          jpart["geometry"]["source"] = part->getGeom()->getName();
           jpart["geometry"]["representation"] = "BRep";
           //~ jpart["geometry"]["bounding_box"] = {
               //~ {part->getBBoxMinX(), part->getBBoxMinY(), part->getBBoxMinZ()},

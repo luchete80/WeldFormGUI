@@ -1,7 +1,8 @@
 
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories("../../")
-include_directories("../Model")
+include_directories("../model")
+include_directories("../geom")
 set(IO_SRCS         "ModelWriter.cpp"
                     "ModelReader.cpp"
 )

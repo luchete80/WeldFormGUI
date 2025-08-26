@@ -37,6 +37,7 @@ public:
   virtual Part_Type getType(){return m_type;}
   const bool isMeshed () const{return m_ismeshed;}
   const bool isGeom () const{return m_isgeom;}
+  Geom* getGeom(){return m_geom;}
 protected:
   Mesh* m_msh;
   Part_Type m_type;

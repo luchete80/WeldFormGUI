@@ -577,6 +577,10 @@ void Editor::drawGui() {
               selected_mat = m_mats[i];}
             if (ImGui::BeginPopupContextItem())
             {
+              if (ImGui::MenuItem("Rename", "CTRL+Z")) {
+
+                //selected_mat = m_mats[i];
+              }
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_mat_dlg_edit = true;
                 //selected_mat = m_mats[i];
@@ -890,8 +894,10 @@ void Editor::drawGui() {
             }
             if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
-
-              Geom *geo = new Geom();
+              int pc = m_model->getPartCount();
+              
+              std::string name = "part_" + std::to_string(pc) + ".step";
+              Geom *geo = new Geom(name);
               cout << "Creating rectangle"<<endl;
               geo->LoadRectangle(0.1,0.1);
               cout << "Done. Creating vtkmesh"<<endl;
@@ -903,11 +909,68 @@ void Editor::drawGui() {
               viewer->addActor(geom->actor);
               
                                           
-              int pc = m_model->getPartCount();
-              std::string name = "part_" + std::to_string(pc) + ".step";
-              //m_model->addPart(geo);
+
+
+              geo->ExportSTEP();
               
+              m_model->addPart(geo);
+              create_new_part = true;
+              getApp().setActiveModel(m_model);              
+
+
+              gmsh::model::add("t20");
+
+                // Load a STEP file (using `importShapes' instead of `merge' allows to
+              // directly retrieve the tags of the highest dimensional imported entities):
+              std::vector<std::pair<int, int> > v;
+             //try {
+                cout << "Loading file "<<name<<endl;
+                gmsh::model::occ::importShapes(name, v);
+                gmsh::model::occ::synchronize();  // Critical for dimension detection
+                int model_dim = gmsh::model::getDimension();
+                
+                cout << "Dimension: "<<model_dim<<endl;
+              //} catch(...) {
+              //  gmsh::logger::write("Could not load STEP file: bye!");
+              //  gmsh::finalize();
+                //return 0;
+              //}
+              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
+              gmsh::merge(name);
+
+              
+              getApp().setActiveModel(m_model);
+
+              #ifdef BUILD_PYTHON
+              PyRun_SimpleString("GetApplication().getActiveModel()");
+              #else
+                getApp().getActiveModel();
+              #endif
+
+              getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
+            std::vector<std::pair<int, int>> entities;
+            gmsh::model::getEntities(entities);
+
+            // Recorremos curvas y seteamos transfinite
+            for(auto &e : entities) {
+                if(e.first == 1) { // 1 = curva
+                    gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
+                }
+                if(e.first == 2) { // 2 = superficie
+                    gmsh::model::mesh::setTransfiniteSurface(e.second);
+                    gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                    cout << "Recombine in 2 dim"<<endl; 
+                }
+                if(e.first == 3) { // 3 = volumen
+                    gmsh::model::mesh::setTransfiniteVolume(e.second);
+                    gmsh::model::mesh::setRecombine(3, e.second); // HEXES
+                }
             }
+
+
+            }////CREATE GEO
 
     }
 
