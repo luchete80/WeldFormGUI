@@ -19,6 +19,7 @@
 #include <algorithm>
 
 #include "io/ModelWriter.h"
+#include "io/ModelReader.h"
 #include "LSDynaWriter.h"
 
 //#include "SceneView.h"
@@ -1009,6 +1010,48 @@ void Editor::drawGui() {
     // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")){
     cout << "Open"<<endl;
+
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {          
+    ModelReader mr(m_model);
+    mr.readFromFile(filePathName);
+
+      int pc = m_model->getPartCount();
+            
+      cout << "Adding vtkgeo meshes"<<endl;
+      for (int p=0;p<pc;p++){
+        cout << "part "<<p<<endl;
+      vtkOCCTGeom *geom = new vtkOCCTGeom;
+
+      
+      std::string name = "part_" + std::to_string(pc) + ".step";
+      Geom *geo = m_model->getPart(p)->getGeom();
+        if (geo != nullptr){
+        geom->LoadFromShape(geo->getShape(), 0.01);
+        cout << "Done."<<endl;
+        //geom->LoadCylinder(0.1,0.1);
+        
+        //widget->SetInteractor(rendersWindowInteractor);
+        viewer->addActor(geom->actor);
+      }
+    }
+              
+    //~ //m_model = mr.getModel();
+      //~ #ifdef BUILD_PYTHON
+      //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+      //~ #else
+        //~ getApp().getActiveModel();
+      //~ #endif
+
+      //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
+    // close
+    ImGuiFileDialog::Instance()->Close();
+              
+    }
   }
 
   // display

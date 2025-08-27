@@ -60,6 +60,7 @@ void App::updateMeshes(){
   
   for (int p=0;p<_activeModel->getPartCount();p++){
     cout << "Checking app new parts "<<endl;
+    cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
     bool not_found = true;
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
         if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh

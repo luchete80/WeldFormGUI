@@ -15,6 +15,13 @@
 #include <STEPControl_StepModelType.hxx>
 #include <IFSelect_ReturnStatus.hxx>
 
+//READ FILE
+#include <STEPControl_Reader.hxx>
+#include <BRepTools.hxx>
+#include <IFSelect_ReturnStatus.hxx>
+#include <iostream>
+
+
 
 // Geom::Geom(std::string fname){
   
@@ -76,5 +83,43 @@ bool Geom::ExportSTEP() {
         return false;
     }
 
+    return true;
+}
+
+bool Geom::LoadSTEP(const std::string& fname) {
+    STEPControl_Reader reader;
+    IFSelect_ReturnStatus stat = reader.ReadFile(fname.c_str());
+
+    if (stat != IFSelect_RetDone) {
+        std::cerr << "Error: no se pudo leer el archivo STEP " << fname << std::endl;
+        return false;
+    }
+
+    // Cargar la raíz (puede haber varias, pero tomamos la primera)
+    bool failsonly = false;
+    reader.PrintCheckLoad(failsonly, IFSelect_ItemsByEntity);
+
+    // Transferir la geometría a OpenCascade
+    int nRoots = reader.NbRootsForTransfer();
+    bool ok = false;
+    for (int i = 1; i <= nRoots; i++) {
+        ok = reader.TransferRoot(i);
+    }
+
+    if (!ok) {
+        std::cerr << "Error: no se pudo transferir la geometría desde STEP." << std::endl;
+        return false;
+    }
+
+    // Obtenemos la shape transferida
+    TopoDS_Shape shape = reader.OneShape();
+    if (shape.IsNull()) {
+        std::cerr << "Error: shape vacía al leer STEP." << std::endl;
+        return false;
+    }
+
+    // Guardamos en el miembro
+    m_shape = new TopoDS_Shape(shape);
+    m_fileName = fname;
     return true;
 }

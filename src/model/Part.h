@@ -19,6 +19,7 @@ public:
   Part(){
     m_id = -1;
     m_msh = nullptr;
+    m_geom = nullptr;
     m_ismeshed = false;
     m_isgeom   = false;
   }

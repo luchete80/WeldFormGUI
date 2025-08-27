@@ -13,7 +13,9 @@ protected:
   
 public:
   Geom(){}
-  Geom(std::string fname){m_fileName = fname;}
+  Geom(std::string fname){
+    m_fileName = fname;
+    LoadSTEP(fname);}
   void readFile(std::string file){}  
   const std::string getName()const{return m_fileName;}
 
@@ -23,6 +25,7 @@ public:
 
   void LoadRectangle(double dx, double dy);
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
+  bool LoadSTEP(const std::string& fname);
   
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
