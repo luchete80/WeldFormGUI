@@ -43,6 +43,16 @@
     m_shape = new TopoDS_Shape (face);
   }
 
+void Geom::LoadLine(double dx, double dy, double ox, double oy) {
+    gp_Pnt p1(ox, oy, 0);
+    gp_Pnt p2(ox+dx, oy+dy, 0);
+
+    // Crear edge (línea entre p1 y p2)
+    BRepBuilderAPI_MakeEdge edge(p1, p2);
+
+    // Guardar como shape
+    m_shape = new TopoDS_Shape(edge.Shape());
+}
 
 bool Geom::ExportSTEP() {
     if (!m_shape) {

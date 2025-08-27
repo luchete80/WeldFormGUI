@@ -22,6 +22,8 @@ public:
   //double scale; //Is scale
 
   void LoadRectangle(double dx, double dy);
+  void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
+  
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
   

@@ -3,10 +3,11 @@
 
 
 #include "Material.h"
+#include "Geom.h"
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-struct GeomBoxDialog{
+struct GeomDialog{
   
   //void    AddLog(const char* fmt, ...);
   double m_density_const; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)

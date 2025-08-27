@@ -15,7 +15,7 @@ using json = nlohmann::json;
 
 ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 
-void ModelWriter::writeToFile(){
+void ModelWriter::writeToFile(std::string fname){
   json m_json;
   
   //json j;
@@ -33,7 +33,7 @@ void ModelWriter::writeToFile(){
 	nlohmann::json ics 			= j["InitialConditions"];
 */
   //std::ofstream o(m_model.getName());
-  std::ofstream o("WOW.json");
+  std::ofstream o(fname);
   std::string filename = m_model.getName();
   if (!m_model.getHasName()) cout << "Not has name!"<<endl;
   std::cout << "Writing to file: " << filename << std::endl;

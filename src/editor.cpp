@@ -819,12 +819,12 @@ void Editor::drawGui() {
             // static char buf[32] = "0.";
             // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
             ImGui::Text("Origin");
-            static double d0 = 0.0;
-            ImGui::InputDouble("ox ", &d0, 0.01f, 1.0f, "%.4f");
+            static double origin[] = {0.0,0.0,0.0};
+            ImGui::InputDouble("ox ", &origin[0], 0.01f, 1.0f, "%.4f");
             static double d1 = 0.0;
-            ImGui::InputDouble("oy ", &d1, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oy ", &origin[1], 0.01f, 1.0f, "%.4f");
             static double d2   = 0.0;
-            ImGui::InputDouble("oz ", &d2, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oz ", &origin[2], 0.01f, 1.0f, "%.4f");
             ImGui::Text("Size");
             //Vec3_t size;
             static double size[] = {0.1,0.1,0.1};
@@ -876,7 +876,7 @@ void Editor::drawGui() {
  
               Mesh *m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              cout << "size[2]"<<endl;
+              cout << size[2]<<endl;
               cout << "Adding part" <<endl;
               m_model->addPart(new Part(m_fem_msh));
               cout << "set upate"<<endl;
@@ -892,14 +892,28 @@ void Editor::drawGui() {
               //is_fem_mesh = true;
               
             }
-            if (ImGui::Button("Create GEO")){
+            else if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
               int pc = m_model->getPartCount();
               
               std::string name = "part_" + std::to_string(pc) + ".step";
               Geom *geo = new Geom(name);
               cout << "Creating rectangle"<<endl;
-              geo->LoadRectangle(0.1,0.1);
+              bool created = false;
+              cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
+              if (size[2] == 0.0){ 
+                cout << "Dimension is 2 "<<endl;
+                if (size[1]>0.0){
+                  geo->LoadRectangle(size[0],size[1]);
+                  cout << "Loading Rectanbgle "<<endl;
+                  created = true;
+                } else{
+                  geo->LoadLine(size[0],size[1],origin[0],origin[1]);
+                  cout << "Loading line "<<endl;
+                  created = true;
+                }
+              }
+              if (created){
               cout << "Done. Creating vtkmesh"<<endl;
               geom->LoadFromShape(geo->getShape(), 0.01);
               cout << "Done."<<endl;
@@ -907,7 +921,8 @@ void Editor::drawGui() {
               
               //widget->SetInteractor(rendersWindowInteractor);
               viewer->addActor(geom->actor);
-              
+              //geom->actor->GetProperty()->SetLineWidth(3.0);
+              //geom->actor->GetProperty()->SetColor(1.0, 0.0, 0.0); // rojo para que resalte
                                           
 
 
@@ -960,7 +975,7 @@ void Editor::drawGui() {
                 }
                 if(e.first == 2) { // 2 = superficie
                     gmsh::model::mesh::setTransfiniteSurface(e.second);
-                    gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                    //gmsh::model::mesh::setRecombine(2, e.second); // QUADS
                     cout << "Recombine in 2 dim"<<endl; 
                 }
                 if(e.first == 3) { // 3 = volumen
@@ -969,7 +984,10 @@ void Editor::drawGui() {
                 }
             }
 
-
+          }//Created = true
+          else {
+            cout <<"Not geometry created"<<endl;
+            }
             }////CREATE GEO
 
     }
@@ -1110,9 +1128,9 @@ void Editor::drawGui() {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       getApp().getActiveModel().setName(filePathName);
       cout << "Setting model name: "<<filePathName<<"address "<<&getApp().getActiveModel()<<endl;
+      ModelWriter mw(getApp().getActiveModel()); //Once it has name
+      mw.writeToFile(filePathName);
     }
-    ModelWriter mw(getApp().getActiveModel()); //Once it has name
-    mw.writeToFile();
     // close
     ImGuiFileDialog::Instance()->Close();
   }
