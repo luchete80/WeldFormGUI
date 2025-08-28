@@ -9,7 +9,7 @@
 #include "Geom.h"
 
 #include <nlohmann/json.hpp>
-
+#include "json_io.h"
 
 using json = nlohmann::json;
 
@@ -127,6 +127,7 @@ void ModelWriter::writeToFile(std::string fname){
       if (part->isGeom()) {
           cout << "Part has geom"<<endl;
           jpart["geometry"]["source"] = part->getGeom()->getName();
+          jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
           jpart["geometry"]["representation"] = "BRep";
           //~ jpart["geometry"]["bounding_box"] = {
               //~ {part->getBBoxMinX(), part->getBBoxMinY(), part->getBBoxMinZ()},

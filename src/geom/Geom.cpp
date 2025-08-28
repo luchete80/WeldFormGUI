@@ -28,9 +28,12 @@
   // scale = 1.0;
 // }
 
-  void Geom::LoadRectangle(double dx, double dy) {
+  void Geom::LoadRectangle(double dx, double dy, double ox, double oy) {
   gp_Pnt p1(0,0,0), p2(dx,0,0), p3(dx,dy,0), p4(0,dy,0);
 
+    m_origin.x = ox;
+    m_origin.y = oy;
+    
     // Crear edges
     BRepBuilderAPI_MakeEdge e1(p1,p2);
     BRepBuilderAPI_MakeEdge e2(p2,p3);
@@ -53,6 +56,8 @@
 void Geom::LoadLine(double dx, double dy, double ox, double oy) {
     gp_Pnt p1(ox, oy, 0);
     gp_Pnt p2(ox+dx, oy+dy, 0);
+    m_origin.x = ox;
+    m_origin.y = oy;
 
     // Crear edge (línea entre p1 y p2)
     BRepBuilderAPI_MakeEdge edge(p1, p2);

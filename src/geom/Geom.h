@@ -2,7 +2,7 @@
 #define _GEOM_H_
 
 #include <string>
-
+#include "double3.h"
 class TopoDS_Shape; //AVOID OCC (for python wrapping)
 
 //// SHOULD INHERIT FROM SOME SHAPEGEOM  
@@ -10,6 +10,8 @@ class Geom{
 protected:
   TopoDS_Shape *m_shape;       // Lógica CAD
   std::string m_fileName;   // el STEP/IGES original
+  double3 m_origin;
+  
   
 public:
   Geom(){}
@@ -23,10 +25,10 @@ public:
   //std::string m_name;
   //double scale; //Is scale
 
-  void LoadRectangle(double dx, double dy);
+  void LoadRectangle(double dx, double dy, double ox = 0.0, double oy = 0.0);
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
   bool LoadSTEP(const std::string& fname);
-  
+  const double3 & getOrigin()const{return m_origin;}
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
   
