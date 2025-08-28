@@ -6,8 +6,13 @@
 #include <fstream>
 #include <iomanip> //setw
 #include "Material.h"
+#include "Geom.h"
+#include "json_io.h"
 
-
+ModelReader::ModelReader(Model *model){
+  
+  m_model = model;
+  }
 ModelReader::ModelReader(const char *fname){
 
 	//json j;
@@ -87,5 +92,99 @@ ModelReader::ModelReader(const char *fname){
   
   o.close();
   */
+}
+
+
+
+bool ModelReader::readFromFile(const std::string& fname) {
+    std::ifstream i(fname);
+    if (!i.is_open()) {
+        std::cerr << "Error opening file: " << fname << std::endl;
+        return false;
+    }
+
+    json j;
+    try {
+        i >> j;
+    } catch (const std::exception& e) {
+        std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+        return false;
+    }
+    
+    //m_model = new Model();
+
+    // Configuración básica
+    if (j.contains("Configuration")) {
+        auto& conf = j["Configuration"];
+        //~ if (conf.contains("modelType"))
+            //~ //m_model.setType(conf["modelType"].get<std::string>());
+        //~ if (conf.contains("solver"))
+            //~ //m_model.setSolver(conf["solver"].get<std::string>());
+        //~ if (conf.contains("SPH") && conf["SPH"].contains("hFactor"))
+            //~ //m_model.setHFactor(conf["SPH"]["hFactor"].get<double>());
+    }
+
+    // Materiales
+    if (j.contains("Materials")) {
+        auto& mat = j["Materials"];
+        if (mat.contains("density0")) {
+            Material_* m = new Material_();
+            //m->setDensity(mat["density0"].get<double>());
+            m_model->addMaterial(m);
+        }
+    }
+
+    //~ // Partes
+    if (j.contains("model") && j["model"].contains("parts")) {
+      int i=0;
+    for (auto& jpart : j["model"]["parts"]) {
+            cout << "Reading part "<<i<<endl;
+            Part* part;
+            //~ if (jpart.contains("id"))
+                //~ part->setId(jpart["id"].get<int>());
+            //~ if (jpart.contains("name"))
+                //~ part->setName(jpart["name"].get<std::string>());
+
+            //~ // Geometry
+            if (jpart.contains("geometry")) {
+                if (jpart["geometry"].contains("source")){
+                   double3 origin = make_double3(0.0,0.0,0.0);
+                   readVector(jpart["geometry"]["origin"],origin);
+                   
+                    std::string name = jpart["geometry"]["source"].get<std::string>();
+                    cout << "Reading surface "<<name<<endl;
+                    Geom* geom = new Geom(name);
+                 part = new Part(geom);
+               }
+
+               
+                //part->setGeom(geom);
+            }
+
+            //~ // Mesh (nodos y elementos, si existe)
+            //~ if (jpart.contains("mesh")) {
+                //~ if (jpart["mesh"].contains("nodes")) {
+                    //~ for (auto& n : jpart["mesh"]["nodes"]) {
+                        //~ part->addNode({n[0].get<double>(), n[1].get<double>(), n[2].get<double>()});
+                    //~ }
+                //~ }
+                //~ if (jpart["mesh"].contains("elements")) {
+                    //~ for (auto& e : jpart["mesh"]["elements"]) {
+                        //~ Element elem;
+                        //~ elem.id = e["id"].get<int>();
+                        //~ elem.type = e["type"].get<std::string>();
+                        //~ elem.connectivity = e["connectivity"].get<std::vector<int>>();
+                        //~ part->addElement(elem);
+                    //~ }
+                //~ }
+            //~ }
+
+            m_model->addPart(part);
+            i++;
+        }
+    }//if contain part
+
+    std::cout << "Model loaded from " << fname << std::endl;
+    return true;
 }
 

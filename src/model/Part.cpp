@@ -27,6 +27,9 @@ m_msh(mesh){
 
 Part::Part(Geom* geom){
   m_ismeshed = false;
+  
+  m_isgeom = true;
+  m_geom = geom;
 }
 
 void Part::generateMesh(){

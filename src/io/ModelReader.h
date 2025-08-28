@@ -1,5 +1,5 @@
-#ifndef MODEL_WRITER_H
-#define MODEL_WRITER_H
+#ifndef MODEL_READER_H
+#define MODEL_READER_H
 
 #include <nlohmann/json.hpp>
 
@@ -9,8 +9,11 @@ class Model;
 
 class ModelReader{
 public:
+  //ModelReader(){}
+  ModelReader(Model*);
   ModelReader(const char *);
   Model* getModel(){return m_model;}
+  bool readFromFile(const std::string& fname) ;
   
   ~ModelReader(){delete m_model;}  
 

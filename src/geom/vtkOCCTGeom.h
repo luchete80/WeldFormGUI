@@ -30,7 +30,7 @@ protected:
   //vtkSmartPointer<vtkOCCTReader> occtreader;
   Mesh *m_mesh;
   Geom *geom = nullptr;   // Non-owning pointer (In geom is the real thing)
-
+  TopoDS_Shape m_shape;
 public:
   vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}
@@ -42,6 +42,7 @@ public:
   void SetGeometry(Geom* g);
 
   void BuildVTKData();
+  void LoadFromShape(const TopoDS_Shape& shape, double deflection = 0.01);
 
 
   bool isRendered = false;

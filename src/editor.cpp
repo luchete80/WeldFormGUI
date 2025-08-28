@@ -19,6 +19,7 @@
 #include <algorithm>
 
 #include "io/ModelWriter.h"
+#include "io/ModelReader.h"
 #include "LSDynaWriter.h"
 
 //#include "SceneView.h"
@@ -45,6 +46,10 @@
 #include "App.h"
 
 #include "results_simple.h"
+
+//~ #include <GModel.h>
+//~ #include <GModelIO_OCC.h>
+//~ #include <TopoDS_Shape.hxx>
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
@@ -256,9 +261,9 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Open", "Ctrl+O")) {
         // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".json", ".");
     }
-    if (ImGui::MenuItem("Import", "Ctrl+O")){
+    if (ImGui::MenuItem("Import", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
@@ -551,7 +556,7 @@ void Editor::drawGui() {
             ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
             
             string test;
-            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+            cout << "Model part count "<<m_model->getPartCount()<<endl;
           }
           if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
           }
@@ -559,6 +564,7 @@ void Editor::drawGui() {
             ImGui::EndPopup();          
         }
         
+        /////////////////////// PART TREE
         if (open_){
         //cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
@@ -576,6 +582,10 @@ void Editor::drawGui() {
               selected_mat = m_mats[i];}
             if (ImGui::BeginPopupContextItem())
             {
+              if (ImGui::MenuItem("Rename", "CTRL+Z")) {
+
+                //selected_mat = m_mats[i];
+              }
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_mat_dlg_edit = true;
                 //selected_mat = m_mats[i];
@@ -584,8 +594,36 @@ void Editor::drawGui() {
                 m_model->delPart(i);
                 getApp().Update(); //CRASHES
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
+
+              ////// IF LOADING STEP
+                  //~ // Crear un modelo GMSH desde la forma OCC
+                  //~ GModel* gm = new GModel();
                   
-                  gmsh::model::mesh::generate(2);
+                  //~ // Importar la forma OCC al modelo GMSH
+                  //~ GModelIO_OCC::importOCCShape(gm, shape);
+                  
+                  //~ // Sincronizar el modelo OCC de GMSH
+                  //~ gmsh::model::occ::synchronize();
+                  
+              ////// IF LOADING FILE
+              
+              gmsh::clear();  //Cleaning
+              std::string name = "part_" + std::to_string(i) + ".step";
+              gmsh::model::add("t20");
+              std::vector<std::pair<int, int> > v;
+              gmsh::model::occ::importShapes(name, v);
+                gmsh::model::occ::synchronize();  // Critical for dimension detection
+                int model_dim = gmsh::model::getDimension();
+                cout << "Dimension: "<<model_dim<<endl;
+              
+              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
+              gmsh::merge(name);
+              
+              
+      
+                        
+                  gmsh::model::mesh::generate(model_dim);
                   gmsh::write("test.msh");
                   m_model->getPart(i)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
                   
@@ -594,7 +632,17 @@ void Editor::drawGui() {
                   graphic_mesh->createVTKPolyData();
                   
                   viewer->addActor(graphic_mesh->getActor());
-                
+
+                  getApp().setActiveModel(m_model);
+
+                  #ifdef BUILD_PYTHON
+                  PyRun_SimpleString("GetApplication().getActiveModel()");
+                  #else
+                    getApp().getActiveModel();
+                  #endif
+
+                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+                                  
               }
               
                
@@ -814,12 +862,12 @@ void Editor::drawGui() {
             // static char buf[32] = "0.";
             // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
             ImGui::Text("Origin");
-            static double d0 = 0.0;
-            ImGui::InputDouble("ox ", &d0, 0.01f, 1.0f, "%.4f");
+            static double origin[] = {0.0,0.0,0.0};
+            ImGui::InputDouble("ox ", &origin[0], 0.01f, 1.0f, "%.4f");
             static double d1 = 0.0;
-            ImGui::InputDouble("oy ", &d1, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oy ", &origin[1], 0.01f, 1.0f, "%.4f");
             static double d2   = 0.0;
-            ImGui::InputDouble("oz ", &d2, 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("oz ", &origin[2], 0.01f, 1.0f, "%.4f");
             ImGui::Text("Size");
             //Vec3_t size;
             static double size[] = {0.1,0.1,0.1};
@@ -871,7 +919,7 @@ void Editor::drawGui() {
  
               Mesh *m_fem_msh = new Mesh();
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-              cout << "size[2]"<<endl;
+              cout << size[2]<<endl;
               cout << "Adding part" <<endl;
               m_model->addPart(new Part(m_fem_msh));
               cout << "set upate"<<endl;
@@ -887,13 +935,103 @@ void Editor::drawGui() {
               //is_fem_mesh = true;
               
             }
-            if (ImGui::Button("Create GEO")){
+            else if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
-              geom->LoadCylinder(0.1,0.1);
-              //widget->SetInteractor(renderWindowInteractor);
-              viewer->addActor(geom->actor);
+              int pc = m_model->getPartCount();
               
+              std::string name = "part_" + std::to_string(pc) + ".step";
+              Geom *geo = new Geom(name);
+              cout << "Creating rectangle"<<endl;
+              bool created = false;
+              cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
+              if (size[2] == 0.0){ 
+                cout << "Dimension is 2 "<<endl;
+                if (size[1]>0.0){
+                  geo->LoadRectangle(size[0],size[1]);
+                  cout << "Loading Rectanbgle "<<endl;
+                  created = true;
+                } else{
+                  geo->LoadLine(size[0],size[1],origin[0],origin[1]);
+                  cout << "Loading line "<<endl;
+                  created = true;
+                }
+              }
+              if (created){
+              cout << "Done. Creating vtkmesh"<<endl;
+              geom->LoadFromShape(geo->getShape(), 0.01);
+              cout << "Done."<<endl;
+              //geom->LoadCylinder(0.1,0.1);
+              
+              //widget->SetInteractor(rendersWindowInteractor);
+              viewer->addActor(geom->actor);
+              //geom->actor->GetProperty()->SetLineWidth(3.0);
+              //geom->actor->GetProperty()->SetColor(1.0, 0.0, 0.0); // rojo para que resalte
+                                          
+
+
+              geo->ExportSTEP();
+              
+              m_model->addPart(geo);
+              create_new_part = true;
+              getApp().setActiveModel(m_model);              
+
+
+              gmsh::model::add("t20");
+
+                // Load a STEP file (using `importShapes' instead of `merge' allows to
+              // directly retrieve the tags of the highest dimensional imported entities):
+              std::vector<std::pair<int, int> > v;
+             //try {
+                cout << "Loading file "<<name<<endl;
+                gmsh::model::occ::importShapes(name, v);
+                gmsh::model::occ::synchronize();  // Critical for dimension detection
+                int model_dim = gmsh::model::getDimension();
+                
+                cout << "Dimension: "<<model_dim<<endl;
+              //} catch(...) {
+              //  gmsh::logger::write("Could not load STEP file: bye!");
+              //  gmsh::finalize();
+                //return 0;
+              //}
+              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
+              gmsh::merge(name);
+
+              
+              getApp().setActiveModel(m_model);
+
+              #ifdef BUILD_PYTHON
+              PyRun_SimpleString("GetApplication().getActiveModel()");
+              #else
+                getApp().getActiveModel();
+              #endif
+
+              getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
+            std::vector<std::pair<int, int>> entities;
+            gmsh::model::getEntities(entities);
+
+            // Recorremos curvas y seteamos transfinite
+            for(auto &e : entities) {
+                if(e.first == 1) { // 1 = curva
+                    gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
+                }
+                if(e.first == 2) { // 2 = superficie
+                    gmsh::model::mesh::setTransfiniteSurface(e.second);
+                    //gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                    cout << "Recombine in 2 dim"<<endl; 
+                }
+                if(e.first == 3) { // 3 = volumen
+                    gmsh::model::mesh::setTransfiniteVolume(e.second);
+                    gmsh::model::mesh::setRecombine(3, e.second); // HEXES
+                }
             }
+
+          }//Created = true
+          else {
+            cout <<"Not geometry created"<<endl;
+            }
+            }////CREATE GEO
 
     }
 
@@ -912,6 +1050,51 @@ void Editor::drawGui() {
   // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
     // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")){
+    cout << "Open"<<endl;
+
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {          
+    ModelReader mr(m_model);
+    mr.readFromFile(filePathName);
+
+      int pc = m_model->getPartCount();
+            
+      cout << "Adding vtkgeo meshes"<<endl;
+      for (int p=0;p<pc;p++){
+        cout << "part "<<p<<endl;
+      vtkOCCTGeom *geom = new vtkOCCTGeom;
+
+      
+      std::string name = "part_" + std::to_string(pc) + ".step";
+      Geom *geo = m_model->getPart(p)->getGeom();
+        if (geo != nullptr){
+        geom->LoadFromShape(geo->getShape(), 0.01);
+        cout << "Done."<<endl;
+        //geom->LoadCylinder(0.1,0.1);
+        
+        //widget->SetInteractor(rendersWindowInteractor);
+        viewer->addActor(geom->actor);
+      }
+    }
+              
+    //~ //m_model = mr.getModel();
+      //~ #ifdef BUILD_PYTHON
+      //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+      //~ #else
+        //~ getApp().getActiveModel();
+      //~ #endif
+
+      //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
+    // close
+    ImGuiFileDialog::Instance()->Close();
+              
+    }
+  }
 
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImport")) 
@@ -943,6 +1126,9 @@ void Editor::drawGui() {
 
       vtkOCCTGeom *geom = new vtkOCCTGeom;
       geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
+      
+      //m_model->addPart(geo);
+      
       //widget->SetInteractor(renderWindowInteractor);
       viewer->addActor(geom->actor);
       //RELATE TO THE PART VIA APP!
@@ -1027,8 +1213,9 @@ void Editor::drawGui() {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       getApp().getActiveModel().setName(filePathName);
       cout << "Setting model name: "<<filePathName<<"address "<<&getApp().getActiveModel()<<endl;
+      ModelWriter mw(getApp().getActiveModel()); //Once it has name
+      mw.writeToFile(filePathName);
     }
-    ModelWriter(getApp().getActiveModel()); //Once it has name
     // close
     ImGuiFileDialog::Instance()->Close();
   }
