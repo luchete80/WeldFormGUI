@@ -32,7 +32,7 @@ bool readValue(const nlohmann::json &j, T &v)
 // }
 
 //template <typename T>
-bool readVector(const nlohmann::json &j, double3 &vec)
+inline bool readVector(const nlohmann::json &j, double3 &vec)
 {
 	if (j.is_null())
 		return false;
@@ -55,7 +55,7 @@ bool readVector(const nlohmann::json &j, Vector &vec)
 	return true;
 }
 */
-bool readBoolVector(const nlohmann::json &j, bool vec[])
+inline bool readBoolVector(const nlohmann::json &j, bool vec[])
 {
 	if (j.is_null())
 		return false;
@@ -66,7 +66,7 @@ bool readBoolVector(const nlohmann::json &j, bool vec[])
 	return true;
 }
 
-bool readArray(const nlohmann::json &j, std::vector<double> &vec)
+inline bool readArray(const nlohmann::json &j, std::vector<double> &vec)
 {
 	if (j.is_null())
 		return false;

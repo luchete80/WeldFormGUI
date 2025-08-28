@@ -7,6 +7,7 @@
 #include <iomanip> //setw
 #include "Material.h"
 #include "Geom.h"
+#include "json_io.h"
 
 ModelReader::ModelReader(Model *model){
   
@@ -147,11 +148,16 @@ bool ModelReader::readFromFile(const std::string& fname) {
             //~ // Geometry
             if (jpart.contains("geometry")) {
                 if (jpart["geometry"].contains("source")){
+                   double3 origin = make_double3(0.0,0.0,0.0);
+                   readVector(jpart["geometry"]["origin"],origin);
+                   
                     std::string name = jpart["geometry"]["source"].get<std::string>();
                     cout << "Reading surface "<<name<<endl;
                     Geom* geom = new Geom(name);
                  part = new Part(geom);
                }
+
+               
                 //part->setGeom(geom);
             }
 

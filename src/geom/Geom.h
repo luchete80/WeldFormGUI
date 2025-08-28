@@ -5,6 +5,8 @@
 #include "double3.h"
 class TopoDS_Shape; //AVOID OCC (for python wrapping)
 
+class double3;
+
 //// SHOULD INHERIT FROM SOME SHAPEGEOM  
 class Geom{
 protected:
@@ -28,6 +30,7 @@ public:
   void LoadRectangle(double dx, double dy, double ox = 0.0, double oy = 0.0);
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
   bool LoadSTEP(const std::string& fname);
+  bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
   const double3 & getOrigin()const{return m_origin;}
   
   const TopoDS_Shape& getShape() const { return *m_shape; }

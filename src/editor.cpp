@@ -47,6 +47,10 @@
 
 #include "results_simple.h"
 
+//~ #include <GModel.h>
+//~ #include <GModelIO_OCC.h>
+//~ #include <TopoDS_Shape.hxx>
+
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
 
@@ -590,8 +594,36 @@ void Editor::drawGui() {
                 m_model->delPart(i);
                 getApp().Update(); //CRASHES
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
+
+              ////// IF LOADING STEP
+                  //~ // Crear un modelo GMSH desde la forma OCC
+                  //~ GModel* gm = new GModel();
                   
-                  gmsh::model::mesh::generate(2);
+                  //~ // Importar la forma OCC al modelo GMSH
+                  //~ GModelIO_OCC::importOCCShape(gm, shape);
+                  
+                  //~ // Sincronizar el modelo OCC de GMSH
+                  //~ gmsh::model::occ::synchronize();
+                  
+              ////// IF LOADING FILE
+              
+              gmsh::clear();  //Cleaning
+              std::string name = "part_" + std::to_string(i) + ".step";
+              gmsh::model::add("t20");
+              std::vector<std::pair<int, int> > v;
+              gmsh::model::occ::importShapes(name, v);
+                gmsh::model::occ::synchronize();  // Critical for dimension detection
+                int model_dim = gmsh::model::getDimension();
+                cout << "Dimension: "<<model_dim<<endl;
+              
+              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
+              gmsh::merge(name);
+              
+              
+      
+                        
+                  gmsh::model::mesh::generate(model_dim);
                   gmsh::write("test.msh");
                   m_model->getPart(i)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
                   
@@ -600,7 +632,17 @@ void Editor::drawGui() {
                   graphic_mesh->createVTKPolyData();
                   
                   viewer->addActor(graphic_mesh->getActor());
-                
+
+                  getApp().setActiveModel(m_model);
+
+                  #ifdef BUILD_PYTHON
+                  PyRun_SimpleString("GetApplication().getActiveModel()");
+                  #else
+                    getApp().getActiveModel();
+                  #endif
+
+                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+                                  
               }
               
                

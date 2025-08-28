@@ -21,6 +21,9 @@
 #include <IFSelect_ReturnStatus.hxx>
 #include <iostream>
 
+#include <BRepBuilderAPI_Transform.hxx> // Necesario para transformaciones
+#include <gp_Trsf.hxx>                 // Necesario para definición de transformaciones
+#include <BRepBndLib.hxx>
 
 
 // Geom::Geom(std::string fname){
@@ -56,8 +59,8 @@
 void Geom::LoadLine(double dx, double dy, double ox, double oy) {
     gp_Pnt p1(ox, oy, 0);
     gp_Pnt p2(ox+dx, oy+dy, 0);
-    m_origin.x = ox;
-    m_origin.y = oy;
+    //m_origin.x = ox;
+    //m_origin.y = oy;
 
     // Crear edge (línea entre p1 y p2)
     BRepBuilderAPI_MakeEdge edge(p1, p2);
@@ -126,5 +129,79 @@ bool Geom::LoadSTEP(const std::string& fname) {
     // Guardamos en el miembro
     m_shape = new TopoDS_Shape(shape);
     m_fileName = fname;
+    return true;
+}
+
+bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) {
+    STEPControl_Reader reader;
+    IFSelect_ReturnStatus stat = reader.ReadFile(fname.c_str());
+
+    if (stat != IFSelect_RetDone) {
+        std::cerr << "Error: no se pudo leer el archivo STEP " << fname << std::endl;
+        return false;
+    }
+
+    // Cargar la raíz (puede haber varias, pero tomamos la primera)
+    bool failsonly = false;
+    reader.PrintCheckLoad(failsonly, IFSelect_ItemsByEntity);
+
+    // Transferir la geometría a OpenCascade
+    int nRoots = reader.NbRootsForTransfer();
+    bool ok = false;
+    for (int i = 1; i <= nRoots; i++) {
+        ok = reader.TransferRoot(i);
+    }
+
+    if (!ok) {
+        std::cerr << "Error: no se pudo transferir la geometría desde STEP." << std::endl;
+        return false;
+    }
+
+    // Obtenemos la shape transferida
+    TopoDS_Shape shape = reader.OneShape();
+    if (shape.IsNull()) {
+        std::cerr << "Error: shape vacía al leer STEP." << std::endl;
+        return false;
+    }
+
+    // Calcular el bounding box de la shape para encontrar su centro actual
+    Bnd_Box bbox;
+    BRepBndLib::Add(shape, bbox);
+    
+    double xMin, yMin, zMin, xMax, yMax, zMax;
+    bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    
+    // Calcular el centro actual de la pieza
+    double currentCenterX = (xMin + xMax) / 2.0;
+    double currentCenterY = (yMin + yMax) / 2.0;
+    double currentCenterZ = (zMin + zMax) / 2.0;
+    
+    // Crear transformación para mover la pieza al origen deseado
+    gp_Trsf transformation;
+    transformation.SetTranslation(
+        gp_Vec(-currentCenterX + targetOriginX, 
+               -currentCenterY + targetOriginY, 
+               -currentCenterZ + targetOriginZ)
+    );
+    
+    // Aplicar la transformación a la shape
+    BRepBuilderAPI_Transform transformBuilder(shape, transformation, true);
+    TopoDS_Shape transformedShape = transformBuilder.Shape();
+    
+    // Verificar que la transformación fue exitosa
+    if (transformedShape.IsNull()) {
+        std::cerr << "Error: la transformación falló." << std::endl;
+        return false;
+    }
+
+    // Guardamos en el miembro
+    m_shape = new TopoDS_Shape(transformedShape);
+    m_fileName = fname;
+    
+    // Actualizar el origen de la geometría
+    m_origin.x = targetOriginX;
+    m_origin.y = targetOriginY;
+    // Si tienes coordenada z en m_origin, también actualízala
+    
     return true;
 }
