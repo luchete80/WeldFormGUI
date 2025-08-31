@@ -624,8 +624,9 @@ void Editor::drawGui() {
       
                         
                   gmsh::model::mesh::generate(model_dim);
-                  gmsh::write("test.msh");
-                  m_model->getPart(i)->generateMesh();//TODO: CHANGE FOR ACTIVE PART
+                  std::string meshname = "part_" + std::to_string(i) + ".msh";
+                  gmsh::write(meshname.c_str());
+                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
                   
 
                   graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
@@ -1078,6 +1079,34 @@ void Editor::drawGui() {
         
         //widget->SetInteractor(rendersWindowInteractor);
         viewer->addActor(geom->actor);
+      
+        gmsh::clear();
+
+        std::string meshname = "part_" + std::to_string(p) + ".msh";
+        gmsh::open(meshname.c_str());
+
+        // O también puedes usar merge para añadir a un modelo existente
+        // gmsh::merge(meshname.c_str());
+
+        // Sincronizar después de cargar
+        gmsh::model::occ::synchronize();
+
+        graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+        graphic_mesh->createVTKPolyData();
+        
+        viewer->addActor(graphic_mesh->getActor());
+
+        getApp().setActiveModel(m_model);
+
+        #ifdef BUILD_PYTHON
+        PyRun_SimpleString("GetApplication().getActiveModel()");
+        #else
+          getApp().getActiveModel();
+        #endif
+
+        getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)        
+      
+      
       }
     }
               
