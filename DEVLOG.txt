@@ -114,4 +114,4 @@
          - Creating cilynder and export to step.
          - This requires to link executable to several OCC files.
 20250706 - Separate geom and adding scripting for it.
-20250831 - 
+20250831 - Now writing and reading mesh
