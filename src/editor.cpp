@@ -292,7 +292,7 @@ void ShowExampleMenuFile(const Editor &editor)
     }
     //If open
     if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
-      //InputWriter writer("Input.json",editor.getDomain());
+      InputWriter writer("Input.json",editor.getDomain());
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
       if (!(getApp().getActiveModel().getHasName()))
