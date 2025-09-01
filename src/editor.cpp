@@ -616,34 +616,65 @@ void Editor::drawGui() {
                 gmsh::model::occ::synchronize();  // Critical for dimension detection
                 int model_dim = gmsh::model::getDimension();
                 cout << "Dimension: "<<model_dim<<endl;
-              
+
+
+              ////////////////////////////////////////
+  
+            std::vector<std::pair<int, int>> entities;
+            gmsh::model::getEntities(entities);
+
+            // Recorremos curvas y seteamos transfinite
+            for(auto &e : entities) {
+                if(e.first == 1) { // 1 = curva
+                    gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
+                }
+                if(e.first == 2) { // 2 = superficie
+                    gmsh::model::mesh::setTransfiniteSurface(e.second);
+                    gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                    cout << "Recombine in 2 dim"<<endl; 
+                }
+                if(e.first == 3) { // 3 = volumen
+                    //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
+                    //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
+                }
+            }
+            ////////////////////////
+                          
               if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
 
               gmsh::merge(name);
               
               
-      
-                        
-                  gmsh::model::mesh::generate(model_dim);
                   std::string meshname = "part_" + std::to_string(i) + ".msh";
                   gmsh::write(meshname.c_str());
-                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
+                  //m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
                   
 
                   graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+
+              //~ getApp().setActiveModel(m_model);
+
+              //~ #ifdef BUILD_PYTHON
+              //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+              //~ #else
+                //~ getApp().getActiveModel();
+              //~ #endif
+
+              //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+              
                   graphic_mesh->createVTKPolyData();
                   
                   viewer->addActor(graphic_mesh->getActor());
 
                   getApp().setActiveModel(m_model);
 
-                  #ifdef BUILD_PYTHON
-                  PyRun_SimpleString("GetApplication().getActiveModel()");
-                  #else
-                    getApp().getActiveModel();
-                  #endif
+                  //~ #ifdef BUILD_PYTHON
+                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+                  //~ #else
+                    //~ getApp().getActiveModel();
+                  //~ #endif
 
-                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
                                   
               }
               
@@ -983,28 +1014,6 @@ void Editor::drawGui() {
               create_new_part = true;
               getApp().setActiveModel(m_model);              
 
-
-              gmsh::model::add("t20");
-
-                // Load a STEP file (using `importShapes' instead of `merge' allows to
-              // directly retrieve the tags of the highest dimensional imported entities):
-              std::vector<std::pair<int, int> > v;
-             //try {
-                cout << "Loading file "<<name<<endl;
-                gmsh::model::occ::importShapes(name, v);
-                gmsh::model::occ::synchronize();  // Critical for dimension detection
-                int model_dim = gmsh::model::getDimension();
-                
-                cout << "Dimension: "<<model_dim<<endl;
-              //} catch(...) {
-              //  gmsh::logger::write("Could not load STEP file: bye!");
-              //  gmsh::finalize();
-                //return 0;
-              //}
-              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
-
-              gmsh::merge(name);
-
               
               getApp().setActiveModel(m_model);
 
@@ -1016,24 +1025,6 @@ void Editor::drawGui() {
 
               getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
 
-            std::vector<std::pair<int, int>> entities;
-            gmsh::model::getEntities(entities);
-
-            // Recorremos curvas y seteamos transfinite
-            for(auto &e : entities) {
-                if(e.first == 1) { // 1 = curva
-                    gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
-                }
-                if(e.first == 2) { // 2 = superficie
-                    gmsh::model::mesh::setTransfiniteSurface(e.second);
-                    //gmsh::model::mesh::setRecombine(2, e.second); // QUADS
-                    cout << "Recombine in 2 dim"<<endl; 
-                }
-                if(e.first == 3) { // 3 = volumen
-                    gmsh::model::mesh::setTransfiniteVolume(e.second);
-                    gmsh::model::mesh::setRecombine(3, e.second); // HEXES
-                }
-            }
 
           }//Created = true
           else {
@@ -1104,9 +1095,7 @@ void Editor::drawGui() {
         viewer->addActor(graphic_mesh->getActor());
 
         getApp().setActiveModel(m_model);
-      
-        
-        /// WHY THIS CRASHES???
+
         //~ #ifdef BUILD_PYTHON
         //~ PyRun_SimpleString("GetApplication().getActiveModel()");
         //~ #else
