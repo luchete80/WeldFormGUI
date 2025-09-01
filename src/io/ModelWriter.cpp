@@ -128,11 +128,15 @@ void ModelWriter::writeToFile(std::string fname){
           cout << "Part has geom"<<endl;
           jpart["geometry"]["source"] = part->getGeom()->getName();
           jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
-          jpart["geometry"]["representation"] = "BRep";
+          jpart["geometry"]["repres entation"] = "BRep";
           //~ jpart["geometry"]["bounding_box"] = {
               //~ {part->getBBoxMinX(), part->getBBoxMinY(), part->getBBoxMinZ()},
               //~ {part->getBBoxMaxX(), part->getBBoxMaxY(), part->getBBoxMaxZ()}
           //~ };
+      } 
+      if (part->isMeshed()) {
+        std::string meshname = "part_" + std::to_string(part->getId()) + ".msh";
+        jpart["mesh"]["source"] = meshname;
       }
 
       m_json["model"]["parts"].push_back(jpart);

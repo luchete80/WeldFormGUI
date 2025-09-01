@@ -20,6 +20,7 @@
 
 #include "io/ModelWriter.h"
 #include "io/ModelReader.h"
+#include "io/InputWriter.h"
 #include "LSDynaWriter.h"
 
 //#include "SceneView.h"
@@ -292,7 +293,7 @@ void ShowExampleMenuFile(const Editor &editor)
     }
     //If open
     if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
-      InputWriter writer("Input.json",editor.getDomain());
+      //InputWriter writer("Input.json",editor.getDomain());
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
       if (!(getApp().getActiveModel().getHasName()))
@@ -973,6 +974,12 @@ void Editor::drawGui() {
               geo->ExportSTEP();
               
               m_model->addPart(geo);
+              int max_pid = 0;
+              for (int p=0;p<m_model->getPartCount();p++)
+                if (m_model->getPart(p)->getId()>max_pid)
+                  max_pid = m_model->getPart(p)->getId();
+                  
+              //m_model->getPart(m_model->getPartCount())->setId(max_pid);
               create_new_part = true;
               getApp().setActiveModel(m_model);              
 
@@ -1097,14 +1104,16 @@ void Editor::drawGui() {
         viewer->addActor(graphic_mesh->getActor());
 
         getApp().setActiveModel(m_model);
+      
+        
+        /// WHY THIS CRASHES???
+        //~ #ifdef BUILD_PYTHON
+        //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+        //~ #else
+          //~ getApp().getActiveModel();
+        //~ #endif
 
-        #ifdef BUILD_PYTHON
-        PyRun_SimpleString("GetApplication().getActiveModel()");
-        #else
-          getApp().getActiveModel();
-        #endif
-
-        getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)        
+        //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)        
       
       
       }

@@ -32,6 +32,8 @@ public:
     return m_msh;
     }else cout << "MESH POINTER "<<endl;
   }
+  void setId(const int &id){m_id = id;}
+
   Mesh & getRef(){return *m_msh;}
   void setMesh(Mesh* m);
   void generateMesh();
