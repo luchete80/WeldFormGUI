@@ -51,6 +51,8 @@ public:
   Element*  getElem(const int &i){return m_elem[i];}
   Part& getPart(){return *m_part;}
   
+  const int & getDim() const {return m_dim;}
+  
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   Mesh_Type& getType(){return m_type;}
     
@@ -58,6 +60,9 @@ public:
 protected:
   int m_node_count;
   int m_elem_count;
+  
+  int m_dim = 3;
+  
   std::vector <Node*>    m_node; //LOCATED ON MODEL SPACE!!!!
   std::vector <Element*> m_elem; //BUT THIS ARE FROM THE PART!!
   std::vector <int>      elnod_h;

@@ -647,22 +647,26 @@ void Editor::drawGui() {
               
                   std::string meshname = "part_" + std::to_string(i) + ".msh";
                   gmsh::write(meshname.c_str());
-                  //m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
                   
+                  //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
+                  
+                  //~ m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
+                  //~ getApp().setActiveModel(m_model);
+
+                  //~ #ifdef BUILD_PYTHON
+                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+                  //~ #else
+                    //~ getApp().getActiveModel();
+                  //~ #endif
+
+                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+                                
 
                   graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-
-              //~ getApp().setActiveModel(m_model);
-
-              //~ #ifdef BUILD_PYTHON
-              //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-              //~ #else
-                //~ getApp().getActiveModel();
-              //~ #endif
-
-              //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-              
                   graphic_mesh->createVTKPolyData();
+                  
+
+              
                   
                   viewer->addActor(graphic_mesh->getActor());
 

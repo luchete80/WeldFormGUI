@@ -87,7 +87,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
     
     int p, nnodz;
     int nel[3];
-    int m_dim = 2;
+    m_dim = 2;
     
     if (L[2] > 0.0) m_dim = 3;
     cout << "Dimension set to "<<m_dim<<endl;
