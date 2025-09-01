@@ -55,6 +55,7 @@ void GraphicMesh::setPoints(Mesh &mesh){
 
 ///// IF IMPORTING FROM GEOM
 /// ASOCIATE WITH GEOM!
+/*
 int GraphicMesh::createVTKPolyData() {
 
 
@@ -167,11 +168,11 @@ int GraphicMesh::createVTKPolyData() {
       
       for (int n=0;n<nodeCoords.size()/3;n++){
         for (int d=0;d<3;d++){
-          cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+          //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
         }
         nodetagpos[nodeTags[n]]=nc;
         
-        cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
+        //cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
           //test[n][d]= nodeCoords[3*n+d];
           //float coords[3];
           std::array <float,3> coords;
@@ -189,10 +190,10 @@ int GraphicMesh::createVTKPolyData() {
       }
       cout << "Nodes inside nodeTags"<<endl;
       
-      for (auto n: nodeTags){
-        cout << n<<" ";
-      }   
-      cout << endl;
+      //~ for (auto n: nodeTags){
+        //~ cout << n<<" ";
+      //~ }   
+      //~ cout << endl;
       
     if (dim ==1){ 
       
@@ -219,10 +220,10 @@ int GraphicMesh::createVTKPolyData() {
         cout << endl;
         
         cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
-        for(auto ne: elemNodeTags[0])   { 
-          cout << ne << " ";//numElem += tags.size();          
-        }
-        cout << endl;
+        //~ for(auto ne: elemNodeTags[0])   { 
+          //~ cout << ne << " ";//numElem += tags.size();          
+        //~ }
+        //~ cout << endl;
         
         for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
           //std::array <int,3> conn;
@@ -234,7 +235,7 @@ int GraphicMesh::createVTKPolyData() {
             conn[d] = elemNodeTags[0][3*ne+d];
             
             //If defined with gmsh positions 
-            //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];*/
+            //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;
 
           }
           elnodes.push_back(conn);
@@ -243,7 +244,7 @@ int GraphicMesh::createVTKPolyData() {
     }// dim 2
 
 
-    // * List all types of elements making up the mesh of the entity:
+
     for(auto elemType : elemTypes) {
       std::string name;
       int d, order, numv, numpv;
@@ -267,31 +268,22 @@ int GraphicMesh::createVTKPolyData() {
   //IF QUAD
   //https://examples.vtk.org/site/Cxx/GeometricObjects/Quad/
   // Create a quad on the four points
-/*
-  vtkNew<vtkQuad> quad;
-  quad->GetPointIds()->SetId(0, 0);
-  quad->GetPointIds()->SetId(1, 1);
-  quad->GetPointIds()->SetId(2, 2);
-  quad->GetPointIds()->SetId(3, 3);
 
-  // Create a cell array to store the quad in
-  vtkNew<vtkCellArray> quads;
-  quads->InsertNextCell(quad);
-*/
+  //~ vtkNew<vtkQuad> quad;
+  //~ quad->GetPointIds()->SetId(0, 0);
+  //~ quad->GetPointIds()->SetId(1, 1);
+  //~ quad->GetPointIds()->SetId(2, 2);
+  //~ quad->GetPointIds()->SetId(3, 3);
+
+  //~ // Create a cell array to store the quad in
+  //~ vtkNew<vtkCellArray> quads;
+  //~ quads->InsertNextCell(quad);
+
   vtkNew<vtkTriangle> quad;
   
   vtkNew<vtkNamedColors> colors;
 
-  /*
-  std::array<std::array<double, 3>, 8> pts = {{{{0, 0, 0}},
-                                               {{1, 0, 0}},
-                                               {{1, 1, 0}},
-                                               {{0, 1, 0}},
-                                               {{0, 0, 1}},
-                                               {{1, 0, 1}},
-                                               {{1, 1, 1}},
-                                               {{0, 1, 1}}}};
-  */
+
   // The ordering of the corner points on each face.
   std::array<std::array<vtkIdType, 4>, 6> ordering = {{{{0, 3, 2, 1}},
                                                        {{4, 5, 6, 7}},
@@ -370,6 +362,163 @@ int GraphicMesh::createVTKPolyData() {
   cout << "Created polydata from empty"<<endl;
   
   return EXIT_SUCCESS;
+}
+*/
+int GraphicMesh::createVTKPolyData() {
+  std::vector <std::array<float,3>> pts; 
+
+  //std::vector <std::array<int,3>> elnodes; 
+  std::vector <std::vector <int> > elnodes; 
+  std::map< int,int > nodetagpos;
+  
+    // Limpiar estructuras existentes
+    pts.clear();
+    elnodes.clear();
+    nodetagpos.clear();
+
+    // Obtener información del modelo
+    std::string name;
+    gmsh::model::getCurrent(name);
+    std::cout << "Model " << name << " (" << gmsh::model::getDimension() << "D)\n";
+
+    // Obtener todas las entidades del modelo
+    std::vector<std::pair<int, int>> entities;
+    gmsh::model::getEntities(entities);
+
+    // Mapa para relacionar tags de Gmsh con índices de VTK
+    std::map<std::size_t, vtkIdType> gmshToVtkIndex;
+    vtkNew<vtkPoints> points;
+    vtkNew<vtkCellArray> cells;
+    vtkNew<vtkFloatArray> scalars;
+
+    // Primera pasada: recoger todos los puntos y crear mapeo
+    int nodeCount = 0;
+    for (auto &e : entities) {
+        int dim = e.first, tag = e.second;
+        
+        std::vector<std::size_t> nodeTags;
+        std::vector<double> nodeCoords, nodeParams;
+        gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+        
+        for (int i = 0; i < nodeTags.size(); i++) {
+            if (gmshToVtkIndex.find(nodeTags[i]) == gmshToVtkIndex.end()) {
+                std::array<float, 3> coord = {
+                    static_cast<float>(nodeCoords[3 * i]),
+                    static_cast<float>(nodeCoords[3 * i + 1]),
+                    static_cast<float>(nodeCoords[3 * i + 2])
+                };
+                
+                pts.push_back(coord);
+                vtkIdType pointId = points->InsertNextPoint(coord[0], coord[1], coord[2]);
+                gmshToVtkIndex[nodeTags[i]] = pointId;
+                scalars->InsertTuple1(pointId, pointId);
+                nodeCount++;
+            }
+        }
+    }
+
+    std::cout << "Total nodes: " << nodeCount << std::endl;
+
+    // Segunda pasada: procesar elementos
+    for (auto &e : entities) {
+        int dim = e.first, tag = e.second;
+        
+        std::vector<int> elemTypes;
+        std::vector<std::vector<std::size_t>> elemTags, elemNodeTags;
+        gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
+
+        for (int i = 0; i < elemTypes.size(); i++) {
+            int elemType = elemTypes[i];
+            std::string elemName;
+            int elemDim, order, numNodes, numPrimaryNodes;
+            std::vector<double> param;
+            
+            gmsh::model::mesh::getElementProperties(elemType, elemName, elemDim, order, 
+                                                   numNodes, param, numPrimaryNodes);
+            
+            std::cout << "Processing element type: " << elemName << " with " << numNodes << " nodes" << std::endl;
+
+            for (int j = 0; j < elemTags[i].size(); j++) {
+                vtkSmartPointer<vtkCell> cell;
+                std::vector<int> connectivity;
+                
+                // Crear el tipo de celda apropiado
+                if (elemDim == 1 && numNodes == 2) {
+                    cell = vtkSmartPointer<vtkLine>::New();
+                } else if (elemDim == 2 && numNodes == 3) {
+                    cell = vtkSmartPointer<vtkTriangle>::New();
+                } else if (elemDim == 2 && numNodes == 4) {
+                    cell = vtkSmartPointer<vtkQuad>::New();
+                } else {
+                    std::cout << "Unsupported element type: " << elemName << std::endl;
+                    continue;
+                }
+
+                // Establecer la conectividad de la celda
+                for (int k = 0; k < numNodes; k++) {
+                    std::size_t nodeTag = elemNodeTags[i][j * numNodes + k];
+                    if (gmshToVtkIndex.find(nodeTag) != gmshToVtkIndex.end()) {
+                        vtkIdType pointId = gmshToVtkIndex[nodeTag];
+                        cell->GetPointIds()->SetId(k, pointId);
+                        connectivity.push_back(pointId);
+                    } else {
+                        std::cerr << "Error: Node tag " << nodeTag << " not found in mapping!" << std::endl;
+                    }
+                }
+                
+                // Añadir la celda y guardar conectividad
+                cells->InsertNextCell(cell);
+                elnodes.push_back(connectivity);
+            }
+        }
+    }
+
+    std::cout << "Total elements: " << elnodes.size() << std::endl;
+
+    // Crear el polydata
+    mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
+    mesh_pdata->SetPoints(points);
+    
+    // Configurar según la dimensión de los elementos
+    bool has2DElements = false;
+    bool has1DElements = false;
+    
+    for (auto &e : entities) {
+        if (e.first == 2) has2DElements = true;
+        if (e.first == 1) has1DElements = true;
+    }
+    
+    if (has2DElements) {
+        mesh_pdata->SetPolys(cells);
+    }
+    if (has1DElements) {
+        mesh_pdata->SetLines(cells);
+    }
+    
+    mesh_pdata->GetPointData()->SetScalars(scalars);
+
+    // Configurar mapper y actor
+    mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mesh_Mapper->SetInputData(mesh_pdata);
+    mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+    
+    mesh_actor = vtkSmartPointer<vtkActor>::New();
+    mesh_actor->SetMapper(mesh_Mapper);
+    
+    vtkNew<vtkNamedColors> colors;
+    mesh_actor->GetProperty()->SetColor(colors->GetColor3d("Silver").GetData());
+    mesh_actor->GetProperty()->EdgeVisibilityOn();
+    mesh_actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
+    
+    // Solo mostrar wireframe si hay elementos 2D
+    if (has2DElements) {
+        mesh_actor->GetProperty()->SetRepresentationToWireframe();
+    }
+    
+    mesh_actor->Modified();
+
+    std::cout << "VTK PolyData created successfully!" << std::endl;
+    return EXIT_SUCCESS;
 }
 
 int GraphicMesh::createVTKPolyData(Mesh &mesh)
