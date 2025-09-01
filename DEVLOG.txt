@@ -115,3 +115,5 @@
          - This requires to link executable to several OCC files.
 20250706 - Separate geom and adding scripting for it.
 20250831 - Now writing and reading mesh
+-----------------------------------------------------------------------------------------
+20250901 - Fixed graphic (polydata, vtk) mesh generation from geometry, and setting apart gmsh

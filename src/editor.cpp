@@ -650,27 +650,19 @@ void Editor::drawGui() {
                   
                   //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
                   
-                  //~ m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
-                  //~ getApp().setActiveModel(m_model);
-
-                  //~ #ifdef BUILD_PYTHON
-                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-                  //~ #else
-                    //~ getApp().getActiveModel();
-                  //~ #endif
-
-                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-                                
-
-                  graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-                  graphic_mesh->createVTKPolyData();
-                  
-
-              
-                  
-                  viewer->addActor(graphic_mesh->getActor());
-
+                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
+                  cout << "Done mesh gen."<<endl;
                   getApp().setActiveModel(m_model);
+                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
+                                
+                  
+                  
+                  ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
+                  //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+                  //graphic_mesh->createVTKPolyData();
+                  //viewer->addActor(graphic_mesh->getActor());
+
+                  
 
                   //~ #ifdef BUILD_PYTHON
                   //~ PyRun_SimpleString("GetApplication().getActiveModel()");

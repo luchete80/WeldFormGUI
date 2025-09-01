@@ -330,232 +330,459 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 } // ADD BOX LENGTH
 
 
+//~ void Mesh::genFromGmshModel() {
+
+  //~ // Print the model name and dimension:
+  //~ std::string name;
+  //~ gmsh::model::getCurrent(name);
+  //~ std::cout << "Model " << name << " (" << gmsh::model::getDimension()
+            //~ << "D)\n";
+
+  //~ //GET PART!!!
+
+  //~ // Geometrical data is made of elementary model `entities', called `points'
+  //~ // (entities of dimension 0), `curves' (entities of dimension 1), `surfaces'
+  //~ // (entities of dimension 2) and `volumes' (entities of dimension 3). As we
+  //~ // have seen in the other C++ tutorials, elementary model entities are
+  //~ // identified by their dimension and by a `tag': a strictly positive
+  //~ // identification number. Model entities can be either CAD entities (from the
+  //~ // built-in `geo' kernel or from the OpenCASCADE `occ' kernel) or `discrete'
+  //~ // entities (defined by a mesh). `Physical groups' are collections of model
+  //~ // entities and are also identified by their dimension and by a tag.
+
+  //~ // Get all the elementary entities in the model, as a vector of (dimension,
+  //~ // tag) pairs:
+  //~ std::vector<std::pair<int, int> > entities;
+  //~ gmsh::model::getEntities(entities);
+  //~ cout << "Entity count "<<entities.size()<<endl;
+
+
+  //~ std::vector <std::array<float,3>> pts; 
+
+  //~ //std::vector <std::array<int,3>> elnodes; 
+  //~ std::vector <std::vector <int> > elnodes; 
+  //~ std::map< int,int > nodetagpos;
+  //~ int nodecount =0;
+
+  //~ int dim_count[] = {0,0,0,0};
+  //~ for(auto e : entities) {
+    //~ int dim = e.first, tag = e.second;
+    //~ dim_count[dim]++;    
+  //~ }
+  
+  //~ cout << "DIM COUNT "<<endl;
+  //~ cout << dim_count[0]<<", "<< dim_count[1]<<", "<< dim_count[2]<<", "<< dim_count[3]<<", "<<endl;
+  //~ int max_dim=0;
+  //~ for (int i=0;i<4;i++)
+    //~ if (dim_count[i]>0) 
+      //~ max_dim=i;
+  //~ cout << "Max dim "<<max_dim<<endl;
+  
+  //~ for(auto e : entities) {
+
+    //~ int dim = e.first, tag = e.second;
+
+    //~ // Get the mesh nodes for the entity (dim, tag):
+    //~ std::vector<std::size_t> nodeTags;
+    //~ std::vector<double> nodeCoords, nodeParams;
+    //~ gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+
+
+  //~ }
+
+  //~ cout << "Overall node count "<<nodecount<<endl;
+  
+  //~ int nc=0;
+  //~ pts.resize(nodecount+1);
+
+  
+  //~ gmsh::model::getEntities(entities);
+  //~ for(auto e : entities) {
+    //~ cout<<" ---- \n"<<endl;
+    //~ // Dimension and tag of the entity:
+    //~ int dim = e.first, tag = e.second;
+
+
+    //~ // Get the mesh nodes for the entity (dim, tag):
+    //~ std::vector<std::size_t> nodeTags;
+    //~ std::vector<double> nodeCoords, nodeParams;
+    //~ gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+    //~ //cout << "Node coords size "<<endl;
+    //~ //cout << "Node Coords "<<nodeCoords[0]<<", " << nodeCoords[1]<<", "<<nodeCoords[2]<<endl;
+
+    //~ // Get the mesh elements for the entity (dim, tag):
+    //~ std::vector<int> elemTypes;
+    //~ std::vector<std::vector<std::size_t> > elemTags, elemNodeTags;
+    //~ gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
+
+    
+    //~ // * Number of mesh nodes and elements:
+    //~ int numElem = 0;
+    //~ cout << "Element tags size "<<elemTags.size()<<endl;
+    //~ for(auto &tags : elemTags) numElem += tags.size();
+    
+      //~ // std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
+              //~ // << " elements\n";
+      //~ // cout << "Node coords size "<<nodeCoords.size()<<endl; 
+      
+      //~ for (int n=0;n<nodeCoords.size()/3;n++){
+        //~ for (int d=0;d<3;d++){
+          //~ //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
+        //~ }
+        //~ nodetagpos[nodeTags[n]]=nc;
+        
+        //~ // cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
+          //~ //test[n][d]= nodeCoords[3*n+d];
+          //~ //float coords[3];
+          //~ std::array <float,3> coords;
+          //~ for (int d=0;d<3;d++) coords[d] = nodeCoords[3*n+d];
+          //~ // IF REAL POSITIONS
+          //~ //pts.push_back(coords);
+
+          //~ if (nodeTags[n]<nodecount)
+            //~ pts[nodeTags[n]]=coords;
+          //~ else
+            //~ cout << "ERROR IN NODE "<<nodeTags[n]<<endl;
+
+          //~ nc++;
+        //~ //}
+      //~ }
+      //~ //cout << "Nodes inside nodeTags"<<endl;
+      
+      //~ for (auto n: nodeTags){
+        //~ cout << n<<" ";
+      //~ }   
+      //~ cout << endl;
+
+    //~ m_node_count = pts.size();
+        
+    //~ if (dim ==1){ 
+      
+      //~ cout << "Generating graphic mesh 1D "<<endl;
+        //~ for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
+          //~ std::vector <int> conn; conn.resize(2);
+          //~ //cout << "Local "  << elemNodeTags[0][2*ne] << ", "<<elemNodeTags[0][2*ne+1] <<endl;
+          //~ //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]] << endl;
+          //~ for (int d=0;d<2;d++) {
+            //~ conn[d] = elemNodeTags[0][2*ne+d];
+            
+            //~ //If defined with gmsh positions 
+            //~ //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];
+
+          //~ }
+          //~ elnodes.push_back(conn);
+        //~ }      
+        
+      //~ }else if (dim ==2){
+      //~ for(auto &tags : elemTags){ 
+        //~ //cout << "Element inside tags "<<endl;
+        //~ //for (int t=0;t<tags.size();t++)
+        //~ //  cout <<tags[t]<<" ";
+        //~ //cout << endl;
+        
+        //~ //cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
+        //~ //for(auto ne: elemNodeTags[0])   { 
+          //~ //cout << ne << " ";//numElem += tags.size();          
+        //~ //}
+        //~ //cout << endl;
+        
+        //~ for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
+          //~ //std::array <int,3> conn;
+          //~ std::vector<int> conn;
+          //~ conn.resize(3);
+          //~ //cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
+          //~ //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
+          //~ for (int d=0;d<3;d++) {
+            //~ conn[d] = elemNodeTags[0][3*ne+d];
+            
+            //~ //If defined with gmsh positions 
+            //~ //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];*/
+
+          //~ }
+          //~ elnodes.push_back(conn);
+        //~ }
+      //~ }//elem tags
+    //~ }// dim 2
+
+
+    //~ // * List all types of elements making up the mesh of the entity:
+    //~ for(auto elemType : elemTypes) {
+      //~ std::string name;
+      //~ int d, order, numv, numpv;
+      //~ std::vector<double> param;
+      //~ gmsh::model::mesh::getElementProperties(elemType, name, d, order, numv,
+                                              //~ param, numpv);
+      //~ //std::cout << " - Element type: " << name << ", order " << order << "\n";
+      //~ //std::cout << "   with " << numv << " nodes in param coord: (";
+      //~ //for(auto p : param) std::cout << p << " ";
+      //~ //std::cout << ")\n";
+    //~ }
+    //~ cout << "elem tag size: "<<elemTags.size()<<", element nodetag size "<<elemNodeTags.size()<<endl; 
+    //~ //for (auto enode : elemNodeTags[0]){
+      //~ //cout << elemNodeTags[0][enode]<<endl;}
+        
+    
+  //~ }//entities
+  
+  //~ cout << "Element Nodes size "<<elnodes.size()<<endl;
+  
+  //~ for (int p=0;p<pts.size();p++)
+    //~ m_node.push_back(new Node(pts[p][0],pts[p][1],pts[p][2],p));
+
+  //~ //TEMPLATIZE
+  //~ for (int e=0;e<elnodes.size();e++){
+    //~ int ne = elnodes[e].size();
+    //~ if (ne==3){
+      //~ //Element *elem = new ;
+      //~ //vtkNew<vtkTriangle> tri;
+      //~ /*
+      //~ for (int nn=0;nn<elnodes[e].size();nn++) {
+        //~ tri->GetPointIds()->SetId(nn, elnodes[e][nn]);
+        //~ cout <<elnodes[e][nn]<<", ";
+      //~ }
+      //~ cout <<endl;
+      //~ polys->InsertNextCell(tri);
+      //~ */
+    //~ } else if (ne ==2){
+      //~ /*
+      //~ vtkNew<vtkLine> tri;
+      //~ for (int nn=0;nn<elnodes[e].size();nn++) {
+        //~ tri->GetPointIds()->SetId(nn, elnodes[e][nn]);
+        //~ cout <<elnodes[e][nn]<<", ";
+      //~ }
+      //~ cout <<endl;
+      //~ //polys->InsertNextCell(tri);      
+      //~ */
+      //~ }
+  //~ }
+  
+  
+//~ }
+
+
 void Mesh::genFromGmshModel() {
+    // Limpiar estructuras existentes
+    m_node.clear();
+    m_elem.clear();
 
-  // Print the model name and dimension:
-  std::string name;
-  gmsh::model::getCurrent(name);
-  std::cout << "Model " << name << " (" << gmsh::model::getDimension()
-            << "D)\n";
+    // Obtener información del modelo
+    std::string name;
+    gmsh::model::getCurrent(name);
+    std::cout << "Model " << name << " (" << gmsh::model::getDimension() << "D)\n";
 
-  //GET PART!!!
+    // Obtener todas las entidades del modelo
+    std::vector<std::pair<int, int>> entities;
+    gmsh::model::getEntities(entities);
+    std::cout << "Entity count " << entities.size() << std::endl;
 
-  // Geometrical data is made of elementary model `entities', called `points'
-  // (entities of dimension 0), `curves' (entities of dimension 1), `surfaces'
-  // (entities of dimension 2) and `volumes' (entities of dimension 3). As we
-  // have seen in the other C++ tutorials, elementary model entities are
-  // identified by their dimension and by a `tag': a strictly positive
-  // identification number. Model entities can be either CAD entities (from the
-  // built-in `geo' kernel or from the OpenCASCADE `occ' kernel) or `discrete'
-  // entities (defined by a mesh). `Physical groups' are collections of model
-  // entities and are also identified by their dimension and by a tag.
-
-  // Get all the elementary entities in the model, as a vector of (dimension,
-  // tag) pairs:
-  std::vector<std::pair<int, int> > entities;
-  gmsh::model::getEntities(entities);
-  cout << "Entity count "<<entities.size()<<endl;
-
-
-  std::vector <std::array<float,3>> pts; 
-
-  //std::vector <std::array<int,3>> elnodes; 
-  std::vector <std::vector <int> > elnodes; 
-  std::map< int,int > nodetagpos;
-  int nodecount =0;
-
-  int dim_count[] = {0,0,0,0};
-  for(auto e : entities) {
-    int dim = e.first, tag = e.second;
-    dim_count[dim]++;    
-  }
-  
-  cout << "DIM COUNT "<<endl;
-  cout << dim_count[0]<<", "<< dim_count[1]<<", "<< dim_count[2]<<", "<< dim_count[3]<<", "<<endl;
-  int max_dim=0;
-  for (int i=0;i<4;i++)
-    if (dim_count[i]>0) 
-      max_dim=i;
-  cout << "Max dim "<<max_dim<<endl;
-  
-  for(auto e : entities) {
-
-    int dim = e.first, tag = e.second;
-
-    // Get the mesh nodes for the entity (dim, tag):
-    std::vector<std::size_t> nodeTags;
-    std::vector<double> nodeCoords, nodeParams;
-    gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
-
-
-  }
-
-  cout << "Overall node count "<<nodecount<<endl;
-  
-  int nc=0;
-  pts.resize(nodecount+1);
-
-  
-  gmsh::model::getEntities(entities);
-  for(auto e : entities) {
-    cout<<" ---- \n"<<endl;
-    // Dimension and tag of the entity:
-    int dim = e.first, tag = e.second;
-
-
-    // Get the mesh nodes for the entity (dim, tag):
-    std::vector<std::size_t> nodeTags;
-    std::vector<double> nodeCoords, nodeParams;
-    gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
-    //cout << "Node coords size "<<endl;
-    //cout << "Node Coords "<<nodeCoords[0]<<", " << nodeCoords[1]<<", "<<nodeCoords[2]<<endl;
-
-    // Get the mesh elements for the entity (dim, tag):
-    std::vector<int> elemTypes;
-    std::vector<std::vector<std::size_t> > elemTags, elemNodeTags;
-    gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
-
-    
-    // * Number of mesh nodes and elements:
-    int numElem = 0;
-    cout << "Element tags size "<<elemTags.size()<<endl;
-    for(auto &tags : elemTags) numElem += tags.size();
-    
-      // std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
-              // << " elements\n";
-      // cout << "Node coords size "<<nodeCoords.size()<<endl; 
-      
-      for (int n=0;n<nodeCoords.size()/3;n++){
-        for (int d=0;d<3;d++){
-          //cout << "Node "<<n<<": "<<nodeCoords[3*n+d]<<", "<<endl;
-        }
-        nodetagpos[nodeTags[n]]=nc;
-        
-        // cout << "Node pos local"<<n << " and global "<<nc<<" has tag "<<nodeTags[n]<<endl;
-          //test[n][d]= nodeCoords[3*n+d];
-          //float coords[3];
-          std::array <float,3> coords;
-          for (int d=0;d<3;d++) coords[d] = nodeCoords[3*n+d];
-          // IF REAL POSITIONS
-          //pts.push_back(coords);
-
-          if (nodeTags[n]<nodecount)
-            pts[nodeTags[n]]=coords;
-          else
-            cout << "ERROR IN NODE "<<nodeTags[n]<<endl;
-
-          nc++;
-        //}
-      }
-      //cout << "Nodes inside nodeTags"<<endl;
-      
-      for (auto n: nodeTags){
-        cout << n<<" ";
-      }   
-      cout << endl;
-
-    m_node_count = pts.size();
-        
-    if (dim ==1){ 
-      
-      cout << "Generating graphic mesh 1D "<<endl;
-        for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
-          std::vector <int> conn; conn.resize(2);
-          //cout << "Local "  << elemNodeTags[0][2*ne] << ", "<<elemNodeTags[0][2*ne+1] <<endl;
-          //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]] << endl;
-          for (int d=0;d<2;d++) {
-            conn[d] = elemNodeTags[0][2*ne+d];
-            
-            //If defined with gmsh positions 
-            //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];
-
-          }
-          elnodes.push_back(conn);
-        }      
-        
-      }else if (dim ==2){
-      for(auto &tags : elemTags){ 
-        //cout << "Element inside tags "<<endl;
-        //for (int t=0;t<tags.size();t++)
-        //  cout <<tags[t]<<" ";
-        //cout << endl;
-        
-        //cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
-        //for(auto ne: elemNodeTags[0])   { 
-          //cout << ne << " ";//numElem += tags.size();          
-        //}
-        //cout << endl;
-        
-        for(int ne=0;ne<elemNodeTags[0].size()/3;ne++)   { 
-          //std::array <int,3> conn;
-          std::vector<int> conn;
-          conn.resize(3);
-          //cout << "Local "  << elemNodeTags[0][3*ne] << ", "<<elemNodeTags[0][3*ne+1] << ", "<<elemNodeTags[0][3*ne+2] <<endl;
-          //cout << "Global " << nodetagpos[elemNodeTags[0][3*ne]] <<", "<< nodetagpos[elemNodeTags[0][3*ne+1]]<<", " << nodetagpos[elemNodeTags[0][3*ne+2]] <<endl;
-          for (int d=0;d<3;d++) {
-            conn[d] = elemNodeTags[0][3*ne+d];
-            
-            //If defined with gmsh positions 
-            //conn[d] = nodetagpos[elemNodeTags[0][3*ne+d]] ;/*elemNodeTags[0][3*ne+d];*/
-
-          }
-          elnodes.push_back(conn);
-        }
-      }//elem tags
-    }// dim 2
-
-
-    // * List all types of elements making up the mesh of the entity:
-    for(auto elemType : elemTypes) {
-      std::string name;
-      int d, order, numv, numpv;
-      std::vector<double> param;
-      gmsh::model::mesh::getElementProperties(elemType, name, d, order, numv,
-                                              param, numpv);
-      //std::cout << " - Element type: " << name << ", order " << order << "\n";
-      //std::cout << "   with " << numv << " nodes in param coord: (";
-      //for(auto p : param) std::cout << p << " ";
-      //std::cout << ")\n";
+    // Contar dimensiones presentes
+    int dim_count[] = {0, 0, 0, 0};
+    for(auto e : entities) {
+        int dim = e.first;
+        if(dim >= 0 && dim < 4) dim_count[dim]++;
     }
-    cout << "elem tag size: "<<elemTags.size()<<", element nodetag size "<<elemNodeTags.size()<<endl; 
-    //for (auto enode : elemNodeTags[0]){
-      //cout << elemNodeTags[0][enode]<<endl;}
-        
     
-  }//entities
-  
-  cout << "Element Nodes size "<<elnodes.size()<<endl;
-  
-  for (int p=0;p<pts.size();p++)
-    m_node.push_back(new Node(pts[p][0],pts[p][1],pts[p][2],p));
+    std::cout << "DIM COUNT: " << dim_count[0] << ", " << dim_count[1] << ", " 
+              << dim_count[2] << ", " << dim_count[3] << std::endl;
+    
+    int max_dim = 0;
+    for(int i = 0; i < 4; i++) {
+        if(dim_count[i] > 0) max_dim = i;
+    }
+    std::cout << "Max dim " << max_dim << std::endl;
 
-  //TEMPLATIZE
-  for (int e=0;e<elnodes.size();e++){
-    int ne = elnodes[e].size();
-    if (ne==3){
-      //Element *elem = new ;
-      //vtkNew<vtkTriangle> tri;
-      /*
-      for (int nn=0;nn<elnodes[e].size();nn++) {
-        tri->GetPointIds()->SetId(nn, elnodes[e][nn]);
-        cout <<elnodes[e][nn]<<", ";
-      }
-      cout <<endl;
-      polys->InsertNextCell(tri);
-      */
-    } else if (ne ==2){
-      /*
-      vtkNew<vtkLine> tri;
-      for (int nn=0;nn<elnodes[e].size();nn++) {
-        tri->GetPointIds()->SetId(nn, elnodes[e][nn]);
-        cout <<elnodes[e][nn]<<", ";
-      }
-      cout <<endl;
-      //polys->InsertNextCell(tri);      
-      */
-      }
-  }
-  
-  
+    // Mapa para relacionar tags de Gmsh con índices locales
+    std::map<std::size_t, int> gmshToLocalIndex;
+    std::vector<std::array<float, 3>> pts;
+    std::vector<std::vector<int>> elnodes;
+
+    // Primera pasada: recoger todos los puntos
+    int nodeCount = 0;
+    for(auto &e : entities) {
+        int dim = e.first, tag = e.second;
+        
+        std::vector<std::size_t> nodeTags;
+        std::vector<double> nodeCoords, nodeParams;
+        gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams, dim, tag);
+        
+        for(std::size_t i = 0; i < nodeTags.size(); i++) {
+            if(gmshToLocalIndex.find(nodeTags[i]) == gmshToLocalIndex.end()) {
+                std::array<float, 3> coord = {
+                    static_cast<float>(nodeCoords[3 * i]),
+                    static_cast<float>(nodeCoords[3 * i + 1]),
+                    static_cast<float>(nodeCoords[3 * i + 2])
+                };
+                
+                pts.push_back(coord);
+                gmshToLocalIndex[nodeTags[i]] = nodeCount;
+                nodeCount++;
+            }
+        }
+    }
+
+    std::cout << "Total nodes: " << nodeCount << std::endl;
+
+    // Segunda pasada: procesar elementos
+    int elementCount = 0;
+    for(auto &e : entities) {
+        int dim = e.first, tag = e.second;
+        
+        std::vector<int> elemTypes;
+        std::vector<std::vector<std::size_t>> elemTags, elemNodeTags;
+        gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags, dim, tag);
+
+        for(std::size_t i = 0; i < elemTypes.size(); i++) {
+            int elemType = elemTypes[i];
+            std::string elemName;
+            int elemDim, order, numNodes, numPrimaryNodes;
+            std::vector<double> param;
+            
+            gmsh::model::mesh::getElementProperties(elemType, elemName, elemDim, order, 
+                                                   numNodes, param, numPrimaryNodes);
+            
+            std::cout << "Processing element type: " << elemName << " with " << numNodes << " nodes" << std::endl;
+
+            for(std::size_t j = 0; j < elemTags[i].size(); j++) {
+                std::vector<int> connectivity;
+                
+                // Establecer la conectividad de la celda
+                for(int k = 0; k < numNodes; k++) {
+                    std::size_t nodeTag = elemNodeTags[i][j * numNodes + k];
+                    if(gmshToLocalIndex.find(nodeTag) != gmshToLocalIndex.end()) {
+                        int localIndex = gmshToLocalIndex[nodeTag];
+                        connectivity.push_back(localIndex);
+                    } else {
+                        std::cerr << "Error: Node tag " << nodeTag << " not found in mapping!" << std::endl;
+                    }
+                }
+                
+                // Guardar conectividad
+                elnodes.push_back(connectivity);
+                elementCount++;
+            }
+        }
+    }
+
+    std::cout << "Total elements: " << elementCount << std::endl;
+
+    // Crear nodos
+    m_node_count = pts.size();
+    for(std::size_t p = 0; p < pts.size(); p++) {
+        m_node.push_back(new Node(pts[p][0], pts[p][1], pts[p][2], p));
+    }
+
+    // Crear elementos - INSERCIÓN SEGÚN EL TIPO DE ELEMENTO
+    for(std::size_t e = 0; e < elnodes.size(); e++) {
+        int numNodes = elnodes[e].size();
+        std::vector<Node*> elementNodes;
+        
+        // Crear vector de nodos para el elemento
+        for(int nodeIndex : elnodes[e]) {
+            if(nodeIndex >= 0 && nodeIndex < m_node.size()) {
+                elementNodes.push_back(m_node[nodeIndex]);
+            } else {
+                std::cerr << "Error: Invalid node index " << nodeIndex << " in element " << e << std::endl;
+            }
+        }
+
+        //~ // Crear el elemento según el número de nodos
+        //~ if(numNodes == 2) {
+            //~ // Elemento 1D (Línea)
+            //~ m_elem.push_back(new Line(elementNodes));
+        //~ } else if(numNodes == 3) {
+            //~ // Elemento 2D (Triángulo)
+            //~ m_elem.push_back(new Tria(elementNodes));
+        //~ } else if(numNodes == 4) {
+            //~ // Podría ser Quad 2D o Tetraedro 3D
+            //~ // Verificamos la dimensión máxima de la malla
+            //~ if(max_dim == 2) {
+                //~ m_elem.push_back(new Quad(elementNodes));
+            //~ } else {
+                //~ //m_element.push_back(new Tetrahedron(elementNodes));
+            //~ }
+        //~ } else if(numNodes == 8) {
+            //~ // Hexaedro 3D
+            //~ //m_element.push_back(new Hexahedron(elementNodes));
+        //~ } else if(numNodes == 6) {
+            //~ // Prisma triangular 3D
+            //~ //m_element.push_back(new Wedge(elementNodes));
+        //~ } else if(numNodes == 5) {
+            //~ // Pirámide 3D
+            //~ //m_element.push_back(new Pyramid(elementNodes));
+        //~ } else {
+            //~ std::cout << "Unsupported element with " << numNodes << " nodes" << std::endl;
+            //~ // Crear elemento genérico
+        
+        
+            m_elem.push_back(new Element(elementNodes));
+        
+        //}
+    }
+
+    // Establecer la dimensión de la malla
+    m_dim = max_dim;
+    
+    m_elem_count  =m_elem.size();
+
+    std::cout << "Mesh created successfully with " << m_node.size() 
+              << " nodes and " << m_elem.size() << " elements" << std::endl;
+    
+    //~ // Si es una malla estructurada 2D, podemos organizar los elementos como en tu ejemplo
+    //~ if(m_dim == 2 && isStructuredMesh(elnodes)) {
+        //~ organizeStructuredMesh2D();
+    //~ } else if(m_dim == 3 && isStructuredMesh(elnodes)) {
+        //~ organizeStructuredMesh3D();
+    //~ }
 }
 
+//~ // Función auxiliar para verificar si la malla es estructurada
+//~ bool Mesh::isStructuredMesh(const std::vector<std::vector<int>>& elnodes) {
+    //~ // Implementar lógica para detectar malla estructurada
+    //~ // Por ahora, retornamos false para mallas no estructuradas
+    //~ return false;
+//~ }
+
+//~ // Función para organizar malla estructurada 2D (similar a tu ejemplo)
+//~ void Mesh::organizeStructuredMesh2D() {
+    //~ // Implementación similar a tu ejemplo de Quad
+    //~ // int nel[2] = {num_elements_x, num_elements_y};
+    //~ // std::vector<Node*> n(4);
+    
+    //~ // for(int ey = 0; ey < nel[1]; ey++) {
+    //~ //     for(int ex = 0; ex < nel[0]; ex++) {
+    //~ //         n[0] = m_node[(nel[0]+1)*ey + ex];
+    //~ //         n[1] = m_node[(nel[0]+1)*ey + ex+1];
+    //~ //         n[2] = m_node[(nel[0]+1)*(ey+1) + ex+1];
+    //~ //         n[3] = m_node[(nel[0]+1)*(ey+1) + ex];
+    //~ //         m_element.push_back(new Quad(n));
+    //~ //     }
+    //~ // }
+//~ }
+
+//~ // Función para organizar malla estructurada 3D (similar a tu ejemplo)
+//~ void Mesh::organizeStructuredMesh3D() {
+    //~ // Implementación similar a tu ejemplo de Hexahedron
+    //~ // int nel[3] = {num_elements_x, num_elements_y, num_elements_z};
+    //~ // std::vector<Node*> n(8);
+    //~ // int nnodz = (nel[0]+1)*(nel[1]+1);
+    
+    //~ // for(int ez = 0; ez < nel[2]; ez++) {
+    //~ //     for(int ey = 0; ey < nel[1]; ey++) {
+    //~ //         for(int ex = 0; ex < nel[0]; ex++) {
+    //~ //             int nb1 = nnodz*ez + (nel[0]+1)*ey + ex;
+    //~ //             int nb2 = nnodz*ez + (nel[0]+1)*(ey+1) + ex;
+                
+    //~ //             n[0] = m_node[nb1];
+    //~ //             n[1] = m_node[nb1+1];
+    //~ //             n[2] = m_node[nb2+1];
+    //~ //             n[3] = m_node[nb2];
+    //~ //             n[4] = m_node[nb1 + nnodz];
+    //~ //             n[5] = m_node[nb1 + nnodz + 1];
+    //~ //             n[6] = m_node[nb2 + nnodz + 1];
+    //~ //             n[7] = m_node[nb2 + nnodz];
+                
+    //~ //             m_element.push_back(new Hexahedron(n));
+    //~ //         }
+    //~ //     }
+    //~ // }
+//~ }

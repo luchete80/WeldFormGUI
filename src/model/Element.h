@@ -38,6 +38,22 @@ protected:
   
 };
 
+class Tria:
+public Element {
+public:
+  void init(){
+        m_nodecount = 2;m_node.resize(2);
+  }
+  Tria(){
+    init();}
+  Tria(std::vector<Node*>nv){
+    initValues(nv);   
+  }
+  //Asumme existence of ech node
+  Tria(Node *n0, Node *n1, Node *n2); //Good fo python binding 
+
+};
+
 class Quad:
 public Element {
 public:
@@ -51,6 +67,22 @@ public:
   }
   //Asumme existence of ech node
   Quad(Node *n0, Node *n1, Node *n2, Node *n3); //Good fo python binding 
+
+};
+
+class Line:
+public Element {
+public:
+  void init(){
+        m_nodecount = 2;m_node.resize(2);
+  }
+  Line(){
+    init();}
+  Line(std::vector<Node*>nv){
+    initValues(nv);   
+  }
+  //Asumme existence of ech node
+  Line(Node *n0, Node *n1); //Good fo python binding 
 
 };
 
