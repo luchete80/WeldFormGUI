@@ -21,6 +21,7 @@ class Editor;
 class LSDynaWriter;
 class GraphicMesh;
 class ModelWriter;
+class InputWriter;
 
 enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
@@ -29,6 +30,7 @@ class Model {
   friend LSDynaWriter;
   friend GraphicMesh;
   friend ModelWriter;
+  friend InputWriter;
 public:
   Model(){part_count=0;
     m_hasname = false;

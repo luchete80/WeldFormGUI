@@ -293,7 +293,8 @@ void ShowExampleMenuFile(const Editor &editor)
     }
     //If open
     if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
-      //InputWriter writer("Input.json",editor.getDomain());
+      InputWriter writer( &getApp().getActiveModel() );
+      writer.writeToFile("Input.json");
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
       if (!(getApp().getActiveModel().getHasName()))
@@ -654,7 +655,9 @@ void Editor::drawGui() {
                   cout << "Done mesh gen."<<endl;
                   getApp().setActiveModel(m_model);
                   getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
-                                
+                  
+                  std::string kname = "part_" + std::to_string(i) + ".k";
+                  m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
                   
                   
                   ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
@@ -950,10 +953,15 @@ void Editor::drawGui() {
               m_fem_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
               cout << size[2]<<endl;
               cout << "Adding part" <<endl;
-              m_model->addPart(new Part(m_fem_msh));
+              Part *p = new Part(m_fem_msh);
+              m_model->addPart(p);
               cout << "set upate"<<endl;
               getApp().setActiveModel(m_model);
               getApp().Update(); //Create Graphic Mesh
+              
+              p->getMesh()->exportToLSDYNA("test.k");
+                                
+              
               cout << "Done"<<endl;
               //CHANGE TO MESH CONSTRUCTOR
               //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL

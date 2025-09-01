@@ -5,6 +5,7 @@ include_directories("../model")
 include_directories("../geom")
 set(IO_SRCS         "ModelWriter.cpp"
                     "ModelReader.cpp"
+                    "InputWriter.cpp"
 )
 
 ADD_LIBRARY(io ${IO_SRCS})

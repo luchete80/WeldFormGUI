@@ -14,6 +14,8 @@ public:
   InputWriter(const char *);
   Model* getModel(){return m_model;}
   bool readFromFile(const std::string& fname) ;
+
+  void writeToFile(std::string fname);
   
   ~InputWriter(){delete m_model;}  
 

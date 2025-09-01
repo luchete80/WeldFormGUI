@@ -55,6 +55,9 @@ public:
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   Mesh_Type& getType(){return m_type;}
+  
+  
+  bool exportToLSDYNA(const std::string & filename);
     
   //vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:

@@ -482,7 +482,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
         
         //~ //cout << endl<<"Element nodes size"<< elemNodeTags.size()<<", "<<elemNodeTags[0].size()<<endl;
         //~ //for(auto ne: elemNodeTags[0])   { 
-          //~ //cout << ne << " ";//numElem += tags.size();          
+          //~ //cout << ne ;//numElem += tags.size();          
         //~ //}
         //~ //cout << endl;
         
@@ -514,7 +514,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
                                               //~ param, numpv);
       //~ //std::cout << " - Element type: " << name << ", order " << order << "\n";
       //~ //std::cout << "   with " << numv << " nodes in param coord: (";
-      //~ //for(auto p : param) std::cout << p << " ";
+      //~ //for(auto p : param) std::cout << p ;
       //~ //std::cout << ")\n";
     //~ }
     //~ cout << "elem tag size: "<<elemTags.size()<<", element nodetag size "<<elemNodeTags.size()<<endl; 
@@ -698,17 +698,17 @@ void Mesh::genFromGmshModel() {
             //~ if(max_dim == 2) {
                 //~ m_elem.push_back(new Quad(elementNodes));
             //~ } else {
-                //~ //m_element.push_back(new Tetrahedron(elementNodes));
+                //~ //m_elem.push_back(new Tetrahedron(elementNodes));
             //~ }
         //~ } else if(numNodes == 8) {
             //~ // Hexaedro 3D
-            //~ //m_element.push_back(new Hexahedron(elementNodes));
+            //~ //m_elem.push_back(new Hexahedron(elementNodes));
         //~ } else if(numNodes == 6) {
             //~ // Prisma triangular 3D
-            //~ //m_element.push_back(new Wedge(elementNodes));
+            //~ //m_elem.push_back(new Wedge(elementNodes));
         //~ } else if(numNodes == 5) {
             //~ // Pirámide 3D
-            //~ //m_element.push_back(new Pyramid(elementNodes));
+            //~ //m_elem.push_back(new Pyramid(elementNodes));
         //~ } else {
             //~ std::cout << "Unsupported element with " << numNodes << " nodes" << std::endl;
             //~ // Crear elemento genérico
@@ -745,7 +745,7 @@ void Mesh::genFromGmshModel() {
 //~ // Función para organizar malla estructurada 2D (similar a tu ejemplo)
 //~ void Mesh::organizeStructuredMesh2D() {
     //~ // Implementación similar a tu ejemplo de Quad
-    //~ // int nel[2] = {num_elements_x, num_elements_y};
+    //~ // int nel[2] = {num_elems_x, num_elems_y};
     //~ // std::vector<Node*> n(4);
     
     //~ // for(int ey = 0; ey < nel[1]; ey++) {
@@ -754,7 +754,7 @@ void Mesh::genFromGmshModel() {
     //~ //         n[1] = m_node[(nel[0]+1)*ey + ex+1];
     //~ //         n[2] = m_node[(nel[0]+1)*(ey+1) + ex+1];
     //~ //         n[3] = m_node[(nel[0]+1)*(ey+1) + ex];
-    //~ //         m_element.push_back(new Quad(n));
+    //~ //         m_elem.push_back(new Quad(n));
     //~ //     }
     //~ // }
 //~ }
@@ -762,7 +762,7 @@ void Mesh::genFromGmshModel() {
 //~ // Función para organizar malla estructurada 3D (similar a tu ejemplo)
 //~ void Mesh::organizeStructuredMesh3D() {
     //~ // Implementación similar a tu ejemplo de Hexahedron
-    //~ // int nel[3] = {num_elements_x, num_elements_y, num_elements_z};
+    //~ // int nel[3] = {num_elems_x, num_elems_y, num_elems_z};
     //~ // std::vector<Node*> n(8);
     //~ // int nnodz = (nel[0]+1)*(nel[1]+1);
     
@@ -781,8 +781,224 @@ void Mesh::genFromGmshModel() {
     //~ //             n[6] = m_node[nb2 + nnodz + 1];
     //~ //             n[7] = m_node[nb2 + nnodz];
                 
-    //~ //             m_element.push_back(new Hexahedron(n));
+    //~ //             m_elem.push_back(new Hexahedron(n));
     //~ //         }
     //~ //     }
     //~ // }
 //~ }
+
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+
+bool Mesh::exportToLSDYNA(const std::string& filename) {
+    std::ofstream outfile(filename);
+    if (!outfile.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << " for writing" << std::endl;
+        return false;
+    }
+
+    // Escribir encabezado del archivo
+    outfile << "*KEYWORD" << std::endl;
+    outfile << "*TITLE" << std::endl;
+    outfile << "LS-DYNA Export from Mesh Class" << std::endl;
+    outfile << "Created by Mesh::exportToLSDYNA()" << std::endl;
+    outfile << "$# END OF HEADER" << std::endl;
+    
+
+    // Escribir nodos
+    outfile << "*NODE" << std::endl;
+    outfile << "$#   nid               x               y               z      tc      rc" << std::endl;
+    
+    for (size_t i = 0; i < m_node.size(); i++) {
+        Node* node = m_node[i];
+        //const std::array<float, 3>& pos = node->getPos();
+        Vector3f pos = node->getPos();
+        outfile << std::setw(8) << i + 1   // ID del nodo (1-based)
+                << std::scientific << std::setprecision(10)
+                << std::setw(16) << pos.x  
+                << std::setw(16) << pos.y  
+                << std::setw(16) << pos.z  
+                << std::setw(6) << 0       // tc (default 0)
+                << std::setw(6) << 0       // rc (default 0)
+                << std::endl;
+    }
+    outfile << "$# END OF NODES" << std::endl;
+    
+
+    // Escribir elementos
+    int shellElementCount = 0;
+    int solidElementCount = 0;
+
+    for (size_t i = 0; i < m_elem.size(); i++) {
+        Element* elem = m_elem[i];
+        int numNodes = elem->getNodeCount();
+
+        // Determinar el tipo de elemento LS-DYNA
+        int elemType = 0;
+        //~ std::string elemName;
+
+        //~ if (numNodes == 2) {
+            //~ // Elemento barra (BEAM)
+            //~ elemType = 1;
+            //~ elemName = "BEAM";
+        //~ } else if (numNodes == 3) {
+            //~ // Shell triangular (SHELL)
+            //~ elemType = 2;
+            //~ elemName = "SHELL";
+            //~ shellElementCount++;
+        //~ } else if (numNodes == 4) {
+            //~ if (m_dim == 2) {
+                //~ // Shell cuadrangular (SHELL)
+                //~ elemType = 2;
+                //~ elemName = "SHELL";
+                //~ shellElementCount++;
+            //~ } else {
+                //~ // Tetraedro (SOLID)
+                //~ elemType = 4;
+                //~ elemName = "SOLID";
+                //~ solidElementCount++;
+            //~ }
+        //~ } else if (numNodes == 8) {
+            //~ // Hexaedro (SOLID)
+            //~ elemType = 1; // SOLID tipo 1 en LS-DYNA
+            //~ elemName = "SOLID";
+            //~ solidElementCount++;
+        //~ }
+
+        // Escribir encabezado de sección de elementos si es necesario
+        if (i == 0) {
+            cout << "ELEM NAME" <<endl;
+            if (m_dim == 2)
+            //outfile << "*ELEMENT_" << elemName << std::endl;
+            outfile << "*ELEMENT_SHELL" << std::endl;
+            else
+            //outfile << "*ELEMENT_" << elemName << std::endl;
+            outfile << "*ELEMENT_SOLID" << std::endl;
+            outfile << "$#   eid     pid      n1      n2      n3      n4      n5      n6      n7      n8" << std::endl;
+        }
+
+        
+        bool out = false;
+        if (m_dim == 2){
+          if (numNodes== 3 || numNodes == 4)
+            out = true;
+          } else if (m_dim == 3){
+            
+            if (numNodes==4)
+            out = false;
+        }
+        if (out){
+          // Escribir elemento
+          outfile << std::setw(8) << i + 1   // ID del elemento (1-based)
+                  << std::setw(8) << 1 ;     // PID (Part ID) - default 1          
+          // Escribir conectividad de nodos
+          for (int j = 0; j < std::min(numNodes, 8); j++) {
+              int nodeId = elem->getNodeId(j)+1;
+              outfile << std::setw(8) << nodeId ;
+          }
+
+          // Completar con ceros si tiene menos de 8 nodos
+          for (int j = numNodes; j < 8; j++) {
+              outfile << std::setw(8) << 0 ;
+          }
+
+        outfile << std::endl;
+        
+      }// if out
+    }// Elements
+    outfile << "$# END OF ELEMENTS" << std::endl;
+    
+
+    // Escribir definición de PART
+    outfile << "*PART" << std::endl;
+    outfile << "$#     pid       secid       mid     eosid      hgid      grav    adpopt      tmid" << std::endl;
+    outfile << std::setw(8) << 1   // PID
+            << std::setw(8) << 1   // SECID
+            << std::setw(8) << 1   // MID (Material ID)
+            << std::setw(8) << 0   // EOSID
+            << std::setw(8) << 0   // HGID
+            << std::setw(8) << 0   // GRAV
+            << std::setw(8) << 0   // ADPOPT
+            << std::setw(8) << 0   // TMID
+            << std::endl;
+    outfile << "$# END OF PART" << std::endl;
+    
+
+    // Escribir definición de SECTION según el tipo de elementos
+    if (shellElementCount > 0) {
+        outfile << "*SECTION_SHELL" << std::endl;
+        outfile << "$#   secid    elform      shrf       nip     propt   qr/irid     icomp     setyp" << std::endl;
+        outfile << std::setw(8) << 1   // SECID
+                << std::setw(8) << 2   // ELFORM (2: Belytschko-Tsay shell)
+                << std::setw(8) << 1.0  // SHRF (shear factor)
+                << std::setw(8) << 2   // NIP (integration points)
+                << std::setw(8) << 1.0  // PROPT
+                << std::setw(8) << 0   // QR/IRID
+                << std::setw(8) << 0   // ICOMP
+                << std::setw(8) << 1   // SETYP (shell type)
+                << std::endl;
+        outfile << "$# END OF SHELL SECTION" << std::endl;
+        
+    }
+
+    if (solidElementCount > 0) {
+        outfile << "*SECTION_SOLID" << std::endl;
+        outfile << "$#   secid    elform       aet    unused    unused    unused    unused    unused" << std::endl;
+        outfile << std::setw(8) << 2   // SECID (diferente al de shells)
+                << std::setw(8) << 1   // ELFORM (1: constant stress solid)
+                << std::setw(8) << 0   // AET
+                << std::setw(8) << 0   // unused
+                << std::setw(8) << 0   // unused
+                << std::setw(8) << 0   // unused
+                << std::setw(8) << 0   // unused
+                << std::setw(8) << 0   // unused
+                << std::endl;
+        outfile << "$# END OF SOLID SECTION" << std::endl;
+        
+    }
+
+    // Escribir definición de MATERIAL básico
+    outfile << "*MAT_ELASTIC" << std::endl;
+    outfile << "$#     mid        ro         e        pr        da        db         k" << std::endl;
+    outfile << std::setw(8) << 1   // MID
+            << std::scientific << std::setprecision(6)
+            << std::setw(12) << 7850.0   // RO (densidad)
+            << std::setw(12) << 2.1e11   // E (módulo elástico)
+            << std::setw(12) << 0.3      // PR (coef. Poisson)
+            << std::setw(12) << 0.0      // DA
+            << std::setw(12) << 0.0      // DB
+            << std::setw(12) << 0.0      // K
+            << std::endl;
+    outfile << "$# END OF MATERIAL" << std::endl;
+    
+
+    // Escribir condiciones de contorno básicas (ejemplo)
+    outfile << "*BOUNDARY_SPC_SET" << std::endl;
+    outfile << "$#      id       cid      dofx      dofy      dofz     dofrx     dofry     dofrz" << std::endl;
+    outfile << std::setw(8) << 1   // ID
+            << std::setw(8) << 0   // CID
+            << std::setw(8) << 1   // DOFX (fijo)
+            << std::setw(8) << 1   // DOFY (fijo)
+            << std::setw(8) << 1   // DOFZ (fijo)
+            << std::setw(8) << 0   // DOFRX (libre)
+            << std::setw(8) << 0   // DOFRY (libre)
+            << std::setw(8) << 0   // DOFRZ (libre)
+            << std::endl;
+    outfile << "$# END OF BOUNDARY CONDITIONS" << std::endl;
+    
+
+    // Escribir terminador del archivo
+    outfile << "*END" << std::endl;
+    
+    outfile.close();
+
+    std::cout << "LS-DYNA export completed successfully!" << std::endl;
+    std::cout << "File: " << filename << std::endl;
+    std::cout << "Nodes: " << m_node.size() << std::endl;
+    std::cout << "Elements: " << m_elem.size() << std::endl;
+    std::cout << "Shell elements: " << shellElementCount << std::endl;
+    std::cout << "Solid elements: " << solidElementCount << std::endl;
+
+    return true;
+}
