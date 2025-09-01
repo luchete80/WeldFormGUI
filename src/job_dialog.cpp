@@ -21,6 +21,11 @@ void  JobDialog::Draw(){
   //cout << "drawing "<<endl;
   //Vec3_t size;
   double test;
+  if (ImGui::Button("From Model")){
+    //ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportJob", "Choose File", ".json,.k", ".");
+    //show_job_files = true;
+      }
+      
   if (ImGui::Button("Choose File")){
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportJob", "Choose File", ".json,.k", ".");
     show_job_files = true;
