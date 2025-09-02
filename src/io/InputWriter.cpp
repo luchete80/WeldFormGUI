@@ -110,10 +110,34 @@ void InputWriter::writeToFile(std::string fname){
     cout << "Done."<<endl;
   }
 
-
+  
+  bool is_elastic = false;
   cout << "Loop thorough parts..."<<endl;
   for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it){
    Part* part = *it;
+   
+   if (part->getType() == Elastic){
+     if (is_elastic){
+        cout << "ERROR: More than Elastic body not supported. "<<endl;
+        return;
+      }
+     m_json["DomainBlocks"]["type"] = "File";
+     is_elastic = true;
+  } else {
+      m_json["DomainBlocks"]["type"] = "File";    
+  
+      json rigidBody;
+      rigidBody["type"] = "File";
+      rigidBody["zoneId"] = part->getId();
+      rigidBody["start"] = {-0.02, -0.02, 0.03};
+      rigidBody["dim"] = {0.04, 0.04, 0.0};
+      rigidBody["translation"] = {1.0, 0.0, 0.0};
+      rigidBody["scale"] = {1, 1, 1};
+
+      // Agregarlo al subbloque "RigidBodies"
+      m_json["RigidBodies"].push_back(rigidBody);
+
+  }
 
       json jpart;
       jpart["id"] = part->getId();

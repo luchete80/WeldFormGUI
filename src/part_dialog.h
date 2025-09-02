@@ -1,5 +1,5 @@
-#ifndef _MATERIAL_DIALOG_H_
-#define _MATERIAL_DIALOG_H_
+#ifndef _PART_DIALOG_H_
+#define _PART_DIALOG_H_
 
 
 #include "Part.h"
@@ -9,21 +9,24 @@
 struct PartDialog{
   
   //void    AddLog(const char* fmt, ...);
-  double m_density_const; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)
+  int m_id; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)
   double m_elastic_const;
   double m_poisson_const;
+  int part_type = 0 ;
+  
+  bool m_initialized = false;
   
   bool cancel_action;
-  bool create_material;
+  bool create_part;
   
-  const bool & isMaterialCreated()const{return create_material;}
-  void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
+  const bool & isPartCreated()const{return create_part;}
+  void   Draw(const char* title, bool* p_open = NULL, Part* prt = NULL);  
 };
 
 //Returns true if NEW material is created or if changes are saved, if no
 //if no material is created, pointer is null
-Material_ ShowCreateMaterialDialog(bool* p_open, PartDialog *, bool* ret);
-bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *, Material_ *);
+Part ShowCreateMaterialDialog(bool* p_open, PartDialog *, bool* ret);
+bool ShowEditPartDialog(bool* p_open, PartDialog *, Part *);
 
 
 #endif

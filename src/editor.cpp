@@ -576,7 +576,10 @@ void Editor::drawGui() {
           if (i == 0)
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
-          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d", i))
+          std::string des;
+          if (m_model->getPart(i)->getType() == Elastic) des = "Deformable";
+          else                                des = "Rigid";
+          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s", m_model->getPart(i)->getId(), des.c_str()))
           {
             //cout << "Model part count "<<m_model->getPartCount()<<endl;
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
@@ -589,8 +592,8 @@ void Editor::drawGui() {
                 //selected_mat = m_mats[i];
               }
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                m_show_mat_dlg_edit = true;
-                //selected_mat = m_mats[i];
+                m_show_prt_dlg_edit = true;
+                selected_prt = m_model->getPart(i);
               }
               else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
                 m_model->delPart(i);
@@ -681,7 +684,10 @@ void Editor::drawGui() {
               ImGui::EndPopup();
             }                    
               ImGui::SameLine();
-              if (ImGui::SmallButton("button")) {}
+              if (ImGui::SmallButton("edit")) {
+                m_show_prt_dlg_edit = true;
+                selected_prt = m_model->getPart(i);                  
+              }
               ImGui::TreePop();
           }
         }
@@ -1293,8 +1299,11 @@ void Editor::drawGui() {
   Material_ mat;
   Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
+
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   //else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
+  if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
+  
   else if (m_show_set_dlg) {
   
   /*   

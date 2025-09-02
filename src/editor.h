@@ -41,6 +41,7 @@
 #include "log.h"
 #include "entity_dialog.h"
 #include "material_dialog.h"
+#include "part_dialog.h"
 #include "set_dialog.h"
 
 #include "Material.h"
@@ -185,6 +186,8 @@ protected:
   ExampleAppLog logtest;
   
   MaterialDialog  m_matdlg;
+  PartDialog      m_prtdlg;
+  
   //JobDialog<Job> m_jobdlg;
   JobDialog       m_jobdlg; //creation
   JobShowDialog   m_jobshowdlg;
@@ -196,6 +199,7 @@ protected:
 
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit;
+  bool m_show_prt_dlg_edit;
   bool create_new_mat;
   bool create_new_part;
   bool create_new_job;
@@ -211,7 +215,8 @@ protected:
   Model *m_model;
   bool is_model;
   Material_ *selected_mat;
-  
+  Part      *selected_prt;
+    
   //Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
   

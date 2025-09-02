@@ -119,3 +119,5 @@
 20250901 - Fixed graphic (polydata, vtk) mesh generation from geometry, and setting apart gmsh
          - Now the idea is all graphic meshes are generated from mesh class
          - Created LSDYNA output for model main mesh
+20250902 - Working on part edition dialog and input file writer. 
+         - Now select between Deformable and Rigid, Id, and write this to output.

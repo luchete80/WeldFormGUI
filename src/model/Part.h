@@ -11,8 +11,11 @@ class Geom;
 
 enum Part_Type {Elastic=0, Rigid};
 
+class PartDialog;
+
 class Part :
 public Entity{
+friend PartDialog;
   
 public:
   Part(int &id);
@@ -22,6 +25,7 @@ public:
     m_geom = nullptr;
     m_ismeshed = false;
     m_isgeom   = false;
+    m_type     = Elastic;
   }
   Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
@@ -38,6 +42,11 @@ public:
   void setMesh(Mesh* m);
   void generateMesh();
   virtual Part_Type getType(){return m_type;}
+  bool setType(const int &t){
+    if (t==0) m_type = Elastic;
+    else if (t==1)m_type = Rigid;
+  }
+  
   const bool isMeshed () const{return m_ismeshed;}
   const bool isGeom () const{return m_isgeom;}
   Geom* getGeom(){return m_geom;}
