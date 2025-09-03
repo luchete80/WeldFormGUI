@@ -124,8 +124,8 @@ void InputWriter::writeToFile(std::string fname){
      m_json["DomainBlocks"]["type"] = "File";
      is_elastic = true;
   } else {
-      m_json["DomainBlocks"]["type"] = "File";    
-  
+
+ 
       json rigidBody;
       rigidBody["type"] = "File";
       rigidBody["zoneId"] = part->getId();
