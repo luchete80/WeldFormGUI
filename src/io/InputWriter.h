@@ -17,7 +17,7 @@ public:
 
   void writeToFile(std::string fname);
   
-  ~InputWriter(){delete m_model;}  
+  ~InputWriter(){}  
 
 protected:
   char  *m_filename;
