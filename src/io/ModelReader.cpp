@@ -8,6 +8,7 @@
 #include "Material.h"
 #include "Geom.h"
 #include "json_io.h"
+#include "gmsh.h"
 
 ModelReader::ModelReader(Model *model){
   
@@ -154,12 +155,33 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     std::string name = jpart["geometry"]["source"].get<std::string>();
                     cout << "Reading surface "<<name<<endl;
                     Geom* geom = new Geom(name);
-                 part = new Part(geom);
-               }
+                    part = new Part(geom);
+
+               
+                    gmsh::clear();
+                    std::string meshname = "part_" + std::to_string(i) + ".msh";
+                    gmsh::open(meshname.c_str());
+                    gmsh::model::occ::synchronize();               
+                    
+                    part->generateMesh();
+               
+               }// if geometry
 
                
                 //part->setGeom(geom);
             }
+
+          
+          if (jpart["isRigid"] == true)
+            part->setType(1);
+          else {
+            cout << "part "<< i << " is deformable"<<endl;
+            part->setType(0);
+          }
+          part->setId(jpart["id"]);
+          
+        
+        
 
             //~ // Mesh (nodos y elementos, si existe)
             //~ if (jpart.contains("mesh")) {

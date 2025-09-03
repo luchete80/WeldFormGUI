@@ -1072,15 +1072,14 @@ void Editor::drawGui() {
 
       int pc = m_model->getPartCount();
       cout << "Model part count: "<<pc<<endl;
-            
+      
+      
+      /////////////////// TODO: MOVE TO READER
       cout << "Adding vtkgeo meshes"<<endl;
       for (int p=0;p<pc;p++){
         cout << "part "<<p<<endl;
       vtkOCCTGeom *geom = new vtkOCCTGeom;
 
-      int pc = m_model->getPartCount();
-      cout << "Model part count: "<<pc<<endl;
-      
       std::string name = "part_" + std::to_string(pc) + ".step";
       Geom *geo = m_model->getPart(p)->getGeom();
         if (geo != nullptr){
@@ -1091,19 +1090,28 @@ void Editor::drawGui() {
         //widget->SetInteractor(rendersWindowInteractor);
         viewer->addActor(geom->actor);
       
-        gmsh::clear();
+        //~ gmsh::clear();
 
-        std::string meshname = "part_" + std::to_string(p) + ".msh";
-        gmsh::open(meshname.c_str());
+        //~ std::string meshname = "part_" + std::to_string(p) + ".msh";
+        //~ gmsh::open(meshname.c_str());
+        //~ cout << "Mesh "<< meshname <<" opened."<<endl;
+        
 
-        // O también puedes usar merge para añadir a un modelo existente
-        // gmsh::merge(meshname.c_str());
 
-        // Sincronizar después de cargar
-        gmsh::model::occ::synchronize();
+        //~ // O también puedes usar merge para añadir a un modelo existente
+        //~ // gmsh::merge(meshname.c_str());
 
+        //~ // Sincronizar después de cargar
+        //~ gmsh::model::occ::synchronize();
+        
+        cout << "Generating mesh from gmsh"<<endl;
+        
+        //m_model->getPart(p)->generateMesh(); //from gmsh
+        
         graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-        graphic_mesh->createVTKPolyData();
+        
+        //graphic_mesh->createVTKPolyData();
+        graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
         
         viewer->addActor(graphic_mesh->getActor());
         

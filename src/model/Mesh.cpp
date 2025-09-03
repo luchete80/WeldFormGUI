@@ -566,6 +566,7 @@ void Mesh::genFromGmshModel() {
     m_elem.clear();
 
     // Obtener información del modelo
+    cout << "Opening mesh "<<endl;
     std::string name;
     gmsh::model::getCurrent(name);
     std::cout << "Model " << name << " (" << gmsh::model::getDimension() << "D)\n";

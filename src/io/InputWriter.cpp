@@ -122,6 +122,19 @@ void InputWriter::writeToFile(std::string fname){
         return;
       }
      m_json["DomainBlocks"]["type"] = "File";
+
+      if (part->isMeshed()){
+      std::string fname = "part_" + std::to_string(part->getId()) + ".k";
+      part->getMesh()->exportToLSDYNA(fname);
+      m_json["DomainBlocks"]["fileName"] = fname;
+      }
+      else {
+        
+        cout << "ERROR: Part "<<part->getId()<< "is not meshed!"<<endl; 
+        }
+
+
+
      is_elastic = true;
   } else {
 
@@ -146,16 +159,11 @@ void InputWriter::writeToFile(std::string fname){
       
       //m_json["DomainBlocks"]["type"] = "File";
 
-      if (part->isMeshed()){
-        std::string meshname = "part_" + std::to_string(part->getId()) + ".msh";
-        jpart["mesh"]["source"] = meshname;
-      }
-      else {
-        
-        cout << "ERROR: Part "<<part->getId()<< "is not meshed!"<<endl; 
-        }
 
-    }
+    }//Part 
+    
+    if (!is_elastic)
+      cout << "ERROR: Not deformable parts"<<endl;
 
   o << std::setw(4) << m_json << std::endl;
   

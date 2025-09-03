@@ -25,7 +25,7 @@ public:
     m_geom = nullptr;
     m_ismeshed = false;
     m_isgeom   = false;
-    m_type     = Elastic;
+    m_type     = Elastic; //Deformable
   }
   Part(int &id, Mesh *mesh);
   Part(Mesh *mesh);
