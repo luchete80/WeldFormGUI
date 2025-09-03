@@ -566,9 +566,10 @@ void Editor::drawGui() {
             ImGui::EndPopup();          
         }
         
+        
         /////////////////////// PART TREE
         if (open_){
-        //cout << "Model part count "<<m_model->getPartCount()<<endl;      
+        cout << "Model part count "<<m_model->getPartCount()<<endl;      
         for (int i = 0; i < m_model->getPartCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -1071,12 +1072,15 @@ void Editor::drawGui() {
     mr.readFromFile(filePathName);
 
       int pc = m_model->getPartCount();
+      cout << "Model part count: "<<pc<<endl;
             
       cout << "Adding vtkgeo meshes"<<endl;
       for (int p=0;p<pc;p++){
         cout << "part "<<p<<endl;
       vtkOCCTGeom *geom = new vtkOCCTGeom;
 
+      int pc = m_model->getPartCount();
+      cout << "Model part count: "<<pc<<endl;
       
       std::string name = "part_" + std::to_string(pc) + ".step";
       Geom *geo = m_model->getPart(p)->getGeom();
@@ -1103,9 +1107,7 @@ void Editor::drawGui() {
         graphic_mesh->createVTKPolyData();
         
         viewer->addActor(graphic_mesh->getActor());
-
-        getApp().setActiveModel(m_model);
-
+        
         //~ #ifdef BUILD_PYTHON
         //~ PyRun_SimpleString("GetApplication().getActiveModel()");
         //~ #else
@@ -1128,11 +1130,15 @@ void Editor::drawGui() {
       //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
 
     // close
+    pc = m_model->getPartCount();
+    cout << "Model part count: "<<pc<<endl;
+      m_model = mr.getModel();
     ImGuiFileDialog::Instance()->Close();
               
     }
-  }
+  }// Open File
 
+    
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImport")) 
   {

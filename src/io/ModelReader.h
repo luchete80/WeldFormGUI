@@ -15,7 +15,7 @@ public:
   Model* getModel(){return m_model;}
   bool readFromFile(const std::string& fname) ;
   
-  ~ModelReader(){delete m_model;}  
+  ~ModelReader(){}  
 
 protected:
   char  *m_filename;
