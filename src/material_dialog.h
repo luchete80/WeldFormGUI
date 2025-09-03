@@ -10,6 +10,8 @@
 struct MaterialDialog:
 public Dialog{
   
+  bool m_initiated = false; /// FOR FIRST CREATED
+  
   //void    AddLog(const char* fmt, ...);
   double m_density_const; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)
   double m_elastic_const;
@@ -17,6 +19,10 @@ public Dialog{
   
   bool cancel_action;
   bool create_material;
+  
+  Plastic_ *m_pl = nullptr;
+  
+  GMT m_gmt;
   
   const bool & isMaterialCreated()const{return create_material;}
   void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  

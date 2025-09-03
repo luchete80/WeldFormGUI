@@ -13,6 +13,9 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
 
   create_material = false; 
   cancel_action = false;
+  if (!m_initiated)
+    m_initiated = true;
+    
   if (!ImGui::Begin(title, p_open))
   {
       ImGui::End();
@@ -32,16 +35,52 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   //MUST BE SAVED CURRENT STATE
   ImGui::Combo("Yield Criteria", &item_current, items, IM_ARRAYSIZE(items) ) ;
   // if (ImGui::Button("Hollomon")){
+        // Aquí verificas qué opción está seleccionada
+    if (item_current == 1) { // GMT está en índice 2
+    
+      //ImGui::InputDouble("K ", &mat->, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("n ", &m_density_const, 0.00f, 1.0f, "%.4f");   
+            
+    }
+    if (item_current == 2) { // GMT está en índice 2
       
+      if (mat == NULL){
+        m_pl = new GMT();
+      }
+      else {
+        if (!mat->isPlastic() ){
+          //cout << "Not plasticity model"<<endl;
+          m_pl = new GMT();
+        } else{
+          m_pl = mat->getPlastic();
+          //cout << "Existent Plastic"<<endl;
+        }
+      }
+      ImGui::InputDouble("n1 ", &m_gmt.n1, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("n2 ", &m_gmt.n2, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("m1 ", &m_gmt.m1, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("m2 ", &m_gmt.m2, 0.00f, 1.0f, "%.4f");  
+            
+    }
+          
     
   // }
   }//Yield Criteria
   }//Plastic
   
-  if (ImGui::Button("Create")) {create_material = true;}
+  if (ImGui::Button("Ok")) {
+    create_material = true;
+    *p_open = false;
+    if (mat == NULL){
+    } else {
+      //mat->m_plastic = 
+      }
+    
+    }
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
     cancel_action = true;
+    *p_open = false;
   }
   ImGui::End();
   
@@ -64,6 +103,7 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
     if (matdlg->m_elastic_const != 0.0 && matdlg->m_elastic_const != 0.0){
       Elastic_ el(matdlg->m_elastic_const ,matdlg->m_elastic_const);
       ret = Material_(el);
+      ret.m_plastic = new Plastic_(*matdlg->m_pl);
     } else {
       cout << "Material elastic constants should not be zero;"<<endl;
     };

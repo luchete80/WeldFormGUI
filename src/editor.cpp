@@ -1314,7 +1314,7 @@ void Editor::drawGui() {
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
 
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
-  //else if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg, &m_matdlg, selected_mat);}
+  if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
   if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
   
   else if (m_show_set_dlg) {
@@ -1346,7 +1346,9 @@ void Editor::drawGui() {
     
     m_show_mat_dlg = false;
 
-  } else if (m_matdlg.cancel_action)     m_show_mat_dlg=false;
+  } else if (m_matdlg.cancel_action) {    
+    m_show_mat_dlg=false;
+  }
   
   if (m_jobdlg.create_entity){
     cout << "Creating Job "<<m_jobdlg.m_filename<<endl;
