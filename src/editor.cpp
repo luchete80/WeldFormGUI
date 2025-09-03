@@ -568,8 +568,7 @@ void Editor::drawGui() {
         
         
         /////////////////////// PART TREE
-        if (open_){
-        cout << "Model part count "<<m_model->getPartCount()<<endl;      
+        if (open_){ 
         for (int i = 0; i < m_model->getPartCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
