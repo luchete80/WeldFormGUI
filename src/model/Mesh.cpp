@@ -1013,11 +1013,6 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
 #include <iostream>
 
 // Suponiendo que tienes estas clases definidas
-class Node {
-public:
-    std::array<double, 3> getPos() const { return {0,0,0}; }
-    // ... otras funciones
-};
 
 //~ class Element {
 //~ public:
@@ -1075,9 +1070,10 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     for (size_t i = 0; i < m_elem.size(); i++) {
         Element* elem = m_elem[i];
         int numNodes = elem->getNodeCount();
-        std::string elemType = elem->getType();
+        //std::string elemType = elem->getType();
 
-        if (elemType == "BAR" || numNodes == 2) {
+//        if (elemType == "BAR" || numNodes == 2) {
+        if ( numNodes == 2) {
             // Elemento barra CBAR
             outfile << "CBAR," << std::setw(8) << i + 1  // EID
                     << "," << std::setw(8) << 1          // PID
@@ -1086,15 +1082,15 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
             cbarCount++;
         }
-        else if (elemType == "BEAM" || (numNodes == 2 && elemType == "BEAM")) {
-            // Elemento viga CBEAM
-            outfile << "CBEAM," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 2           // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
-                    << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
-            cbeamCount++;
-        }
+//        else if (elemType == "BEAM" || (numNodes == 2 && elemType == "BEAM")) {
+            // // Elemento viga CBEAM
+            // outfile << "CBEAM," << std::setw(8) << i + 1  // EID
+                    // << "," << std::setw(8) << 2           // PID
+                    // << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
+                    // << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    // << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
+            // cbeamCount++;
+        // }
         else if (numNodes == 3 && m_dim == 2) {
             // Elemento triangular 2D CTRIA3
             outfile << "CTRIA3," << std::setw(8) << i + 1  // EID
