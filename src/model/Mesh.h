@@ -52,6 +52,9 @@ public:
   Part& getPart(){return *m_part;}
   
   const int & getDim() const {return m_dim;}
+
+
+  bool exportToNASTRAN(const std::string& filename);
   
   const Vector3f& getNodePos(const int &i)const; //Used by the renderer to get Node positions, this calls to NODE POINTER
   Mesh_Type& getType(){return m_type;}

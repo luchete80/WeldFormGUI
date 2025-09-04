@@ -1003,3 +1003,196 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
 
     return true;
 }
+
+
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <iostream>
+
+// Suponiendo que tienes estas clases definidas
+class Node {
+public:
+    std::array<double, 3> getPos() const { return {0,0,0}; }
+    // ... otras funciones
+};
+
+//~ class Element {
+//~ public:
+    //~ int getNodeCount() const { return 0; }
+    //~ int getNodeId(int) const { return 0; }
+    //~ std::string getType() const { return ""; }
+    //~ // ... otras funciones
+//~ };
+
+//~ class Mesh {
+//~ public:
+    //~ std::vector<Node*> m_node;
+    //~ std::vector<Element*> m_elem;
+    //~ int m_dim;
+    
+    //~ bool exportToNASTRAN(const std::string& filename);
+//~ };
+
+bool Mesh::exportToNASTRAN(const std::string& filename) {
+    std::ofstream outfile(filename);
+    if (!outfile.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << " for writing" << std::endl;
+        return false;
+    }
+
+    // Escribir encabezado del archivo NASTRAN
+    outfile << "NASTRAN bulk data file created by Mesh::exportToNASTRAN()" << std::endl;
+    outfile << "BEGIN BULK" << std::endl;
+    
+    // Escribir nodos (GRID)
+    outfile << "$ Nodes" << std::endl;
+    for (size_t i = 0; i < m_node.size(); i++) {
+        Node* node = m_node[i];
+        auto pos = node->getPos();
+        
+        outfile << "GRID," << std::setw(8) << i + 1  // ID del nodo (1-based)
+                << ",," << std::fixed << std::setprecision(6)
+                << std::setw(8) << pos[0] << ","
+                << std::setw(8) << pos[1] << ","
+                << std::setw(8) << pos[2] << std::endl;
+    }
+    outfile << "$ End of nodes" << std::endl;
+
+    // Contadores para diferentes tipos de elementos
+    int cquad4Count = 0;
+    int ctri3Count = 0;
+    int cbarCount = 0;
+    int cbeamCount = 0;
+    int ctria3Count = 0;
+    int ctetraCount = 0;
+    int chexaCount = 0;
+
+    // Escribir elementos
+    outfile << "$ Elements" << std::endl;
+    for (size_t i = 0; i < m_elem.size(); i++) {
+        Element* elem = m_elem[i];
+        int numNodes = elem->getNodeCount();
+        std::string elemType = elem->getType();
+
+        if (elemType == "BAR" || numNodes == 2) {
+            // Elemento barra CBAR
+            outfile << "CBAR," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 1          // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
+            cbarCount++;
+        }
+        else if (elemType == "BEAM" || (numNodes == 2 && elemType == "BEAM")) {
+            // Elemento viga CBEAM
+            outfile << "CBEAM," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 2           // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
+            cbeamCount++;
+        }
+        else if (numNodes == 3 && m_dim == 2) {
+            // Elemento triangular 2D CTRIA3
+            outfile << "CTRIA3," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 3           // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1
+                    << "," << std::setw(8) << elem->getNodeId(2) + 1
+                    << std::endl;
+            ctri3Count++;
+        }
+        else if (numNodes == 4 && m_dim == 2) {
+            // Elemento cuadrilátero 2D CQUAD4
+            outfile << "CQUAD4," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 4           // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1
+                    << "," << std::setw(8) << elem->getNodeId(2) + 1
+                    << "," << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::endl;
+            cquad4Count++;
+        }
+        else if (numNodes == 4 && m_dim == 3) {
+            // Elemento tetraédrico CTETRA
+            outfile << "CTETRA," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 5           // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1
+                    << "," << std::setw(8) << elem->getNodeId(2) + 1
+                    << "," << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::endl;
+            ctetraCount++;
+        }
+        else if (numNodes == 8 && m_dim == 3) {
+            // Elemento hexaédrico CHEXA
+            outfile << "CHEXA," << std::setw(8) << i + 1  // EID
+                    << "," << std::setw(8) << 6           // PID
+                    << "," << std::setw(8) << elem->getNodeId(0) + 1
+                    << "," << std::setw(8) << elem->getNodeId(1) + 1
+                    << "," << std::setw(8) << elem->getNodeId(2) + 1
+                    << "," << std::setw(8) << elem->getNodeId(3) + 1
+                    << "," << std::setw(8) << elem->getNodeId(4) + 1
+                    << "," << std::setw(8) << elem->getNodeId(5) + 1
+                    << std::endl;
+            // Continuación para nodos 7 y 8 si es necesario
+            chexaCount++;
+        }
+    }
+    outfile << "$ End of elements" << std::endl;
+
+    // Escribir propiedades de elementos (PBAR, PBEAM, PSHELL, etc.)
+    outfile << "$ Properties" << std::endl;
+    
+    if (cbarCount > 0) {
+        outfile << "PBAR," << std::setw(8) << 1  // PID
+                << "," << std::setw(8) << 1      // MID
+                << ",1.0,0.1,0.01,0.01"         // A, I1, I2, J
+                << std::endl;
+    }
+    
+    if (cbeamCount > 0) {
+        outfile << "PBEAM," << std::setw(8) << 2  // PID
+                << "," << std::setw(8) << 1       // MID
+                << ",1.0,0.1,0.01,0.01"          // A, I1, I2, J
+                << std::endl;
+    }
+    
+    if (ctri3Count > 0 || cquad4Count > 0) {
+        outfile << "PSHELL," << std::setw(8) << 3  // PID
+                << "," << std::setw(8) << 1        // MID
+                << ",0.1"                         // thickness
+                << std::endl;
+    }
+
+    // Escribir materiales
+    outfile << "$ Materials" << std::endl;
+    outfile << "MAT1," << std::setw(8) << 1        // MID
+            << ",2.1E11,,0.3,7850.0"              // E, G, NU, RHO
+            << std::endl;
+
+    // Condiciones de contorno (SPC)
+    outfile << "$ Boundary conditions" << std::endl;
+    outfile << "SPC,1,123456,1" << std::endl;  // SPC set 1, todos los DOFs, node 1
+
+    // Finalizar archivo
+    outfile << "ENDDATA" << std::endl;
+    
+    outfile.close();
+
+    std::cout << "NASTRAN export completed successfully!" << std::endl;
+    std::cout << "File: " << filename << std::endl;
+    std::cout << "Nodes: " << m_node.size() << std::endl;
+    std::cout << "Elements: " << m_elem.size() << std::endl;
+    std::cout << "CBAR elements: " << cbarCount << std::endl;
+    std::cout << "CBEAM elements: " << cbeamCount << std::endl;
+    std::cout << "CTRIA3 elements: " << ctri3Count << std::endl;
+    std::cout << "CQUAD4 elements: " << cquad4Count << std::endl;
+    std::cout << "CTETRA elements: " << ctetraCount << std::endl;
+    std::cout << "CHEXA elements: " << chexaCount << std::endl;
+
+    return true;
+}
