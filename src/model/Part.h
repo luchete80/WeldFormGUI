@@ -42,7 +42,7 @@ public:
   void setMesh(Mesh* m);
   void generateMesh();
   virtual Part_Type getType(){return m_type;}
-  bool setType(const int &t){
+  void setType(const int &t){
     if (t==0) m_type = Elastic;
     else if (t==1)m_type = Rigid;
   }
