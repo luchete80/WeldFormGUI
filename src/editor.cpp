@@ -891,9 +891,28 @@ void Editor::drawGui() {
           // Using the _simplified_ one-liner Combo() api here
           // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
           //IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
-          const char* items[] = { "Box", "Cylinder", "Plane"};
-          
-          ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
+          //const char* items[] = { "Box", "Cylinder", "Plane"};
+          //ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
+          std::vector<const char*> items;
+
+          switch (m_model->getAnalysisType()) {
+              case Solid3D:
+                  items = { "Box", "Cylinder", "Plane" };
+              case Axisymmetric2D:
+                  items = {"Cylinder"};
+                  break;
+              case PlaneStress2D:
+              case PlaneStrain2D:
+                  items = { "Rectangle", "Circle" };
+                  break;
+              default:
+                  items = { "Unknown" };
+                  break;
+          }
+
+
+          ImGui::Combo("Geometry", &item_current, 
+             items.data(), static_cast<int>(items.size()));
           ImGui::SameLine(); HelpMarker(
               "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
       }
@@ -992,6 +1011,13 @@ void Editor::drawGui() {
               cout << "Creating rectangle"<<endl;
               bool created = false;
               cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
+              // if (m_model->getAnalysisType() == Axisymmetric2D){
+                  // geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);                
+              // }
+              // if (m_model->getAnalysisType() == Solid3D){
+                  // if (item_current == 0)
+                    // geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);                
+              // }
               if (size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 if (size[1]>0.0){

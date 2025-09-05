@@ -107,7 +107,7 @@ protected:
   //IO AND SETTING THINGS
   bool m_hasname;
   string m_name;
-  AnalysisType m_analysisType;
+  AnalysisType m_analysisType = Solid3D;
 
 
 };
