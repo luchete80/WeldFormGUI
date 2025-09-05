@@ -91,9 +91,10 @@ Part ShowCreatePartDialog(bool* p_open, PartDialog *matdlg, bool *create){
 }
 
 bool ShowEditPartDialog(bool* p_open, PartDialog *prtdlg, Part *part){
+  bool ret = true;
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
   prtdlg->Draw("Part", p_open, part);
 
-    
+  return ret;
   
 }

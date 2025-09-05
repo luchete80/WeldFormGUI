@@ -547,8 +547,13 @@ void Editor::drawGui() {
     if (ImGui::BeginTabItem("Model")) { 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
+    std::string des = "3D";
+    if (m_model->getAnalysisType() == PlaneStress2D) des = "2D PS";
+    else if (m_model->getAnalysisType() == PlaneStrain2D) des = "2D PE";
+    else if (m_model->getAnalysisType() == Axisymmetric2D) des = "2D AX";
+   
     
-    if (ImGui::TreeNode("Model"))
+    if (ImGui::TreeNode("Model %s",des.c_str()))
     {
 
         bool open_ = ImGui::TreeNode("Parts");

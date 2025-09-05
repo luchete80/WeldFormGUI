@@ -122,4 +122,5 @@
 20250902 - Working on part edition dialog and input file writer. 
          - Now select between Deformable and Rigid, Id, and write this to output.
 20250903 - Fixed meshing at opening file. Not anymore on editor. Now is on reader.
-
+20250905 - Fixed Nastran export.
+         - Added Mode Type.

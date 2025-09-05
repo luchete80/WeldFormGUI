@@ -23,6 +23,13 @@ class GraphicMesh;
 class ModelWriter;
 class InputWriter;
 
+enum AnalysisType {
+    PlaneStress2D,
+    PlaneStrain2D,
+    Axisymmetric2D,
+    Solid3D
+};
+
 enum model_type {FEM_Model=1, SPH_Model};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
@@ -64,6 +71,22 @@ public:
   
   int part_count;
   void delPart(const int &p){m_part.erase(m_part.begin()+p);};
+
+    void setAnalysisType(AnalysisType t) { m_analysisType = t; }
+    AnalysisType getAnalysisType() const { return m_analysisType; }
+
+    int getDimension() const {
+        switch(m_analysisType) {
+            case AnalysisType::PlaneStress2D:
+            case AnalysisType::PlaneStrain2D:
+            case AnalysisType::Axisymmetric2D:
+                return 2;
+            case AnalysisType::Solid3D:
+                return 3;
+        }
+        return -1; // error
+    }
+
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
@@ -84,6 +107,9 @@ protected:
   //IO AND SETTING THINGS
   bool m_hasname;
   string m_name;
+  AnalysisType m_analysisType;
+
+
 };
 
 class FEMModel:
