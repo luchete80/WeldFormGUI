@@ -553,7 +553,7 @@ void Editor::drawGui() {
     else if (m_model->getAnalysisType() == Axisymmetric2D) des = "2D AX";
    
     
-    if (ImGui::TreeNode("Model %s",des.c_str()))
+    if (ImGui::TreeNode((void*)"Model %s",des.c_str()))
     {
 
         bool open_ = ImGui::TreeNode("Parts");
@@ -768,6 +768,21 @@ void Editor::drawGui() {
         }
         //-----------------------------------------------------
         open_ = ImGui::TreeNode("Boundary Conditions");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+            ImGui::EndPopup();
+          
+        }
+        if (open_)
+        {
+           // your tree code stuff
+           ImGui::TreePop();
+        }
+
+
+        //-----------------------------------------------------
+        open_ = ImGui::TreeNode("Steps");
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
