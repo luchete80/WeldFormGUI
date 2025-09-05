@@ -32,7 +32,7 @@
 // }
 
   void Geom::LoadRectangle(double dx, double dy, double ox, double oy) {
-  gp_Pnt p1(0,0,0), p2(dx,0,0), p3(dx,dy,0), p4(0,dy,0);
+  gp_Pnt p1(ox,oy,0), p2(ox+dx,oy,0), p3(ox+dx,oy+dy,0), p4(ox,oy+dy,0);
 
     m_origin.x = ox;
     m_origin.y = oy;

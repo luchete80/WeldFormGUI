@@ -1031,6 +1031,68 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
     //~ bool exportToNASTRAN(const std::string& filename);
 //~ };
 
+// Función auxiliar para formatear números con ancho fijo de 8 caracteres
+std::string formatNastranNumber(double value) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(5);
+    
+    // Para números negativos, el signo ocupa un espacio
+    if (value < 0) {
+        oss << std::setw(7) << value;
+    } else {
+        // Para números positivos, agregamos un espacio extra
+        oss << " " << std::setw(7) << value;
+    }
+    return oss.str();
+}
+
+//~ // Función auxiliar para formatear números con ancho fijo de 8 caracteres
+//~ std::string formatNastranNumber(double value) {
+    //~ std::ostringstream oss;
+    //~ oss << std::fixed << std::scientific << std::setprecision(1);
+    
+    //~ // Para números negativos, el signo ocupa un espacio
+    //~ if (value < 0) {
+        //~ oss << std::setw(7) << value;
+    //~ } else {
+        //~ // Para números positivos, agregamos un espacio extra
+        //~ oss << " " << std::setw(7) << value;
+    //~ }
+    //~ return oss.str();
+//~ }
+
+// Función para formatear en notación científica sin punto decimal
+std::string formatScientific(double value) {
+    std::ostringstream oss;
+    
+    if (value == 0.0) {
+        oss << std::setw(8) << "0";
+        return oss.str();
+    }
+    
+    int exponent = static_cast<int>(std::floor(std::log10(std::abs(value))));
+    double mantissa = value * std::pow(10, -exponent);
+    
+    // Ajustar mantissa para que esté entre 1 y 10 (sin punto decimal)
+    int int_mantissa = static_cast<int>(std::round(mantissa));
+    
+    // Formatear: mantissaE+exponente (ejemplo: 1234E-05)
+    oss << std::setw(4) << int_mantissa 
+        << "E" 
+        << std::setw(3) << std::setfill('0') 
+        << (exponent >= 0 ? "+" : "-")
+        << std::setw(2) << std::abs(exponent);
+    
+    return oss.str();
+}
+
+//~ std::string formatNastranNumber(double value) {
+    //~ std::ostringstream oss;
+    //~ oss << std::fixed << std::setprecision(6) 
+        //~ << std::internal << std::setw(8) << value;
+    //~ return oss.str();
+//~ }
+
 bool Mesh::exportToNASTRAN(const std::string& filename) {
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
@@ -1041,18 +1103,21 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     // Escribir encabezado del archivo NASTRAN
     outfile << "NASTRAN bulk data file created by Mesh::exportToNASTRAN()" << std::endl;
     outfile << "BEGIN BULK" << std::endl;
-    
+
+       
     // Escribir nodos (GRID)
     outfile << "$ Nodes" << std::endl;
     for (size_t i = 0; i < m_node.size(); i++) {
         Node* node = m_node[i];
         auto pos = node->getPos();
         
-        outfile << "GRID," << std::setw(8) << i + 1  // ID del nodo (1-based)
-                << ",," << std::fixed << std::setprecision(6)
-                << std::setw(8) << pos[0] << ","
-                << std::setw(8) << pos[1] << ","
-                << std::setw(8) << pos[2] << std::endl;
+        outfile << "GRID    " 
+            << std::setw(8) << i + 1  // ID del nodo (1-based)
+            << std::setw(8) << 0       // CP
+            << formatNastranNumber(pos[0])
+            << formatNastranNumber(pos[1])
+            << formatNastranNumber(pos[2]) 
+            << std::endl;
     }
     outfile << "$ End of nodes" << std::endl;
 
@@ -1075,64 +1140,79 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
 //        if (elemType == "BAR" || numNodes == 2) {
         if ( numNodes == 2) {
             // Elemento barra CBAR
-            outfile << "CBAR," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 1          // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
-                    << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
+            outfile << "CBAR    " << std::setw(8) << i + 1  // EID
+                    << std::setw(8) << 1          // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1  // GA
+                    << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    //<< ",,0.0,1.0,0.0" // Vector de orientación 
+                    << std::endl;     
             cbarCount++;
         }
 //        else if (elemType == "BEAM" || (numNodes == 2 && elemType == "BEAM")) {
             // // Elemento viga CBEAM
             // outfile << "CBEAM," << std::setw(8) << i + 1  // EID
-                    // << "," << std::setw(8) << 2           // PID
-                    // << "," << std::setw(8) << elem->getNodeId(0) + 1  // GA
-                    // << "," << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    // << std::setw(8) << 2           // PID
+                    // << std::setw(8) << elem->getNodeId(0) + 1  // GA
+                    // << std::setw(8) << elem->getNodeId(1) + 1  // GB
                     // << ",,0.0,1.0,0.0" << std::endl;     // Vector de orientación
             // cbeamCount++;
         // }
         else if (numNodes == 3 && m_dim == 2) {
             // Elemento triangular 2D CTRIA3
-            outfile << "CTRIA3," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 3           // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1
-                    << "," << std::setw(8) << elem->getNodeId(2) + 1
+            outfile << "CTRIA3  " << std::setw(8) << i + 1  // EID
+                    << std::setw(8) << 3           // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1
+                    << std::setw(8) << elem->getNodeId(1) + 1
+                    << std::setw(8) << elem->getNodeId(2) + 1
                     << std::endl;
             ctri3Count++;
         }
         else if (numNodes == 4 && m_dim == 2) {
             // Elemento cuadrilátero 2D CQUAD4
-            outfile << "CQUAD4," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 4           // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1
-                    << "," << std::setw(8) << elem->getNodeId(2) + 1
-                    << "," << std::setw(8) << elem->getNodeId(3) + 1
+            //~ outfile << "CQUAD4," << std::setw(8) << i + 1  // EID
+                    //~ << std::setw(8) << 4           // PID
+                    //~ << std::setw(8) << elem->getNodeId(0) + 1
+                    //~ << std::setw(8) << elem->getNodeId(1) + 1
+                    //~ << std::setw(8) << elem->getNodeId(2) + 1
+                    //~ << std::setw(8) << elem->getNodeId(3) + 1
+                    //~ << std::endl;
+            //~ cquad4Count++;
+            outfile << "CTRIA3  " << std::setw(8) << 2*i + 1  // EID
+                    << std::setw(8) << 3           // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1
+                    << std::setw(8) << elem->getNodeId(1) + 1
+                    << std::setw(8) << elem->getNodeId(2) + 1
                     << std::endl;
-            cquad4Count++;
+            ctri3Count++;
+            outfile << "CTRIA3  " << std::setw(8) << 2*i + 2  // EID
+                    << std::setw(8) << 3           // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1
+                    << std::setw(8) << elem->getNodeId(2) + 1
+                    << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::endl;
+            ctri3Count++;
         }
         else if (numNodes == 4 && m_dim == 3) {
             // Elemento tetraédrico CTETRA
-            outfile << "CTETRA," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 5           // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1
-                    << "," << std::setw(8) << elem->getNodeId(2) + 1
-                    << "," << std::setw(8) << elem->getNodeId(3) + 1
+            outfile << "CTETRA  " << std::setw(8) << i + 1  // EID
+                    << std::setw(8) << 5           // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1
+                    << std::setw(8) << elem->getNodeId(1) + 1
+                    << std::setw(8) << elem->getNodeId(2) + 1
+                    << std::setw(8) << elem->getNodeId(3) + 1
                     << std::endl;
             ctetraCount++;
         }
         else if (numNodes == 8 && m_dim == 3) {
             // Elemento hexaédrico CHEXA
-            outfile << "CHEXA," << std::setw(8) << i + 1  // EID
-                    << "," << std::setw(8) << 6           // PID
-                    << "," << std::setw(8) << elem->getNodeId(0) + 1
-                    << "," << std::setw(8) << elem->getNodeId(1) + 1
-                    << "," << std::setw(8) << elem->getNodeId(2) + 1
-                    << "," << std::setw(8) << elem->getNodeId(3) + 1
-                    << "," << std::setw(8) << elem->getNodeId(4) + 1
-                    << "," << std::setw(8) << elem->getNodeId(5) + 1
+            outfile << "CHEXA   " << std::setw(8) << i + 1  // EID
+                    << std::setw(8) << 6           // PID
+                    << std::setw(8) << elem->getNodeId(0) + 1
+                    << std::setw(8) << elem->getNodeId(1) + 1
+                    << std::setw(8) << elem->getNodeId(2) + 1
+                    << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::setw(8) << elem->getNodeId(4) + 1
+                    << std::setw(8) << elem->getNodeId(5) + 1
                     << std::endl;
             // Continuación para nodos 7 y 8 si es necesario
             chexaCount++;
@@ -1144,35 +1224,35 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     outfile << "$ Properties" << std::endl;
     
     if (cbarCount > 0) {
-        outfile << "PBAR," << std::setw(8) << 1  // PID
-                << "," << std::setw(8) << 1      // MID
+        outfile << "PBAR    " << std::setw(8) << 1  // PID
+                << std::setw(8) << 1      // MID
                 << ",1.0,0.1,0.01,0.01"         // A, I1, I2, J
                 << std::endl;
     }
     
     if (cbeamCount > 0) {
-        outfile << "PBEAM," << std::setw(8) << 2  // PID
-                << "," << std::setw(8) << 1       // MID
+        outfile << "PBEAM   " << std::setw(8) << 2  // PID
+                << std::setw(8) << 1       // MID
                 << ",1.0,0.1,0.01,0.01"          // A, I1, I2, J
                 << std::endl;
     }
     
     if (ctri3Count > 0 || cquad4Count > 0) {
-        outfile << "PSHELL," << std::setw(8) << 3  // PID
-                << "," << std::setw(8) << 1        // MID
+        outfile << "PSHELL  " << std::setw(8) << 3  // PID
+                << std::setw(8) << 1        // MID
                 << ",0.1"                         // thickness
                 << std::endl;
     }
 
     // Escribir materiales
-    outfile << "$ Materials" << std::endl;
-    outfile << "MAT1," << std::setw(8) << 1        // MID
-            << ",2.1E11,,0.3,7850.0"              // E, G, NU, RHO
-            << std::endl;
+    //~ outfile << "$ Materials" << std::endl;
+    //~ outfile << "MAT1," << std::setw(8) << 1        // MID
+            //~ << ",2.1E11,,0.3,7850.0"              // E, G, NU, RHO
+            //~ << std::endl;
 
-    // Condiciones de contorno (SPC)
-    outfile << "$ Boundary conditions" << std::endl;
-    outfile << "SPC,1,123456,1" << std::endl;  // SPC set 1, todos los DOFs, node 1
+    //~ // Condiciones de contorno (SPC)
+    //~ outfile << "$ Boundary conditions" << std::endl;
+    //~ outfile << "SPC,1,123456,1" << std::endl;  // SPC set 1, todos los DOFs, node 1
 
     // Finalizar archivo
     outfile << "ENDDATA" << std::endl;

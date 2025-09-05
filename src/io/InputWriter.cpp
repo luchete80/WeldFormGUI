@@ -136,7 +136,7 @@ void InputWriter::writeToFile(std::string fname){
 
 
      is_elastic = true;
-  } else {
+  } else { ////RIGID
 
  
       json rigidBody;
@@ -149,6 +149,12 @@ void InputWriter::writeToFile(std::string fname){
 
       // Agregarlo al subbloque "RigidBodies"
       m_json["RigidBodies"].push_back(rigidBody);
+
+      if (part->isMeshed()){
+        std::string fname = "part_" + std::to_string(part->getId()) + ".nas";
+        part->getMesh()->exportToNASTRAN(fname);
+        m_json["DomainBlocks"]["fileName"] = fname;
+      }
 
   }
 

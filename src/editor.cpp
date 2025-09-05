@@ -990,7 +990,7 @@ void Editor::drawGui() {
               if (size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 if (size[1]>0.0){
-                  geo->LoadRectangle(size[0],size[1]);
+                  geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);
                   cout << "Loading Rectanbgle "<<endl;
                   created = true;
                 } else{
