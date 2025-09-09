@@ -25,6 +25,7 @@
 #include <gp_Trsf.hxx>                 // Necesario para definición de transformaciones
 #include <BRepBndLib.hxx>
 
+#include <BRepPrimAPI_MakeCylinder.hxx>
 
 // Geom::Geom(std::string fname){
   
@@ -55,6 +56,16 @@
     // Crear face a partir del wire
     m_shape = new TopoDS_Shape (face);
   }
+
+void Geom::LoadCylinder(double radius, double height) {
+    // Crear cilindro con eje en Z
+    BRepPrimAPI_MakeCylinder mkCyl(radius, height);
+    TopoDS_Shape cyl = mkCyl.Shape();
+
+    // Guardar en m_shape
+    m_shape = new TopoDS_Shape(cyl);
+}
+
 
 void Geom::LoadLine(double dx, double dy, double ox, double oy) {
     gp_Pnt p1(ox, oy, 0);

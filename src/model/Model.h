@@ -42,7 +42,8 @@ public:
   Model(){part_count=0;
     m_hasname = false;
     m_name = "";
-    m_mat_count=0;    
+    m_mat_count=0;   
+    m_analysisType =  Solid3D;
   }
   Model(std::string );
   //Mesh* getPartMesh(const int &i);

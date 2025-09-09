@@ -913,10 +913,12 @@ void Editor::drawGui() {
           switch (m_model->getAnalysisType()) {
               case Solid3D:
                   items = { "Box", "Cylinder", "Plane" };
+                  break;
               case Axisymmetric2D:
                   items = {"Cylinder"};
                   break;
               case PlaneStress2D:
+                  break;
               case PlaneStrain2D:
                   items = { "Rectangle", "Circle" };
                   break;
@@ -934,61 +936,63 @@ void Editor::drawGui() {
         
       if (ImGui::Button("Box")){
       }
-            ImGuiIO& io = ImGui::GetIO();
-            ImGui::Text("WantTextInput: %d", io.WantTextInput);
-            // static char buf[32] = "0.";
-            // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
-            ImGui::Text("Origin");
-            static double origin[] = {0.0,0.0,0.0};
-            ImGui::InputDouble("ox ", &origin[0], 0.01f, 1.0f, "%.4f");
-            static double d1 = 0.0;
-            ImGui::InputDouble("oy ", &origin[1], 0.01f, 1.0f, "%.4f");
-            static double d2   = 0.0;
-            ImGui::InputDouble("oz ", &origin[2], 0.01f, 1.0f, "%.4f");
-            ImGui::Text("Size");
-            //Vec3_t size;
-            static double size[] = {0.1,0.1,0.1};
-            ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
-            ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
-            ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
+      
+      
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("WantTextInput: %d", io.WantTextInput);
+        // static char buf[32] = "0.";
+        // ImGui::InputText("1", buf, IM_ARRAYSIZE(buf));
+        ImGui::Text("Origin");
+        static double origin[] = {0.0,0.0,0.0};
+        ImGui::InputDouble("ox ", &origin[0], 0.01f, 1.0f, "%.4f");
+        static double d1 = 0.0;
+        ImGui::InputDouble("oy ", &origin[1], 0.01f, 1.0f, "%.4f");
+        static double d2   = 0.0;
+        ImGui::InputDouble("oz ", &origin[2], 0.01f, 1.0f, "%.4f");
+        ImGui::Text("Size");
+        //Vec3_t size;
+        static double size[] = {0.1,0.1,0.1};
+        ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
+        ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
+        ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
 
-            static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
-            ImGui::InputFloat3("input float3", vec4a);
+        static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
+        ImGui::InputFloat3("input float3", vec4a);
+        
+        static double radius = 0.01;
+        ImGui::InputDouble("Particle Radius",&radius); 
+        if (ImGui::Button("Create SPH")){
+           cout << "radius "<<radius<<endl;
+           cout << "size 0"<<size[0]<<endl;
+          if (item_current == 2)//Plane
+              cout << "PLANE!"<<endl;
+            double L = 0.5;
+            double H = 0.5;
+            m_dx = 0.05;
+            double rho = 1.;
+            double h = 1.2*radius;
+            cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
+            if (item_current == 2)//Plane
+              size[2] = 0.0;
+            //m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
+            double m_radius = 1.0;
+            Mesh *m_sph_msh = new SPHMesh();
+            m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
+            cout << "Box created, adding part to model "<<endl;
+            m_model->addPart(new Part(m_sph_msh));
+            cout << "Part Added "<<endl;
+            getApp().setActiveModel(m_model);
+            getApp().Update(); //CRASHES
             
-            static double radius = 0.01;
-            ImGui::InputDouble("Particle Radius",&radius); 
-            if (ImGui::Button("Create SPH")){
-               cout << "radius "<<radius<<endl;
-               cout << "size 0"<<size[0]<<endl;
-              if (item_current == 2)//Plane
-                  cout << "PLANE!"<<endl;
-                double L = 0.5;
-                double H = 0.5;
-                m_dx = 0.05;
-                double rho = 1.;
-                double h = 1.2*radius;
-                cout << "Created Box Length with XYZ Length: "<<size[0]<< ", "<<size[1]<< ", "<<size[2]<< endl;
-                if (item_current == 2)//Plane
-                  size[2] = 0.0;
-                //m_model->AddBoxLength(0 ,Vec3_t ( d0 , d1,d2 ), size[0] , size[1],  size[2], radius ,rho, h, 1 , 0 , false, false );     
-                double m_radius = 1.0;
-                Mesh *m_sph_msh = new SPHMesh();
-                m_sph_msh->addBoxLength(Vector3f(0,0,0),Vector3f(size[0],size[1],size[2]),radius);
-                cout << "Box created, adding part to model "<<endl;
-                m_model->addPart(new Part(m_sph_msh));
-                cout << "Part Added "<<endl;
-                getApp().setActiveModel(m_model);
-                getApp().Update(); //CRASHES
-                
-                //graphic_mesh = new GraphicSPHMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-                //graphic_mesh->createVTKPolyData(*m_sph_msh);
+            //graphic_mesh = new GraphicSPHMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+            //graphic_mesh->createVTKPolyData(*m_sph_msh);
 
-                //viewer->addActor(graphic_mesh->getActor());
-                
-                //calcDomainCenter();
-                //cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
-                //is_sph_mesh = true;
-            } //CREATE SPH
+            //viewer->addActor(graphic_mesh->getActor());
+            
+            //calcDomainCenter();
+            //cout << "Domain Center: "<<m_domain_center.x<<", "<<m_domain_center.y<<", "<<m_domain_center.z<<endl;
+            //is_sph_mesh = true;
+        } //CREATE SPH
             
             if (ImGui::Button("Create FEM")){
               
@@ -1023,7 +1027,7 @@ void Editor::drawGui() {
               
               std::string name = "part_" + std::to_string(pc) + ".step";
               Geom *geo = new Geom(name);
-              cout << "Creating rectangle"<<endl;
+              //cout << "Creating rectangle"<<endl;
               bool created = false;
               cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
               // if (m_model->getAnalysisType() == Axisymmetric2D){
@@ -1040,6 +1044,28 @@ void Editor::drawGui() {
                   cout << "Loading Rectanbgle "<<endl;
                   created = true;
                 } else{
+
+                  switch (m_model->getAnalysisType()) {
+                      case Solid3D:
+                          if (item_current == 1)
+                            cout << "Creating Cylinder "<<endl;
+                            geo->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                            created = true;
+                          //else if (item_current == 2)
+                            //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                          break;
+                      case Axisymmetric2D:
+
+                          break;
+                      case PlaneStress2D:
+                          break;
+                      case PlaneStrain2D:
+
+                          break;
+                      default:
+
+                          break;
+                  }
                   geo->LoadLine(size[0],size[1],origin[0],origin[1]);
                   cout << "Loading line "<<endl;
                   created = true;
@@ -1081,6 +1107,23 @@ void Editor::drawGui() {
 
               getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
 
+              switch (m_model->getAnalysisType()) {
+                  case Solid3D:
+                    cout<< "SOLID MODEL"<<endl;
+                      break;
+                  case Axisymmetric2D:
+
+                      break;
+                  case PlaneStress2D:
+                      break;
+                  case PlaneStrain2D:
+
+                      break;
+                  default:
+
+                      break;
+              }
+                  
 
           }//Created = true
           else {

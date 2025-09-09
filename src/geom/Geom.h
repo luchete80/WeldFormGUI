@@ -31,6 +31,9 @@ public:
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
   bool LoadSTEP(const std::string& fname);
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
+  
+  void LoadCylinder(double radius, double height);
+  
   const double3 & getOrigin()const{return m_origin;}
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
