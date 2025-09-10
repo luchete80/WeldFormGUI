@@ -1037,40 +1037,49 @@ void Editor::drawGui() {
                   // if (item_current == 0)
                     // geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);                
               // }
+              switch (m_model->getAnalysisType()) {
+                  case Solid3D:
+                      if (item_current == 0){ //RECTANGLE
+                          
+                      }else if (item_current == 1){ //CYLINDER
+                        if (size[2] > 0.0){
+                          cout << "Creating Cylinder "<<endl;
+                          geo->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                          created = true;
+                        } else {
+                          cout << "NULL Z DIMENSION VALUE"<<endl;
+                          }
+                      }//item cylinder
+                      //else if (item_current == 2)
+                        //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                      break;
+                  case Axisymmetric2D:
+
+                      break;
+                  case PlaneStress2D:
+                      break;
+                  case PlaneStrain2D:
+
+                      break;
+                  default:
+
+                      break;
+              }
+                  
               if (size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 if (size[1]>0.0){
                   geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);
                   cout << "Loading Rectanbgle "<<endl;
                   created = true;
-                } else{
+                } else{//DIMENSION 1
 
-                  switch (m_model->getAnalysisType()) {
-                      case Solid3D:
-                          if (item_current == 1)
-                            cout << "Creating Cylinder "<<endl;
-                            geo->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
-                            created = true;
-                          //else if (item_current == 2)
-                            //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
-                          break;
-                      case Axisymmetric2D:
-
-                          break;
-                      case PlaneStress2D:
-                          break;
-                      case PlaneStrain2D:
-
-                          break;
-                      default:
-
-                          break;
-                  }
                   geo->LoadLine(size[0],size[1],origin[0],origin[1]);
                   cout << "Loading line "<<endl;
                   created = true;
                 }
               }
+              
               if (created){
               cout << "Done. Creating vtkmesh"<<endl;
               geom->LoadFromShape(geo->getShape(), 0.01);
