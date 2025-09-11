@@ -121,12 +121,13 @@ void InputWriter::writeToFile(std::string fname){
         cout << "ERROR: More than Elastic body not supported. "<<endl;
         return;
       }
-     m_json["DomainBlocks"]["type"] = "File";
+      json block;
+     block["type"] = "File";
 
       if (part->isMeshed()){
       std::string fname = "part_" + std::to_string(part->getId()) + ".k";
       part->getMesh()->exportToLSDYNA(fname);
-      m_json["DomainBlocks"]["fileName"] = fname;
+      block["fileName"] = fname;
       }
       else {
         
@@ -134,7 +135,7 @@ void InputWriter::writeToFile(std::string fname){
         }
 
 
-
+      m_json["DomainBlocks"].push_back(block);
      is_elastic = true;
   } else { ////RIGID
 
