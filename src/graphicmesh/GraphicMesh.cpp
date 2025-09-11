@@ -12,6 +12,7 @@
 #include <vtkTriangle.h>
 #include <vtkQuad.h>
 #include <vtkProperty.h>
+#include <vtkTetra.h>
 
 #include <array>
 
@@ -363,8 +364,8 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
                     cell = vtkSmartPointer<vtkQuad>::New();
                     has2DElements = true;
                 } else {
-                    //cell = vtkSmartPointer<vtkTetra>::New();
-                    //has3DElements = true;
+                    cell = vtkSmartPointer<vtkTetra>::New();
+                    has3DElements = true;
                 }
             } else if (nc == 8) {
                 // Hexaedro 3D
@@ -388,7 +389,8 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
             }
 
             cells->InsertNextCell(cell);
-        }
+            
+        }//Element loop
 
         // Configurar el polydata según los tipos de elementos presentes
         mesh_pdata->SetPoints(points);

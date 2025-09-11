@@ -644,21 +644,23 @@ void Editor::drawGui() {
   
             std::vector<std::pair<int, int>> entities;
             gmsh::model::getEntities(entities);
-
-            // Recorremos curvas y seteamos transfinite
-            for(auto &e : entities) {
-                if(e.first == 1) { // 1 = curva
-                    gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
-                }
-                if(e.first == 2) { // 2 = superficie
-                    gmsh::model::mesh::setTransfiniteSurface(e.second);
-                    gmsh::model::mesh::setRecombine(2, e.second); // QUADS
-                    cout << "Recombine in 2 dim"<<endl; 
-                }
-                if(e.first == 3) { // 3 = volumen
-                    //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
-                    //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
-                }
+            
+            if (m_model->getAnalysisType() > Solid3D){
+              // Recorremos curvas y seteamos transfinite
+              for(auto &e : entities) {
+                  if(e.first == 1) { // 1 = curva
+                      gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
+                  }
+                  if(e.first == 2) { // 2 = superficie
+                      gmsh::model::mesh::setTransfiniteSurface(e.second);
+                      gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                      cout << "Recombine in 2 dim"<<endl; 
+                  }
+                  if(e.first == 3) { // 3 = volumen
+                      //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
+                      //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
+                  }
+              }
             }
             ////////////////////////
                           
@@ -673,13 +675,14 @@ void Editor::drawGui() {
                   //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
                   
                   m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
-                  cout << "Done mesh gen."<<endl;
+
                   getApp().setActiveModel(m_model);
                   getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
-                  
+
                   std::string kname = "part_" + std::to_string(i) + ".k";
+                  cout << "Exporting to LSDyna..."<<endl;
                   m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
-                  
+                  cout << "Done"<<endl;
                   
                   ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
                   //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
