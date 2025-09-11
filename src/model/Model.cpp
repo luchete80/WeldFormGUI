@@ -134,6 +134,7 @@ void Model::addPart(Part *part){
 
 void Model::addPart(Geom *geom){
   m_part.push_back(new Part(geom));
+  m_part[m_part.size()-1]->setId(m_part.size()-1);
 }
 
 void Model::addGeom(Geom *geom){

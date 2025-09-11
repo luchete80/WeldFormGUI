@@ -792,6 +792,20 @@ void Mesh::genFromGmshModel() {
 #include <iomanip>
 #include <sstream>
 
+std::string formatLSDynaNumber(double value) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(13);
+    
+    // Para números negativos, el signo ocupa un espacio
+    if (value < 0) {
+        oss << std::setw(15) << value;
+    } else {
+        // Para números positivos, agregamos un espacio extra
+        oss << " " << std::setw(15) << value;
+    }
+    return oss.str();
+}
+
 bool Mesh::exportToLSDYNA(const std::string& filename) {
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
@@ -817,9 +831,9 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
         Vector3f pos = node->getPos();
         outfile << std::setw(8) << i + 1   // ID del nodo (1-based)
                 << std::scientific << std::setprecision(10)
-                << std::setw(16) << pos.x  
-                << std::setw(16) << pos.y  
-                << std::setw(16) << pos.z  
+                << formatLSDynaNumber(pos.x)  
+                << formatLSDynaNumber(pos.y)  
+                << formatLSDynaNumber(pos.z)  
                 << std::setw(6) << 0       // tc (default 0)
                 << std::setw(6) << 0       // rc (default 0)
                 << std::endl;
@@ -887,7 +901,7 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
           } else if (m_dim == 3){
             
             if (numNodes==4)
-            out = false;
+            out = true;
         }
         if (out){
           // Escribir elemento

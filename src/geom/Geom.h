@@ -27,7 +27,7 @@ public:
   //std::string m_name;
   //double scale; //Is scale
 
-  void LoadRectangle(double dx, double dy, double ox = 0.0, double oy = 0.0);
+  void LoadRectangle(double dx, double dy, double ox = 0.0, double oy = 0.0, double oz = 0.0);
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
   bool LoadSTEP(const std::string& fname);
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;

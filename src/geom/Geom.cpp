@@ -32,12 +32,13 @@
   // scale = 1.0;
 // }
 
-  void Geom::LoadRectangle(double dx, double dy, double ox, double oy) {
-  gp_Pnt p1(ox,oy,0), p2(ox+dx,oy,0), p3(ox+dx,oy+dy,0), p4(ox,oy+dy,0);
+  void Geom::LoadRectangle(double dx, double dy, double ox, double oy, double oz) {
+  gp_Pnt p1(ox,oy,oz), p2(ox+dx,oy,oz), p3(ox+dx,oy+dy,oz), p4(ox,oy+dy,oz);
 
     m_origin.x = ox;
     m_origin.y = oy;
-    
+    m_origin.z = oz;
+        
     // Crear edges
     BRepBuilderAPI_MakeEdge e1(p1,p2);
     BRepBuilderAPI_MakeEdge e2(p2,p3);

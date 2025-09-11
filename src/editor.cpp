@@ -645,7 +645,8 @@ void Editor::drawGui() {
             std::vector<std::pair<int, int>> entities;
             gmsh::model::getEntities(entities);
             
-            if (m_model->getAnalysisType() > Solid3D){
+            //if (m_model->getAnalysisType() > Solid3D){
+            if (model_dim<3){
               // Recorremos curvas y seteamos transfinite
               for(auto &e : entities) {
                   if(e.first == 1) { // 1 = curva
@@ -1060,7 +1061,7 @@ void Editor::drawGui() {
                       }else if (item_current == 1){ //CYLINDER
                         if (size[2] > 0.0){
                           cout << "Creating Cylinder "<<endl;
-                          geo->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                          geo->LoadCylinder(size[0],size[2]); //BOX, CYlinder, Plane
                           created = true;
                         } else {
                           cout << "NULL Z DIMENSION VALUE"<<endl;
@@ -1085,7 +1086,7 @@ void Editor::drawGui() {
               if (size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 if (size[1]>0.0){
-                  geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);
+                  geo->LoadRectangle(size[0],size[1],origin[0],origin[1],origin[2]);
                   cout << "Loading Rectanbgle "<<endl;
                   created = true;
                 } else{//DIMENSION 1
@@ -1112,11 +1113,7 @@ void Editor::drawGui() {
               geo->ExportSTEP();
               
               m_model->addPart(geo);
-              int max_pid = 0;
-              for (int p=0;p<m_model->getPartCount();p++)
-                if (m_model->getPart(p)->getId()>max_pid)
-                  max_pid = m_model->getPart(p)->getId();
-                  
+
               //m_model->getPart(m_model->getPartCount())->setId(max_pid);
               create_new_part = true;
               getApp().setActiveModel(m_model);              

@@ -147,15 +147,16 @@ void InputWriter::writeToFile(std::string fname){
       rigidBody["translation"] = {1.0, 0.0, 0.0};
       rigidBody["scale"] = {1, 1, 1};
 
-      // Agregarlo al subbloque "RigidBodies"
-      m_json["RigidBodies"].push_back(rigidBody);
 
       if (part->isMeshed()){
         std::string fname = "part_" + std::to_string(part->getId()) + ".nas";
         part->getMesh()->exportToNASTRAN(fname);
-        m_json["DomainBlocks"]["fileName"] = fname;
+        rigidBody["fileName"] = fname;
       }
 
+      // Agregarlo al subbloque "RigidBodies"
+      m_json["RigidBodies"].push_back(rigidBody);
+      
   }
 
       json jpart;
