@@ -552,10 +552,23 @@ void Editor::drawGui() {
     else if (m_model->getAnalysisType() == PlaneStrain2D) des = "2D PE";
     else if (m_model->getAnalysisType() == Axisymmetric2D) des = "2D AX";
    
-    
+ 
     if (ImGui::TreeNode((void*)"Model %s",des.c_str()))
     {
-
+        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+          m_show_mod_dlg_edit = true;
+          //selected_mat = m_mats[i];
+          selected_mod = m_model;
+        }
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("Edit"/*, "CTRL+Z"*/)) { 
+            m_show_mod_dlg_edit = true;
+            selected_mod = m_model;
+            }
+          ImGui::EndPopup();          
+        }   
+        
         bool open_ = ImGui::TreeNode("Parts");
         if (ImGui::BeginPopupContextItem())
         {
@@ -568,7 +581,7 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
           }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
-            ImGui::EndPopup();          
+          ImGui::EndPopup();          
         }
         
         
@@ -1414,6 +1427,7 @@ void Editor::drawGui() {
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
   if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
+  if (m_show_mod_dlg_edit) {ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);}
   
   else if (m_show_set_dlg) {
   

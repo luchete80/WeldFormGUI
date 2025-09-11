@@ -60,6 +60,7 @@ add_executable(${EXEC_NAME} main.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
                             Job.cpp
                             job_dialog.cpp
+                            model_dialog.cpp
                             part_dialog.cpp
                             log.cpp
                             global.cpp
