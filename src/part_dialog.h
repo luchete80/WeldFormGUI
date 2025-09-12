@@ -8,11 +8,14 @@
 // IS BASICALLY THE SAME 
 struct PartDialog{
   
+   PartDialog() {
+     m_v = make_double3(0,0,0);}
   //void    AddLog(const char* fmt, ...);
   int m_id; //TODO; CHANGE TO VECTOR (TEMP FUNCTION)
   double m_elastic_const;
   double m_poisson_const;
   int part_type = 0 ;
+  double3 m_v ;
   
   bool m_initialized = false;
   

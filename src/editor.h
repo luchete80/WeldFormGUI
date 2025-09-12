@@ -200,9 +200,9 @@ protected:
   bool m_show_mat_dlg; //REMOVE, CGHANGE TO 
 
   bool m_show_set_dlg;
-  bool m_show_mat_dlg_edit;
-  bool m_show_mod_dlg_edit;  
-  bool m_show_prt_dlg_edit;
+  bool m_show_mat_dlg_edit = false;
+  bool m_show_mod_dlg_edit = false;  
+  bool m_show_prt_dlg_edit = false;
   bool create_new_mat;
   bool create_new_part;
   bool create_new_job;

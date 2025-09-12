@@ -14,6 +14,7 @@ void  PartDialog::Draw(const char* title, bool* p_open, Part *part){
   if (!m_initialized) {
       m_id = part->m_id;  // inicializamos la UI solo la primera vez
       m_initialized = true;
+      m_v = part->getVel();
       if (part->getType() == Elastic)
         part_type = 0;
       else 
@@ -39,8 +40,15 @@ void  PartDialog::Draw(const char* title, bool* p_open, Part *part){
   if (ImGui::RadioButton("Rigid", part_type == 1)) {
       part_type = 1;
   }
+  
+  
+  float vv[3] = {m_v.x,m_v.y,m_v.z};
 
-
+  ImGui::InputFloat3("Velocity", vv, "%.4f");
+  //copying back;
+    m_v.x = vv[0];
+    m_v.y = vv[1];
+    m_v.z = vv[2];
   
   //~ ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
   //~ ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
@@ -50,7 +58,7 @@ void  PartDialog::Draw(const char* title, bool* p_open, Part *part){
     part->m_id = m_id;
     cout << "m_id"<<m_id<<endl;
     m_initialized = false;  // reset para la próxima vez
-    
+    part->setVel(m_v);
     part->setType(part_type);
     *p_open = false;
 

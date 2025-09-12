@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include "double3.h"
 
 using namespace std;
 
@@ -14,12 +15,17 @@ public:
   Entity(){}
   Entity(int &id){m_id=id;}
   const int & getId()const{return m_id;} ///REMEMBER TO RETURN AS CONST &, CONSIDERING SWIG WRAPPING
+  
+  const double3 & getVel()const {return m_v;}
+  void setVel(const double3 &v){m_v = v;}
+  
   void setId(int &i){
     m_id=i;
     cout <<"Id set to "<<m_id<<endl;}
 protected:
   int m_id;
   char *       m_name;
+  double3       m_v;// Velocity
 };
 
 class MeshEntity {

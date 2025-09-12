@@ -15,6 +15,12 @@ using json = nlohmann::json;
 
 ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 
+
+//~ void to_json(json& j, const Vec3& v) {
+    //~ j = json{v.x, v.y, v.z};
+//~ }
+
+
 void ModelWriter::writeToFile(std::string fname){
   json m_json;
   
@@ -150,6 +156,14 @@ void ModelWriter::writeToFile(std::string fname){
       }
 
       m_json["model"]["parts"].push_back(jpart);
+      
+      
+      json bc;
+      
+      bc["zoneId"] = 0;
+      bc["value"] = {part->getVel().x,part->getVel().y,part->getVel().z};
+      
+      m_json["BoundaryConditions"].push_back(bc);
     
   }
 
