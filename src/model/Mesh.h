@@ -61,7 +61,8 @@ public:
   
   
   bool exportToLSDYNA(const std::string & filename);
-    
+  void setFlipNormals(const bool & fn){m_flip_normals = fn;}
+  const bool & getFlipNormals()const{return m_flip_normals;}
   //vtkSmartPointer<vtkActor> getActor(){return mesh_actor;}
 protected:
   int m_node_count;
@@ -78,6 +79,8 @@ protected:
   int                     m_gmsh_id; //GMSH entity ID 
   Part*                   m_part;
   Mesh_Type               m_type;
+  
+  bool                    m_flip_normals = false;
   /*
   //VTK THING, for visualization
    vtkSmartPointer<vtkActor> mesh_actor;
