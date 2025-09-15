@@ -125,3 +125,4 @@
 20250905 - Fixed Nastran export.
          - Added Mode Type.
 20250915 - Fixed Opening model not meshed (crash).
+         - Fixed model input read.

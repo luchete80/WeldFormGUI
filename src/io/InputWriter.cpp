@@ -157,6 +157,14 @@ void InputWriter::writeToFile(std::string fname){
 
       // Agregarlo al subbloque "RigidBodies"
       m_json["RigidBodies"].push_back(rigidBody);
+
+
+      json bc;
+      
+      bc["zoneId"] = part->getId();
+      bc["value"] = {part->getVel().x,part->getVel().y,part->getVel().z};
+      
+      m_json["BoundaryConditions"].push_back(bc);
       
   }
 

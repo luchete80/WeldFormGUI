@@ -157,15 +157,8 @@ void ModelWriter::writeToFile(std::string fname){
 
       m_json["model"]["parts"].push_back(jpart);
       
-      
-      json bc;
-      
-      bc["zoneId"] = 0;
-      bc["value"] = {part->getVel().x,part->getVel().y,part->getVel().z};
-      
-      m_json["BoundaryConditions"].push_back(bc);
     
-  }
+  }//PART
 
   o << std::setw(4) << m_json << std::endl;
   
