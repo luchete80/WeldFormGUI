@@ -124,3 +124,4 @@
 20250903 - Fixed meshing at opening file. Not anymore on editor. Now is on reader.
 20250905 - Fixed Nastran export.
          - Added Mode Type.
+20250915 - Fixed Opening model not meshed (crash).

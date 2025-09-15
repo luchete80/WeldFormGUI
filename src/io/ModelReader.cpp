@@ -157,18 +157,20 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     Geom* geom = new Geom(name);
                     part = new Part(geom);
 
-               
-                    gmsh::clear();
-                    std::string meshname = "part_" + std::to_string(i) + ".msh";
-                    gmsh::open(meshname.c_str());
-                    gmsh::model::occ::synchronize();               
-                    
-                    part->generateMesh();
-               
+                             
                }// if geometry
 
                
                 //part->setGeom(geom);
+            }
+            
+            if (jpart.contains("mesh")){
+              gmsh::clear();
+              std::string meshname = "part_" + std::to_string(i) + ".msh";
+              gmsh::open(meshname.c_str());
+              gmsh::model::occ::synchronize();               
+              
+              part->generateMesh();             
             }
 
           

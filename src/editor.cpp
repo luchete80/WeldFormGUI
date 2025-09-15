@@ -1166,7 +1166,7 @@ void Editor::drawGui() {
     }
     
     
-
+  ////// OPEN MODEL 
   // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
     // ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dae,.obj,.str", ".");
@@ -1219,13 +1219,14 @@ void Editor::drawGui() {
         
         //m_model->getPart(p)->generateMesh(); //from gmsh
         
-        graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-        
-        //graphic_mesh->createVTKPolyData();
-        graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
-        
-        viewer->addActor(graphic_mesh->getActor());
-        
+        if (m_model->getPart(p)->isMeshed()){
+          graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+          
+          //graphic_mesh->createVTKPolyData();
+          graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
+          
+          viewer->addActor(graphic_mesh->getActor());
+        }
         //~ #ifdef BUILD_PYTHON
         //~ PyRun_SimpleString("GetApplication().getActiveModel()");
         //~ #else
