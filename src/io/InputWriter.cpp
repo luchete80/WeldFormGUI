@@ -122,6 +122,10 @@ void InputWriter::writeToFile(std::string fname){
           cout << "GMT"<<endl;
           
           break;
+        case HOLLOMON:
+          cout << "Hollomon"<<endl;
+          
+          break;
         default:
           break;
       }

@@ -160,6 +160,38 @@ void ModelWriter::writeToFile(std::string fname){
     
   }//PART
 
+
+  if (m_model.getMaterialCount()>0){
+    
+    if (m_model.getMaterial(0)!= nullptr){
+    
+    m_json["Materials"]["density0"]     = m_model.getMaterial(0)->getDensityConstant();  
+    m_json["Materials"]["youngsModulus"]= m_model.getMaterial(0)->Elastic().E();  
+    m_json["Materials"]["poissonsRatio"]= m_model.getMaterial(0)->Elastic().nu();  
+    
+    cout << "Checking plastic "<<endl;
+    if (!m_model.getMaterial(0)->isPlastic()) {
+      cout << "Elastic"<<endl;
+      m_json["Materials"]["type"] = "Elastic";     
+    } else {
+      switch ( m_model.getMaterial(0)->m_plastic->Material_model ) {
+      
+        case _GMT_:
+          cout << "GMT"<<endl;
+          
+          break;
+        case HOLLOMON:
+          cout << "Hollomon"<<endl;
+          
+          break;
+        default:
+          break;
+      }
+    }//PLASTIC
+    
+    }//if not nullptr
+    cout << "Done."<<endl;
+  }
   o << std::setw(4) << m_json << std::endl;
   
   o.close();
