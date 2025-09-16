@@ -605,6 +605,11 @@ void Editor::drawGui() {
               //selected_mat = m_mats[i];
               selected_mat = m_model->getMaterial(i);
             }
+            
+            if (m_model->getPart(i)->isMeshed()){
+            
+              
+            }
             if (ImGui::BeginPopupContextItem())
             {
               if (ImGui::MenuItem("Rename", "CTRL+Z")) {
@@ -706,7 +711,7 @@ void Editor::drawGui() {
               
                
               ImGui::EndPopup();
-            }                    
+            }//popuip                    
               ImGui::SameLine();
               if (ImGui::SmallButton("edit")) {
                 m_show_prt_dlg_edit = true;
@@ -717,7 +722,7 @@ void Editor::drawGui() {
         }
       
            ImGui::TreePop();
-        }
+        }//If model tree open
         //-----------------------
         open_ = ImGui::TreeNode("Sets");
         if (ImGui::BeginPopupContextItem())
