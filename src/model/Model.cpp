@@ -22,7 +22,6 @@ using namespace LS_Dyna;
   
 Model::Model(string name){
   part_count = 0;
-  m_mat_count = 0;
   have_meshes = false;
   cout << "Creating Model ..."<<endl;
   cout << "Reading "<<name<<endl;

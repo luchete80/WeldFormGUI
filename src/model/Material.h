@@ -43,7 +43,7 @@ class Plastic_{
   double er_min, er_max;
  
 
-  
+  virtual const int getType()const{return Material_model;}
   //THERMAL
   double k_T, cp_T; ///MAYBE MOVE TO element or nodes
   
@@ -72,7 +72,7 @@ class Material_{
   void setDensityConstant(const double &val){m_density = val;};
   const double& getDensityConstant()const {return m_density;}; //COULD DEFINE IT AS TEMP 0 and 
   Plastic_* getPlastic(){return m_plastic;}
-  const bool isPlastic(){return m_isplastic;}
+  const bool & isPlastic()const{return m_isplastic;}
   
 	
   double m_density;
@@ -129,7 +129,9 @@ public Plastic_{
   double sy0;
 	
 	public:
-	Hollomon(){}
+	Hollomon(){
+    Material_model = HOLLOMON;
+    }
 	//You provide the values of A, B, n, m, 
 	//θmelt, and  θ_transition
 	//as part of the metal plasticity material definition.

@@ -602,7 +602,9 @@ void Editor::drawGui() {
             //cout << "Model part count "<<m_model->getPartCount()<<endl;
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
               m_show_mat_dlg_edit = true;
-              selected_mat = m_mats[i];}
+              //selected_mat = m_mats[i];
+              selected_mat = m_model->getMaterial(i);
+            }
             if (ImGui::BeginPopupContextItem())
             {
               if (ImGui::MenuItem("Rename", "CTRL+Z")) {
@@ -743,6 +745,7 @@ void Editor::drawGui() {
         }
         if (open_){
         for (int i = 0; i < m_mats.size(); i++)
+        //for (int i = 0; i < m_model->getMaterialCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
           // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
@@ -753,12 +756,15 @@ void Editor::drawGui() {
           {
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
               m_show_mat_dlg_edit = true;
-              selected_mat = m_mats[i];}
+              //selected_mat = m_mats[i];
+              selected_mat = m_model->getMaterial(i);
+            }
             if (ImGui::BeginPopupContextItem())
             {
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_mat_dlg_edit = true;
-                selected_mat = m_mats[i];
+                //selected_mat = m_mats[i];
+                selected_mat = m_model->getMaterial(i);
               }
               ImGui::EndPopup();
             }                    
@@ -1452,10 +1458,10 @@ void Editor::drawGui() {
     //SHOULD NOT BE CALLED AGAIN!!!!!!
     //cout << "temp dens" <<m_matdlg.m_density_const<<endl;
     m_mats.push_back(new Material_(mat));
-    getApp().getActiveModel().addMaterial(&mat);
+    getApp().getActiveModel().addMaterial(new Material_(mat));
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
-    cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
+    //cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
     
     m_show_mat_dlg = false;
 

@@ -42,7 +42,6 @@ public:
   Model(){part_count=0;
     m_hasname = false;
     m_name = "";
-    m_mat_count=0;   
     m_analysisType =  Solid3D;
   }
   Model(std::string );
@@ -56,9 +55,9 @@ public:
   Geom* getLastGeom(){return m_geom[m_geom.size()-1];}
   int getPartCount(){return m_part.size();}
   const model_type& getModelType () const {return m_modeltype;}
-  const Material_* getMaterial (const int &m)const{return m_mat[m];}
+  Material_* getMaterial (const int &m){return m_mat[m];}
   void addMaterial(Material_*m){m_mat.push_back(m);} //Existent material
-  const int & getMaterialCount()const{return m_mat_count;}
+  int getMaterialCount(){return m_mat.size();}
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}
   Part & getPartRef(const int &i) {return *m_part[i];}
@@ -101,7 +100,6 @@ protected:
   std::vector <Particle*>   Particles; //SPH
   
   model_type m_modeltype;
-  int m_mat_count;
   
   bool have_meshes;
   
@@ -120,7 +118,6 @@ public:
     m_modeltype = FEM_Model;
     m_hasname = false;
     m_name = "";
-    m_mat_count=0;
   
   }
   FEMModel(std::string ){};

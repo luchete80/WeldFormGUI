@@ -104,7 +104,9 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
       Elastic_ el(matdlg->m_elastic_const ,matdlg->m_elastic_const);
       ret = Material_(el);
       if (matdlg->m_pl != nullptr)
-        ret.m_plastic = new Plastic_(*matdlg->m_pl);
+        //ret.m_plastic = new Plastic_(*matdlg->m_pl);
+        ret.m_plastic = matdlg->m_pl;
+        ret.m_isplastic = true;
     } else {
       cout << "Material elastic constants should not be zero;"<<endl;
     };
