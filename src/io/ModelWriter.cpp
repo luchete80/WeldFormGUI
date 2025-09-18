@@ -174,19 +174,25 @@ void ModelWriter::writeToFile(std::string fname){
       cout << "Elastic"<<endl;
       m_json["Materials"]["type"] = "Elastic";     
     } else {
+      std::vector<double> plasticConst;
       switch ( m_model.getMaterial(0)->m_plastic->Material_model ) {
-      
-        case _GMT_:
+                
+        case _GMT_: 
           cout << "GMT"<<endl;
+          m_json["Materials"]["type"]= "GMT";  
           
           break;
         case HOLLOMON:
           cout << "Hollomon"<<endl;
-          
+          m_json["Materials"]["type"]= "Hollomon";  
+          plasticConst = m_model.getMaterial(0)->m_plastic->getPlasticConstants(); //K,n
+
+                    
           break;
         default:
           break;
       }
+      m_json["Materials"]["const"] = plasticConst;  // esto crea un array JSON automáticamente
     }//PLASTIC
     
     }//if not nullptr

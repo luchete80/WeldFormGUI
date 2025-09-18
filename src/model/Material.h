@@ -4,11 +4,13 @@
 /////// DUMMY MATERIAL CLASS //////////////////////////
 ///////////////////////////////////////////////////////
 
+
 #define BILINEAR				0
 #define HOLLOMON				1 //POWER LAW
 #define JOHNSON_COOK		2
 #define _GMT_         	3
 
+#include <vector>
 class Elastic_{
 	private:
 	double E_m, nu_m;	//Poisson and young
@@ -46,6 +48,7 @@ class Plastic_{
   virtual const int getType()const{return Material_model;}
   //THERMAL
   double k_T, cp_T; ///MAYBE MOVE TO element or nodes
+  virtual std::vector <double> getPlasticConstants(){}
   
 };
 
@@ -143,6 +146,11 @@ public Plastic_{
 	//~ inline double CalcTangentModulus(const double &strain);
 	//~ inline double CalcYieldStress(){return 0.0;}	
 	//~ inline double CalcYieldStress(const double &strain);	
+  virtual std::vector <double> getPlasticConstants(){
+    std::vector<double> ret;
+    ret.push_back(K);ret.push_back(m);
+    return ret;
+  }
 };
 
 
