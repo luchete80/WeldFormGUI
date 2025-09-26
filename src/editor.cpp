@@ -980,7 +980,31 @@ void Editor::drawGui() {
         ImGui::Text("Size");
         //Vec3_t size;
         static double size[] = {0.1,0.1,0.1};
-        ImGui::InputDouble("x ", &size[0], 0.01f, 1.0f, "%.4f");
+        static std::string label_x = "x ";
+        switch (m_model->getAnalysisType()) {
+            case Solid3D:
+                if (item_current == 0){ //RECTANGLE
+                    
+                }else if (item_current == 1){ //CYLINDER
+                  label_x = "radius ";
+                }//item cylinder
+                //else if (item_current == 2)
+                  //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
+                break;
+            case Axisymmetric2D:
+
+                break;
+            case PlaneStress2D:
+                break;
+            case PlaneStrain2D:
+
+                break;
+            default:
+
+                break;
+        }
+              
+        ImGui::InputDouble(label_x.c_str(), &size[0], 0.01f, 1.0f, "%.4f");
         ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
         ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
 

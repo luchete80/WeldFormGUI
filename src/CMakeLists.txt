@@ -26,6 +26,14 @@ link_directories ("${GMSH_DIR}/lib")
 include_directories ("${GMSH_DIR}/include")
 endif()
 
+if(WIN32) 
+    # Remover jemalloc de las flags de enlace
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:jemalloc.lib")
+    
+    # Para todas las configuraciones
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:jemalloc.lib")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /NODEFAULTLIB:jemalloc.lib")
+endif()
 
 add_subdirectory("model")
 add_subdirectory("geom")
