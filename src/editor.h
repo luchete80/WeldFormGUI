@@ -208,6 +208,8 @@ protected:
   bool create_new_job;
   bool create_new_set;
 
+  bool m_showNewDomain = false; // o true si quieres que inicie abierto
+
   SceneView *m_sceneview;
   
   float m_rotation;

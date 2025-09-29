@@ -578,7 +578,8 @@ void Editor::drawGui() {
             string test;
             cout << "Model part count "<<m_model->getPartCount()<<endl;
           }
-          if (ImGui::MenuItem("New Geometry: 2D Box", "CTRL+Z")) {
+          if (ImGui::MenuItem("New Geometry...", "CTRL+Z")) {
+            m_showNewDomain = true;
           }
           if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
           ImGui::EndPopup();          
@@ -925,10 +926,13 @@ void Editor::drawGui() {
       ImGui::EndTabBar();
     }
     ////////////////////// END TAB BAR ///////////////////////////////////
+
+    // En tu función de renderizado
+    bool shouldShow = m_showNewDomain;
+    ImGuiTreeNodeFlags flags = shouldShow ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;    
     
     
-    
-    if (ImGui::CollapsingHeader("New Domain")){
+    if (ImGui::CollapsingHeader("New Domain", flags)){
       static int item_current = 0;
       {
           // Using the _simplified_ one-liner Combo() api here
@@ -980,13 +984,17 @@ void Editor::drawGui() {
         ImGui::Text("Size");
         //Vec3_t size;
         static double size[] = {0.1,0.1,0.1};
-        static std::string label_x = "x ";
+        static std::string label[] = {"x ", "y ", "z "};
+        bool show_size[] = {true,true,true};
+        
         switch (m_model->getAnalysisType()) {
             case Solid3D:
                 if (item_current == 0){ //RECTANGLE
                     
                 }else if (item_current == 1){ //CYLINDER
-                  label_x = "radius ";
+                  label[0] = "radius ";
+                  show_size[1] = false;
+                  label[2] = "size ";
                 }//item cylinder
                 //else if (item_current == 2)
                   //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
@@ -1004,9 +1012,12 @@ void Editor::drawGui() {
                 break;
         }
               
-        ImGui::InputDouble(label_x.c_str(), &size[0], 0.01f, 1.0f, "%.4f");
+        ImGui::InputDouble(label[0].c_str(), &size[0], 0.01f, 1.0f, "%.4f");
+        if (show_size[1])
         ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
-        ImGui::InputDouble("z ", &size[2], 0.01f, 1.0f, "%.4f");
+        
+        
+        ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
 
         static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
         ImGui::InputFloat3("input float3", vec4a);
