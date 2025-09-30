@@ -1020,10 +1020,10 @@ void Editor::drawGui() {
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
 
         static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
-        ImGui::InputFloat3("input float3", vec4a);
+        //ImGui::InputFloat3("input float3", vec4a);
         
         static double radius = 0.01;
-        ImGui::InputDouble("Particle Radius",&radius); 
+        //ImGui::InputDouble("Particle Radius",&radius); 
         if (ImGui::Button("Create SPH")){
            cout << "radius "<<radius<<endl;
            cout << "size 0"<<size[0]<<endl;
