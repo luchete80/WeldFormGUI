@@ -994,7 +994,7 @@ void Editor::drawGui() {
                 }else if (item_current == 1){ //CYLINDER
                   label[0] = "radius ";
                   show_size[1] = false;
-                  label[2] = "size ";
+                  label[2] = "height ";
                 }//item cylinder
                 //else if (item_current == 2)
                   //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
