@@ -295,6 +295,7 @@ public:
 
             double translate[3] = {0, 0, 0};
             translate[this->SelectedAxis] = movement;
+            cout << "Movement: "<<movement<<endl;
 
             // Aplicar transformación
             vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
