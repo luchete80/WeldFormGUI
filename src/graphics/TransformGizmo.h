@@ -171,7 +171,10 @@ public:
     }
     
     void OnLeftButtonDown() override {
-        int* clickPos = this->GetInteractor()->GetEventPosition();
+        int *clickPos = this->GetInteractor()->GetEventPosition();
+        this->ClickPos[0] = clickPos[0];  // ✅ guardar posición inicial
+        this->ClickPos[1] = clickPos[1];
+        
         this->SelectedAxis = -1;
 
         // Convertir coordenadas de pantalla a mundo 3D
@@ -272,9 +275,12 @@ public:
     
         if (this->SelectedAxis >= 0 && this->TargetActor) {
             int* currPos = this->GetInteractor()->GetEventPosition();
-            double dx = currPos[0] - this->LastPos[0];
-            double dy = currPos[1] - this->LastPos[1];
+            //double dx = currPos[0] - this->LastPos[0];
+            //double dy = currPos[1] - this->LastPos[1];
             
+            double dx = currPos[0] - this->ClickPos[0];
+            double dy = currPos[1] - this->ClickPos[1];
+                        
             cout << "dx: "<<dx<<endl;
 
             // Movimiento más suave
@@ -314,6 +320,7 @@ private:
     vtkSmartPointer<TransformGizmo> Gizmo;
     int SelectedAxis = -1;
     int LastPos[2];
+    int ClickPos[2];
 };
 
 vtkStandardNewMacro(GizmoInteractorStyle);
