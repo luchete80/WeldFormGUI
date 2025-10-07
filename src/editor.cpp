@@ -714,25 +714,31 @@ void Editor::drawGui() {
               //~ #endif
 
               //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-              
+
+
+                              
+          }/// "MESH" part
+          else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
+            
+                          
               vtkSmartPointer<vtkActor> mesh_actor; 
               vtkSmartPointer<TransformGizmo> gizmo = vtkSmartPointer<TransformGizmo>::New();
 
               cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
               int gmid = -1; //graphic mesh id
-              for (int p=0;p<m_model->getPartCount();p++){
-                cout << "Checking app new parts "<<endl;
-                //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
-                bool not_found = true;
-                  for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
-                    if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(p)->getMesh()){//is related to the part mesh
-                      mesh_actor = getApp().getGraphicMesh(gm)->getActor();
-                      gmid = gm;
-                      cout << "gmid = "<<gmid<<endl;
-                      cout << "MESH ACTOR FOUND "<<endl;
-                      }
-                  }//gm
-                }//part
+
+              cout << "Checking app new parts "<<endl;
+              //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
+              bool not_found = true;
+              for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
+                if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(i)->getMesh()){//is related to the part mesh
+                  mesh_actor = getApp().getGraphicMesh(gm)->getActor();
+                  gmid = gm;
+                  cout << "gmid = "<<gmid<<endl;
+                  cout << "MESH ACTOR FOUND "<<endl;
+                  }
+              }//gm
+
           
               if (gmid != -1){
               gizmo->SetTargetActor(mesh_actor);
@@ -753,10 +759,8 @@ void Editor::drawGui() {
             } else {
                 cout << "no graphic mesh found "<<endl;
             }
-
-                              
-          }/// "MESH" part
-              
+            
+            }///// MESH MOVE
                
               ImGui::EndPopup();
             }//popuip                    

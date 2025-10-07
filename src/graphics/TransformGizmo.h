@@ -268,7 +268,7 @@ public:
         //~ }
         //
     }
-    std::cout << "Selected Axis: "<< SelectedAxis<<std::endl;
+    //std::cout << "Selected Axis: "<< SelectedAxis<<std::endl;
     
         if (this->SelectedAxis >= 0 && this->TargetActor) {
             int* currPos = this->GetInteractor()->GetEventPosition();
