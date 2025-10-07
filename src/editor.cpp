@@ -744,7 +744,7 @@ void Editor::drawGui() {
                   vtkOCCTGeom* visual = getApp().getVisualForPart(i);
                   mesh_actor = visual->actor;
                   // La geometría ya está registrada
-                  cout << "Geom actor assigned to be moved."<<endl;
+                  cout << "Visual Geom: "<<visual<<" actor assigned to be moved."<<endl;
               }
 
               if (mesh_actor != nullptr){
@@ -1145,6 +1145,7 @@ void Editor::drawGui() {
             }
             else if (ImGui::Button("Create GEO")){
               vtkOCCTGeom *geom = new vtkOCCTGeom;
+              cout <<"Created OCCvtK: "<<vtkOCCTGeom<<endl;
               int pc = m_model->getPartCount();
               
               std::string name = "part_" + std::to_string(pc) + ".step";
