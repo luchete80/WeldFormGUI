@@ -48,7 +48,7 @@
 
 #include "results_simple.h"
 
-//#include "graphics/TransformGizmo.h"
+#include "graphics/TransformGizmo.h"
 //#include "graphics/ModelGizmo.h"
  
 
@@ -739,9 +739,15 @@ void Editor::drawGui() {
                   cout << "MESH ACTOR FOUND "<<endl;
                   }
               }//gm
+              
+              if (getApp().hasVisualForPart(i)) {
+                  vtkOCCTGeom* visual = getApp().getVisualForPart(i);
+                  mesh_actor = visual->actor;
+                  // La geometría ya está registrada
+                  cout << "Geom actor assigned to be moved."<<endl;
+              }
 
-          
-              if (gmid != -1){
+              if (mesh_actor != nullptr){
               gizmo->SetTargetActor(mesh_actor);
               //gizmo->AddToRenderer(viewer);
               for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
@@ -757,14 +763,11 @@ void Editor::drawGui() {
 
               //interactor->SetInteractorStyle(style);
               viewer->getInteractor()->SetInteractorStyle(style);
-
-
-
-
-            } else {
-                cout << "no graphic mesh found "<<endl;
-            }
-            
+              }else{
+                
+                cout << "No geometry part actor"<<endl;
+              }
+  
             }///// MESH MOVE
                
               ImGui::EndPopup();
@@ -1202,6 +1205,7 @@ void Editor::drawGui() {
               if (created){
               cout << "Done. Creating vtkmesh"<<endl;
               geom->LoadFromShape(geo->getShape(), 0.01);
+              
               cout << "Done."<<endl;
               //geom->LoadCylinder(0.1,0.1);
               
@@ -1210,7 +1214,7 @@ void Editor::drawGui() {
               //geom->actor->GetProperty()->SetLineWidth(3.0);
               //geom->actor->GetProperty()->SetColor(1.0, 0.0, 0.0); // rojo para que resalte
                                           
-
+                    
 
               geo->ExportSTEP();
               
@@ -1222,7 +1226,12 @@ void Editor::drawGui() {
 
               
               getApp().setActiveModel(m_model);
-
+              
+              
+              ///APPP
+              getApp().registerGeometry(geo, geom);
+              getApp().registerPartVisualGeometry(pc,geom);
+              
               #ifdef BUILD_PYTHON
               PyRun_SimpleString("GetApplication().getActiveModel()");
               #else

@@ -45,7 +45,7 @@ Model & App::getActiveModel(){
 void App::checkUpdate(){
   if (_updateNeeded){
       updateMeshes();
-      updateGeoms();
+      //updateGeoms();
   }
 }
 
@@ -165,4 +165,28 @@ void App::updateGeoms(/*vtkViewer* viewer*/) {
             //~ }
         }
     }
+}
+
+
+void App::registerGeometry(Geom* geo, vtkOCCTGeom* visual) {
+    if (!geo || !visual) return;
+    
+    visual->SetGeometry(geo);
+    visual->BuildVTKData();
+    visual->isRendered = true;
+    
+    geomToVisual[geo] = visual;
+    m_orphangeoms.emplace_back(geo);
+    _updateNeeded = true;
+    
+    //std::cout << "Registered geometry: " << geo->m_name << std::endl;
+}
+
+// Sobrecarga para cuando solo tienes la geometría y quieres que App cree el visual
+vtkOCCTGeom* App::registerGeometry(Geom* geo) {
+    if (!geo) return nullptr;
+    
+    vtkOCCTGeom* visual = new vtkOCCTGeom();
+    registerGeometry(geo, visual);
+    return visual;
 }

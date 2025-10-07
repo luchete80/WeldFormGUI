@@ -44,8 +44,26 @@ public:
   
   Geom* addOrphanGeometry(Geom* g);
   Geom* loadGeometry(const std::string& file);
-  
 
+    void registerGeometry(Geom* geo, vtkOCCTGeom* visual);
+    
+    // Sobrecarga para cuando solo tienes la geometría y quieres que App cree el visual
+    vtkOCCTGeom* registerGeometry(Geom* geo); 
+
+    void registerPartVisualGeometry(int partId, vtkOCCTGeom* visual) {
+        partIdToVisual[partId] = visual;
+        _updateNeeded = true;
+    }
+    
+    vtkOCCTGeom* getVisualForPart(int partId) {
+        auto it = partIdToVisual.find(partId);
+        return (it != partIdToVisual.end()) ? it->second : nullptr;
+    }
+    
+    bool hasVisualForPart(int partId) const {
+        return partIdToVisual.find(partId) != partIdToVisual.end();
+    }
+    
 private:
   static App *_pcSingleton;  
   Model *_activeModel;
@@ -54,7 +72,9 @@ private:
   std::vector <vtkOCCTGeom*> m_geoms;
     //std::vector<std::shared_ptr<Geometry>> m_orphanGeometries;
   std::vector <Geom*> m_orphangeoms;
-  std::unordered_map<Geom*, vtkOCCTGeom*> geomToVisual;
+  //REDUNDANT
+  std::unordered_map<Geom*, vtkOCCTGeom*> geomToVisual; //TO DELETE
+  std::unordered_map<int, vtkOCCTGeom*> partIdToVisual; // ID de parte -> visual
 
 }; 
 
