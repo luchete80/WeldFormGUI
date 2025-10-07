@@ -48,6 +48,9 @@
 
 #include "results_simple.h"
 
+#include "graphics/TransformGizmo.h"
+ 
+
 //~ #include <GModel.h>
 //~ #include <GModelIO_OCC.h>
 //~ #include <TopoDS_Shape.hxx>
@@ -670,7 +673,8 @@ void Editor::drawGui() {
                       //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
                   }
               }
-            }
+            }//Model dim <3
+            
             ////////////////////////
                           
               if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
@@ -678,37 +682,80 @@ void Editor::drawGui() {
               gmsh::merge(name);
               
               
-                  std::string meshname = "part_" + std::to_string(i) + ".msh";
-                  gmsh::write(meshname.c_str());
-                  
-                  //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
-                  
-                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
+              std::string meshname = "part_" + std::to_string(i) + ".msh";
+              gmsh::write(meshname.c_str());
+              
+              //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
+              
+              m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
 
-                  getApp().setActiveModel(m_model);
-                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
+              getApp().setActiveModel(m_model);
+              getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
 
-                  std::string kname = "part_" + std::to_string(i) + ".k";
-                  cout << "Exporting to LSDyna..."<<endl;
-                  m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
-                  cout << "Done"<<endl;
-                  
-                  ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
-                  //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-                  //graphic_mesh->createVTKPolyData();
-                  //viewer->addActor(graphic_mesh->getActor());
 
-                  
+              getApp().checkUpdate(); //to create meshes
+              
+              std::string kname = "part_" + std::to_string(i) + ".k";
+              cout << "Exporting to LSDyna..."<<endl;
+              m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
+              cout << "Done"<<endl;
+              
+              ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
+              //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+              //graphic_mesh->createVTKPolyData();
+              //viewer->addActor(graphic_mesh->getActor());
 
-                  //~ #ifdef BUILD_PYTHON
-                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-                  //~ #else
-                    //~ getApp().getActiveModel();
-                  //~ #endif
+              
 
-                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-                                  
-              }
+              //~ #ifdef BUILD_PYTHON
+              //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+              //~ #else
+                //~ getApp().getActiveModel();
+              //~ #endif
+
+              //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+              
+              vtkSmartPointer<vtkActor> mesh_actor; 
+              vtkSmartPointer<TransformGizmo> gizmo = vtkSmartPointer<TransformGizmo>::New();
+
+              cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
+              int gmid = -1; //graphic mesh id
+              for (int p=0;p<m_model->getPartCount();p++){
+                cout << "Checking app new parts "<<endl;
+                //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
+                bool not_found = true;
+                  for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
+                    if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(p)->getMesh()){//is related to the part mesh
+                      mesh_actor = getApp().getGraphicMesh(gm)->getActor();
+                      gmid = gm;
+                      cout << "gmid = "<<gmid<<endl;
+                      cout << "MESH ACTOR FOUND "<<endl;
+                      }
+                  }//gm
+                }//part
+          
+              if (gmid != -1){
+              gizmo->SetTargetActor(mesh_actor);
+              //gizmo->AddToRenderer(viewer);
+              for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
+              
+              // The rest of your setup code remains the same
+              vtkSmartPointer<GizmoInteractorStyle> style = vtkSmartPointer<GizmoInteractorStyle>::New();
+              style->SetDefaultRenderer(viewer->getRenderer());
+              style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
+
+              style->SetTargetActor(mesh_actor);
+              style->SetGizmoAxes(gizmo->GetAxes());
+              style->SetTransformGizmo(gizmo);
+
+              //interactor->SetInteractorStyle(style);
+              viewer->getInteractor()->SetInteractorStyle(style);
+            } else {
+                cout << "no graphic mesh found "<<endl;
+            }
+
+                              
+          }/// "MESH" part
               
                
               ImGui::EndPopup();
