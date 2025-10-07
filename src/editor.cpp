@@ -48,7 +48,8 @@
 
 #include "results_simple.h"
 
-#include "graphics/TransformGizmo.h"
+//#include "graphics/TransformGizmo.h"
+//#include "graphics/ModelGizmo.h"
  
 
 //~ #include <GModel.h>
@@ -756,6 +757,10 @@ void Editor::drawGui() {
 
               //interactor->SetInteractorStyle(style);
               viewer->getInteractor()->SetInteractorStyle(style);
+
+
+
+
             } else {
                 cout << "no graphic mesh found "<<endl;
             }

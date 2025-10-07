@@ -23,6 +23,7 @@
 #include <vtkCubeSource.h>
 #include <vtkSphereSource.h>
 #include <vtkGlyph3D.h>
+#include <vtkTransform.h>
 
 //https://examples.vtk.org/site/Cxx/GeometricObjects/Cube/
 
@@ -69,8 +70,17 @@ public:
   bool & isPolydataNeeded(){return m_needs_polydata;}
   void setPoints(Mesh &mesh); //NOT VIRTUAL
   void setViewer(VtkViewer* v){m_viewer = v;}
-  
-  
+
+    void SetTransform(vtkSmartPointer<vtkTransform> transform);
+    
+    vtkSmartPointer<vtkTransform> GetTransform() const { return m_transform; }
+    
+    void UpdateMeshPosition();
+    
+    Vector3f GetPosition() const;
+    
+    void SetPosition(const Vector3f& position);
+    
 protected:
   bool                  m_needs_polydata;
   bool                  m_needs_actor;
@@ -85,6 +95,8 @@ protected:
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
   VtkViewer*              m_viewer;
+  
+  vtkSmartPointer<vtkTransform> m_transform;
   
   
   //VTK THING, for visualization

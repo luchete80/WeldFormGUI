@@ -15,6 +15,8 @@
 #include <vtkObject.h>  // Add this include
 #include <array>
 
+
+
     double DistanceToLineSegment(const double point[3], const double lineStart[3], const double lineEnd[3]) {
         double lineVec[3] = {lineEnd[0] - lineStart[0], lineEnd[1] - lineStart[1], lineEnd[2] - lineStart[2]};
         double pointVec[3] = {point[0] - lineStart[0], point[1] - lineStart[1], point[2] - lineStart[2]};
@@ -45,6 +47,7 @@
         
         return vtkMath::Norm(diff);
     }
+
     
 class TransformGizmo : public vtkObject  // Inherit from vtkObject
 {
@@ -151,6 +154,10 @@ TransformGizmo* TransformGizmo::New() {
 void TransformGizmo::Initialize() {
     CreateAxes();
 }
+
+
+
+
 
 class GizmoInteractorStyle : public vtkInteractorStyleTrackballCamera
 {
@@ -326,19 +333,3 @@ private:
 vtkStandardNewMacro(GizmoInteractorStyle);
 
 #endif
-
-///// USAGE 
-
-//~ // Crear y configurar el gizmo
-//~ vtkSmartPointer<TransformGizmo> gizmo = vtkSmartPointer<TransformGizmo>::New();
-//~ gizmo->SetTargetActor(mesh_actor);
-//~ gizmo->AddToRenderer(renderer);
-
-//~ // Configurar el estilo de interacción
-//~ vtkSmartPointer<GizmoInteractorStyle> style = vtkSmartPointer<GizmoInteractorStyle>::New();
-//~ style->SetDefaultRenderer(renderer);
-//~ style->SetTargetActor(mesh_actor);
-//~ style->SetGizmoAxes(gizmo->GetAxes());
-//~ style->SetTransformGizmo(gizmo); // Nueva integración
-
-//~ interactor->SetInteractorStyle(style);

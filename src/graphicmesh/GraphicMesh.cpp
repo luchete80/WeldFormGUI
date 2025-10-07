@@ -536,3 +536,46 @@ GraphicSPHMesh::GraphicSPHMesh()
   
   
 }
+
+
+    void GraphicMesh::SetTransform(vtkSmartPointer<vtkTransform> transform) {
+        m_transform = transform;
+        if (mesh_actor) {
+            mesh_actor->SetUserTransform(m_transform);
+        }
+    }
+    
+
+    
+    void GraphicMesh::UpdateMeshPosition() {
+        if (!m_mesh || !m_transform) return;
+        
+        // Actualizar nodos del mesh según la transformación
+        double currentPos[3];
+        m_transform->GetPosition(currentPos);
+        
+        // Aquí actualizas los nodos reales del Mesh
+        for (int i = 0; i < m_mesh->getNodeCount(); i++) {
+            Node* node = m_mesh->getNode(i);
+            Vector3f originalPos ;//= node->getOriginalPos();
+            Vector3f newPos = originalPos + Vector3f(currentPos[0], currentPos[1], currentPos[2]);
+            //node->setPos(newPos);
+        }
+    }
+    
+    Vector3f GraphicMesh::GetPosition() const {
+        if (!m_transform) return Vector3f(0, 0, 0);
+        double pos[3];
+        m_transform->GetPosition(pos);
+        return Vector3f(pos[0], pos[1], pos[2]);
+    }
+    
+    void GraphicMesh::SetPosition(const Vector3f& position) {
+        if (!m_transform) m_transform = vtkSmartPointer<vtkTransform>::New();
+        m_transform->Identity();
+        m_transform->Translate(position.x, position.y, position.z);
+        if (mesh_actor) {
+            mesh_actor->SetUserTransform(m_transform);
+        }
+        UpdateMeshPosition();
+    } 
