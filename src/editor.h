@@ -229,6 +229,8 @@ protected:
   bool m_show_app_main_menu_bar;
   bool m_show_app_console;
   
+  bool m_moving_mode = false;
+  
   bool m_add_part;
   
   ViewportWindow *m_viewport_win;

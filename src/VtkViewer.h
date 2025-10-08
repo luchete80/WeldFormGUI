@@ -106,6 +106,19 @@ public:
 	inline vtkSmartPointer<vtkInteractorStyleTrackballCamera>& getInteractorStyle() {
 		return interactorStyle;
 	}
+  
+  void resetInteractor(){
+
+	interactorStyle->SetDefaultRenderer(renderer);
+
+	interactor = vtkSmartPointer<vtkGenericRenderWindowInteractor>::New();
+	interactor->SetInteractorStyle(interactorStyle);
+	interactor->EnableRenderOff();
+  
+    interactor->EnableRenderOff();    
+    renderWindow->SetInteractor(interactor);
+
+    }
 
 	inline vtkSmartPointer<vtkRenderer>& getRenderer() {
 		return renderer;

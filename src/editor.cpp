@@ -778,6 +778,9 @@ void Editor::drawGui() {
 
               //interactor->SetInteractorStyle(style);
               viewer->getInteractor()->SetInteractorStyle(style);
+              
+              m_moving_mode = true;
+              
               }else{
                 
                 cout << "No geometry part actor"<<endl;
@@ -1617,6 +1620,18 @@ void Editor::drawGui() {
 
 static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mods) {   
     editor->Key(key, scancode, action, mods);
+
+    if (action == GLFW_PRESS) {
+        switch(key) {
+            case GLFW_KEY_A:
+                std::cout << "Pressed A VIA KEY CALLBACK" << std::endl;
+                break;
+            case GLFW_KEY_O:
+                std::cout << "Pressed O, opening file" << std::endl;
+                break;
+        }
+    }
+    
 }
 
 void Editor::Key(int key, int scancode, int action, int mods) {   
@@ -2253,6 +2268,16 @@ void Editor::processInput(GLFWwindow *window)
       //cout << "pause: "<<endl;
       m_pause = !m_pause;
     }
+    
+     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+      //cout << "pause: "<<endl;
+      if (m_moving_mode){
+        m_moving_mode = false;
+        viewer->resetInteractor();
+        cout << "MOVE OFF. Reset interactor."<<endl;
+        
+      }
+    }   
 
 
 
