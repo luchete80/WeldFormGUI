@@ -8,6 +8,7 @@
 #include "geom/Geom.h"
 #include <unordered_map>
 //#define MY_DLL_API __declspec(dllexport)
+#include "Part.h"
 
 
 
@@ -50,18 +51,43 @@ public:
     // Sobrecarga para cuando solo tienes la geometría y quieres que App cree el visual
     vtkOCCTGeom* registerGeometry(Geom* geo); 
 
-    void registerPartVisualGeometry(int partId, vtkOCCTGeom* visual) {
-        partIdToVisual[partId] = visual;
+    void registerPartVisual(Part* part, vtkOCCTGeom* visual) {
+        if (!part || !visual) return;
+        
+        partToVisual[part] = visual;
         _updateNeeded = true;
+        //cout << "Registered visual for part: " << part << " (" << part->getName() << ")" << endl;
     }
     
-    vtkOCCTGeom* getVisualForPart(int partId) {
-        auto it = partIdToVisual.find(partId);
-        return (it != partIdToVisual.end()) ? it->second : nullptr;
+    vtkOCCTGeom* getVisualForPart(Part* part) {
+        auto it = partToVisual.find(part);
+        return (it != partToVisual.end()) ? it->second : nullptr;
     }
     
-    bool hasVisualForPart(int partId) const {
-        return partIdToVisual.find(partId) != partIdToVisual.end();
+    bool hasVisualForPart(Part* part) const {
+        return partToVisual.find(part) != partToVisual.end();
+    }
+    
+    // Función para limpiar visualizaciones de partes eliminadas
+    void cleanupOrphanVisuals(Model* model) {
+        std::vector<Part*> toRemove;
+        for (const auto& pair : partToVisual) {
+            bool partExists = false;
+            for (int i = 0; i < model->getPartCount(); i++) {
+                if (model->getPart(i) == pair.first) {
+                    partExists = true;
+                    break;
+                }
+            }
+            if (!partExists) {
+                toRemove.push_back(pair.first);
+            }
+        }
+        
+        for (Part* part : toRemove) {
+            cout << "Cleaning up visual for deleted part: " << part << endl;
+            partToVisual.erase(part);
+        }
     }
     
 private:
@@ -74,7 +100,7 @@ private:
   std::vector <Geom*> m_orphangeoms;
   //REDUNDANT
   std::unordered_map<Geom*, vtkOCCTGeom*> geomToVisual; //TO DELETE
-  std::unordered_map<int, vtkOCCTGeom*> partIdToVisual; // ID de parte -> visual
+  std::unordered_map<Part*, vtkOCCTGeom*> partToVisual; // ID de parte -> visual
 
 }; 
 

@@ -740,13 +740,26 @@ void Editor::drawGui() {
                   }
               }//gm
               
-              if (getApp().hasVisualForPart(i)) {
-                  vtkOCCTGeom* visual = getApp().getVisualForPart(i);
-                  mesh_actor = visual->actor;
-                  // La geometría ya está registrada
-                  cout << "Visual Geom: "<<visual<<" actor assigned to be moved."<<endl;
-              }
+              // if (getApp().hasVisualForPart(i)) {
+                  // vtkOCCTGeom* visual = getApp().getVisualForPart(i);
+                  // mesh_actor = visual->actor;
+                  // // La geometría ya está registrada
+                  // cout << "Visual Geom: "<<visual<<" actor assigned to be moved."<<endl;
+              // }
 
+              Part* currentPart = m_model->getPart(i);
+              
+              cout << "Looking for visual for part: " << currentPart << endl;
+              
+              // Buscar por PARTE directamente
+              if (getApp().hasVisualForPart(currentPart)) {
+                  vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
+                  mesh_actor = visual->actor;
+                  cout << "Visual Geom: " << visual << " actor assigned to be moved." << endl;
+              } else {
+                  cout << "No visual found for part: " << currentPart << endl;
+              }
+              
               if (mesh_actor != nullptr){
               gizmo->SetTargetActor(mesh_actor);
               //gizmo->AddToRenderer(viewer);
@@ -1223,6 +1236,11 @@ void Editor::drawGui() {
 
               //m_model->getPart(m_model->getPartCount())->setId(max_pid);
               create_new_part = true;
+              
+                      Part* newPart = m_model->getPart(m_model->getPartCount() - 1);
+        
+        
+        
               getApp().setActiveModel(m_model);              
 
               
@@ -1231,8 +1249,11 @@ void Editor::drawGui() {
               
               ///APPP
               getApp().registerGeometry(geo, geom);
-              getApp().registerPartVisualGeometry(pc,geom);
-              
+              //getApp().registerPartVisualGeometry(pc,geom);
+                      // REGISTRAR usando el puntero a la parte
+              getApp().registerPartVisual(newPart, geom);
+
+
               #ifdef BUILD_PYTHON
               PyRun_SimpleString("GetApplication().getActiveModel()");
               #else
