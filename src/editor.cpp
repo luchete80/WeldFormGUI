@@ -725,37 +725,35 @@ void Editor::drawGui() {
               vtkSmartPointer<vtkActor> mesh_actor; 
               vtkSmartPointer<TransformGizmo> gizmo = vtkSmartPointer<TransformGizmo>::New();
 
-              cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
-              int gmid = -1; //graphic mesh id
-
-              cout << "Checking app new parts "<<endl;
-              //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
-              bool not_found = true;
-              for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
-                if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(i)->getMesh()){//is related to the part mesh
-                  mesh_actor = getApp().getGraphicMesh(gm)->getActor();
-                  gmid = gm;
-                  cout << "gmid = "<<gmid<<endl;
-                  cout << "MESH ACTOR FOUND "<<endl;
-                  }
-              }//gm
+              //~ ///// IF MOVING BY MESH. THIS WORKS OK
+              //~ cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
+              //~ int gmid = -1; //graphic mesh id
+              //~ cout << "Checking app new parts "<<endl;
+              //~ //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
+              //~ bool not_found = true;
+              //~ for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
+                //~ if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(i)->getMesh()){//is related to the part mesh
+                  //~ mesh_actor = getApp().getGraphicMesh(gm)->getActor();
+                  //~ gmid = gm;
+                  //~ cout << "gmid = "<<gmid<<endl;
+                  //~ cout << "MESH ACTOR FOUND: "<< mesh_actor << endl;
+                  //~ }
+              //~ }//gm
+              //~ ////////////////////////////
               
-              // if (getApp().hasVisualForPart(i)) {
-                  // vtkOCCTGeom* visual = getApp().getVisualForPart(i);
-                  // mesh_actor = visual->actor;
-                  // // La geometría ya está registrada
-                  // cout << "Visual Geom: "<<visual<<" actor assigned to be moved."<<endl;
-              // }
-
-              Part* currentPart = m_model->getPart(i);
               
+              ////// IF MOVING BY GEOM, DOES NOT WORK
+              Part* currentPart = m_model->getPart(i);              
               cout << "Looking for visual for part: " << currentPart << endl;
-              
               // Buscar por PARTE directamente
+              vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
               if (getApp().hasVisualForPart(currentPart)) {
-                  vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
+                  
                   mesh_actor = visual->actor;
-                  cout << "Visual Geom: " << visual << " actor assigned to be moved." << endl;
+                  cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
+                  std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
+                  std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
+
               } else {
                   cout << "No visual found for part: " << currentPart << endl;
               }
@@ -771,6 +769,7 @@ void Editor::drawGui() {
               style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
 
               style->SetTargetActor(mesh_actor);
+              style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
               style->SetGizmoAxes(gizmo->GetAxes());
               style->SetTransformGizmo(gizmo);
 

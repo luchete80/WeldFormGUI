@@ -20,6 +20,8 @@
 #include <TopoDS_Shape.hxx>
 
 #include "vtkOCCTReader.h"
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
 
 class Geom;
 
@@ -31,10 +33,15 @@ protected:
   Mesh *m_mesh;
   Geom *geom = nullptr;   // Non-owning pointer (In geom is the real thing)
   TopoDS_Shape m_shape;
+  vtkSmartPointer<vtkPolyData> m_polydata;
+  vtkSmartPointer<vtkPolyDataMapper> m_mapper;
+  
 public:
   vtkSmartPointer <vtkActor> actor;
   vtkOCCTGeom(){}
   int readFile(int argc, char* argv[]);
+  
+  vtkSmartPointer<vtkPolyData> getPolydata(){return m_polydata;}
 
   int TestReader(const std::string& path, unsigned int format);
   void LoadCylinder(double radius, double height);

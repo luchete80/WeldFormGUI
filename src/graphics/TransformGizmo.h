@@ -3,6 +3,7 @@
 
 
 #include <vtkLineSource.h>
+#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkSmartPointer.h>
@@ -14,7 +15,9 @@
 #include <vtkCommand.h>
 #include <vtkObject.h>  // Add this include
 #include <array>
+#include <vtkTransformFilter.h>
 
+using namespace std;
 
 
     double DistanceToLineSegment(const double point[3], const double lineStart[3], const double lineEnd[3]) {
@@ -168,7 +171,11 @@ public:
     void SetTargetActor(vtkSmartPointer<vtkActor> actor) { 
         this->TargetActor = actor; 
     }
-    
+
+    void SetPolyData(vtkSmartPointer<vtkPolyData> pd) { 
+        this->m_polydata = pd; 
+    }
+        
     void SetGizmoAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) { 
         this->Axes = axes; 
     }
@@ -280,39 +287,69 @@ public:
     }
     //std::cout << "Selected Axis: "<< SelectedAxis<<std::endl;
     
-        if (this->SelectedAxis >= 0 && this->TargetActor) {
-            int* currPos = this->GetInteractor()->GetEventPosition();
-            //double dx = currPos[0] - this->LastPos[0];
-            //double dy = currPos[1] - this->LastPos[1];
-            
-            double dx = currPos[0] - this->ClickPos[0];
-            double dy = currPos[1] - this->ClickPos[1];
-                        
-            cout << "dx: "<<dx<<endl;
+    if (this->SelectedAxis >= 0 && this->TargetActor) {
+        int* currPos = this->GetInteractor()->GetEventPosition();
+        double dx = currPos[0] - this->ClickPos[0];
+        double dy = currPos[1] - this->ClickPos[1];
+        
+        double movement = (dx + dy) * 0.005;
+        double translate[3] = {0, 0, 0};
+        translate[this->SelectedAxis] = movement;
 
-            // Movimiento más suave
-            double movement = (dx + dy) * 0.005;
+        // DEBUG: Verificar el estado antes de mover
+        std::cout << "=== BEFORE TRANSFORM ===" << std::endl;
+        std::cout << "TargetActor: " << this->TargetActor << std::endl;
+        std::cout << "Actor visibility: " << this->TargetActor->GetVisibility() << std::endl;
+        
+        double* posBefore = this->TargetActor->GetPosition();
+        std::cout << "Position before: " << posBefore[0] << ", " << posBefore[1] << ", " << posBefore[2] << std::endl;
 
-            double translate[3] = {0, 0, 0};
-            translate[this->SelectedAxis] = movement;
-            cout << "Movement: "<<movement<<endl;
+        // Aplicar transformación
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        transform->Translate(translate);
+        
+        //// A. Transformation over the actor
+        ///this->TargetActor->SetUserTransform(transform);
 
-            // Aplicar transformación
-            vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-            transform->Translate(translate);
-            this->TargetActor->SetUserTransform(transform);
+        //// B. If moving polyata
+        vtkNew<vtkTransformFilter> tf;
+        if (m_polydata){
+          cout << "Assigning polydata"<<endl;
+        tf->SetInputData(m_polydata);
+        tf->SetTransform(transform);
+        tf->Update();
 
-            // Actualizar posición del gizmo
-            if (this->Gizmo) {
-                this->Gizmo->UpdateGizmoPosition();
-            }
-
-            this->LastPos[0] = currPos[0];
-            this->LastPos[1] = currPos[1];
-            this->GetInteractor()->GetRenderWindow()->Render();
-        } else {
-            vtkInteractorStyleTrackballCamera::OnMouseMove();
+        m_polydata->ShallowCopy(tf->GetOutput());
+        //this->TargetActor->GetMapper()->SetInputData(m_polydata);
+      } else {
+        
+        std::cout << "ERROR: NO POLYDATA"<<endl;
         }
+
+        // DEBUG: Verificar después de mover
+        double* posAfter = this->TargetActor->GetPosition();
+        std::cout << "Position after: " << posAfter[0] << ", " << posAfter[1] << ", " << posAfter[2] << std::endl;
+        std::cout << "Transform applied: " << translate[0] << ", " << translate[1] << ", " << translate[2] << std::endl;
+
+
+        std::cout << TargetActor->GetMapper()->GetClassName() << std::endl;
+        std::cout << TargetActor->GetMapper()->GetInput()->GetClassName() << std::endl;
+
+      //~ double origin[3] = {0,0,0};
+      //~ double transformed[3];
+      //~ TargetActor->GetUserTransform()->TransformPoint(origin, transformed);
+      //~ std::cout << "Actual visual position: " 
+                //~ << transformed[0] << ", " 
+                //~ << transformed[1] << ", " 
+                //~ << transformed[2] << std::endl;
+                
+
+        this->GetInteractor()->GetRenderWindow()->Render();
+    } else {
+        vtkInteractorStyleTrackballCamera::OnMouseMove();
+    } 
+        
+
     }
 
     void OnLeftButtonUp() override {
@@ -322,6 +359,7 @@ public:
 
 private:
 
+    vtkSmartPointer<vtkPolyData> m_polydata;
     
     vtkSmartPointer<vtkActor> TargetActor;
     std::array<vtkSmartPointer<vtkActor>, 3> Axes;

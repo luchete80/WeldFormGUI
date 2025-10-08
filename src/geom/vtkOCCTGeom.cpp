@@ -161,8 +161,10 @@ void vtkOCCTGeom::LoadCylinder(double radius, double height)
         
         actor = vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(mapper);
-        actor->GetProperty()->SetOpacity(0.5);
-        actor->GetProperty()->SetLineWidth(1.0);
+        
+        //actor->GetProperty()->SetOpacity(0.5);
+        //actor->GetProperty()->SetLineWidth(1.0);
+        actor->GetProperty()->SetRepresentationToWireframe();
 
         //BRepTools::Write(shape, "cylinder.step");
         
@@ -199,21 +201,28 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
 {
     try {
         // Convert OCC shape to VTK polydata
-        vtkSmartPointer<vtkPolyData> polyData = ShapeToPolyData(shape, deflection);
+        m_polydata = vtkSmartPointer<vtkPolyData>::New();
+        //vtkSmartPointer<vtkPolyData> polyData = ShapeToPolyData(shape, deflection);
+        m_polydata = ShapeToPolyData(shape, deflection);
+        m_polydata->Modified();
 
-        if (!polyData || polyData->GetNumberOfPoints() == 0) {
+        if (!m_polydata || m_polydata->GetNumberOfPoints() == 0) {
             std::cerr << "Error: Failed to create polyData from shape" << std::endl;
             return;
         }
 
         // Create mapper and actor
-        vtkNew<vtkPolyDataMapper> mapper;
-        mapper->SetInputData(polyData);
+        m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
+        m_mapper->SetInputData(m_polydata);
+        m_mapper->SetScalarRange(m_polydata->GetScalarRange());
+    
         actor = vtkSmartPointer<vtkActor>::New();
-        actor->SetMapper(mapper);
+        actor->SetMapper(m_mapper);
         actor->GetProperty()->SetOpacity(0.5);
         actor->GetProperty()->SetLineWidth(1.0);
+        //actor->GetProperty()->SetRepresentationToWireframe();
+        actor->Modified();
 
     } catch (const Standard_Failure& e) {
         std::cerr << "OpenCASCADE error: " << e.GetMessageString() << std::endl;
