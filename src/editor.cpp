@@ -49,6 +49,7 @@
 #include "results_simple.h"
 
 #include "graphics/TransformGizmo.h"
+
 //#include "graphics/ModelGizmo.h"
 
 
@@ -725,7 +726,7 @@ void Editor::drawGui() {
             
                           
               vtkSmartPointer<vtkActor> mesh_actor; 
-              vtkSmartPointer<TransformGizmo> gizmo = vtkSmartPointer<TransformGizmo>::New();
+              
 
               //~ ///// IF MOVING BY MESH. THIS WORKS OK
               //~ cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
@@ -752,16 +753,18 @@ void Editor::drawGui() {
               if (getApp().hasVisualForPart(currentPart)) {
                   
                   mesh_actor = visual->actor;
-                  cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
-                  std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
-                  std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
+                  //~ cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
+                  //~ std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
+                  //~ std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
 
               } else {
                   cout << "No visual found for part: " << currentPart << endl;
               }
               
               if (mesh_actor != nullptr){
+              gizmo->Show();
               gizmo->SetTargetActor(mesh_actor);
+              gizmo->Rescale(mesh_actor);
               //gizmo->AddToRenderer(viewer);
               for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
               
@@ -2219,6 +2222,8 @@ int Editor::Init(){
   m_show_mat_dlg = false;
   m_show_mat_dlg_edit = false;
   create_new_mat = false;
+  
+  gizmo = vtkSmartPointer<TransformGizmo>::New();
  
   return 1;
 }//Editor::Init()
@@ -2282,6 +2287,7 @@ void Editor::processInput(GLFWwindow *window)
       if (m_moving_mode){
         m_moving_mode = false;
         viewer->resetInteractor();
+        gizmo->Hide();
         cout << "MOVE OFF. Reset interactor."<<endl;
         
       }

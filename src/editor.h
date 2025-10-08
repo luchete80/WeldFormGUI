@@ -56,6 +56,12 @@
 #include "model/Mesh.h"
 #include "geom/Geom.h"
 
+#include <vtkSmartPointer.h>
+
+
+
+class TransformGizmo;
+
 
 class SceneView;
 class ViewportWindow;
@@ -240,6 +246,8 @@ protected:
   //Visual meshes
   //std::vector<GraphicMesh*> graphic_mesh;
   GraphicMesh* graphic_mesh;
+  
+  vtkSmartPointer<TransformGizmo> gizmo;
     
 };
 
