@@ -32,6 +32,8 @@ public:
   bool LoadSTEP(const std::string& fname);
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
   
+  void Move(const double &x, const double &y, const double &z);
+  
   void LoadCylinder(double radius, double height);
   
   const double3 & getOrigin()const{return m_origin;}

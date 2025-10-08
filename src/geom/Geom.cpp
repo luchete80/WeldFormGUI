@@ -27,6 +27,38 @@
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
 
+#include <gp_Vec.hxx>
+
+void Geom::Move(const double &dx, const double &dy, const double &dz){
+
+    if (!m_shape) {
+        std::cerr << "Error: No Shape to move." << std::endl;
+        return;
+    }
+
+    //
+    gp_Trsf tr;
+    tr.SetTranslation(gp_Vec(dx, dy, dz));
+
+    // 2
+    BRepBuilderAPI_Transform transformer(*m_shape, tr, true); // true = copia
+    TopoDS_Shape movedShape = transformer.Shape();
+
+    if (movedShape.IsNull()) {
+        std::cerr << "Error: la transformación falló." << std::endl;
+        return;
+    }
+  
+    //
+    *m_shape = movedShape;
+
+    // 4️⃣ Actualizar el origen de la geometría
+    m_origin.x += dx;
+    m_origin.y += dy;
+    m_origin.z += dz;
+    
+}
+
 // Geom::Geom(std::string fname){
   
   // scale = 1.0;

@@ -16,6 +16,7 @@
 #include <vtkObject.h>  // Add this include
 #include <array>
 #include <vtkTransformFilter.h>
+#include "../model/Part.h"
 
 using namespace std;
 
@@ -175,6 +176,11 @@ public:
     void SetPolyData(vtkSmartPointer<vtkPolyData> pd) { 
         this->m_polydata = pd; 
     }
+    
+    void SetPart(Part* pt){
+      this->m_part = pt;
+      
+      }
         
     void SetGizmoAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) { 
         this->Axes = axes; 
@@ -321,6 +327,8 @@ public:
 
         m_polydata->ShallowCopy(tf->GetOutput());
         //this->TargetActor->GetMapper()->SetInputData(m_polydata);
+        
+        m_part->getGeom()->Move(movement,0.,0.);
       } else {
         
         std::cout << "ERROR: NO POLYDATA"<<endl;
@@ -360,6 +368,7 @@ public:
 private:
 
     vtkSmartPointer<vtkPolyData> m_polydata;
+    Part* m_part;
     
     vtkSmartPointer<vtkActor> TargetActor;
     std::array<vtkSmartPointer<vtkActor>, 3> Axes;

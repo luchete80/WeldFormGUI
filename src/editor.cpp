@@ -641,6 +641,8 @@ void Editor::drawGui() {
                   //~ gmsh::model::occ::synchronize();
                   
               ////// IF LOADING FILE
+              Geom *geo = m_model->getPart(i)->getGeom();
+              geo->ExportSTEP();
               
               gmsh::clear();  //Cleaning
               std::string name = "part_" + std::to_string(i) + ".step";
@@ -769,6 +771,7 @@ void Editor::drawGui() {
               style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
 
               style->SetTargetActor(mesh_actor);
+              style->SetPart(m_model->getPart(i));
               style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
               style->SetGizmoAxes(gizmo->GetAxes());
               style->SetTransformGizmo(gizmo);
@@ -1229,7 +1232,7 @@ void Editor::drawGui() {
                                           
                     
 
-              geo->ExportSTEP();
+              //geo->ExportSTEP();
               
               m_model->addPart(geo);
 
