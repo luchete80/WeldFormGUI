@@ -50,7 +50,7 @@
 
 #include "graphics/TransformGizmo.h"
 //#include "graphics/ModelGizmo.h"
- 
+
 
 //~ #include <GModel.h>
 //~ #include <GModelIO_OCC.h>
@@ -780,6 +780,14 @@ void Editor::drawGui() {
               viewer->getInteractor()->SetInteractorStyle(style);
               
               m_moving_mode = true;
+
+              GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+
+              // Aplicar cursor a la ventana
+              ImGuiIO& io = ImGui::GetIO();
+              io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange; // permite que ImGui cambie el cursor
+              ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+              //ImGui_ImplGlfw_UpdateMouseCursor();
               
               }else{
                 
