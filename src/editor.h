@@ -44,6 +44,7 @@
 #include "part_dialog.h"
 #include "set_dialog.h"
 #include "model_dialog.h"
+#include "move_part_dialog.h"
 
 #include "Material.h"
 
@@ -195,6 +196,8 @@ protected:
   MaterialDialog  m_matdlg;
   PartDialog      m_prtdlg;
   ModelDialog     m_moddlg;
+  
+  MovePartDialog     m_movprtdlg;
     
   //JobDialog<Job> m_jobdlg;
   JobDialog       m_jobdlg; //creation

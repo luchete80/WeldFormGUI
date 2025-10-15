@@ -764,9 +764,9 @@ void Editor::drawGui() {
               if (mesh_actor != nullptr){
               gizmo->Show();
               gizmo->SetTargetActor(mesh_actor);
-              gizmo->Rescale(mesh_actor);
-              gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
-              //gizmo->AddToRenderer(viewer);
+
+              //gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
+
               for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
               
               // The rest of your setup code remains the same
@@ -1588,6 +1588,7 @@ void Editor::drawGui() {
   create_new_set  = false;
   create_new_part = false;
   
+   if (m_moving_mode) {m_movprtdlg.Draw(nullptr);}
 
   Material_ mat;
   Job job;
@@ -1597,7 +1598,6 @@ void Editor::drawGui() {
   if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
   if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
   if (m_show_mod_dlg_edit) {ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);}
-  
   else if (m_show_set_dlg) {
   
   /*   
@@ -2308,6 +2308,7 @@ void Editor::processInput(GLFWwindow *window)
         viewer->resetInteractor();
         gizmo->Hide();
         cout << "MOVE OFF. Reset interactor."<<endl;
+        for (int i=0;i<3;i++) viewer->removeActor(gizmo->getActor(i));
         
       }
     }   
