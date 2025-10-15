@@ -126,3 +126,6 @@
          - Added Mode Type.
 20250915 - Fixed Opening model not meshed (crash).
          - Fixed model input read.
+------------------------------------------------------------------------------------------
+20251015 - Created Gizmo axes at target actor origin.
+         - Corrected now is moving at selected axis. 

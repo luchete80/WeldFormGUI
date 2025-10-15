@@ -15,6 +15,7 @@
 #include <vtkTetra.h>
 
 #include <array>
+#include <array>
 
 #include "VtkViewer.h"
 // ADD VTK MECH

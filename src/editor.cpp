@@ -765,6 +765,7 @@ void Editor::drawGui() {
               gizmo->Show();
               gizmo->SetTargetActor(mesh_actor);
               gizmo->Rescale(mesh_actor);
+              gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
               //gizmo->AddToRenderer(viewer);
               for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
               
@@ -1494,8 +1495,26 @@ void Editor::drawGui() {
 
       ResultFrame *frame = new ResultFrame(filePathName);
       frame->printAvailableFields();
+
+      std::string fieldName;
+      fieldName = "pl_strain";
+      //fieldName = "DISP";
+
+      //IF SCALAR
+      frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
+      //if cell data
+      //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
+      //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+      //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+
+
+      //IF VECTOR
       frame->setActiveScalarField("DISP");      
       frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
+
+      frame->actor->GetMapper()->ScalarVisibilityOn();
+      frame->actor->GetMapper()->Update();
+
       viewer->addActor(frame->actor);      
       
       getApp().setActiveModel(m_model);
