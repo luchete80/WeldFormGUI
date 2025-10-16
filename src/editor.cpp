@@ -793,6 +793,8 @@ void Editor::drawGui() {
               ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
               //ImGui_ImplGlfw_UpdateMouseCursor();
               
+              selected_prt = currentPart;
+              
               }else{
                 
                 cout << "No geometry part actor"<<endl;
@@ -1587,8 +1589,45 @@ void Editor::drawGui() {
   create_new_mat  = false;
   create_new_set  = false;
   create_new_part = false;
+
+  static double position[3] = {0,0,0};
+  static double step = 0.1;
   
-   if (m_moving_mode) {m_movprtdlg.Draw(nullptr);}
+  if (m_moving_mode) {
+    MoveCommand move = m_movprtdlg.Draw(step, position);
+    
+    bool auto_;
+    double axis[3];
+    
+    if (move.active) {
+      
+      
+      cout << "Position "<<position[0]<<", "<<position[1]<<", "<<position[2]<<", "<<endl;
+
+      vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+      //transform->Translate(position[0],position[1],position[2]);
+
+    transform->Translate(move.axis==0 ? move.delta : 0.0,
+                         move.axis==1 ? move.delta : 0.0,
+                         move.axis==2 ? move.delta : 0.0);
+                         
+      vtkNew<vtkTransformFilter> tf;
+      vtkPolyData *m_polydata = getApp().getVisualForPart(selected_prt)->getPolydata();
+
+      if (m_polydata){
+
+      //IF MOVE THE POLYDATA
+      tf->SetInputData(m_polydata);
+      tf->SetTransform(transform);
+      tf->Update();
+      m_polydata->ShallowCopy(tf->GetOutput());
+      
+      position[move.axis] += move.delta;
+      selected_prt->getGeom()->Move(position[0],position[1],position[2]);
+     }
+        
+    }
+  }// if move active
 
   Material_ mat;
   Job job;

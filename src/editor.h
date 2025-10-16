@@ -239,7 +239,8 @@ protected:
   bool m_show_app_console;
   
   bool m_moving_mode = false;
-  
+  int  m_mov_part = -1;
+   
   bool m_add_part;
   
   ViewportWindow *m_viewport_win;

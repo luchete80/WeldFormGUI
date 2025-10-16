@@ -9,59 +9,48 @@
 
 using namespace std;
 
-void  MovePartDialog::Draw(Part *model){
+//// To know 
+MoveCommand MovePartDialog::Draw(double &step, double* pos){
 
-  //~ if (!m_initialized) {
-      //~ //m_id = part->m_id;  // inicializamos la UI solo la primera vez
-      //~ m_initialized = true;
-      //~ if (model->getAnalysisType() == Solid3D)
-        //~ m_antype = Solid3D;
-      //~ else if (model->getAnalysisType() == Axisymmetric2D)
-        //~ m_antype = Axisymmetric2D;
-        
-      //~ cout << "Not initialized "<<endl;
-  //~ }
+    MoveCommand cmd = {-1, 0.0, false};
+    const char* labels[3] = {"X", "Y", "Z"};
+
+    ImGui::Begin("Transform Controls");
+    ImGui::Text("Step size:");
+    ImGui::SameLine();
+    ImGui::InputDouble("##delta", &step, 0.01, 1.0, "%.3f");
+
+    for (int i = 0; i < 3; ++i)
+    {
+        ImGui::PushID(i);
+        ImGui::Text("%s:", labels[i]);
+        ImGui::SameLine(40);
+
+        if (ImGui::Button("-")) {
+            cmd.axis = i;
+            cmd.delta = -step;
+            cmd.active = true;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("+")) {
+            cmd.axis = i;
+            cmd.delta = step;
+            cmd.active = true;
+        }
+
+        ImGui::SameLine(100);
+        if (ImGui::Button("⬆")) { /* acción extra */ }
+        ImGui::SameLine();
+        ImGui::Text("Up to other piece");
+
+        ImGui::PopID();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Current position: X=%.3f, Y=%.3f, Z=%.3f", pos[0], pos[1], pos[2]);
     
-  
-  if (!ImGui::Begin("Moving Part"))
-  {
-      ImGui::End();
-      return;
-  }
-
-
-  //~ if (ImGui::RadioButton("Solid 3D", m_antype == Solid3D)) {
-      //~ m_antype = Solid3D;
-  //~ }
-  //~ if (ImGui::RadioButton("AxiSymm 2D", m_antype == Axisymmetric2D)) {
-      //~ m_antype = Axisymmetric2D;
-  //~ }
-
-
-  
-  ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
-  ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
-
-  //~ if (ImGui::Button("Ok")) {
-    //~ //create_material = true;
-    //~ //art->m_id = m_id;
-    //~ //cout << "m_id"<<m_id<<endl;
-    //~ m_initialized = false;  // reset para la próxima vez
-    //~ model->setAnalysisType(m_antype);
-    
-    //~ //part->setType(part_type);
-    //~ *p_open = false;
-
-    //~ }
-  //~ ImGui::SameLine();
-  if (ImGui::Button("Cancel")) {
-    m_initialized = false;  // cancelamos cambios
-
-    //*p_open = false;    //cancel_action = false;
-  }
-  
-  ImGui::End();
-  
-
+    ImGui::End();
+    return cmd;
 }
 

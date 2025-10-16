@@ -313,7 +313,7 @@ public:
           this->ClickPos[1] = clickPos[1];
 
           vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
-          picker->SetTolerance(0.05); // ajustable        
+          picker->SetTolerance(0.2); // ajustable        
           picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
 
           vtkActor* pickedActor = picker->GetActor();

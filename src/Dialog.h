@@ -18,7 +18,7 @@ struct Dialog{
 
 
   bool m_isopen;
-  bool m_show; //If true, then draw me
+  bool m_show = false; //If true, then draw me
   
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
