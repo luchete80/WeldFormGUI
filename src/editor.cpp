@@ -1289,10 +1289,7 @@ void Editor::drawGui() {
         
               getApp().setActiveModel(m_model);              
 
-              
-              getApp().setActiveModel(m_model);
-              
-              
+
               ///APPP
               getApp().registerGeometry(geo, geom);
               //getApp().registerPartVisualGeometry(pc,geom);
@@ -1450,7 +1447,8 @@ void Editor::drawGui() {
       cout << "file path name "<<filePathName<<endl;
       //m_model = new Model(filePathName);
       cout << "Adding part "<<endl;
-      m_model->addGeom(new Geom(filePathName));
+      Geom *geo = new Geom(filePathName);
+      m_model->addGeom(geo);
       m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));
@@ -1496,7 +1494,9 @@ void Editor::drawGui() {
 
       
       getApp().setActiveModel(m_model);
-
+      getApp().registerGeometry(geo, geom);
+      getApp().registerPartVisual(m_model->getLastPart(), geom);
+      
       #ifdef BUILD_PYTHON
       PyRun_SimpleString("GetApplication().getActiveModel()");
       #else

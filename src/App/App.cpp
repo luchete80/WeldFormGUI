@@ -45,7 +45,7 @@ Model & App::getActiveModel(){
 void App::checkUpdate(){
   if (_updateNeeded){
       updateMeshes();
-      //updateGeoms();
+      updateGeoms(); //Orphan Geoms
   }
 }
 
