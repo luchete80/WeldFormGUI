@@ -1,0 +1,8 @@
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/freetype.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/package.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/package_source.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/edit_cache.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/rebuild_cache.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/list_install_components.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/install.dir
+C:/Luciano/Numerico/WeldFormGUI/libs/freetype-2.10.4/build_nmake/CMakeFiles/install/local.dir

@@ -81,7 +81,7 @@ target_link_libraries(geom
   TKPrim         # Primitives (like cylinders)
   TKTopAlgo      # Topological algorithms
   TKShHealing    # Shape healing
-  TKStdL         # Standard library with implementation (needed for Standard::Free and others)
+  #TKStdL         # Standard library with implementation (needed for Standard::Free and others)
   TKBinL         # Binary streaming
   TKService      # Services used internally
   TKMesh
@@ -102,7 +102,7 @@ list(GET OCC_VERSION_LIST 2 OCC_PATCH)
 
  if(OCC_VERSION_NUM GREATER 70500)
     message(STATUS "Using TKSTEP (OCC > 7.5.0)")
-    target_link_libraries(geom  ${VTK_LIBRARIES} gmsh TKDESTEP )
+    target_link_libraries(geom  ${VTK_LIBRARIES} gmsh TKStdL TKDESTEP )
  else()
     message(STATUS "Using TKDSTEP (OCC <= 7.5.0)")
     target_link_libraries(geom  ${VTK_LIBRARIES} gmsh TKSTEP)

@@ -112,7 +112,6 @@ target_link_libraries(${EXEC_NAME}
   TKPrim         # Primitives (like cylinders)
   TKTopAlgo      # Topological algorithms
   TKShHealing    # Shape healing
-  TKStdL         # Standard library with implementation (needed for Standard::Free and others)
   TKBinL         # Binary streaming
   TKService      # Services used internally
   TKMesh
@@ -136,6 +135,13 @@ target_link_libraries(${EXEC_NAME}
 	#~ target_compile_definitions(${EXEC_NAME} PRIVATE GL_SILENCE_DEPRECATION)
 #~ endif()
 
+ if(OCC_VERSION_NUM GREATER 70500)
+    message(STATUS "Using TKSTEP (OCC > 7.5.0)")
+    target_link_libraries(${EXEC_NAME}   ${VTK_LIBRARIES} TKStdL TKDESTEP )
+ else()
+    message(STATUS "Using TKDSTEP (OCC <= 7.5.0)")
+    target_link_libraries(${EXEC_NAME}   ${VTK_LIBRARIES} TKSTEP)
+ endif()
 
 target_link_libraries(${EXEC_NAME} gl3w)
 
