@@ -1647,7 +1647,9 @@ void Editor::drawGui() {
       m_polydata->ShallowCopy(tf->GetOutput());
       
       position[move.axis] += move.delta;
-      selected_prt->getGeom()->Move(position[0],position[1],position[2]);
+      double move_[] = {0,0,0};
+      move_[move.axis] = move.delta;
+      selected_prt->getGeom()->Move(move_[0],move_[1],move_[2]);
      }
         
     }
