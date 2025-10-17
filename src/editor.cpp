@@ -632,164 +632,167 @@ void Editor::drawGui() {
                   //~ // Sincronizar el modelo OCC de GMSH
                   //~ gmsh::model::occ::synchronize();
                   
-              ////// IF LOADING FILE
-              Geom *geo = m_model->getPart(i)->getGeom();
-              geo->ExportSTEP();
-              
-              gmsh::clear();  //Cleaning
-              std::string name = "part_" + std::to_string(i) + ".step";
-              gmsh::model::add("t20");
-              std::vector<std::pair<int, int> > v;
-              gmsh::model::occ::importShapes(name, v);
-                gmsh::model::occ::synchronize();  // Critical for dimension detection
-                int model_dim = gmsh::model::getDimension();
-                cout << "Dimension: "<<model_dim<<endl;
-
-
-              ////////////////////////////////////////
-  
-            std::vector<std::pair<int, int>> entities;
-            gmsh::model::getEntities(entities);
-            
-            //if (m_model->getAnalysisType() > Solid3D){
-            if (model_dim<3){
-              // Recorremos curvas y seteamos transfinite
-              for(auto &e : entities) {
-                  if(e.first == 1) { // 1 = curva
-                      gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
-                  }
-                  if(e.first == 2) { // 2 = superficie
-                      gmsh::model::mesh::setTransfiniteSurface(e.second);
-                      gmsh::model::mesh::setRecombine(2, e.second); // QUADS
-                      cout << "Recombine in 2 dim"<<endl; 
-                  }
-                  if(e.first == 3) { // 3 = volumen
-                      //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
-                      //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
-                  }
-              }
-            }//Model dim <3
-            
-            ////////////////////////
-                          
-              if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
-
-              gmsh::merge(name);
-              
-              
-              std::string meshname = "part_" + std::to_string(i) + ".msh";
-              gmsh::write(meshname.c_str());
-              
-              //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
-              
-              m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
-
-              getApp().setActiveModel(m_model);
-              getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
-
-
-              getApp().checkUpdate(); //to create meshes
-              
-              std::string kname = "part_" + std::to_string(i) + ".k";
-              cout << "Exporting to LSDyna..."<<endl;
-              m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
-              cout << "Done"<<endl;
-              
-              ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
-              //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-              //graphic_mesh->createVTKPolyData();
-              //viewer->addActor(graphic_mesh->getActor());
-
-              
-
-              //~ #ifdef BUILD_PYTHON
-              //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-              //~ #else
-                //~ getApp().getActiveModel();
-              //~ #endif
-
-              //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-
-
-                              
-          }/// "MESH" part
-          
-          else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
-            
-                          
-              vtkSmartPointer<vtkActor> mesh_actor; 
-              
-
-              //~ ///// IF MOVING BY MESH. THIS WORKS OK
-              //~ cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
-              //~ int gmid = -1; //graphic mesh id
-              //~ cout << "Checking app new parts "<<endl;
-              //~ //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
-              //~ bool not_found = true;
-              //~ for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
-                //~ if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(i)->getMesh()){//is related to the part mesh
-                  //~ mesh_actor = getApp().getGraphicMesh(gm)->getActor();
-                  //~ gmid = gm;
-                  //~ cout << "gmid = "<<gmid<<endl;
-                  //~ cout << "MESH ACTOR FOUND: "<< mesh_actor << endl;
-                  //~ }
-              //~ }//gm
-              //~ ////////////////////////////
-              
-              
-              ////// IF MOVING BY GEOM, DOES NOT WORK
-              Part* currentPart = m_model->getPart(i);              
-              cout << "Looking for visual for part: " << currentPart << endl;
-              // Buscar por PARTE directamente
-              vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
-              if (getApp().hasVisualForPart(currentPart)) {
+                ////// IF LOADING FILE
+                if (m_model->getPart(i)->getGeom() != nullptr){
+                  Geom *geo = m_model->getPart(i)->getGeom();
+                  geo->ExportSTEP();
                   
-                  mesh_actor = visual->actor;
-                  //~ cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
-                  //~ std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
-                  //~ std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
+                  gmsh::clear();  //Cleaning
+                  std::string name = "part_" + std::to_string(i) + ".step";
+                  gmsh::model::add("t20");
+                  std::vector<std::pair<int, int> > v;
+                  gmsh::model::occ::importShapes(name, v);
+                    gmsh::model::occ::synchronize();  // Critical for dimension detection
+                    int model_dim = gmsh::model::getDimension();
+                    cout << "Dimension: "<<model_dim<<endl;
 
-              } else {
-                  cout << "No visual found for part: " << currentPart << endl;
-              }
-              
-              if (mesh_actor != nullptr){
-              gizmo->Show();
-              gizmo->SetTargetActor(mesh_actor);
 
-              //gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
-
-              for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
-              
-              // The rest of your setup code remains the same
-              vtkSmartPointer<GizmoInteractorStyle> style = vtkSmartPointer<GizmoInteractorStyle>::New();
-              style->SetDefaultRenderer(viewer->getRenderer());
-              style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
-
-              style->SetTargetActor(mesh_actor);
-              style->SetPart(m_model->getPart(i));
-              style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
-              style->SetGizmoAxes(gizmo->GetAxes());
-              style->SetTransformGizmo(gizmo);
-
-              //interactor->SetInteractorStyle(style);
-              viewer->getInteractor()->SetInteractorStyle(style);
-              
-              m_moving_mode = true;
-
-              GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-
-              // Aplicar cursor a la ventana
-              ImGuiIO& io = ImGui::GetIO();
-              io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange; // permite que ImGui cambie el cursor
-              ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-              //ImGui_ImplGlfw_UpdateMouseCursor();
-              
-              selected_prt = currentPart;
-              
-              }else{
+                    ////////////////////////////////////////
+        
+                  std::vector<std::pair<int, int>> entities;
+                  gmsh::model::getEntities(entities);
+                  
+                  //if (m_model->getAnalysisType() > Solid3D){
+                  if (model_dim<3){
+                    // Recorremos curvas y seteamos transfinite
+                    for(auto &e : entities) {
+                        if(e.first == 1) { // 1 = curva
+                            gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
+                        }
+                        if(e.first == 2) { // 2 = superficie
+                            gmsh::model::mesh::setTransfiniteSurface(e.second);
+                            gmsh::model::mesh::setRecombine(2, e.second); // QUADS
+                            cout << "Recombine in 2 dim"<<endl; 
+                        }
+                        if(e.first == 3) { // 3 = volumen
+                            //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
+                            //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
+                        }
+                    }
+                  }//Model dim <3
                 
-                cout << "No geometry part actor"<<endl;
+                ////////////////////////
+                              
+                  if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
+
+                  gmsh::merge(name);
+                  
+                  
+                  std::string meshname = "part_" + std::to_string(i) + ".msh";
+                  gmsh::write(meshname.c_str());
+                  
+                  //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
+                  
+                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
+
+                  getApp().setActiveModel(m_model);
+                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
+
+
+                  getApp().checkUpdate(); //to create meshes
+                  
+                  std::string kname = "part_" + std::to_string(i) + ".k";
+                  cout << "Exporting to LSDyna..."<<endl;
+                  m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
+                  cout << "Done"<<endl;
+                  
+                  ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
+                  //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
+                  //graphic_mesh->createVTKPolyData();
+                  //viewer->addActor(graphic_mesh->getActor());
+
+                  
+
+                  //~ #ifdef BUILD_PYTHON
+                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
+                  //~ #else
+                    //~ getApp().getActiveModel();
+                  //~ #endif
+
+                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
+                } else { // IF GEO
+                  cout << "No geometry"<<endl;
+                }
+                                
+              }/// "MESH" part
+              
+              else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
+                
+                              
+                vtkSmartPointer<vtkActor> mesh_actor; 
+                
+
+                //~ ///// IF MOVING BY MESH. THIS WORKS OK
+                //~ cout << "------- ASSIGNING GRAPHIC MESH in "<<getApp().getGraphicMeshCount()<<endl;
+                //~ int gmid = -1; //graphic mesh id
+                //~ cout << "Checking app new parts "<<endl;
+                //~ //cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
+                //~ bool not_found = true;
+                //~ for (int gm=0;gm<getApp().getGraphicMeshCount();gm++){
+                  //~ if (getApp().getGraphicMesh(gm)->getMesh() == m_model->getPart(i)->getMesh()){//is related to the part mesh
+                    //~ mesh_actor = getApp().getGraphicMesh(gm)->getActor();
+                    //~ gmid = gm;
+                    //~ cout << "gmid = "<<gmid<<endl;
+                    //~ cout << "MESH ACTOR FOUND: "<< mesh_actor << endl;
+                    //~ }
+                //~ }//gm
+                //~ ////////////////////////////
+                
+                
+                ////// IF MOVING BY GEOM, DOES NOT WORK
+                Part* currentPart = m_model->getPart(i);              
+                cout << "Looking for visual for part: " << currentPart << endl;
+                // Buscar por PARTE directamente
+                vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
+                if (getApp().hasVisualForPart(currentPart)) {//search for vtkOCCTgeom
+                    
+                    mesh_actor = visual->actor;
+                    //~ cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
+                    //~ std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
+                    //~ std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
+
+                } else {
+                    cout << "No visual found for part: " << currentPart << endl;
+                }
+                
+                if (mesh_actor != nullptr){
+                gizmo->Show();
+                gizmo->SetTargetActor(mesh_actor);
+
+                //gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
+
+                for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
+                
+                // The rest of your setup code remains the same
+                vtkSmartPointer<GizmoInteractorStyle> style = vtkSmartPointer<GizmoInteractorStyle>::New();
+                style->SetDefaultRenderer(viewer->getRenderer());
+                style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
+
+                style->SetTargetActor(mesh_actor);
+                style->SetPart(m_model->getPart(i));
+                style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
+                style->SetGizmoAxes(gizmo->GetAxes());
+                style->SetTransformGizmo(gizmo);
+
+                //interactor->SetInteractorStyle(style);
+                viewer->getInteractor()->SetInteractorStyle(style);
+                
+                m_moving_mode = true;
+
+                GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+
+                // Aplicar cursor a la ventana
+                ImGuiIO& io = ImGui::GetIO();
+                io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange; // permite que ImGui cambie el cursor
+                ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+                //ImGui_ImplGlfw_UpdateMouseCursor();
+                
+                selected_prt = currentPart;
+              
+              }else{ //NO mesh_actor
+                
+                cout << "ERROR. No geometry part actor"<<endl;
               }
   
             }///// MESH MOVE
@@ -828,7 +831,7 @@ void Editor::drawGui() {
                   //~ }
 
                   ImGui::TreePop(); // Cierra "Mesh"
-              }            
+              }//If MESH            
 
               
             }
@@ -1433,8 +1436,9 @@ void Editor::drawGui() {
     ImGuiFileDialog::Instance()->Close();
   }// Open File
 
-    
-  // display
+  ////////////////////////////////
+  // IMPORT STEP GEOMETRY
+  /////////////////////////////////
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImport")) 
   {
     // action if OK
@@ -1446,8 +1450,7 @@ void Editor::drawGui() {
       cout << "file path name "<<filePathName<<endl;
       //m_model = new Model(filePathName);
       cout << "Adding part "<<endl;
-      string test;
-      m_model->addGeom(new Geom(test));
+      m_model->addGeom(new Geom(filePathName));
       m_model->addPart(m_model->getLastGeom());
       if (m_model->isAnyMesh()){
       //m_renderer.addMesh(m_model->getPartMesh(0));

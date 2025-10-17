@@ -53,7 +53,7 @@ public:
 protected:
   Mesh* m_msh;
   Part_Type m_type;
-  Geom* m_geom;
+  Geom* m_geom = nullptr;
   bool m_ismeshed;
   bool m_isgeom;
   
