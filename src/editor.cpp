@@ -449,10 +449,6 @@ void Editor::drawGui() {
 
 
   /////////////////////////// TREEEEEE
-  
-  
-
-
 // //IMGUI_DEMO_MARKER("Configuration");
     if (ImGui::CollapsingHeader("Configuration"))
     {
@@ -612,12 +608,7 @@ void Editor::drawGui() {
               selected_mat = m_model->getMaterial(i);
             }
             
-            if (m_model->getPart(i)->isMeshed()){
-            
-              
-            }
-            if (ImGui::BeginPopupContextItem())
-            {
+            if (ImGui::BeginPopupContextItem()) {
               if (ImGui::MenuItem("Rename", "CTRL+Z")) {
 
                 //selected_mat = m_mats[i];
@@ -722,6 +713,7 @@ void Editor::drawGui() {
 
                               
           }/// "MESH" part
+          
           else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
             
                           
@@ -803,12 +795,44 @@ void Editor::drawGui() {
             }///// MESH MOVE
                
               ImGui::EndPopup();
-            }//popuip                    
+            }//CONTEXT MENU                    
               ImGui::SameLine();
               if (ImGui::SmallButton("edit")) {
                 m_show_prt_dlg_edit = true;
                 selected_prt = m_model->getPart(i);                  
               }
+
+
+            if (m_model->getPart(i)->isMeshed()){
+              if (ImGui::TreeNode("Mesh"))
+              {
+                  if (ImGui::BeginPopupContextItem())
+                  {
+                      if (ImGui::MenuItem("Delete")) {
+                      
+                      }
+                      ImGui::EndPopup();
+                  }
+                  
+                  // Subramas internas
+                  if (ImGui::TreeNode("Nodes"))
+                  {
+                      ImGui::Text("Count: %d", m_model->getPart(i)->getMesh()->getNodeCount());
+                      ImGui::TreePop();
+                  }
+
+                  //~ if (ImGui::TreeNode("Elements"))
+                  //~ {
+                      //~ ImGui::Text("Count: %d", m_model->getPart(i)->getMesh()->getElementCount());
+                      //~ ImGui::TreePop();
+                  //~ }
+
+                  ImGui::TreePop(); // Cierra "Mesh"
+              }            
+
+              
+            }
+
               ImGui::TreePop();
           }
         }
@@ -1405,7 +1429,7 @@ void Editor::drawGui() {
     cout << "Model part count: "<<pc<<endl;
       m_model = mr.getModel();
               
-    }
+    }//If ok 
     ImGuiFileDialog::Instance()->Close();
   }// Open File
 

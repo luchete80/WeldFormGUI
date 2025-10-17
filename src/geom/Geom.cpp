@@ -53,9 +53,9 @@ void Geom::Move(const double &dx, const double &dy, const double &dz){
     *m_shape = movedShape;
 
     // 4️⃣ Actualizar el origen de la geometría
-    m_origin.x += dx;
-    m_origin.y += dy;
-    m_origin.z += dz;
+    //m_origin.x += dx;
+    //m_origin.y += dy;
+    //m_origin.z += dz;
     
 }
 
@@ -243,8 +243,8 @@ bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targe
     m_fileName = fname;
     
     // Actualizar el origen de la geometría
-    m_origin.x = targetOriginX;
-    m_origin.y = targetOriginY;
+    //m_origin.x = targetOriginX;
+    //m_origin.y = targetOriginY;
     // Si tienes coordenada z en m_origin, también actualízala
     
     return true;
