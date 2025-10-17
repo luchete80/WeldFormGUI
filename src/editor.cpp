@@ -1404,9 +1404,9 @@ void Editor::drawGui() {
     pc = m_model->getPartCount();
     cout << "Model part count: "<<pc<<endl;
       m_model = mr.getModel();
-    ImGuiFileDialog::Instance()->Close();
               
     }
+    ImGuiFileDialog::Instance()->Close();
   }// Open File
 
     
