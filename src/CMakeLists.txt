@@ -70,6 +70,7 @@ add_executable(${EXEC_NAME} main.cpp
                             job_dialog.cpp
                             model_dialog.cpp
                             move_part_dialog.cpp
+                            mesh_dialog.cpp
                             part_dialog.cpp
                             log.cpp
                             global.cpp

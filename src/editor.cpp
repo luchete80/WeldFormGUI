@@ -658,6 +658,7 @@ void Editor::drawGui() {
                 getApp().Update(); //CRASHES
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
 
+                selected_prt = m_model->getPart(i);
               ////// IF LOADING STEP
                   //~ // Crear un modelo GMSH desde la forma OCC
                   //~ GModel* gm = new GModel();
@@ -750,6 +751,8 @@ void Editor::drawGui() {
                 } else { // IF GEO
                   cout << "No geometry"<<endl;
                 }
+                
+                m_show_msh_dlg = true;
                                 
               }/// "MESH" part
               
@@ -1734,6 +1737,11 @@ void Editor::drawGui() {
   Material_ mat;
   Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
+  
+  if (m_show_msh_dlg) {  
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+    m_mshdlg.Draw("Part", &m_show_msh_dlg, selected_prt);
+  }
 
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
@@ -2095,6 +2103,9 @@ Editor::Editor(){
   is_fem_mesh = false;
   is_sph_mesh = false;
   */
+  
+  m_show_msh_dlg = false;
+  
   m_show_app_console = true;
   m_model = new Model();
   getApp().setActiveModel(m_model);

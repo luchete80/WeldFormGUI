@@ -21,6 +21,7 @@ Axis::Axis()
   //vtkNew<vtkActor> actor;
   */
   actor = vtkSmartPointer<vtkAxesActor>::New();
+  actor->PickableOff();
   //axisactor->SetMapper(mapper);
   
   
@@ -30,6 +31,12 @@ Axis::Axis()
   
   widget->SetOutlineColor(rgba[0], rgba[1], rgba[2]);
   widget->SetOrientationMarker(actor);
+  widget->InteractiveOff();
+
+
+// También deshabilita el picking en el renderer interactivo
+//renderWindowInteractor->GetInteractorStyle()->SetPickable(0);
+  
   //widget->SetInteractor(renderWindowInteractor);
   //widget->SetViewport(0.0, 0.0, 0.4, 0.4);
   //widget->SetEnabled(1);

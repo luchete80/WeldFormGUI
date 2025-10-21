@@ -131,4 +131,5 @@
          - Corrected now is moving at selected axis. 
 20251021 - Fixed Model names of geo and geom, when saving changing name.
          - Added mesh delete feature.
-         - Added mesh sizing. 
+         - Begining to add mesh sizing dialog. 
+    

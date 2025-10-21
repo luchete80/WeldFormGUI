@@ -50,6 +50,7 @@
 
 #include "job_dialog.h"
 #include "bc_dialog.h"
+#include "mesh_dialog.h"
 
 
 //#include "gMesh.h"
@@ -197,6 +198,8 @@ protected:
   PartDialog      m_prtdlg;
   ModelDialog     m_moddlg;
   
+  MeshDialog      m_mshdlg;
+  
   MovePartDialog     m_movprtdlg;
     
   //JobDialog<Job> m_jobdlg;
@@ -216,6 +219,8 @@ protected:
   bool create_new_part;
   bool create_new_job;
   bool create_new_set;
+  
+  bool m_show_msh_dlg;
 
   bool m_showNewDomain = false; // o true si quieres que inicie abierto
 
