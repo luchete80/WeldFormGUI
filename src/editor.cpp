@@ -302,10 +302,46 @@ void ShowExampleMenuFile(const Editor &editor)
       writer.writeToFile("Input.json");
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
+
+
+
       if (!(getApp().getActiveModel().getHasName()))
         ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
-      else 
+      else {
         cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
+        ModelWriter mw(getApp().getActiveModel()); //Once it has name
+        mw.writeToFile(getApp().getActiveModel().getName()+".json");
+      
+        //ImGui::OpenPopup("Overwrite?");
+        //~ if (fileExists(fullName)) {
+            //~ ImGui::OpenPopup("Overwrite?");
+        //~ }
+
+        //~ if (ImGui::BeginPopupModal("Overwrite?", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            //~ ImGui::Text("El archivo '%s' ya existe.\n¿Desea sobreescribirlo?", fullName.c_str());
+            //~ ImGui::Separator();
+
+            //~ static bool confirmed = false;
+            //~ if (ImGui::Button("Sí, sobreescribir", ImVec2(150, 0))) {
+                //~ confirmed = true;
+                //~ ImGui::CloseCurrentPopup();
+            //~ }
+            //~ ImGui::SameLine();
+            //~ if (ImGui::Button("Cancelar", ImVec2(120, 0))) {
+                //~ confirmed = false;
+                //~ ImGui::CloseCurrentPopup();
+            //~ }
+
+            //~ ImGui::EndPopup();
+
+            //~ if (confirmed) {
+                //~ // Guardar el archivo realmente aquí
+                //~ std::cout << "Sobrescribiendo: " << fullName << std::endl;
+                //~ // tu código de guardado...
+                //~ confirmed = false; // reset
+            //~ }
+        //~ }
+      }
       cout << "Adress"<<&getApp().getActiveModel()<<endl;
       //ModelWriter(getApp().getActiveModel()); //Once it has name
     }
@@ -638,13 +674,13 @@ void Editor::drawGui() {
                   geo->ExportSTEP();
                   
                   gmsh::clear();  //Cleaning
-                  std::string name = /*m_model->getName()+*/"part_" + std::to_string(i) + ".step";
+                  std::string name = m_model->getName() + "_part_" + std::to_string(i) + ".step";
                   gmsh::model::add("t20");
                   std::vector<std::pair<int, int> > v;
                   gmsh::model::occ::importShapes(name, v);
-                    gmsh::model::occ::synchronize();  // Critical for dimension detection
-                    int model_dim = gmsh::model::getDimension();
-                    cout << "Dimension: "<<model_dim<<endl;
+                  gmsh::model::occ::synchronize();  // Critical for dimension detection
+                  int model_dim = gmsh::model::getDimension();
+                  cout << "Dimension: "<<model_dim<<endl;
 
 
                     ////////////////////////////////////////
@@ -678,7 +714,7 @@ void Editor::drawGui() {
                   gmsh::merge(name);
                   
                   
-                  std::string meshname = "part_" + std::to_string(i) + ".msh";
+                  std::string meshname = m_model->getName()+"_part_" + std::to_string(i) + ".msh";
                   gmsh::write(meshname.c_str());
                   
                   //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
@@ -691,7 +727,7 @@ void Editor::drawGui() {
 
                   getApp().checkUpdate(); //to create meshes
                   
-                  std::string kname = "part_" + std::to_string(i) + ".k";
+                  std::string kname = m_model->getName()+"_part_" + std::to_string(i) + ".k";
                   cout << "Exporting to LSDyna..."<<endl;
                   m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
                   cout << "Done"<<endl;
@@ -1207,7 +1243,7 @@ void Editor::drawGui() {
               cout <<"Created OCCvtK: "<<geom<<endl;
               int pc = m_model->getPartCount();
               
-              std::string name = "part_" + std::to_string(pc) + ".step";
+              std::string name = m_model->getName()+"_part_" + std::to_string(pc) + ".step";
               Geom *geo = new Geom(name);
               //cout << "Creating rectangle"<<endl;
               bool created = false;
@@ -1428,6 +1464,28 @@ void Editor::drawGui() {
     pc = m_model->getPartCount();
     cout << "Model part count: "<<pc<<endl;
       m_model = mr.getModel();
+
+
+      size_t slashPos = filePathName.find_last_of("/\\"); // por si acaso mezcla los dos tipos
+      if (slashPos != std::string::npos)
+          filePathName = filePathName.substr(slashPos + 1);
+          
+      // --- Quitar la extensión .json si la tiene ---
+      size_t dotPos = filePathName.rfind(".json");
+      if (dotPos != std::string::npos)
+          filePathName = filePathName.substr(0, dotPos);
+      cout << "Setting model name "<<filePathName<<endl;
+      m_model->setName(filePathName);
+      m_model->setNoSaveAs(); //Critic, this is for no changign mesh names
+
+      getApp().setActiveModel(m_model);
+      #ifdef BUILD_PYTHON
+      PyRun_SimpleString("GetApplication().getActiveModel()");
+      #else
+        getApp().getActiveModel();
+      #endif
+      getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+
               
     }//If ok 
     ImGuiFileDialog::Instance()->Close();
@@ -1570,8 +1628,19 @@ void Editor::drawGui() {
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      getApp().getActiveModel().setName(filePathName);
-      cout << "Setting model name: "<<filePathName<<"address "<<&getApp().getActiveModel()<<endl;
+
+      size_t lastSlash = filePathName.find_last_of("/\\");
+      std::string fileName = (lastSlash == std::string::npos)
+                                 ? filePathName
+                                 : filePathName.substr(lastSlash + 1);
+
+      // --- Quitar la extensión .json si la tiene ---
+      size_t dotPos = fileName.rfind(".json");
+      if (dotPos != std::string::npos)
+          fileName = fileName.substr(0, dotPos);
+
+      getApp().getActiveModel().setName(fileName);
+      cout << "Setting model name: "<<fileName<<"address "<<&getApp().getActiveModel()<<endl;
       ModelWriter mw(getApp().getActiveModel()); //Once it has name
       mw.writeToFile(filePathName);
     }

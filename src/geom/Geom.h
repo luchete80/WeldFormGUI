@@ -22,6 +22,8 @@ public:
     LoadSTEP(fname);}
   void readFile(std::string file){}  
   const std::string getName()const{return m_fileName;}
+  
+  void setFileName(std::string fname){m_fileName = fname;}
 
   //std::string m_filename; //
   //std::string m_name;

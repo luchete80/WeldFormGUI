@@ -166,7 +166,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
             
             if (jpart.contains("mesh")){
               gmsh::clear();
-              std::string meshname = "part_" + std::to_string(i) + ".msh";
+              std::string meshname = m_model->getName() + "_part_" + std::to_string(i) + ".msh";
               gmsh::open(meshname.c_str());
               gmsh::model::occ::synchronize();               
               

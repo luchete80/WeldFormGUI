@@ -129,3 +129,4 @@
 ------------------------------------------------------------------------------------------
 20251015 - Created Gizmo axes at target actor origin.
          - Corrected now is moving at selected axis. 
+20251021 - Fixed Model names of geo and geom, when saving changing name.

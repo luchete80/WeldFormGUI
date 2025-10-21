@@ -103,7 +103,7 @@ void ModelWriter::writeToFile(std::string fname){
   }
 
 
-  cout << "Loop thorough parts..."<<endl;
+  cout << "Loop thorough " <<m_model.getPartCount()<<" parts..."<<endl;
   int i = 0;
   for (std::vector<Part*>::iterator it = m_model.m_part.begin(); it != m_model.m_part.end(); ++it){
    Part* part = *it;
@@ -141,6 +141,13 @@ void ModelWriter::writeToFile(std::string fname){
         //~ jpart["isRigid"] = false;
       //~ // Geometry (si existe)
       if (part->isGeom()) {
+          //If save as first time or save as
+          if (m_model.getPrevName()!=m_model.getName()){
+            std::string name = m_model.getName()+"_part_" + std::to_string(i) + ".step";
+            part->getGeom()->setFileName(name);
+            part->getGeom()->ExportSTEP();
+          }
+
           cout << "Part has geom"<<endl;
           jpart["geometry"]["source"] = part->getGeom()->getName();
           jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
@@ -149,14 +156,39 @@ void ModelWriter::writeToFile(std::string fname){
               //~ {part->getBBoxMinX(), part->getBBoxMinY(), part->getBBoxMinZ()},
               //~ {part->getBBoxMaxX(), part->getBBoxMaxY(), part->getBBoxMaxZ()}
           //~ };
+
       } 
       if (part->isMeshed()) {
-        std::string meshname = "part_" + std::to_string(part->getId()) + ".msh";
+        cout << "Part "<<i << " is meshed."<<endl;
+        std::string meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".msh";
         jpart["mesh"]["source"] = meshname;
+
+
+        //CHANGE THIS BY EXPORTING TO LS-DYNA
+        if (m_model.getPrevName()!=m_model.getName()){
+         std::string kname = m_model.getName()+"_part_" + std::to_string(i) + ".k";
+            cout << "Exporting to LSDyna..."<<endl;
+            m_model.getPart(i)->getMesh()->exportToLSDYNA(kname);
+        
+
+
+            std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".msh";
+            std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".msh";
+
+            if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
+                std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
+            } else {
+                std::perror(("Error renaming " + old_name).c_str());
+            }
+        
+        }// IF NAME CHANGED
+      } else {
+          cout << "Part "<<i << " is not meshed."<<endl;
       }
 
       m_json["model"]["parts"].push_back(jpart);
       
+      i++;
     
   }//PART
 

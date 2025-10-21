@@ -67,8 +67,10 @@ public:
                                 
   bool & getHasName(){return m_hasname;}
   virtual ~Model(){}
-  void setName (string n){m_name=n;m_hasname=true;}
+  void setName (string n){m_prev_name=m_name; m_name=n; m_hasname=true;}
+  void setNoSaveAs(){m_prev_name = m_name;}
   string getName(){return m_name;}
+  string getPrevName(){return m_prev_name;}
   
   int part_count;
   void delPart(const int &p){m_part.erase(m_part.begin()+p);};
@@ -107,6 +109,7 @@ protected:
   //IO AND SETTING THINGS
   bool m_hasname;
   string m_name;
+  string m_prev_name;
   AnalysisType m_analysisType = Solid3D;
 
 
