@@ -38,6 +38,12 @@ void Part::generateMesh(){
   m_ismeshed = true;
 }
 
+void Part::deleteMesh(){
+  delete this->m_msh;
+  this->m_msh = nullptr;
+  m_ismeshed = false;
+}
+
 
 void Part::setMesh(Mesh* m){
   if (m!=nullptr){

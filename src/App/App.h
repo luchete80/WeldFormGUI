@@ -89,6 +89,10 @@ public:
             partToVisual.erase(part);
         }
     }
+
+    void removeGraphicMeshForPart(Part* part);
+    
+    GraphicMesh* getGraphicMeshFromPart(Part *part);
     
 private:
   static App *_pcSingleton;  

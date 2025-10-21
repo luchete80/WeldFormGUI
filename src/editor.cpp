@@ -848,7 +848,11 @@ void Editor::drawGui() {
                   if (ImGui::BeginPopupContextItem())
                   {
                       if (ImGui::MenuItem("Delete")) {
-                      
+
+                        viewer->removeActor(getApp().getGraphicMeshFromPart(m_model->getPart(i))->getActor());
+                        getApp().removeGraphicMeshForPart(m_model->getPart(i));
+                        m_model->getPart(i)->deleteMesh();
+                        
                       }
                       ImGui::EndPopup();
                   }

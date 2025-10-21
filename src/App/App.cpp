@@ -182,6 +182,52 @@ void App::registerGeometry(Geom* geo, vtkOCCTGeom* visual) {
     //std::cout << "Registered geometry: " << geo->m_name << std::endl;
 }
 
+void App::removeGraphicMeshForPart(Part* part) {
+    if (!part) return;
+
+    // Buscamos los GraphicMesh asociados a la parte
+    auto it = m_graphicmeshes.begin();
+    while (it != m_graphicmeshes.end()) {
+        GraphicMesh* gmesh = *it;
+        if (gmesh && gmesh->getMesh() == part->getMesh()) {
+            //~ // 1️⃣ Quitar el actor del renderer si existe
+            //~ if (gmesh->getActor() && gmesh->m_viewer) {
+                //~ auto renderer = gmesh->m_viewer->getRenderer();
+                //~ if (renderer)
+                    //~ renderer->RemoveActor(gmesh->getActor());
+            //~ }
+
+            //2. Clean Memory
+            delete gmesh;
+
+            // Borrar del vector
+            it = m_graphicmeshes.erase(it);
+
+            std::cout << "Removed GraphicMesh and actor for part Id: "
+                      << part->getId() << std::endl;
+        } else {
+            ++it;
+        }
+    }
+
+    _updateNeeded = true;
+}
+
+
+GraphicMesh* App::getGraphicMeshFromPart(Part* part) {
+    if (!part) return nullptr;
+
+    // Buscamos los GraphicMesh asociados a la parte
+    auto it = m_graphicmeshes.begin();
+    while (it != m_graphicmeshes.end()) {
+        GraphicMesh* gmesh = *it;
+        if (gmesh && gmesh->getMesh() == part->getMesh()) {
+    
+    return gmesh;
+    }
+  }
+}
+
 // Sobrecarga para cuando solo tienes la geometría y quieres que App cree el visual
 vtkOCCTGeom* App::registerGeometry(Geom* geo) {
     if (!geo) return nullptr;

@@ -38,6 +38,7 @@ class VtkViewer;
 class GraphicMesh{
   friend class Model;
   friend class VtkViewer;
+  friend class App;  // access to  m_viewer, mesh_actor, etc.
 public:
   GraphicMesh(){  
     m_needs_polydata = true;
