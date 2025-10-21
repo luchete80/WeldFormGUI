@@ -10,6 +10,13 @@
 #include "json_io.h"
 #include "gmsh.h"
 
+#include <fstream>
+
+bool fileExists(const std::string& name) {
+    std::ifstream f(name.c_str());
+    return f.good();
+}
+
 ModelReader::ModelReader(Model *model){
   
   m_model = model;
@@ -164,15 +171,18 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 //part->setGeom(geom);
             }
             
-            if (jpart.contains("mesh")){
-              gmsh::clear();
-              std::string meshname = m_model->getName() + "_part_" + std::to_string(i) + ".msh";
-              gmsh::open(meshname.c_str());
-              gmsh::model::occ::synchronize();               
-              
-              part->generateMesh();             
-            }
+            if (jpart.contains("mesh")) {
+                std::string meshname = jpart["mesh"]["source"].get<std::string>();
 
+                if (!fileExists(meshname)) {
+                    std::cerr << " Mesh file not found: " << meshname << std::endl;
+                } else {
+                    gmsh::clear();
+                    gmsh::open(meshname.c_str());
+                    gmsh::model::occ::synchronize();
+                    part->generateMesh();
+                }
+            }
           
           if (jpart["isRigid"] == true)
             part->setType(1);
