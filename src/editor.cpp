@@ -638,7 +638,7 @@ void Editor::drawGui() {
                   geo->ExportSTEP();
                   
                   gmsh::clear();  //Cleaning
-                  std::string name = "part_" + std::to_string(i) + ".step";
+                  std::string name = /*m_model->getName()+*/"part_" + std::to_string(i) + ".step";
                   gmsh::model::add("t20");
                   std::vector<std::pair<int, int> > v;
                   gmsh::model::occ::importShapes(name, v);
