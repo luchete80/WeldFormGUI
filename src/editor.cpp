@@ -1729,6 +1729,9 @@ void Editor::drawGui() {
       double move_[] = {0,0,0};
       move_[move.axis] = move.delta;
       selected_prt->getGeom()->Move(move_[0],move_[1],move_[2]);
+     } else {
+       
+       cout << "ERROR. No polydata on Geometry"<<endl;
      }
         
     }

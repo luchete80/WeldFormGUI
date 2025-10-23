@@ -22,54 +22,50 @@
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
- 
-  vtkNew<vtkOCCTReader> reader;
-  //reader->RelativeDeflectionOn();
-  //reader->SetLinearDeflection(0.1);
-  //reader->SetAngularDeflection(0.5);
-  reader->ReadWireOn();
-  reader->SetFileName(path.c_str());
-  reader->SetFileFormat(format);
-  reader->Update();
-  
-  
-  vtkNew<vtkCompositePolyDataMapper> mapper;
-  mapper->SetInputDataObject(reader->GetOutput());
-  actor = vtkSmartPointer <vtkActor>::New();
-  actor->SetMapper(mapper);
-  //actor->GetProperty()->SetRepresentationToWireframe();
-  actor->GetProperty()->SetLineWidth(1.0);
-  actor->GetProperty()->SetOpacity(0.5); // 50% transparente 
+    vtkNew<vtkOCCTReader> reader;
+    reader->ReadWireOn();
+    reader->SetFileName(path.c_str());
+    reader->SetFileFormat(format);
+    reader->Update();
 
-  /*
-  vtkNew<vtkRenderer> renderer;
-  vtkNew<vtkRenderWindow> renderWindow;
-  vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
-  renderWindow->AddRenderer(renderer);
-  renderer->AddActor(actor);
-  renderWindowInteractor->SetRenderWindow(renderWindow);
-  
-  */
-  
-  /*
-  renderWindow->SetSize(400, 400);
-  renderer->ResetCamera();
-  renderWindow->Render();
+    // Reader output is a multiblock
+    vtkMultiBlockDataSet* mb = reader->GetOutput();
 
+    // Extract first PolyData block
+    vtkSmartPointer<vtkPolyData> polyData = nullptr;
+    for (unsigned int i = 0; i < mb->GetNumberOfBlocks(); ++i)
+    {
+        vtkSmartPointer<vtkPolyData> pd = vtkPolyData::SafeDownCast(mb->GetBlock(i));
+        if (pd)
+        {
+            polyData = pd;
+            break;
+        }
+    }
 
-  /* SHOULD ADD TESTING MODULE!
-  int retVal = vtkRegressionTestImage(renderWindow);
-  if (retVal == vtkRegressionTester::DO_INTERACTOR)
-  {
-  */
-   // renderWindowInteractor->Start();
-  /*
-  }
+    if (!polyData)
+    {
+        std::cerr << "Error: No PolyData found in the imported model." << std::endl;
+        return 0;
+    }
 
-  return retVal;
-  */
-  return 1;
+    // Save it in the member variable (so moving works)
+    m_polydata = polyData;
+    m_polydata->Modified();
+
+    // Create mapper and actor
+    m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_mapper->SetInputData(m_polydata);
+    m_mapper->SetScalarRange(m_polydata->GetScalarRange());
+
+    actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(m_mapper);
+    actor->GetProperty()->SetLineWidth(1.0);
+    actor->GetProperty()->SetOpacity(0.5);
+
+    return 1;
 }
+
 
 
 
