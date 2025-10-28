@@ -4,11 +4,11 @@
 /////// DUMMY MATERIAL CLASS //////////////////////////
 ///////////////////////////////////////////////////////
 
-
-#define BILINEAR				0
-#define HOLLOMON				1 //POWER LAW
-#define JOHNSON_COOK		2
-#define _GMT_         	3
+#define NONE				    0
+#define BILINEAR				1
+#define HOLLOMON				2 //POWER LAW
+#define JOHNSON_COOK		3
+#define _GMT_         	4
 
 #include <vector>
 class Elastic_{
@@ -24,6 +24,8 @@ class Elastic_{
 	
 };
 
+
+
 class Plastic_{
 	
 	public:  
@@ -35,6 +37,7 @@ class Plastic_{
   double K, m;
 	double eps0, eps1;
   double sy0;
+  double Et;
   void InitHollomon(){}
 
   ////// NO //virtual FUNCTIONS, JOHNSON COOK MATERIAL ///////
@@ -43,7 +46,10 @@ class Plastic_{
   double T_min, T_max;
   double e_min, e_max;
   double er_min, er_max;
- 
+
+  virtual ~Plastic_() {}
+    
+  virtual Plastic_* clone() const = 0;
 
   virtual const int getType()const{return Material_model;}
   //THERMAL
@@ -92,6 +98,42 @@ class Material_{
 };
 
 
+class Bilinear:
+public Plastic_{
+  double sy0;
+  double Et;
+	
+	public:
+	Bilinear(){
+    Material_model = BILINEAR;
+    }
+	Bilinear(const double &_sy0, const double &_Et){
+    Et = _Et;
+    Material_model = BILINEAR;
+    }
+    
+	//You provide the values of A, B, n, m, 
+	//θmelt, and  θ_transition
+	//as part of the metal plasticity material definition.
+	//ASSUMING AT FIRST COEFFICIENTS ARE GIVEN TO TOTAL STRAIN-STRESS
+	//~ Hollomon(const double eps0_, const double &k_, const double &m_):
+	//~ K(k_), m(m_){ eps0 = eps0_;}
+	//~ Hollomon(const Elastic_ &el, const double sy0_, const double &k_, const double &m_);
+
+    Plastic_* clone() const override { return new Bilinear(*this); }
+
+      
+	//~ inline double CalcTangentModulus(const double &strain);
+	//~ inline double CalcYieldStress(){return 0.0;}	
+	//~ inline double CalcYieldStress(const double &strain);	
+  virtual std::vector <double> getPlasticConstants(){
+    std::vector<double> ret;
+    ret.push_back(sy0);ret.push_back(Et);
+    return ret;
+  }
+};
+
+
 //TODO: derive johnson cook as plastic material flow
 class JohnsonCook:
 public Plastic_{
@@ -101,7 +143,9 @@ public Plastic_{
 	double eps_0;
 	
 	public:
-	JohnsonCook(){}
+	JohnsonCook(){
+    Material_model = JOHNSON_COOK;
+    }
 	//You provide the values of A, B, n, m, 
 	//θmelt, and  θ_transition
 	//as part of the metal plasticity material definition.
@@ -124,6 +168,8 @@ public Plastic_{
 	//~ inline double CalcYieldStress(const double &strain, const double &strain_rate, const double &temp);	
 	//~ inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp);
 
+    Plastic_* clone() const override { return new JohnsonCook(*this); }
+    
 };
 
 class Hollomon:
@@ -144,7 +190,10 @@ public Plastic_{
 	//~ Hollomon(const double eps0_, const double &k_, const double &m_):
 	//~ K(k_), m(m_){ eps0 = eps0_;}
 	//~ Hollomon(const Elastic_ &el, const double sy0_, const double &k_, const double &m_);
-  
+
+    Plastic_* clone() const override { return new Hollomon(*this); }
+
+      
 	//~ inline double CalcTangentModulus(const double &strain);
 	//~ inline double CalcYieldStress(){return 0.0;}	
 	//~ inline double CalcYieldStress(const double &strain);	
@@ -209,6 +258,10 @@ public Plastic_{
 	inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp);
   double &getRefStrainRate(){return eps_0;}//only for JC
   //~JohnsonCook(){}
+
+  Plastic_* clone() const override { return new GMT(*this); }
+
+
 };
 
 #endif

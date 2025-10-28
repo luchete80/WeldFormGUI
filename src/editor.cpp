@@ -642,6 +642,7 @@ void Editor::drawGui() {
               m_show_mat_dlg_edit = true;
               //selected_mat = m_mats[i];
               selected_mat = m_model->getMaterial(i);
+              m_matdlg.InitFromMaterial(selected_mat); //In order to create a temp to plastic
             }
             
             if (ImGui::BeginPopupContextItem()) {
@@ -993,67 +994,67 @@ void Editor::drawGui() {
     
 
 
-        bool open_ = ImGui::TreeNode("Jobs");
+    bool open_ = ImGui::TreeNode("Jobs");
+    if (ImGui::BeginPopupContextItem())
+    {
+      if (ImGui::MenuItem("New", "CTRL+Z")) 
+        m_jobdlg.m_show=true;
+                       
+      ImGui::EndPopup();
+    }
+
+    m_jobdlg.ShowIfEnabled();
+
+    m_jobshowdlg.ShowIfEnabled();
+
+    for (int i = 0; i < m_jobs.size(); i++)
+    {
+      
+      if (i == 0)
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+      if (ImGui::TreeNode((void*)(intptr_t)i, "Job %d", i))
+      {
+        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+          //m_show_job_dlg_edit = true;
+        }
+          //selected_mat = m_mats[i];}
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) 
-            m_jobdlg.m_show=true;
-                           
+          if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+            m_jobshowdlg.m_show = true;
+            //selected_mat = m_mats[i];
+          }
+          if (ImGui::MenuItem("Show Progress", "")) {
+            m_jobshowdlg.m_job = m_jobs[i];
+            m_jobs[i]->UpdateOutput();
+
+            m_jobshowdlg.m_show = true;
+            
+            //selected_mat = m_mats[i];
+          }
+          if (ImGui::MenuItem("Run", "")) {
+            m_jobs[i]->Run();
+          }
           ImGui::EndPopup();
-        }
+        }                    
+        ImGui::SameLine();
+        if (ImGui::SmallButton("button")) {}
+        ImGui::TreePop();
+      }//Is hovered
+      
+      
+    }//Jobs
 
-        m_jobdlg.ShowIfEnabled();
-
-        m_jobshowdlg.ShowIfEnabled();
-
-        for (int i = 0; i < m_jobs.size(); i++)
-        {
-          
-          if (i == 0)
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-          if (ImGui::TreeNode((void*)(intptr_t)i, "Job %d", i))
-          {
-            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-              //m_show_job_dlg_edit = true;
-            }
-              //selected_mat = m_mats[i];}
-            if (ImGui::BeginPopupContextItem())
-            {
-              if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                m_jobshowdlg.m_show = true;
-                //selected_mat = m_mats[i];
-              }
-              if (ImGui::MenuItem("Show Progress", "")) {
-                m_jobshowdlg.m_job = m_jobs[i];
-                m_jobs[i]->UpdateOutput();
-
-                m_jobshowdlg.m_show = true;
-                
-                //selected_mat = m_mats[i];
-              }
-              if (ImGui::MenuItem("Run", "")) {
-                m_jobs[i]->Run();
-              }
-              ImGui::EndPopup();
-            }                    
-            ImGui::SameLine();
-            if (ImGui::SmallButton("button")) {}
-            ImGui::TreePop();
-          }//Is hovered
-          
-          
-        }//Jobs
-    
-        if (open_)
-        {
-           // your tree code stuff
-           ImGui::TreePop();
-        }
+    if (open_)
+    {
+       // your tree code stuff
+       ImGui::TreePop();
+    }
         
     ImGui::EndTabItem(); 
     
-    } //END MODEL TAB
+  } //END MODEL TAB
     
     
     if (ImGui::BeginTabItem("Results")) { 

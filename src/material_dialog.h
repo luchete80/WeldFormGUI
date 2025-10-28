@@ -19,8 +19,10 @@ public Dialog{
   
   bool cancel_action;
   bool create_material;
+  int m_selected_model; //PLASTIC
   
   Plastic_ *m_pl = nullptr;
+  void InitFromMaterial(Material_* mat);
   
   GMT m_gmt;
   

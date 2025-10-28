@@ -9,6 +9,20 @@
 
 using namespace std;
 
+void MaterialDialog::InitFromMaterial(Material_* mat) {
+    m_density_const = mat->getDensityConstant();
+    //m_elastic_const = mat->E;
+    //m_poisson_const = mat->nu;
+    
+    if (mat->isPlastic()) {
+        m_pl = mat->getPlastic()->clone(); // su propio clon (virtual)
+        m_selected_model = m_pl->getType(); // p.ej. GMT, Hollomon, etc.
+    } else {
+        m_pl = nullptr;
+        m_selected_model = 0;
+    }
+}
+
 void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
 
   create_material = false; 
@@ -27,40 +41,46 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   ImGui::InputDouble("Elastic Mod", &m_elastic_const, 0.0f, 1.0f, "%.2e");  
   ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
 
-  const char* items[] = { "Constant", "Hollomon", "GMT", "Sinh"};
+  const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh"};
 
+  static int item_current = 0;
   if (ImGui::CollapsingHeader("Plastic")){
-    static int item_current = 0;
+    
     {
   //MUST BE SAVED CURRENT STATE
   ImGui::Combo("Yield Criteria", &item_current, items, IM_ARRAYSIZE(items) ) ;
   // if (ImGui::Button("Hollomon")){
         // Aquí verificas qué opción está seleccionada
-    if (item_current == 1) { // GMT está en índice 2
+    if (item_current == 0) { 
+      //NONE
+    }
+
+    if (item_current == 1) { //BILINEAR
+    
+      
+      ImGui::InputDouble("sigma_yield ", &m_density_const, 0.00f, 1.0f, "%.4f");   
+            
+    }
+    if (item_current == 2) { // Hollomon
     
       //ImGui::InputDouble("K ", &mat->, 0.00f, 1.0f, "%.4f");  
       ImGui::InputDouble("n ", &m_density_const, 0.00f, 1.0f, "%.4f");   
             
     }
-    if (item_current == 2) { // GMT está en índice 2
-      
-      if (mat == NULL){
-        m_pl = new GMT();
-      }
-      else {
-        if (!mat->isPlastic() ){
-          //cout << "Not plasticity model"<<endl;
-          m_pl = new GMT();
-        } else{
-          m_pl = mat->getPlastic();
-          //cout << "Existent Plastic"<<endl;
-        }
-      }
+    if (item_current == 3) { // Johnson Cook
+                
+    }
+    if (item_current == 4) { // GMT 
+
       ImGui::InputDouble("n1 ", &m_gmt.n1, 0.00f, 1.0f, "%.4f");  
-      ImGui::InputDouble("n2 ", &m_gmt.n2, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("n2 ", &m_gmt.n2, 0.00f, 1.0f, "%.4f");
+        
       ImGui::InputDouble("m1 ", &m_gmt.m1, 0.00f, 1.0f, "%.4f");  
       ImGui::InputDouble("m2 ", &m_gmt.m2, 0.00f, 1.0f, "%.4f");  
-            
+
+      ImGui::InputDouble("I1 ", &m_gmt.m1, 0.00f, 1.0f, "%.4f");  
+      ImGui::InputDouble("I2 ", &m_gmt.m2, 0.00f, 1.0f, "%.4f");  
+                  
     }
           
     
@@ -69,14 +89,69 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   }//Plastic
   
   if (ImGui::Button("Ok")) {
+    cout << "Created material "<<endl;
     create_material = true;
     *p_open = false;
-    if (mat == NULL){
-    } else {
-      //mat->m_plastic = 
-      }
+
+    m_selected_model = item_current;
     
+    if (mat) {
+        mat->setDensityConstant(m_density_const);
+        //mat->E = m_elastic_const;
+        //mat->nu = m_poisson_const;
+
+        if (m_selected_model != 0) {
+            // Liberar el modelo previo
+          
+          cout << "New Plastic Rule: ";
+          switch (m_selected_model){
+
+          case BILINEAR:
+            m_pl = new Bilinear();
+            cout << "Bilinear"<<endl;
+            break;
+
+          case HOLLOMON:
+            m_pl = new Hollomon();
+            cout << "Hollomon"<<endl;
+            break;
+            
+          case JOHNSON_COOK:
+            m_pl = new JohnsonCook();
+            cout << "Johnson Cook"<<endl;
+            break;
+            
+          case _GMT_:
+            cout << "GMT"<<endl;
+            break;
+            
+            
+            default:
+              break;  
+          }
+          cout <<endl;
+          
+            delete mat->m_plastic;
+            // Clonar o copiar el modelo temporal
+            if (m_pl){
+              mat->m_plastic = m_pl->clone();
+            } else {
+              m_pl = nullptr;
+              cout << "ERROR: No plastic"<<endl;
+            }
+
+            mat->m_isplastic = true;
+
+        } else {
+            cout << "Set material to elastic."<<endl;
+            delete mat->m_plastic;
+            mat->m_plastic = nullptr;
+            mat->m_isplastic = false;
+        }
     }
+        
+    
+  }//OK Button
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
     cancel_action = true;
