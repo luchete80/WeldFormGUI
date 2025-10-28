@@ -24,6 +24,16 @@ public Dialog{
   Plastic_ *m_pl = nullptr;
   void InitFromMaterial(Material_* mat);
   
+  //// TO EDIT INTENALLY WHEN OPEN
+  double bilinear_sy0;
+  double bilinear_Et;
+
+  double hollomon_K;
+  double hollomon_n;
+
+  double gmt_n1, gmt_n2, gmt_m1, gmt_m2, gmt_I1, gmt_I2;
+
+  std::vector<double> m_pl_const;
   GMT m_gmt;
   
   const bool & isMaterialCreated()const{return create_material;}

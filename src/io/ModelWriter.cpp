@@ -208,23 +208,23 @@ void ModelWriter::writeToFile(std::string fname){
     } else {
       std::vector<double> plasticConst;
       if (m_model.getMaterial(0)->m_plastic){
-      switch ( m_model.getMaterial(0)->m_plastic->Material_model ) {
-                
-        case _GMT_: 
-          cout << "GMT"<<endl;
-          m_json["Materials"]["type"]= "GMT";  
-          
-          break;
-        case HOLLOMON:
-          cout << "Hollomon"<<endl;
-          m_json["Materials"]["type"]= "Hollomon";  
-          plasticConst = m_model.getMaterial(0)->m_plastic->getPlasticConstants(); //K,n
+        switch ( m_model.getMaterial(0)->m_plastic->Material_model ) {
+                  
+          case _GMT_: 
+            cout << "GMT"<<endl;
+            m_json["Materials"]["type"]= "GMT";  
+            
+            break;
+          case HOLLOMON:
+            cout << "Hollomon"<<endl;
+            m_json["Materials"]["type"]= "Hollomon";  
 
-                    
-          break;
-        default:
-          break;
-      }
+                      
+            break;
+          default:
+            break;
+        }//Switch material model
+        plasticConst = m_model.getMaterial(0)->m_plastic->getPlasticConstants(); //K,n
       } else {
           cout << "ERROR: No plastic present."<<endl;
       }

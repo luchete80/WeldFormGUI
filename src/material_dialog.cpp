@@ -17,6 +17,36 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
     if (mat->isPlastic()) {
         m_pl = mat->getPlastic()->clone(); // su propio clon (virtual)
         m_selected_model = m_pl->getType(); // p.ej. GMT, Hollomon, etc.
+        m_pl_const = m_pl->getPlasticConstants();
+        cout << "Plastic Constants"<<endl;
+        for (int i=0;i<m_pl_const.size();i++)
+          cout << m_pl_const[i]<<", ";
+        cout <<endl;
+
+        // Ahora asigno a las variables específicas según el tipo de material
+        switch (m_selected_model) {
+            case BILINEAR:
+                bilinear_sy0 = m_pl_const[0];
+                bilinear_Et  = m_pl_const[1];
+                break;
+
+            case HOLLOMON:
+                hollomon_K = m_pl_const[0];
+                hollomon_n = m_pl_const[1];
+                break;
+
+            case _GMT_:
+                gmt_n1 = m_pl_const[0];
+                gmt_n2 = m_pl_const[1];
+                gmt_m1 = m_pl_const[2];
+                gmt_m2 = m_pl_const[3];
+                gmt_I1 = m_pl_const[4];
+                gmt_I2 = m_pl_const[5];
+                break;
+
+            // otros modelos...
+        }
+
     } else {
         m_pl = nullptr;
         m_selected_model = 0;
@@ -58,17 +88,27 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
     if (item_current == 1) { //BILINEAR
     
       
-      ImGui::InputDouble("sigma_yield ", &m_density_const, 0.00f, 1.0f, "%.4f");   
-            
+      ImGui::InputDouble("Yield Stress ", &bilinear_sy0, 0.00f, 1.0f, "%.4f");   
+      ImGui::InputDouble("Tangent mod ", &bilinear_Et, 0.00f, 1.0f, "%.4f");   
+                  
     }
     if (item_current == 2) { // Hollomon
     
       //ImGui::InputDouble("K ", &mat->, 0.00f, 1.0f, "%.4f");  
-      ImGui::InputDouble("n ", &m_density_const, 0.00f, 1.0f, "%.4f");   
+      ImGui::InputDouble("K ", &hollomon_K, 0.00f, 1.0f, "%.4f");   
+      ImGui::InputDouble("n ", &hollomon_n, 0.00f, 1.0f, "%.4f");   
             
     }
     if (item_current == 3) { // Johnson Cook
-                
+      //~ ImGui::InputDouble("A ", &m_gmt.n1, 0.00f, 1.0f, "%.4f");  
+      //~ ImGui::InputDouble("B ", &m_gmt.n2, 0.00f, 1.0f, "%.4f");
+        
+      //~ ImGui::InputDouble("n ", &m_gmt.m1, 0.00f, 1.0f, "%.4f");  
+      //~ ImGui::InputDouble("C ", &m_gmt.m2, 0.00f, 1.0f, "%.4f");  
+
+      //~ ImGui::InputDouble("I1 ", &m_gmt.m1, 0.00f, 1.0f, "%.4f");  
+      //~ ImGui::InputDouble("I2 ", &m_gmt.m2, 0.00f, 1.0f, "%.4f");  
+                      
     }
     if (item_current == 4) { // GMT 
 
@@ -107,12 +147,12 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
           switch (m_selected_model){
 
           case BILINEAR:
-            m_pl = new Bilinear();
+            m_pl = new Bilinear(bilinear_sy0,bilinear_Et);
             cout << "Bilinear"<<endl;
             break;
 
           case HOLLOMON:
-            m_pl = new Hollomon();
+            m_pl = new Hollomon(hollomon_K,hollomon_n);
             cout << "Hollomon"<<endl;
             break;
             

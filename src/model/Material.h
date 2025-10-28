@@ -174,7 +174,7 @@ public Plastic_{
 
 class Hollomon:
 public Plastic_{
-	double K, m;
+	double K, n;
 	double eps0;
   double eps1;  //if has a perfectly plastic algoritm
   double sy0;
@@ -183,6 +183,12 @@ public Plastic_{
 	Hollomon(){
     Material_model = HOLLOMON;
     }
+	Hollomon(const double &_K, const double &_n){
+    K = _K;
+    n = _n;
+    Material_model = HOLLOMON;
+    }
+    
 	//You provide the values of A, B, n, m, 
 	//θmelt, and  θ_transition
 	//as part of the metal plasticity material definition.
@@ -199,7 +205,7 @@ public Plastic_{
 	//~ inline double CalcYieldStress(const double &strain);	
   virtual std::vector <double> getPlasticConstants(){
     std::vector<double> ret;
-    ret.push_back(K);ret.push_back(m);
+    ret.push_back(K);ret.push_back(n);
     return ret;
   }
 };

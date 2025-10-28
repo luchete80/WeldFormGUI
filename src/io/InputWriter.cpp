@@ -111,24 +111,37 @@ void InputWriter::writeToFile(std::string fname){
     m_json["Materials"]["youngsModulus"]= m_model->getMaterial(0)->Elastic().E();  
     m_json["Materials"]["poissonsRatio"]= m_model->getMaterial(0)->Elastic().nu();  
     
+    std::vector<double> plasticConst;
+    
     cout << "Checking plastic "<<endl;
     if (!m_model->getMaterial(0)->isPlastic()) {
       cout << "Elastic"<<endl;
       m_json["Materials"]["type"] = "Elastic";     
     } else {
-      switch ( m_model->getMaterial(0)->m_plastic->Material_model ) {
-      
-        case _GMT_:
-          cout << "GMT"<<endl;
-          
-          break;
-        case HOLLOMON:
-          cout << "Hollomon"<<endl;
-          
-          break;
-        default:
-          break;
-      }
+        switch ( m_model->getMaterial(0)->m_plastic->Material_model ) {
+                  
+          case _GMT_: 
+            cout << "GMT"<<endl;
+            m_json["Materials"]["type"]= "GMT";  
+            
+            break;
+          case HOLLOMON:
+            cout << "Hollomon"<<endl;
+            m_json["Materials"]["type"]= "Hollomon";  
+
+                      
+            break;
+          default:
+            break;
+        }//Switch material model
+      plasticConst = m_model->getMaterial(0)->m_plastic->getPlasticConstants(); //K,n
+
+      if (plasticConst.size()>0)
+        m_json["Materials"]["const"] = plasticConst;  // esto crea un array JSON automáticamente
+      else
+        cout << "ERROR: No plastic constants present."<<endl;
+        
+        
     }//PLASTIC
     
     }//if not nullptr

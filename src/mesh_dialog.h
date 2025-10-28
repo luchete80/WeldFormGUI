@@ -22,6 +22,8 @@ struct MeshDialog{
   bool cancel_action;
   bool create_part;
   float m_element_size;
+
+
   
   const bool & isPartCreated()const{return create_part;}
   void   Draw(const char* title, bool* p_open = NULL, Part* prt = NULL);  

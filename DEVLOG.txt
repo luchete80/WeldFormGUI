@@ -134,3 +134,5 @@
          - Begining to add mesh sizing dialog. 
 20251023 - Fixed Not Moving imported STEP geom. 
          - Fixed freezing when meshing from imported model deleted.
+20251028 - Fixed Material Dialog to Write Hollomon, Bilinear.
+         - Added Input Writer
