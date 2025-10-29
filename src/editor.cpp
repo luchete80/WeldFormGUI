@@ -46,7 +46,7 @@
 
 #include "App.h"
 
-#include "results_simple.h"
+
 
 #include "graphics/TransformGizmo.h"
 
@@ -273,7 +273,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".vtk", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".vtk,.json", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -1587,30 +1587,51 @@ void Editor::drawGui() {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       
       cout << "file path name "<<filePathName<<endl;
+      
+      std::string ext = fs::path(filePathName).extension().string();
 
-      ResultFrame *frame = new ResultFrame(filePathName);
-      frame->printAvailableFields();
+      if (ext == ".json") {
+          MultiResult results = LoadResultsFromJson(filePathName);
+          m_results = new MultiResult(std::move(results)); //Because of dstd_unique_ptr
+          if (!m_results->frames.empty()) {
+              //~ for (auto& framePtr : results.frames) {
+                  //~ viewer->addActor(framePtr->actor);
+              //~ }
+          //if (m_curr_res_actor) res_viewer->RemoveActor(m_curr_res_actor);
 
-      std::string fieldName;
-      fieldName = "pl_strain";
-      //fieldName = "DISP";
+          // mostrar nuevo frame
+          //m_curr_res_actor = results.frames[0]->actor;
+          //res_viewer->addActor(m_curr_res_actor);
+                    
 
-      //IF SCALAR
-      frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
-      //if cell data
-      //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
-      //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
-      //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+          }
+      } else if (ext == ".vtk") { 
 
 
-      //IF VECTOR
-      frame->setActiveScalarField("DISP");      
-      frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
+        ResultFrame *frame = new ResultFrame(filePathName);
+        frame->printAvailableFields();
 
-      frame->actor->GetMapper()->ScalarVisibilityOn();
-      frame->actor->GetMapper()->Update();
+        std::string fieldName;
+        fieldName = "pl_strain";
+        //fieldName = "DISP";
 
-      viewer->addActor(frame->actor);      
+        //IF SCALAR
+        frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
+        //if cell data
+        //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
+        //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+        //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+
+
+        //IF VECTOR
+        frame->setActiveScalarField("DISP");      
+        frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
+
+        frame->actor->GetMapper()->ScalarVisibilityOn();
+        frame->actor->GetMapper()->Update();
+
+        res_viewer->addActor(frame->actor);      
+      }
       
       getApp().setActiveModel(m_model);
 

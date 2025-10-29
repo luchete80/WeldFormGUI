@@ -14,7 +14,8 @@ if(WIN32)
 endif()
 
  
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON) #FILESYSTEM ON RESULTS
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
 set(APP_VERSION_MINOR 0)
@@ -77,6 +78,7 @@ add_executable(${EXEC_NAME} main.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             geom/vtkOCCTGeom.cpp
                             geom/ShapeToPolyData.cpp
+                            results/results.cpp
                             
                             #graphics/axis.cpp
                             )

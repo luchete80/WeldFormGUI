@@ -65,7 +65,7 @@
 #include "App/App.h"
 #include "GraphicMesh.h"
 
-#include "results_simple.h"
+#include "results.h"
 //using App;
 #include "geom/vtkOCCTGeom.h"
 #include "geom/ShapeToPolyData.h"
@@ -209,16 +209,23 @@ int main(int argc, char* argv[])
   //vtkViewer1.addActor(actor);
   
   VtkViewer vtkViewer2;
+  VtkViewer vtkViewer_res;
   //vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
 
   vtkViewer2.getRenderer()->SetBackground(0.2,0.2,0.4);
   vtkViewer2.getRenderer()->SetBackground2(0.8,0.8,0.8);
+
+
+  vtkViewer_res.getRenderer()->SetBackground(0.2,0.2,0.4);
+  vtkViewer_res.getRenderer()->SetBackground2(0.8,0.8,0.8);
+
   //vtkViewer2.addActor(actor);
 
   // Our state
   bool show_demo_window = true;
   bool show_another_window = false;
   bool vtk_2_open = true;
+  bool vtk_res_open = true;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   
 
@@ -243,6 +250,7 @@ int main(int argc, char* argv[])
 */    
     //Axis axis;  
     axis.setInteractor(vtkViewer2.getInteractor());  
+
     //vtkViewer2.addActor(axis.actor);
 
 
@@ -273,6 +281,7 @@ int main(int argc, char* argv[])
   cout << "Creating Editor"<<endl;
   Editor* editor = new Editor();//THIS RELIES ON THE App Singleton!! ALWAIS GENERATE IT FIRST AND THE CALL EDITOR, otherwise crashes
   editor->addViewer(&vtkViewer2);  
+  editor->addResViewer(&vtkViewer_res);  
   cout << "Done "<<endl;
   //getApp().setActiveModel(m_model);
   
@@ -327,7 +336,8 @@ int main(int argc, char* argv[])
       ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
       ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
       ImGui::Checkbox("Another Window", &show_another_window);
-      ImGui::Checkbox("VTK Viewer #2", &vtk_2_open);
+      ImGui::Checkbox("VTK Model  Viewer", &vtk_2_open);
+      ImGui::Checkbox("VTK Result Viewer", &vtk_res_open);
 
       ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
       ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -364,64 +374,133 @@ int main(int argc, char* argv[])
     // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
     //ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(400, 200),ImGuiCond_FirstUseEver);
-    if (vtk_2_open){
+    
+    ImGui::Begin("VTK Viewers"); // ventana padre para los tabs
 
-      ImGui::Begin("Model Viewer", &vtk_2_open, VtkViewer::NoScrollFlags());
-      ImGui::PushFont(font_ubu); //AFTER NEW FRAME
-      // Other widgets can be placed in the same window as the VTKViewer
-      // However, since the VTKViewer is rendered to size ImGui::GetContentRegionAvail(),
-      // it is best to put all widgets first (i.e., render the VTKViewer last).
-      // If you want the VTKViewer to be at the top of a window, you can manually calculate
-      // and define its size, accounting for the space taken up by other widgets
+      if (ImGui::BeginTabBar("##ViewersTabBar", ImGuiTabBarFlags_None))
+      {
+          // ================= TAB: Modelo =================
+          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
+          {
+              ImGui::PushFont(font_ubu);
 
-      auto renderer = vtkViewer2.getRenderer();
-      
+              auto renderer = vtkViewer2.getRenderer();
+
+              // Botones de background específicos
+              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+
+              // Slider de alpha del background
+              static float vtk2BkgAlpha = 0.2f;
+              ImGui::SliderFloat("BG Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
+              renderer->SetBackgroundAlpha(vtk2BkgAlpha);
+
+              // Render del viewer
+              vtkViewer2.render();
+
+              ImGui::PopFont();
+              ImGui::EndTabItem();
+          }
+
+          // ================= TAB: Resultados =================
+          if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open))
+          {
+              ImGui::PushFont(font_ubu);
+
+              auto renderer = vtkViewer_res.getRenderer();
+
+              // Botones de background específicos
+              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
+              ImGui::SameLine();
+              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+              
+              static int currentFrame = 0;
+              static int lastFrame = -1;
+              
+              if (editor->getResults()){
+              if (!editor->getResults()->frames.empty()) {
+                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
+
+                  if (currentFrame != lastFrame) {              // Solo si cambió el frame
+                      vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
+                      lastFrame = currentFrame;                // Actualizamos el frame anterior
+                  }
+                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
+                  auto fieldNames = frame.getAvailableFieldNames();
+
+                  static int selectedField = 0;
+                  //~ if (!fieldNames.empty()) {
+                      //~ // Crear array de const char* para ImGui
+                      //~ std::vector<const char*> fieldCStrs;
+                      //~ for (auto& s : fieldNames) fieldCStrs.push_back(s.c_str());
+
+                      //~ ImGui::Text("Active Field:");
+                      //~ if (ImGui::Combo("##FieldSelector", &selectedField, fieldCStrs.data(), fieldCStrs.size())) {
+                          //~ // cuando cambia la selección
+                          //~ frame.setActiveScalarField(fieldNames[selectedField]);
+                          //~ frame.actor->GetMapper()->Update();
+                          //~ vtkViewer_res.render();
+                      //~ }
+                  //~ } else {
+                      //~ ImGui::Text("No fields available");
+                  //~ }
 
 
-      ImTextureID my_tex_id = io.Fonts->TexID;
-      //You can return anything but you should cast it as void
-      // frame_padding < 0: uses FramePadding from style (default)
-    // frame_padding = 0: no framing
-    // frame_padding > 0: set framing size
-    // The color used are the button colors.
-    //bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+                    if (!fieldNames.empty()) {
+                        std::vector<const char*> fieldCStrs;
+                        for (auto& s : fieldNames) fieldCStrs.push_back(s.c_str());
 
-      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,ImVec2(0,0));
-      if (ImGui::ImageButton("blah", (void *)(intptr_t)my_image_texture, ImVec2(24, 24))){
-      cout << "Extents"<<endl;
-      }
-        
-      ImGui::SameLine();
-      if (ImGui::ImageButton("blah", (void *)my_tex_id, ImVec2(24, 24)))
-        cout << "clicked"<<endl;
-      
-      ImGui::PopStyleVar();  
-      if (ImGui::Button("VTK Background: Black")){
-        renderer->SetBackground(0, 0, 0);
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("VTK Background: Red")){
-        renderer->SetBackground(1, 0, 0);
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("VTK Background: Green")){
-        renderer->SetBackground(0, 1, 0);
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("VTK Background: Blue")){
-        //renderer->SetBackground(0.6, 0.6, 0.8);
-        renderer->SetBackground(0.2,0.2,0.4);
-        renderer->SetBackground2(0.8,0.8,0.8);
-      }
-      static float vtk2BkgAlpha = 0.2f;
-      ImGui::SliderFloat("Background Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
-      renderer->SetBackgroundAlpha(vtk2BkgAlpha);
+                        ImGui::Text("Active Field:");
+                        if (ImGui::Combo("##FieldSelector", &selectedField, fieldCStrs.data(), fieldCStrs.size())) {
 
-      vtkViewer2.render();
-      
-      ImGui::PopFont();
-      ImGui::End();
-    }
+                            std::string selected = fieldNames[selectedField];
+                            bool isElemental = selected.rfind("Elemental: ", 0) == 0;
+                            std::string fieldName = selected.substr(selected.find(":") + 2); // quitar prefijo
+
+                            if (isElemental) {
+                                frame.actor->GetMapper()->SetScalarModeToUseCellFieldData();
+                            } else {
+                                frame.actor->GetMapper()->SetScalarModeToUsePointFieldData();
+                            }
+
+                            frame.setActiveScalarField(fieldName);
+                            frame.actor->GetMapper()->SelectColorArray(fieldName.c_str());
+                            frame.actor->GetMapper()->ScalarVisibilityOn();
+                            frame.actor->GetMapper()->Update();
+                            vtkViewer_res.render();
+                        }
+                    } else {
+                        ImGui::Text("No fields available");
+                    }
+                                  
+              }
+            }
+              
+              // Slider de alpha del background
+              static float vtkResBkgAlpha = 0.2f;
+              ImGui::SliderFloat("BG Alpha", &vtkResBkgAlpha, 0.0f, 1.0f);
+              renderer->SetBackgroundAlpha(vtkResBkgAlpha);
+
+              // Render del viewer
+              vtkViewer_res.render();
+
+              ImGui::PopFont();
+              ImGui::EndTabItem();
+          }
+
+            ImGui::EndTabBar();
+        }
+
+        ImGui::End(); // cierre de la ventana contenedora
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {

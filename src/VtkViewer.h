@@ -54,6 +54,8 @@ private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
 	bool firstRender;
+  
+  vtkSmartPointer<vtkActor> currentActor = nullptr;
 
 
 
@@ -136,6 +138,22 @@ public:
 	inline unsigned int getTexture() const {
 		return tex;
 	}
+  
+  
+  void setActor(vtkSmartPointer<vtkActor> actor) {
+    if (currentActor) {
+        renderer->RemoveActor(currentActor);
+    }
+    currentActor = actor;
+    if (currentActor) {
+        renderer->AddActor(currentActor);
+    }
+  }
+
+  vtkSmartPointer<vtkActor> getCurrentActor(){return currentActor;}
+
+
+
   
   void arrowtest();
 };

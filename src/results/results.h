@@ -1,3 +1,6 @@
+#ifndef _RESULTS_H_
+#define _RESULTS_H_
+
 // Includes necesarios para VTK
 #include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
@@ -12,6 +15,32 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+
+
+#include <nlohmann/json.hpp>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <memory> // para std::unique_ptr
+
+#include <vtkCellData.h>
+
+using json = nlohmann::json;
+
+namespace fs = std::filesystem;
+
+class ResultFrame;
+
+struct MultiResult {
+    //std::vector<std::unique_ptr<ResultFrame>> frames;
+    std::vector<std::unique_ptr<ResultFrame>> frames;
+};
+
+MultiResult LoadResultsFromJson(const std::string& jsonFile);
+
+
+
 
 class ResultFrame {
 public:
@@ -28,6 +57,38 @@ public:
         setupRenderingPipeline();
     }
 
+    std::vector<std::string> getAvailableFieldNames() const {
+        std::vector<std::string> names;
+        if (!mesh) return names;
+
+        // === Campos nodales ===
+        if (mesh->GetPointData()) {
+            vtkPointData* pointData = mesh->GetPointData();
+            for (int i = 0; i < pointData->GetNumberOfArrays(); i++) {
+                vtkDataArray* array = pointData->GetArray(i);
+                if (array && array->GetName()) {
+                    std::string entry = "[P] ";
+                    entry += array->GetName();
+                    names.push_back(entry);
+                }
+            }
+        }
+
+        // === Campos elementales ===
+        if (mesh->GetCellData()) {
+            vtkCellData* cellData = mesh->GetCellData();
+            for (int i = 0; i < cellData->GetNumberOfArrays(); i++) {
+                vtkDataArray* array = cellData->GetArray(i);
+                if (array && array->GetName()) {
+                    std::string entry = "[C] ";
+                    entry += array->GetName();
+                    names.push_back(entry);
+                }
+            }
+        }
+
+        return names;
+    }
 private:
     void loadVTKFile(const std::string& filename) {
         auto reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();
@@ -313,3 +374,6 @@ try {
     std::cerr << "Error: " << e.what() << std::endl;
 }
 */
+
+
+#endif

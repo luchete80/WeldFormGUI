@@ -30,10 +30,6 @@
 
 #include <iostream>
 
-
-
-
-
 //#include "selector.h"
 #include "SPHModel.h"
 //#include "action.h"
@@ -59,8 +55,10 @@
 #include "geom/Geom.h"
 
 #include <vtkSmartPointer.h>
+#include <vtkActor.h>
 
 
+#include "results.h"
 
 class TransformGizmo;
 
@@ -119,9 +117,13 @@ public:
   
   void CalcFPS();
   void addViewer(VtkViewer *);
-  
+  void addResViewer(VtkViewer *v){res_viewer=v;}
+    
   //ArcballCamera * ArcCamera(){return arcCamera;}
   SceneView* getSceneView(){return m_sceneview;}
+  
+  
+
 
 
   //Model * getDomain() {return m_domain;}
@@ -132,6 +134,19 @@ public:
   void calcMeshCenter();
   void setShowConsole(bool &b){m_show_app_console=b;}
   void changeShowConsole(){m_show_app_console=!m_show_app_console;}
+  
+  vtkSmartPointer<vtkActor> getCurrResActor(){return m_curr_res_actor;}
+  
+  MultiResult* getResults(){return m_results;}
+
+    // TODO TOMODIFY
+    //~ std::vector<Results*> allResults; // todos los resultados cargados
+    //~ Results* currentResults = nullptr; // resultado activo
+    //~ int currentFrame = 0;              // frame activo del resultado actual
+
+  
+  
+  
 protected:
 
   GLFWwindow* window;
@@ -251,12 +266,17 @@ protected:
   ViewportWindow *m_viewport_win;
   
   VtkViewer *viewer;
+  VtkViewer *res_viewer;  
   
   //Visual meshes
   //std::vector<GraphicMesh*> graphic_mesh;
   GraphicMesh* graphic_mesh;
   
   vtkSmartPointer<TransformGizmo> gizmo;
+
+  vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
+  
+  MultiResult *m_results = nullptr;
     
 };
 
