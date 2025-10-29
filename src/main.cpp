@@ -425,16 +425,38 @@ int main(int argc, char* argv[])
               
               static int currentFrame = 0;
               static int lastFrame = -1;
+              static double globalMin = 0.0;
+              static double globalMax = 1.0;
               
+              static bool isCellField = false;
+                            
+              static std::string activeFieldName = "";
+              auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
+                                
               if (editor->getResults()){
               if (!editor->getResults()->frames.empty()) {
                   ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
 
                   if (currentFrame != lastFrame) {              // Solo si cambió el frame
                       vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
+                      if (!activeFieldName.empty()) {
+                          auto mapper = frame.actor->GetMapper();
+
+                          if (isCellField)
+                              mapper->SetScalarModeToUseCellFieldData();
+                          else
+                              mapper->SetScalarModeToUsePointFieldData();
+
+                          mapper->SelectColorArray(activeFieldName.c_str());
+                          mapper->SetScalarRange(globalMin, globalMax);
+                          mapper->ScalarVisibilityOn();
+                          mapper->Update();
+                      }
+                      
                       lastFrame = currentFrame;                // Actualizamos el frame anterior
+                      //vtkViewer_res.render();
                   }
-                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
+
                   auto fieldNames = frame.getAvailableFieldNames();
 
                   static int selectedField = 0;
@@ -463,19 +485,36 @@ int main(int argc, char* argv[])
                         if (ImGui::Combo("##FieldSelector", &selectedField, fieldCStrs.data(), fieldCStrs.size())) {
 
                             std::string selected = fieldNames[selectedField];
-                            bool isElemental = selected.rfind("Elemental: ", 0) == 0;
-                            std::string fieldName = selected.substr(selected.find(":") + 2); // quitar prefijo
+                            isCellField = (selected.rfind("[C]", 0) == 0);
+                            activeFieldName = selected.substr(4); // remueve "[C] " o "[P] "
 
-                            if (isElemental) {
-                                frame.actor->GetMapper()->SetScalarModeToUseCellFieldData();
-                            } else {
-                                frame.actor->GetMapper()->SetScalarModeToUsePointFieldData();
+                            // Calcular rango global en todos los frames
+                            globalMin = std::numeric_limits<double>::max();
+                            globalMax = -std::numeric_limits<double>::max();
+
+                            for (auto& f : editor->getResults()->frames) {
+                                vtkDataArray* array = isCellField ?
+                                    f->mesh->GetCellData()->GetArray(activeFieldName.c_str()) :
+                                    f->mesh->GetPointData()->GetArray(activeFieldName.c_str());
+
+                                if (array) {
+                                    double* range = array->GetRange();
+                                    globalMin = std::min(globalMin, range[0]);
+                                    globalMax = std::max(globalMax, range[1]);
+                                }
                             }
+                            cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
+                            // Aplicar al frame actual
+                            if (isCellField)
+                                frame.actor->GetMapper()->SetScalarModeToUseCellFieldData();
+                            else
+                                frame.actor->GetMapper()->SetScalarModeToUsePointFieldData();
 
-                            frame.setActiveScalarField(fieldName);
-                            frame.actor->GetMapper()->SelectColorArray(fieldName.c_str());
+                            frame.actor->GetMapper()->SelectColorArray(activeFieldName.c_str());
+                            frame.actor->GetMapper()->SetScalarRange(globalMin, globalMax);
                             frame.actor->GetMapper()->ScalarVisibilityOn();
                             frame.actor->GetMapper()->Update();
+
                             vtkViewer_res.render();
                         }
                     } else {

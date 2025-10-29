@@ -273,7 +273,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".vtk,.json", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".json,.vtk", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");

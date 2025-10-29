@@ -26,6 +26,8 @@
 
 #include <vtkCellData.h>
 
+#include <vtkDataSetReader.h>
+
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
@@ -60,10 +62,12 @@ public:
     std::vector<std::string> getAvailableFieldNames() const {
         std::vector<std::string> names;
         if (!mesh) return names;
-
+        
         // === Campos nodales ===
         if (mesh->GetPointData()) {
             vtkPointData* pointData = mesh->GetPointData();
+            //std::cout << "PointData has " << pointData->GetNumberOfArrays() << " arrays.\n";
+
             for (int i = 0; i < pointData->GetNumberOfArrays(); i++) {
                 vtkDataArray* array = pointData->GetArray(i);
                 if (array && array->GetName()) {
@@ -77,6 +81,7 @@ public:
         // === Campos elementales ===
         if (mesh->GetCellData()) {
             vtkCellData* cellData = mesh->GetCellData();
+            //std::cout << "cellData has " << cellData->GetNumberOfArrays() << " arrays.\n";
             for (int i = 0; i < cellData->GetNumberOfArrays(); i++) {
                 vtkDataArray* array = cellData->GetArray(i);
                 if (array && array->GetName()) {
@@ -90,33 +95,59 @@ public:
         return names;
     }
 private:
-    void loadVTKFile(const std::string& filename) {
-        auto reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();
-        reader->SetFileName(filename.c_str());
-        reader->Update();
+    /////// THIS WOIRKS BADSLY
+    //~ void loadVTKFile(const std::string& filename) {
+        //~ auto reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();
+        //~ reader->SetFileName(filename.c_str());
+        //~ reader->Update();
         
-        // Verificar que el archivo se leyó correctamente
-        if (reader->GetErrorCode() != 0) {
-            throw std::runtime_error("Error reading VTK file: " + filename);
-        }
+        //~ // Verificar que el archivo se leyó correctamente
+        //~ if (reader->GetErrorCode() != 0) {
+            //~ throw std::runtime_error("Error reading VTK file: " + filename);
+        //~ }
         
-        mesh = reader->GetOutput();
+        //~ mesh = reader->GetOutput();
         
-        // Verificar que el mesh no esté vacío
-        if (!mesh || mesh->GetNumberOfPoints() == 0) {
-            throw std::runtime_error("Empty or invalid mesh in file: " + filename);
-        }
+        //~ // Verificar que el mesh no esté vacío
+        //~ if (!mesh || mesh->GetNumberOfPoints() == 0) {
+            //~ throw std::runtime_error("Empty or invalid mesh in file: " + filename);
+        //~ }
         
-        std::cout << "File loaded successfully" << std::endl;
-std::cout << "Points: " << mesh->GetNumberOfPoints() << std::endl;
-std::cout << "Cells: " << mesh->GetNumberOfCells() << std::endl;
+        //~ std::cout << "File loaded successfully" << std::endl;
+        //~ std::cout << "Points: " << mesh->GetNumberOfPoints() << std::endl;
+        //~ std::cout << "Cells: " << mesh->GetNumberOfCells() << std::endl;
 
-if (mesh->GetNumberOfPoints() == 0) {
-    throw std::runtime_error("Mesh has no points");
+        //~ if (mesh->GetNumberOfPoints() == 0) {
+            //~ throw std::runtime_error("Mesh has no points");
+        //~ }
+
+    //~ }
+    
+void loadVTKFile(const std::string& filename) {
+    auto reader = vtkSmartPointer<vtkDataSetReader>::New();
+    reader->SetFileName(filename.c_str());
+    
+    // Fuerza lectura de todo tipo de arrays
+    reader->ReadAllScalarsOn();
+    reader->ReadAllVectorsOn();
+    reader->ReadAllTensorsOn();
+    reader->ReadAllFieldsOn();
+
+    reader->Update();
+
+    // Obtener el output como un unstructured grid
+    mesh = vtkSmartPointer<vtkUnstructuredGrid>::New();
+    mesh = reader->GetUnstructuredGridOutput();
+    
+    if (!mesh) {
+        std::cerr << "Could not read unstructured grid from " << filename << std::endl;
+        return;
+    }
+
+    std::cout << "Loaded " << mesh->GetNumberOfPoints() << " points, "
+              << mesh->GetNumberOfCells() << " cells" << std::endl;
 }
 
-    }
-    
     void setupRenderingPipeline() {
         // Verificar que el mesh no sea null
         if (!mesh) {
@@ -209,58 +240,118 @@ if (mesh->GetNumberOfPoints() == 0) {
 
 public:
     // Método para seleccionar qué campo mostrar
-    void setActiveScalarField(const std::string& fieldName) {
-        if (!mesh || !mesh->GetPointData()) {
-            std::cerr << "No point data available" << std::endl;
-            return;
-        }
+    //~ void setActiveScalarField(const std::string& fieldName) {
+        //~ if (!mesh || !mesh->GetPointData()) {
+            //~ std::cerr << "No point data available" << std::endl;
+            //~ return;
+        //~ }
         
-        vtkPointData* pointData = mesh->GetPointData();
+        //~ vtkPointData* pointData = mesh->GetPointData();
         
-        // Buscar el campo por nombre
-        vtkDataArray* field = pointData->GetArray(fieldName.c_str());
-        if (!field) {
-            std::cerr << "Field '" << fieldName << "' not found" << std::endl;
-            printAvailableFields(); // Helper para debug
-            return;
-        }
+        //~ // Buscar el campo por nombre
+        //~ vtkDataArray* field = pointData->GetArray(fieldName.c_str());
+        //~ if (!field) {
+            //~ std::cerr << "Field '" << fieldName << "' not found" << std::endl;
+            //~ printAvailableFields(); // Helper para debug
+            //~ return;
+        //~ }
         
-        // Establecer como campo activo según el tipo
-        if (field->GetNumberOfComponents() == 1) {
-            // Campo escalar
-            pointData->SetActiveScalars(fieldName.c_str());
-            if (mapper) {
-                mapper->SetScalarModeToUsePointFieldData();
-                mapper->SelectColorArray(fieldName.c_str());
-                mapper->ScalarVisibilityOn();
+        //~ // Establecer como campo activo según el tipo
+        //~ if (field->GetNumberOfComponents() == 1) {
+            //~ // Campo escalar
+            //~ pointData->SetActiveScalars(fieldName.c_str());
+            //~ if (mapper) {
+                //~ mapper->SetScalarModeToUsePointFieldData();
+                //~ mapper->SelectColorArray(fieldName.c_str());
+                //~ mapper->ScalarVisibilityOn();
                 
-                double* range = field->GetRange();
-                mapper->SetScalarRange(range[0], range[1]);
-                std::cout << "Set scalar field '" << fieldName << "' range: [" 
-                         << range[0] << ", " << range[1] << "]" << std::endl;
-            }
-        } else if (field->GetNumberOfComponents() == 3) {
-            // Campo vectorial (como DISP)
-            pointData->SetActiveVectors(fieldName.c_str());
+                //~ double* range = field->GetRange();
+                //~ mapper->SetScalarRange(range[0], range[1]);
+                //~ std::cout << "Set scalar field '" << fieldName << "' range: [" 
+                         //~ << range[0] << ", " << range[1] << "]" << std::endl;
+            //~ }
+        //~ } else if (field->GetNumberOfComponents() == 3) {
+            //~ // Campo vectorial (como DISP)
+            //~ pointData->SetActiveVectors(fieldName.c_str());
             
-            // Para vectores, puedes mostrar la magnitud
-            if (mapper) {
-                mapper->SetScalarModeToUsePointFieldData();
-                mapper->SelectColorArray(fieldName.c_str());
-                mapper->ScalarVisibilityOn();
+            //~ // Para vectores, puedes mostrar la magnitud
+            //~ if (mapper) {
+                //~ mapper->SetScalarModeToUsePointFieldData();
+                //~ mapper->SelectColorArray(fieldName.c_str());
+                //~ mapper->ScalarVisibilityOn();
                 
-                // Calcular rango de magnitud
-                double* range = field->GetRange(-1); // -1 = magnitud
-                mapper->SetScalarRange(range[0], range[1]);
-                std::cout << "Set vector field '" << fieldName << "' magnitude range: [" 
-                         << range[0] << ", " << range[1] << "]" << std::endl;
-            }
-        }
+                //~ // Calcular rango de magnitud
+                //~ double* range = field->GetRange(-1); // -1 = magnitud
+                //~ mapper->SetScalarRange(range[0], range[1]);
+                //~ std::cout << "Set vector field '" << fieldName << "' magnitude range: [" 
+                         //~ << range[0] << ", " << range[1] << "]" << std::endl;
+            //~ }
+        //~ }
         
-        // Forzar actualización
-        if (mapper) mapper->Modified();
-        if (actor) actor->Modified();
-    }
+        //~ // Forzar actualización
+        //~ if (mapper) mapper->Modified();
+        //~ if (actor) actor->Modified();
+    //~ }
+
+      void setActiveScalarField(const std::string& fieldName) {
+          if (!mesh) {
+              std::cerr << " No mesh available" << std::endl;
+              return;
+          }
+
+          vtkPointData* pointData = mesh->GetPointData();
+          vtkCellData*  cellData  = mesh->GetCellData();
+          vtkDataArray* field = nullptr;
+          bool isCellField = false;
+
+          // --- Buscar en PointData primero ---
+          if (pointData && pointData->HasArray(fieldName.c_str())) {
+              field = pointData->GetArray(fieldName.c_str());
+              isCellField = false;
+          }
+          // --- Si no está, buscar en CellData ---
+          else if (cellData && cellData->HasArray(fieldName.c_str())) {
+              field = cellData->GetArray(fieldName.c_str());
+              isCellField = true;
+          }
+
+          if (!field) {
+              std::cerr << "WARNING: Field '" << fieldName << "' not found in point or cell data." << std::endl;
+              printAvailableFields();
+              return;
+          }
+
+          // --- Configurar mapper según tipo de campo ---
+          if (mapper) {
+              if (isCellField) {
+                  mapper->SetScalarModeToUseCellFieldData();
+                  cellData->SetActiveScalars(fieldName.c_str());
+              } else {
+                  mapper->SetScalarModeToUsePointFieldData();
+                  pointData->SetActiveScalars(fieldName.c_str());
+              }
+
+              mapper->SelectColorArray(fieldName.c_str());
+              mapper->ScalarVisibilityOn();
+
+              // --- Rango dinámico ---
+              double range[2];
+              if (field->GetNumberOfComponents() == 3)
+                  field->GetRange(range, -1); // magnitud
+              else
+                  field->GetRange(range);
+
+              mapper->SetScalarRange(range);
+              std::cout << "Set field '" << fieldName << "' ("
+                        << (isCellField ? "CellData" : "PointData") << ") range: ["
+                        << range[0] << ", " << range[1] << "]" << std::endl;
+          }
+
+          // --- Forzar actualización ---
+          mesh->Modified();
+          if (mapper) mapper->Modified();
+          if (actor) actor->Modified();
+      }
     
     // Helper para ver campos disponibles
     void printAvailableFields() const {
