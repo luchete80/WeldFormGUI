@@ -1763,7 +1763,7 @@ void Editor::drawGui() {
 
   Material_ mat;
   Job job;
-  if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat);}
+  if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat,&m_mat_db);}
   
   if (m_show_msh_dlg) {  
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
@@ -1795,13 +1795,18 @@ void Editor::drawGui() {
     m_show_mat_dlg=false;
     //SHOULD NOT BE CALLED AGAIN!!!!!!
     //cout << "temp dens" <<m_matdlg.m_density_const<<endl;
-    m_mats.push_back(new Material_(mat));
-    getApp().getActiveModel().addMaterial(new Material_(mat));
+    //m_mats.push_back(new Material_(mat));
+    //Material_* newMat = new Material_(m_matdlg.m_temp_mat); // clon/copia
+    m_mats.push_back(m_matdlg.m_temp_mat);
+    getApp().getActiveModel().addMaterial(m_matdlg.m_temp_mat);
+    m_matdlg.m_temp_mat = nullptr; // opcional, para que el diálogo se pueda reiniciar
+    
+    //getApp().getActiveModel().addMaterial(new Material_(mat));
     cout << "Material size is "<< m_mats.size()<<endl;
     cout<<"Material Created"<<endl; 
     //cout << "Density:" <<m_mats[0]->getDensityConstant()<<endl;
     
-    m_show_mat_dlg = false;
+    
 
   } else if (m_matdlg.cancel_action) {    
     m_show_mat_dlg=false;

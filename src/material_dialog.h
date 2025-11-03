@@ -37,6 +37,8 @@ public Dialog{
   std::vector<double> m_pl_const;
   GMT m_gmt;
   
+  Material_ *m_temp_mat = nullptr;  // material temporal
+  
   const bool & isMaterialCreated()const{return create_material;}
   void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL,Material_Db *mat_db = nullptr);  
 };

@@ -142,6 +142,14 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
     *p_open = false;
 
     m_selected_model = item_current;
+
+    if (!mat) {
+      if (!m_temp_mat) {
+        m_temp_mat = new Material_();
+        mat = m_temp_mat;
+        cout << "CREATED MATERIAL"<<endl;
+      }
+    }
     
     if (mat) {
         mat->setDensityConstant(m_density_const);
