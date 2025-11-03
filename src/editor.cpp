@@ -50,6 +50,8 @@
 
 #include "graphics/TransformGizmo.h"
 
+#include "Material_Db.h"
+
 //#include "graphics/ModelGizmo.h"
 
 

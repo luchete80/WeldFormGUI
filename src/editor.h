@@ -67,7 +67,8 @@ class SceneView;
 class ViewportWindow;
 class VtkViewer;
 class GraphicMesh;
-  
+class Material_Db;
+
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
       // 0, 2,  // first Triangle
@@ -277,6 +278,8 @@ protected:
   vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
   
   MultiResult *m_results = nullptr;
+  
+  Material_Db m_mat_db;
     
 };
 

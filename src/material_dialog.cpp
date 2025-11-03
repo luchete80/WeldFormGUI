@@ -53,7 +53,7 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
     }
 }
 
-void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
+void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Material_Db *mat_db){
 
   create_material = false; 
   cancel_action = false;
@@ -127,6 +127,14 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   // }
   }//Yield Criteria
   }//Plastic
+
+
+  if (ImGui::Button("Save to Database")) {
+      if (mat &&mat_db->isActive()) {
+          mat_db->addMaterial(mat);
+          mat_db->saveToJson("materials_db.json");
+      }
+  }
   
   if (ImGui::Button("Ok")) {
     cout << "Created material "<<endl;
@@ -202,7 +210,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat){
   //m_density_const = dens;
 }
 
-Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create){
+Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create, Material_Db *mat_db){
   
   Material_ ret;
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
