@@ -20,7 +20,7 @@ public Dialog
   bool create_bc;
   
   const bool & isBCCreated()const{return create_bc;}
-  void   Draw();  
+  void   Draw(const char* title, bool* p_open, Model* model);  
 };
 
 
