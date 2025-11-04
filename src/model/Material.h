@@ -20,7 +20,7 @@ class Elastic_{
 	Elastic_(){}
 	Elastic_(const double &e, const double &nu):E_m(e),nu_m(nu){}
 	const double& E()const{return E_m;}
-  const double& nu()const{return E_m;}
+  const double& nu()const{return nu_m;}
 	
 };
 
@@ -88,7 +88,7 @@ class Material_{
 	
   double m_density;
   int			Material_model;	//TODO: Change to enum
-  Elastic_ elastic_m;
+  Elastic_  elastic_m;
   Plastic_ *m_plastic;
 	double E_m, nu;	//TODO, move to elastic class
   bool m_isplastic = false;

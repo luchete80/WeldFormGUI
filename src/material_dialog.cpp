@@ -153,6 +153,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
     
     if (mat) {
         mat->setDensityConstant(m_density_const);
+        mat->elastic_m = Elastic_(m_elastic_const,m_poisson_const);
         //mat->E = m_elastic_const;
         //mat->nu = m_poisson_const;
 

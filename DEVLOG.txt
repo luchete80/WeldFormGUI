@@ -139,3 +139,4 @@
 20251103 - Fixed Material Dialog (when created a material, not saved)
          - Begining to add material_Db to store materials.
          - Begining to add BC Dialog.
+20251104 - Fixed material saving (Elastic part was wrong).

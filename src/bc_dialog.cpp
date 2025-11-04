@@ -1,5 +1,10 @@
 #include "bc_dialog.h"
 #include <iostream>
+#include "Model.h"
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 void BCDialog::Draw(const char* title, bool* p_open, Model* model) {
     if (!ImGui::Begin(title, p_open)) {
@@ -24,7 +29,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model) {
     if (ImGui::Button("OK")) {
         BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodes;
         auto* bc = new BoundaryCondition(VelocityBC, target, m_targetId, m_vel);
-        model->addBoundaryCondition(bc);
+        //model->addBoundaryCondition(bc);
 
         std::cout << "Added BC for "
                   << ((target == ApplyToPart) ? "Part " : "Nodes ")

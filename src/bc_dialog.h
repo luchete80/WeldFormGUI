@@ -4,6 +4,9 @@
 
 #include "BoundaryCondition.h"
 #include "Dialog.h"
+#include "double3.h"
+
+class Model;
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
@@ -18,6 +21,10 @@ public Dialog
   
   bool cancel_action;
   bool create_bc;
+  int m_targetId;
+  
+  int m_applyTo;
+  double3 m_vel;
   
   const bool & isBCCreated()const{return create_bc;}
   void   Draw(const char* title, bool* p_open, Model* model);  
