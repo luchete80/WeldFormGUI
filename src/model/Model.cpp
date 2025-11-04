@@ -8,6 +8,8 @@
 
 #include "gmsh.h"
 #include "ModelWriter.h"
+#include "BoundaryCondition.h"
+
 
 //#include <gmsh.h>
 //#include "GModel.h"
@@ -138,5 +140,10 @@ void Model::addPart(Geom *geom){
 
 void Model::addGeom(Geom *geom){
   m_geom.push_back(geom);
+}
+
+void Model::addBoundaryCondition(BoundaryCondition *bc)
+{
+  m_bc.push_back(bc);
 }
 

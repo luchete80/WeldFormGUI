@@ -965,10 +965,41 @@ void Editor::drawGui() {
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
             ImGui::EndPopup();
-          
+            m_show_bc_dlg_edit = true;
         }
         if (open_)
         {
+
+          for (int i = 0; i < m_model->getBCCount(); i++)
+          //for (int i = 0; i < m_model->getMaterialCount(); i++)
+          {
+            // Use SetNextItemOpen() so set the default state of a node to be open. We could
+            // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+            if (i == 0)
+              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+            if (ImGui::TreeNode((void*)(intptr_t)i, "Boundary Condition %d", i))
+            {
+              if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+                m_show_mat_dlg_edit = true;
+                //selected_mat = m_mats[i];
+                selected_bc = m_model->getBC(i);
+              }
+              if (ImGui::BeginPopupContextItem())
+              {
+                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                  m_show_mat_dlg_edit = true;
+                  //selected_mat = m_mats[i];
+                  selected_mat = m_model->getMaterial(i);
+                }
+                ImGui::EndPopup();
+              }                    
+                ImGui::SameLine();
+                if (ImGui::SmallButton("button")) {}
+                ImGui::TreePop();
+            }//TreeNode
+          }
+
            // your tree code stuff
            ImGui::TreePop();
         }
@@ -1764,6 +1795,10 @@ void Editor::drawGui() {
   Material_ mat;
   Job job;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat,&m_mat_db);}
+  
+  if (m_show_bc_dlg_edit){
+    m_bcdlg.Draw("Boundary Conditions",&m_show_bc_dlg_edit,m_model, selected_bc);
+  }
   
   if (m_show_msh_dlg) {  
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);

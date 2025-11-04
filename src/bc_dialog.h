@@ -27,7 +27,7 @@ public Dialog
   double3 m_vel;
   
   const bool & isBCCreated()const{return create_bc;}
-  void   Draw(const char* title, bool* p_open, Model* model);  
+  void   Draw(const char* title, bool* p_open, Model* model, BoundaryCondition *sel_bc = nullptr);  
 };
 
 

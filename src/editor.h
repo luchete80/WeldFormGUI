@@ -231,6 +231,7 @@ protected:
   bool m_show_mat_dlg_edit = false;
   bool m_show_mod_dlg_edit = false;  
   bool m_show_prt_dlg_edit = false;
+  bool m_show_bc_dlg_edit = false;
   bool create_new_mat;
   bool create_new_part;
   bool create_new_job;
@@ -252,6 +253,7 @@ protected:
   Material_ *selected_mat;
   Part      *selected_prt;
   Model     *selected_mod;
+  BoundaryCondition *selected_bc;
     
   //Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)

@@ -64,14 +64,17 @@ public:
   Part & getPartRef(const int &i) {return *m_part[i];}
   virtual void AddBoxLength				(int tag, Vec3_t const &V, double Lx, double Ly, double Lz,double r, double Density,
                                 double h,int type, int rotation, bool random, bool Fixed){};									//Add a cube of particles with a defined dimensions
-                                
+
+  int getBCCount(){return m_bc.size();}
+  BoundaryCondition* getBC(const int &i){return m_bc[i];}
+    
   bool & getHasName(){return m_hasname;}
   virtual ~Model(){}
   void setName (string n){m_prev_name=m_name; m_name=n; m_hasname=true;}
   void setNoSaveAs(){m_prev_name = m_name;}
   string getName(){return m_name;}
   string getPrevName(){return m_prev_name;}
-  
+  void addBoundaryCondition(BoundaryCondition *make_double2bc);
   int part_count;
   void delPart(const int &p){m_part.erase(m_part.begin()+p);};
 
@@ -101,6 +104,7 @@ protected:
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
   std::vector <Particle*>   Particles; //SPH
+  std::vector <BoundaryCondition*> m_bc;
   
   model_type m_modeltype;
   
