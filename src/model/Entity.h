@@ -5,6 +5,7 @@
 #include <iostream>
 #include "double3.h"
 
+
 using namespace std;
 
 class Mesh;
@@ -18,7 +19,9 @@ public:
   
   const double3 & getVel()const {return m_v;}
   void setVel(const double3 &v){m_v = v;}
-  
+  char* getName(){return m_name;}
+  const int & getID()const{return m_id;}
+  void setName(char *name){m_name = name;}
   void setId(int &i){
     m_id=i;
     cout <<"Id set to "<<m_id<<endl;}

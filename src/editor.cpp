@@ -624,7 +624,11 @@ void Editor::drawGui() {
           ImGui::EndPopup();          
         }
         
-        
+
+        static bool show_rename_popup = false;
+        static char new_name[128] = "";
+        static int rename_part_index = -1;
+                
         /////////////////////// PART TREE
         if (open_){ 
         for (int i = 0; i < m_model->getPartCount(); i++)
@@ -637,7 +641,7 @@ void Editor::drawGui() {
           std::string des;
           if (m_model->getPart(i)->getType() == Elastic) des = "Deformable";
           else                                des = "Rigid";
-          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s", m_model->getPart(i)->getId(), des.c_str()))
+          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", m_model->getPart(i)->getId(), m_model->getPart(i)->getName(), des.c_str()))
           {
             //cout << "Model part count "<<m_model->getPartCount()<<endl;
             if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
@@ -646,12 +650,20 @@ void Editor::drawGui() {
               selected_mat = m_model->getMaterial(i);
               m_matdlg.InitFromMaterial(selected_mat); //In order to create a temp to plastic
             }
+
+
             
             if (ImGui::BeginPopupContextItem()) {
-              if (ImGui::MenuItem("Rename", "CTRL+Z")) {
 
-                //selected_mat = m_mats[i];
+
+              if (ImGui::MenuItem("Rename")) {
+                  show_rename_popup = true;
+                  rename_part_index = i;  // recordamos qué parte queremos renombrar
+                  strcpy(new_name, m_model->getPart(i)->getName());
               }
+              
+
+          
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_prt_dlg_edit = true;
                 selected_prt = m_model->getPart(i);
@@ -821,6 +833,7 @@ void Editor::drawGui() {
                 viewer->getInteractor()->SetInteractorStyle(style);
                 
                 m_moving_mode = true;
+                m_show_mov_part = true;
 
                 GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 
@@ -840,7 +853,9 @@ void Editor::drawGui() {
             }///// MESH MOVE
                
               ImGui::EndPopup();
-            }//CONTEXT MENU                    
+            }//PART CONTEXT MENU 
+                   
+                               
               ImGui::SameLine();
               if (ImGui::SmallButton("edit")) {
                 m_show_prt_dlg_edit = true;
@@ -884,6 +899,38 @@ void Editor::drawGui() {
 
               ImGui::TreePop();
           }
+        }//FOR PART
+        
+        // --- Popup modal centrado (se dibuja después del loop, no dentro) ---
+        if (show_rename_popup) {
+            ImGui::OpenPopup("Rename Part");
+            show_rename_popup = false;
+        }
+
+        // Centramos el popup en la pantalla actual
+        if (ImGui::BeginPopupModal("Rename Part", NULL,
+                                   ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::SetNextWindowPos(
+                ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f,
+                       ImGui::GetIO().DisplaySize.y * 0.5f),
+                ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+            ImGui::InputText("New name", new_name, IM_ARRAYSIZE(new_name));
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                if (rename_part_index >= 0 &&
+                    rename_part_index < m_model->getPartCount()) {
+                    m_model->getPart(rename_part_index)->setName(new_name);
+                }
+                ImGui::CloseCurrentPopup();
+                rename_part_index = -1;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+                rename_part_index = -1;
+            }
+            ImGui::EndPopup();
         }
       
            ImGui::TreePop();
@@ -980,17 +1027,17 @@ void Editor::drawGui() {
 
             if (ImGui::TreeNode((void*)(intptr_t)i, "Boundary Condition %d", i))
             {
-              if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-                m_show_mat_dlg_edit = true;
-                //selected_mat = m_mats[i];
-                selected_bc = m_model->getBC(i);
-              }
+              //~ if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+                //~ m_show_bc_dlg_edit = true;
+                //~ //selected_mat = m_mats[i];
+                //~ selected_bc = m_model->getBC(i);
+              //~ }
               if (ImGui::BeginPopupContextItem())
               {
                 if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                  m_show_mat_dlg_edit = true;
+                  m_show_bc_dlg_edit = true;
                   //selected_mat = m_mats[i];
-                  selected_mat = m_model->getMaterial(i);
+                  selected_bc = m_model->getBC(i);
                 }
                 ImGui::EndPopup();
               }                    
@@ -1752,7 +1799,7 @@ void Editor::drawGui() {
   static double step = 0.1;
   
   if (m_moving_mode) {
-    MoveCommand move = m_movprtdlg.Draw(step, position);
+    MoveCommand move = m_movprtdlg.Draw(step, position, &m_show_mov_part);
     
     bool auto_;
     double axis[3];
@@ -1797,6 +1844,8 @@ void Editor::drawGui() {
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat,&m_mat_db);}
   
   if (m_show_bc_dlg_edit){
+    //std::cout << "Opening BC dialog. selected_bc=" << selected_bc << std::endl;
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     m_bcdlg.Draw("Boundary Conditions",&m_show_bc_dlg_edit,m_model, selected_bc);
   }
   
@@ -2524,6 +2573,7 @@ void Editor::processInput(GLFWwindow *window)
       //cout << "pause: "<<endl;
       if (m_moving_mode){
         m_moving_mode = false;
+        m_show_mov_part = false;
         viewer->resetInteractor();
         gizmo->Hide();
         cout << "MOVE OFF. Reset interactor."<<endl;

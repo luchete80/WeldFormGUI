@@ -254,6 +254,8 @@ protected:
   Part      *selected_prt;
   Model     *selected_mod;
   BoundaryCondition *selected_bc;
+  
+  bool m_show_mov_part = false;
     
   //Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)

@@ -24,7 +24,7 @@ struct MovePartDialog{
   bool create_part;
   
   //const bool & isModelCreated()const{return create_part;}
-  MoveCommand   Draw(double &step, double* pos);  
+  MoveCommand   Draw(double &step, double* pos, bool *open );  
 };
 
 

@@ -140,3 +140,5 @@
          - Begining to add material_Db to store materials.
          - Begining to add BC Dialog.
 20251104 - Fixed material saving (Elastic part was wrong).
+         - Added BC Dialog and enable select part. 
+         - Added Rename part

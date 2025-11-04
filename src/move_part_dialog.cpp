@@ -10,9 +10,12 @@
 using namespace std;
 
 //// To know 
-MoveCommand MovePartDialog::Draw(double &step, double* pos){
+MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
 
-    MoveCommand cmd = {-1, 0.0, false};
+    MoveCommand cmd = {-1, 0.0, false};  
+  if (*open){
+
+
     const char* labels[3] = {"X", "Y", "Z"};
 
     ImGui::Begin("Transform Controls");
@@ -49,8 +52,14 @@ MoveCommand MovePartDialog::Draw(double &step, double* pos){
 
     ImGui::Separator();
     ImGui::Text("Current position: X=%.3f, Y=%.3f, Z=%.3f", pos[0], pos[1], pos[2]);
-    
+
+    if (ImGui::Button("Close")) {
+        *open = false;
+        cmd.active = false;
+    }
+        
     ImGui::End();
+  }
     return cmd;
 }
 
