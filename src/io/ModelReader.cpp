@@ -169,7 +169,18 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
                
                 //part->setGeom(geom);
+
+                if (jpart.contains("name")) {
+                    std::string pname = jpart["name"].get<std::string>();
+                    part->setName(pname.c_str());
+                    cout << "Part name: "<<pname<<endl;
+                } else {
+                    //part->setName("Part_" + std::to_string(i));
+                }
+
             }
+
+
             
             if (jpart.contains("mesh")) {
                 std::string meshname = jpart["mesh"]["source"].get<std::string>();

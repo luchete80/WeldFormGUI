@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "double3.h"
-
+#include <string>
 
 using namespace std;
 
@@ -19,15 +19,15 @@ public:
   
   const double3 & getVel()const {return m_v;}
   void setVel(const double3 &v){m_v = v;}
-  char* getName(){return m_name;}
+  const char* getName(){return m_name.c_str();}
   const int & getID()const{return m_id;}
-  void setName(char *name){m_name = name;}
+  void setName(const char *name){m_name = name;}
   void setId(int &i){
     m_id=i;
     cout <<"Id set to "<<m_id<<endl;}
 protected:
   int m_id;
-  char *       m_name;
+  std::string m_name = "";
   double3       m_v;// Velocity
 };
 

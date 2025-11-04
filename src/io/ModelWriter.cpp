@@ -110,6 +110,12 @@ void ModelWriter::writeToFile(std::string fname){
 
       json jpart;
       jpart["id"] = part->getId();
+
+      //if (!part->getName().empty())
+          jpart["name"] = part->getName();
+      //else
+      //    jpart["name"] = "Part_" + std::to_string(part->getId());
+          
       //~ jpart["name"] = part->getName();
       //~ jpart["material"] = part->getMaterialName();
 
