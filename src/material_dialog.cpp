@@ -57,11 +57,22 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
 
 void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Material_Db *mat_db){
 
+  static int item_current = 0;
+  static bool open_plastic = false;
+  
+  ImGuiTreeNodeFlags flags = 0;
+    
   create_material = false; 
   cancel_action = false;
   if (!m_initiated){
     InitFromMaterial(mat);
-
+    item_current = m_selected_model;
+    if (mat->isPlastic()){
+      open_plastic = true;
+      flags |= ImGuiTreeNodeFlags_DefaultOpen;
+      ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+      cout << "DetaultOpen"<<endl;
+    }
     m_initiated = true;
   }
   if (!ImGui::Begin(title, p_open))
@@ -77,8 +88,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
   const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh"};
 
-  static int item_current = 0;
-  if (ImGui::CollapsingHeader("Plastic")){
+
+  if (ImGui::CollapsingHeader("Plastic"/*, flags*/)){
     
     {
   //MUST BE SAVED CURRENT STATE
