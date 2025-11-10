@@ -10,10 +10,11 @@
 using namespace std;
 
 void MaterialDialog::InitFromMaterial(Material_* mat) {
+
     m_density_const = mat->getDensityConstant();
-    //m_elastic_const = mat->E;
-    //m_poisson_const = mat->nu;
-    
+    m_elastic_const = mat->Elastic().E();
+    m_poisson_const =  mat->Elastic().nu();
+        
     if (mat->isPlastic()) {
         m_pl = mat->getPlastic()->clone(); // su propio clon (virtual)
         m_selected_model = m_pl->getType(); // p.ej. GMT, Hollomon, etc.
@@ -31,6 +32,7 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
                 break;
 
             case HOLLOMON:
+                cout << "Material is Hollomon"<<endl;
                 hollomon_K = m_pl_const[0];
                 hollomon_n = m_pl_const[1];
                 break;
@@ -58,9 +60,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
   create_material = false; 
   cancel_action = false;
   if (!m_initiated){
-    m_density_const = mat->getDensityConstant();
-    m_elastic_const = mat->Elastic().E();
-    m_poisson_const =  mat->Elastic().nu();
+    InitFromMaterial(mat);
+
     m_initiated = true;
   }
   if (!ImGui::Begin(title, p_open))

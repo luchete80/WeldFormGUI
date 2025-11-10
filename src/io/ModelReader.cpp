@@ -135,17 +135,47 @@ bool ModelReader::readFromFile(const std::string& fname) {
     // Materiales
     if (j.contains("Materials")) {
         auto& mat = j["Materials"];
-        if (mat.contains("density0")) {
-            double E = 0.0;
-            if (mat.contains("youngsModulus") ) E = mat["youngsModulus"];
-            double nu = 0.0;
-            if (mat.contains("poissonsRatio") ) nu = mat["poissonsRatio"];
-            cout << "Material Constants: "<<E<<", "<<nu<<endl;
-            Elastic_ el(E,nu);
-            Material_* m = new Material_(el);
-            m->setDensityConstant(mat["density0"]);
-            m_model->addMaterial(m);
-        }
+        double rho = 0.0;
+        if (mat.contains("density0")) rho = mat["density0"];
+        double E = 0.0;
+        if (mat.contains("youngsModulus") ) E = mat["youngsModulus"];
+        double nu = 0.0;
+        if (mat.contains("poissonsRatio") ) nu = mat["poissonsRatio"];
+        cout << "Material Constants: "<<E<<", "<<nu<<endl;
+        Elastic_ el(E,nu);
+        Material_* m = new Material_(el);
+        m->setDensityConstant(rho);
+        m_model->addMaterial(m);
+
+        if (mat.contains("type")){
+          std::string type = mat["type"];
+          //mat["type"]
+          if (type != "Elastic"){
+            Plastic_ *m_pl = nullptr;
+            cout << "Material is plastic"<<endl;
+            if (type =="Hollomon"){
+              cout << "Hollomon material "<<endl;
+              if (mat.contains("const") && mat["const"].is_array()) {
+                  double hollomon_K = mat["const"][0];
+                  double hollomon_n = mat["const"][1];
+                  m_pl = new Hollomon(hollomon_K, hollomon_n);
+                  std::cout << "Hollomon material (K=" << hollomon_K
+                            << ", n=" << hollomon_n << ")" << std::endl;
+              }
+            
+            }
+            
+            
+            if (m_pl){
+              cout << "Assigning plastic rule"<<endl;
+              m->m_plastic = m_pl->clone();
+              m->m_isplastic = true;
+            }
+            
+            
+          }//!Elastic
+        }//contains type
+
     }
 
     //~ // Partes
