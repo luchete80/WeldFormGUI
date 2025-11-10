@@ -103,52 +103,49 @@ void InputWriter::writeToFile(std::string fname){
   m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
   cout << "Writing materials .."<<endl;
-  if (m_model->getMaterialCount()>0){
-    
-    if (m_model->getMaterial(0)!= nullptr){
-    
-    m_json["Materials"]["density0"]     = m_model->getMaterial(0)->getDensityConstant();  
-    m_json["Materials"]["youngsModulus"]= m_model->getMaterial(0)->Elastic().E();  
-    m_json["Materials"]["poissonsRatio"]= m_model->getMaterial(0)->Elastic().nu();  
-    
-    std::vector<double> plasticConst;
-    
-    cout << "Checking plastic "<<endl;
-    if (!m_model->getMaterial(0)->isPlastic()) {
-      cout << "Elastic"<<endl;
-      m_json["Materials"]["type"] = "Elastic";     
-    } else {
-        switch ( m_model->getMaterial(0)->m_plastic->Material_model ) {
-                  
-          case _GMT_: 
-            cout << "GMT"<<endl;
-            m_json["Materials"]["type"]= "GMT";  
-            
-            break;
-          case HOLLOMON:
-            cout << "Hollomon"<<endl;
-            m_json["Materials"]["type"]= "Hollomon";  
 
-                      
-            break;
-          default:
-            break;
-        }//Switch material model
-      plasticConst = m_model->getMaterial(0)->m_plastic->getPlasticConstants(); //K,n
+  if (m_model->getMaterialCount() > 0) {
+      m_json["Materials"] = nlohmann::json::array();
 
-      if (plasticConst.size()>0)
-        m_json["Materials"]["const"] = plasticConst;  // esto crea un array JSON automáticamente
-      else
-        cout << "ERROR: No plastic constants present."<<endl;
-        
-        
-    }//PLASTIC
-    
-    }//if not nullptr
-    cout << "Done."<<endl;
+      for (int i = 0; i < m_model->getMaterialCount(); ++i) {
+          auto* mat = m_model->getMaterial(i);
+          if (mat == nullptr) continue;
+
+          nlohmann::json mat_json;
+          mat_json["density0"]      = mat->getDensityConstant();
+          mat_json["poissonsRatio"] = mat->Elastic().nu();
+          mat_json["youngsModulus"] = mat->Elastic().E();
+
+          // Tipo de material
+          if (!mat->isPlastic()) {
+              mat_json["type"] = "Elastic";
+          } else {
+              switch (mat->m_plastic->Material_model) {
+                  case _GMT_:
+                      mat_json["type"] = "GMT";
+                      break;
+                  case HOLLOMON:
+                      mat_json["type"] = "Hollomon";
+                      break;
+                  default:
+                      mat_json["type"] = "UnknownPlastic";
+                      break;
+              }
+
+              std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
+              if (!plasticConst.empty())
+                  mat_json["const"] = plasticConst;
+              else
+                  cout << "WARNING: No plastic constants for material " << i << endl;
+          }
+
+          // Agregar al array principal
+          m_json["Materials"].push_back(mat_json);
+      }
+
+      cout << "Done." << endl;
   }
-
-  
+ 
   bool is_elastic = false;
   cout << "Loop thorough parts..."<<endl;
   for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it){

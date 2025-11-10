@@ -144,4 +144,4 @@
          - Added BC Dialog and enable select part. 
          - Added Rename part
 20251110 - Added Material reader and writer
-2025
+         - Fixed Input Writer (material is now an array)
