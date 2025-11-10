@@ -136,8 +136,14 @@ bool ModelReader::readFromFile(const std::string& fname) {
     if (j.contains("Materials")) {
         auto& mat = j["Materials"];
         if (mat.contains("density0")) {
-            Material_* m = new Material_();
-            //m->setDensity(mat["density0"].get<double>());
+            double E = 0.0;
+            if (mat.contains("youngsModulus") ) E = mat["youngsModulus"];
+            double nu = 0.0;
+            if (mat.contains("poissonsRatio") ) nu = mat["poissonsRatio"];
+            cout << "Material Constants: "<<E<<", "<<nu<<endl;
+            Elastic_ el(E,nu);
+            Material_* m = new Material_(el);
+            m->setDensityConstant(mat["density0"]);
             m_model->addMaterial(m);
         }
     }

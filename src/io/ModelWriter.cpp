@@ -98,7 +98,10 @@ void ModelWriter::writeToFile(std::string fname){
   
   if (m_model.getMaterialCount()>0){
     cout << "Writing materials .."<<endl;
-    m_json["Materials"]["density0"]=m_model.getMaterial(0)->getDensityConstant();  
+    m_json["Materials"]["density0"]      = m_model.getMaterial(0)->getDensityConstant();  
+    m_json["Materials"]["poissonsRatio"] = m_model.getMaterial(0)->Elastic().nu();  
+    m_json["Materials"]["youngsModulus"] = m_model.getMaterial(0)->Elastic().E();  
+    
     cout << "Done."<<endl;
   }
 

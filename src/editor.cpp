@@ -961,7 +961,7 @@ void Editor::drawGui() {
           ImGui::EndPopup();
         }
         if (open_){
-        for (int i = 0; i < m_mats.size(); i++)
+        for (int i = 0; i < m_model->getMaterialCount(); i++)
         //for (int i = 0; i < m_model->getMaterialCount(); i++)
         {
           // Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -1552,6 +1552,8 @@ void Editor::drawGui() {
     pc = m_model->getPartCount();
     cout << "Model part count: "<<pc<<endl;
       m_model = mr.getModel();
+      
+    cout << "Model Material Count: "<<m_model->getMaterialCount()<<endl;
 
 
       size_t slashPos = filePathName.find_last_of("/\\"); // por si acaso mezcla los dos tipos

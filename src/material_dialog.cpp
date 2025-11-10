@@ -57,9 +57,12 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
   create_material = false; 
   cancel_action = false;
-  if (!m_initiated)
+  if (!m_initiated){
+    m_density_const = mat->getDensityConstant();
+    m_elastic_const = mat->Elastic().E();
+    m_poisson_const =  mat->Elastic().nu();
     m_initiated = true;
-    
+  }
   if (!ImGui::Begin(title, p_open))
   {
       ImGui::End();
