@@ -8,6 +8,8 @@
 #include "Material.h"
 #include "Geom.h"
 
+#include "BoundaryCondition.h"
+
 #include <nlohmann/json.hpp>
 #include "json_io.h"
 
@@ -214,6 +216,44 @@ void InputWriter::writeToFile(std::string fname){
     
 
     }//Part 
+
+    if (m_model->getBCCount() > 0) {
+        std::cout << "Writing Boundary Conditions..." << std::endl;
+
+        m_json["BoundaryConditions"] = json::array();
+
+        for (int i = 0; i < m_model->getBCCount(); ++i) {
+            BoundaryCondition* bc = m_model->getBC(i);
+            if (!bc) continue;
+
+            json jbc;
+
+            // Tipo: Velocity o Displacement
+            std::string typeStr = (bc->getType() == VelocityBC) ? "VelocityBC" : "DisplacementBC";
+            jbc["type"] = typeStr;
+
+            // Aplicar a Part o Nodes
+            std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
+            jbc["applyTo"] = applyToStr;
+
+            // ID del objetivo (parte o conjunto de nodos)
+            jbc["targetId"] = bc->getTargetId();
+
+            // Valor (vector 3D)
+            double3 v = bc->getVelocity();
+            jbc["value"] = {v.x, v.y, v.z};
+
+            // Agregar al array principal
+            m_json["BoundaryConditions"].push_back(jbc);
+
+            std::cout << "  → BC[" << i << "]: "
+                      << typeStr << " | ApplyTo=" << applyToStr
+                      << " | TargetID=" << bc->getTargetId()
+                      << " | Value=(" << v.x << ", " << v.y << ", " << v.z << ")" << std::endl;
+        }
+
+        std::cout << "Done writing " << m_model->getBCCount() << " BCs." << std::endl;
+    }
     
     if (!is_elastic)
       cout << "ERROR: Not deformable parts"<<endl;
