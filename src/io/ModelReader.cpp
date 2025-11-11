@@ -1,271 +1,236 @@
-
 #include "ModelReader.h"
 #include "Model.h"
 #include "Part.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip> //setw
 #include "Material.h"
 #include "Geom.h"
 #include "json_io.h"
 #include "gmsh.h"
+#include "BoundaryCondition.h"
 
+#include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 
-bool fileExists(const std::string& name) {
+using std::cout;
+using std::cerr;
+using std::endl;
+
+// =============================================================
+// Utility: Check if file exists
+// =============================================================
+static bool fileExists(const std::string& name) {
     std::ifstream f(name.c_str());
     return f.good();
 }
 
-ModelReader::ModelReader(Model *model){
-  
-  m_model = model;
-  }
-ModelReader::ModelReader(const char *fname){
+// =============================================================
+// Constructors
+// =============================================================
+ModelReader::ModelReader(Model *model) : m_model(model) {}
 
-	//json j;
-	//i >> j;
-
-/*
-	nlohmann::json m_config 		= j["Configuration"];
-	nlohmann::json material 	= j["Materials"];
-	nlohmann::json domblock 	= j["DomainBlocks"];
-	nlohmann::json domzones 	= j["DomainZones"];
-	nlohmann::json amplitudes 	= j["Amplitudes"];
-	nlohmann::json rigbodies 		= j["RigidBodies"];
-  nlohmann::json contact_ 		= j["Contact"];
-	nlohmann::json bcs 			= j["BoundaryConditions"];
-	nlohmann::json ics 			= j["InitialConditions"];
-*/
-  //std::ofstream o("pretty.json");
-
-/*  
-  ostringstream oss;
-  
-  oss << "\"Configuration\":{ \" "            <<endl<<
-           "  \"particleRadius\": 0.001,"       <<endl<<      //
-           "  \"hFactor\": 1.2,\""              <<endl<<
-           "  \"cflMethod\": 1, "               <<endl<< 
-           "  \"cflFactor\": 0.4,"              <<endl<<
-           "  \"sumType\": \"Nishimura\","      <<endl<<
-           "  \"autoTS\": [false,false,false]," <<endl<<
-           "  \"simTime\": 5.0e-7,"             <<endl<<
-           "  \"artifViscAlpha\": 1.0,"         <<endl<<
-           "  \"outTime\": 1.94e-7 "            <<endl<<
-           "},"                                 <<endl;
-  
-  //Can be maintained a Domain Block??
-  oss << "\"Materials\":"                        <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;
-
-  oss << "\"DomainBlocks\":"                     <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;
-
-  //Loop trough sets
-  oss << "\"DomainZones\":"                      <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-  
-  oss << "\"Amplitudes\":"                      <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-    
-  oss << "\"BoundaryConditions\":"               <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-  
-  oss << "}"                                   <<endl;    
-
-	of << oss.str();
-*/  
-/*
-  cout << "Saving model"<<endl;
-  
-  m_json["Configuration"]["modelType"] = "SPH";
-  m_json["Configuration"]["solver"]    = "WeldForm";
-  
-  //SHOULD BE AT SPH
-  //m_json["Configuration"]["hFactor"] = 1.2;
-  m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
-  
-  if (model.getMaterialCount()>0){
-    cout << "Writing materials .."<<endl;
-    m_json["Materials"]["density0"]=model.getMaterial(0)->getDensityConstant();  
-    cout << "Done."<<endl;
-  }
-
-  o << std::setw(4) << m_json << std::endl;
-  
-  o.close();
-  */
+ModelReader::ModelReader(const char *fname) {
+    (void)fname; // Placeholder if needed later
 }
 
-
-
+// =============================================================
+// Main readFromFile function
+// =============================================================
 bool ModelReader::readFromFile(const std::string& fname) {
+
+    // --- 1. Abrir archivo ---
     std::ifstream i(fname);
     if (!i.is_open()) {
-        std::cerr << "Error opening file: " << fname << std::endl;
+        cerr << "[ModelReader] Error: cannot open file: " << fname << endl;
         return false;
     }
 
+    // --- 2. Parsear JSON ---
     json j;
     try {
         i >> j;
     } catch (const std::exception& e) {
-        std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+        cerr << "[ModelReader] JSON parse error: " << e.what() << endl;
         return false;
     }
-    
-    //m_model = new Model();
 
-    // Configuración básica
+    if (!m_model) {
+        cerr << "[ModelReader] Error: model pointer is null." << endl;
+        return false;
+    }
+
+    cout << "[ModelReader] Reading model from: " << fname << endl;
+
+    // =============================================================
+    // Configuration
+    // =============================================================
     if (j.contains("Configuration")) {
-        auto& conf = j["Configuration"];
-        //~ if (conf.contains("modelType"))
-            //~ //m_model.setType(conf["modelType"].get<std::string>());
-        //~ if (conf.contains("solver"))
-            //~ //m_model.setSolver(conf["solver"].get<std::string>());
-        //~ if (conf.contains("SPH") && conf["SPH"].contains("hFactor"))
-            //~ //m_model.setHFactor(conf["SPH"]["hFactor"].get<double>());
+        const auto& conf = j["Configuration"];
+
+        if (conf.contains("modelType"))
+            cout << "  Model type: " << conf["modelType"].get<std::string>() << endl;
+
+        if (conf.contains("solver"))
+            cout << "  Solver: " << conf["solver"].get<std::string>() << endl;
+
+        if (conf.contains("SPH") && conf["SPH"].contains("hFactor"))
+            cout << "  SPH hFactor: " << conf["SPH"]["hFactor"].get<double>() << endl;
     }
 
-    // Materiales
+    // =============================================================
+    // Materials
+    // =============================================================
     if (j.contains("Materials")) {
-        auto& mat = j["Materials"];
-        double rho = 0.0;
-        if (mat.contains("density0")) rho = mat["density0"];
-        double E = 0.0;
-        if (mat.contains("youngsModulus") ) E = mat["youngsModulus"];
-        double nu = 0.0;
-        if (mat.contains("poissonsRatio") ) nu = mat["poissonsRatio"];
-        cout << "Material Constants: "<<E<<", "<<nu<<endl;
-        Elastic_ el(E,nu);
-        Material_* m = new Material_(el);
-        m->setDensityConstant(rho);
-        m_model->addMaterial(m);
+        const auto& mat = j["Materials"];
 
-        if (mat.contains("type")){
-          std::string type = mat["type"];
-          //mat["type"]
-          if (type != "Elastic"){
-            Plastic_ *m_pl = nullptr;
-            cout << "Material is plastic"<<endl;
-            if (type =="Hollomon"){
-              cout << "Hollomon material "<<endl;
-              if (mat.contains("const") && mat["const"].is_array()) {
-                  double hollomon_K = mat["const"][0];
-                  double hollomon_n = mat["const"][1];
-                  m_pl = new Hollomon(hollomon_K, hollomon_n);
-                  std::cout << "Hollomon material (K=" << hollomon_K
-                            << ", n=" << hollomon_n << ")" << std::endl;
-              }
-            
-            }
-            
-            
-            if (m_pl){
-              cout << "Assigning plastic rule"<<endl;
-              m->m_plastic = m_pl->clone();
-              m->m_isplastic = true;
-            }
-            
-            
-          }//!Elastic
-        }//contains type
+        double rho = mat.value("density0", 0.0);
+        double E   = mat.value("youngsModulus", 0.0);
+        double nu  = mat.value("poissonsRatio", 0.0);
 
-    }
+        cout << "[ModelReader] Material constants: E=" << E << ", ν=" << nu << ", ρ=" << rho << endl;
 
-    //~ // Partes
-    if (j.contains("model") && j["model"].contains("parts")) {
-      int i=0;
-    for (auto& jpart : j["model"]["parts"]) {
-            cout << "Reading part "<<i<<endl;
-            Part* part;
-            //~ if (jpart.contains("id"))
-                //~ part->setId(jpart["id"].get<int>());
-            //~ if (jpart.contains("name"))
-                //~ part->setName(jpart["name"].get<std::string>());
+        Elastic_ elastic(E, nu);
+        Material_* material = new Material_(elastic);
+        material->setDensityConstant(rho);
 
-            //~ // Geometry
-            if (jpart.contains("geometry")) {
-                if (jpart["geometry"].contains("source")){
-                   double3 origin = make_double3(0.0,0.0,0.0);
-                   readVector(jpart["geometry"]["origin"],origin);
-                   
-                    std::string name = jpart["geometry"]["source"].get<std::string>();
-                    cout << "Reading surface "<<name<<endl;
-                    Geom* geom = new Geom(name);
-                    part = new Part(geom);
+        // Plastic rule (if applicable)
+        if (mat.contains("type")) {
+            std::string type = mat["type"];
+            if (type != "Elastic") {
+                cout << "  → Nonlinear material: " << type << endl;
+                Plastic_* plRule = nullptr;
 
-                             
-               }// if geometry
-
-               
-                //part->setGeom(geom);
-
-                if (jpart.contains("name")) {
-                    std::string pname = jpart["name"].get<std::string>();
-                    part->setName(pname.c_str());
-                    cout << "Part name: "<<pname<<endl;
-                } else {
-                    //part->setName("Part_" + std::to_string(i));
+                if (type == "Hollomon" && mat.contains("const") && mat["const"].is_array()) {
+                    double K = mat["const"][0];
+                    double n = mat["const"][1];
+                    plRule = new Hollomon(K, n);
+                    cout << "    Hollomon(K=" << K << ", n=" << n << ")" << endl;
                 }
 
+                if (plRule) {
+                    material->m_plastic = plRule->clone();
+                    material->m_isplastic = true;
+                }
+            }
+        }
+
+        m_model->addMaterial(material);
+    }
+
+    // =============================================================
+    // Parts
+    // =============================================================
+    if (j.contains("model") && j["model"].contains("parts")) {
+        const auto& parts = j["model"]["parts"];
+        cout << "[ModelReader] Reading " << parts.size() << " part(s)" << endl;
+
+        int idx = 0;
+        for (const auto& jpart : parts) {
+            cout << "  → Part " << idx << endl;
+
+            Part* part = nullptr;
+            Geom* geom = nullptr;
+
+            // --- Geometry ---
+            if (jpart.contains("geometry")) {
+                const auto& geo = jpart["geometry"];
+                std::string src = geo.value("source", "");
+                double3 origin = make_double3(0.0, 0.0, 0.0);
+                readVector(geo["origin"], origin);
+
+                if (!src.empty()) {
+                    cout << "    Geometry source: " << src << endl;
+                    geom = new Geom(src);
+                    part = new Part(geom);
+                }
             }
 
+            if (!part)
+                part = new Part();
 
-            
-            if (jpart.contains("mesh")) {
+            // --- Name & ID ---
+            if (jpart.contains("name")) {
+                std::string pname = jpart["name"];
+                part->setName(pname.c_str());
+                cout << "    Name: " << pname << endl;
+            }
+
+            if (jpart.contains("id"))
+                part->setId(jpart["id"].get<int>());
+
+            // --- Mesh ---
+            if (jpart.contains("mesh") && jpart["mesh"].contains("source")) {
                 std::string meshname = jpart["mesh"]["source"].get<std::string>();
+                cout << "    Mesh file: " << meshname << endl;
 
                 if (!fileExists(meshname)) {
-                    std::cerr << " Mesh file not found: " << meshname << std::endl;
+                    cerr << "    [Warning] Mesh file not found: " << meshname << endl;
                 } else {
                     gmsh::clear();
-                    gmsh::open(meshname.c_str());
+                    gmsh::open(meshname);
                     gmsh::model::occ::synchronize();
                     part->generateMesh();
                 }
             }
-          
-          if (jpart["isRigid"] == true)
-            part->setType(1);
-          else {
-            cout << "part "<< i << " is deformable"<<endl;
-            part->setType(0);
-          }
-          part->setId(jpart["id"]);
-          
-        
-        
 
-            //~ // Mesh (nodos y elementos, si existe)
-            //~ if (jpart.contains("mesh")) {
-                //~ if (jpart["mesh"].contains("nodes")) {
-                    //~ for (auto& n : jpart["mesh"]["nodes"]) {
-                        //~ part->addNode({n[0].get<double>(), n[1].get<double>(), n[2].get<double>()});
-                    //~ }
-                //~ }
-                //~ if (jpart["mesh"].contains("elements")) {
-                    //~ for (auto& e : jpart["mesh"]["elements"]) {
-                        //~ Element elem;
-                        //~ elem.id = e["id"].get<int>();
-                        //~ elem.type = e["type"].get<std::string>();
-                        //~ elem.connectivity = e["connectivity"].get<std::vector<int>>();
-                        //~ part->addElement(elem);
-                    //~ }
-                //~ }
-            //~ }
+            // --- Type (rigid/deformable) ---
+            bool isRigid = jpart.value("isRigid", false);
+            part->setType(isRigid ? 1 : 0);
+            cout << "    Type: " << (isRigid ? "Rigid" : "Deformable") << endl;
 
+            // Add to model
             m_model->addPart(part);
-            i++;
+            idx++;
         }
-    }//if contain part
+    }//parts
 
-    std::cout << "Model loaded from " << fname << std::endl;
+    // =============================================================
+    // Boundary Conditions
+    // =============================================================
+    if (j.contains("BoundaryConditions") && j["BoundaryConditions"].is_array()) {
+        const auto& bcArray = j["BoundaryConditions"];
+        cout << "[ModelReader] Reading " << bcArray.size() << " Boundary Condition(s)" << endl;
+
+        for (const auto& jbc : bcArray) {
+            // --- Tipo de BC ---
+            std::string typeStr = jbc.value("type", "VelocityBC");
+            BCType bcType = (typeStr == "DisplacementBC") ? DisplacementBC : VelocityBC;
+
+            // --- ApplyTo ---
+            std::string applyToStr = jbc.value("applyTo", "Part");
+            BCApplyTo applyTo = (applyToStr == "Nodes") ? ApplyToNodes : ApplyToPart;
+
+            // --- ID objetivo ---
+            int targetId = jbc.value("targetId", -1);
+            if (targetId < 0) {
+                cerr << "  [Warning] BoundaryCondition missing targetId, skipping." << endl;
+                continue;
+            }
+
+            // --- Valor (3 componentes) ---
+            double3 val = make_double3(0.0, 0.0, 0.0);
+            if (jbc.contains("value") && jbc["value"].is_array() && jbc["value"].size() == 3) {
+                val.x = jbc["value"][0];
+                val.y = jbc["value"][1];
+                val.z = jbc["value"][2];
+            }
+
+            // --- Crear BC ---
+            BoundaryCondition* bc = new BoundaryCondition(bcType, applyTo, targetId, val);
+            m_model->addBoundaryCondition(bc);
+
+            cout << "  → Added BC: "
+                 << typeStr << ", ApplyTo=" << applyToStr
+                 << ", TargetID=" << targetId
+                 << ", Value=(" << val.x << ", " << val.y << ", " << val.z << ")" << endl;
+        }
+
+        cout << "[ModelReader] Done reading Boundary Conditions." << endl;
+    }
+
+
+
+
+    cout << "[ModelReader] Model successfully loaded.\n";
     return true;
 }
-

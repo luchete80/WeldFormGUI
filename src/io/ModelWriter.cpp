@@ -10,6 +10,7 @@
 
 #include <nlohmann/json.hpp>
 #include "json_io.h"
+#include "BoundaryCondition.h"
 
 using json = nlohmann::json;
 
@@ -245,7 +246,41 @@ void ModelWriter::writeToFile(std::string fname){
     
     }//if not nullptr
     cout << "Done."<<endl;
-  }
+  }// MATERIALS
+
+  if (m_model.getBCCount() > 0) {
+      std::cout << "Writing Boundary Conditions..." << std::endl;
+
+      m_json["BoundaryConditions"] = json::array();
+
+      for (int i = 0; i < m_model.getBCCount(); ++i) {
+          BoundaryCondition* bc = m_model.getBC(i);
+          json jbc;
+
+          // Tipo
+          std::string typeStr = (bc->getType() == VelocityBC) ? "VelocityBC" : "DisplacementBC";
+          jbc["type"] = typeStr;
+
+          // ApplyTo
+          std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
+          jbc["applyTo"] = applyToStr;
+
+          // ID objetivo
+          jbc["targetId"] = bc->getTargetId();
+
+          // Valor (velocidad o desplazamiento)
+          double3 v = bc->getVelocity();
+          jbc["value"] = {v.x, v.y, v.z};
+
+          // Agregar al array
+          m_json["BoundaryConditions"].push_back(jbc);
+      }
+
+      std::cout << "Done writing " << m_model.getBCCount() << " BCs." << std::endl;
+  }  
+  
+  
+  
   o << std::setw(4) << m_json << std::endl;
   
   o.close();
