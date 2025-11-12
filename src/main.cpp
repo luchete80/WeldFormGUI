@@ -70,6 +70,11 @@
 #include "geom/vtkOCCTGeom.h"
 #include "geom/ShapeToPolyData.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkFileOutputWindow.h>
+#include <vtkOutputWindow.h>
+
+
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -124,10 +129,15 @@ static void glfw_error_callback(int error, const char* description)
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-Axis axis;
+
 
 int main(int argc, char* argv[])
 {
+  vtkSmartPointer<vtkFileOutputWindow> output =
+  vtkSmartPointer<vtkFileOutputWindow>::New();
+  output->SetFileName("vtk_warnings.log");
+  vtkOutputWindow::SetInstance(output);
+    
   // Setup pipeline
   //auto actor = SetupDemoPipeline();
 
@@ -215,6 +225,8 @@ int main(int argc, char* argv[])
   vtkViewer2.getRenderer()->SetBackground(0.2,0.2,0.4);
   vtkViewer2.getRenderer()->SetBackground2(0.8,0.8,0.8);
 
+  Axis axis;  
+  axis.setInteractor(vtkViewer2.getInteractor());  
 
   vtkViewer_res.getRenderer()->SetBackground(0.2,0.2,0.4);
   vtkViewer_res.getRenderer()->SetBackground2(0.8,0.8,0.8);
@@ -248,8 +260,7 @@ int main(int argc, char* argv[])
     
     actor->SetMapper(mapper);
 */    
-    //Axis axis;  
-    axis.setInteractor(vtkViewer2.getInteractor());  
+
 
     //vtkViewer2.addActor(axis.actor);
 
