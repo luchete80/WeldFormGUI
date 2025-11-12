@@ -489,8 +489,11 @@ int main(int argc, char* argv[])
                             activeFieldName = selected.substr(4); // remueve "[C] " o "[P] "
 
                             // Calcular rango global en todos los frames
-                            globalMin = std::numeric_limits<double>::max();
-                            globalMax = -std::numeric_limits<double>::max();
+                            // globalMin = std::numeric_limits<double>::max();
+                            // globalMax = -std::numeric_limits<double>::max();
+                            globalMin = 1.0e10;
+                            globalMax = -1.0e10;
+
 
                             for (auto& f : editor->getResults()->frames) {
                                 vtkDataArray* array = isCellField ?
@@ -499,8 +502,8 @@ int main(int argc, char* argv[])
 
                                 if (array) {
                                     double* range = array->GetRange();
-                                    globalMin = std::min(globalMin, range[0]);
-                                    globalMax = std::max(globalMax, range[1]);
+                                    globalMin = (std::min)(globalMin, range[0]);
+                                    globalMax = (std::max)(globalMax, range[1]);
                                 }
                             }
                             cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
