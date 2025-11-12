@@ -146,3 +146,6 @@
 20251110 - Added Material reader and writer
          - Fixed Input Writer (material is now an array)
          - Added Boundary Conditions Reading and Writing.
+20251112 - Fixed Crash if not result is loaded.
+         - Fixed Input, fixed filename, added time and out_time
+         - 

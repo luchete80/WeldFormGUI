@@ -88,6 +88,17 @@ void InputWriter::writeToFile(std::string fname){
   m_json["Configuration"]["cflFactor"] = 0.3;
   m_json["Configuration"]["fixedTS"] = true;
   m_json["Configuration"]["solver"]    = "WeldForm";
+
+  m_json["Configuration"]["simTime"] = 1.0;
+  m_json["Configuration"]["outTime"] =  1.0e-4;
+  
+  
+  nlohmann::json cont;
+  cont["fricCoeffStatic"] =  0.3;
+  cont["fricCoeffDynamic"] =  0.3; 
+  cont["penaltyFactor"] = 0.8;
+  m_json["Contact"] = nlohmann::json::array();    
+  m_json["Contact"].push_back(cont);
   
     //~ "Nproc":4,
   //~ "cflFactor": 0.3,
@@ -102,7 +113,7 @@ void InputWriter::writeToFile(std::string fname){
   
   //SHOULD BE AT SPH
   //m_json["Configuration"]["hFactor"] = 1.2;
-  m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
+  //m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
   
   cout << "Writing materials .."<<endl;
 
@@ -229,15 +240,17 @@ void InputWriter::writeToFile(std::string fname){
             json jbc;
 
             // Tipo: Velocity o Displacement
-            std::string typeStr = (bc->getType() == VelocityBC) ? "VelocityBC" : "DisplacementBC";
-            jbc["type"] = typeStr;
+            std::string typeStr = (bc->getType() == VelocityBC) ? "Velocity" : "DisplacementBC";
+            //jbc["type"] = typeStr;
+            
+            jbc["valueType"] = 0; //Value, not amplitude
 
             // Aplicar a Part o Nodes
             std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
             jbc["applyTo"] = applyToStr;
 
             // ID del objetivo (parte o conjunto de nodos)
-            jbc["targetId"] = bc->getTargetId();
+            jbc["zoneId"] = bc->getTargetId();
 
             // Valor (vector 3D)
             double3 v = bc->getVelocity();

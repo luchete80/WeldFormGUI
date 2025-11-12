@@ -69,14 +69,20 @@
 #include "imgui_impl_opengl3.h"
 
 void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondition *sel_bc) {
-    bool create = (sel_bc == nullptr);
-
-    // Si la BC existe, inicializamos los valores desde ella
-    if (!create && sel_bc) {
-        m_applyTo = (sel_bc->getApplyTo() == ApplyToPart) ? 0 : 1;
-        m_targetId = sel_bc->getTargetId();
-        m_vel = sel_bc->getVelocity();
+    
+    bool create = (sel_bc == nullptr);  
+    static bool initialized = false;
+    
+    if (!initialized) {
+      if (!create && sel_bc) {
+          m_applyTo = (sel_bc->getApplyTo() == ApplyToPart) ? 0 : 1;
+          m_targetId = sel_bc->getTargetId();
+          m_vel = sel_bc->getVelocity();
+      }
+      initialized = true;
     }
+
+  
 
     if (!ImGui::Begin(title, p_open)) {
         ImGui::End();
@@ -92,56 +98,56 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
     ImGui::SameLine();
     ImGui::RadioButton("Nodes", &m_applyTo, 1);
 
-if (m_applyTo == 0) {
-    // --- mantener estos estáticos ---
-    static std::vector<std::string> partNames;
-    static int selectedPartIndex = -1;
+    if (m_applyTo == 0) {
+      // --- mantener estos estáticos ---
+      static std::vector<std::string> partNames;
+      static int selectedPartIndex = -1;
 
-    // Solo actualizamos si cambió el modelo o la cantidad de partes
-    int numParts = model->getPartCount();
-    if ((int)partNames.size() != numParts) {
-        partNames.clear();
-        for (int i = 0; i < numParts; i++) {
-            std::string name = model->getPart(i)->getName();
-            if (name.empty()) name = "Part " + std::to_string(model->getPart(i)->getID());
-            partNames.push_back(name);
-        }
+      // Solo actualizamos si cambió el modelo o la cantidad de partes
+      int numParts = model->getPartCount();
+      if ((int)partNames.size() != numParts) {
+          partNames.clear();
+          for (int i = 0; i < numParts; i++) {
+              std::string name = model->getPart(i)->getName();
+              if (name.empty()) name = "Part " + std::to_string(model->getPart(i)->getID());
+              partNames.push_back(name);
+          }
+      }
+
+      // Sincronizar si estamos editando una BC existente
+      if (!create && selectedPartIndex == -1) {
+          for (int i = 0; i < numParts; i++) {
+              if (model->getPart(i)->getID() == m_targetId) {
+                  selectedPartIndex = i;
+                  break;
+              }
+          }
+      }
+      // Si es nueva y aún no hay selección
+      if (create && selectedPartIndex == -1 && numParts > 0) {
+          selectedPartIndex = 0;
+          m_targetId = model->getPart(0)->getID();
+      }
+
+      const char* preview = (selectedPartIndex >= 0 && selectedPartIndex < numParts)
+          ? partNames[selectedPartIndex].c_str() : "Select Part";
+
+      // Combo con label único ("##" oculta el texto visible)
+      if (ImGui::BeginCombo("Select Part##BCDialogPartCombo", preview)) {
+          for (int i = 0; i < numParts; i++) {
+              bool is_selected = (selectedPartIndex == i);
+              if (ImGui::Selectable(partNames[i].c_str(), is_selected)) {
+                  selectedPartIndex = i;
+                  m_targetId = model->getPart(i)->getID();
+              }
+              if (is_selected) ImGui::SetItemDefaultFocus();
+          }
+          ImGui::EndCombo();
+      }
+
+      if (selectedPartIndex >= 0 && selectedPartIndex < numParts)
+          ImGui::Text("Selected ID: %d", model->getPart(selectedPartIndex)->getID());
     }
-
-    // Sincronizar si estamos editando una BC existente
-    if (!create && selectedPartIndex == -1) {
-        for (int i = 0; i < numParts; i++) {
-            if (model->getPart(i)->getID() == m_targetId) {
-                selectedPartIndex = i;
-                break;
-            }
-        }
-    }
-    // Si es nueva y aún no hay selección
-    if (create && selectedPartIndex == -1 && numParts > 0) {
-        selectedPartIndex = 0;
-        m_targetId = model->getPart(0)->getID();
-    }
-
-    const char* preview = (selectedPartIndex >= 0 && selectedPartIndex < numParts)
-        ? partNames[selectedPartIndex].c_str() : "Select Part";
-
-    // Combo con label único ("##" oculta el texto visible)
-    if (ImGui::BeginCombo("Select Part##BCDialogPartCombo", preview)) {
-        for (int i = 0; i < numParts; i++) {
-            bool is_selected = (selectedPartIndex == i);
-            if (ImGui::Selectable(partNames[i].c_str(), is_selected)) {
-                selectedPartIndex = i;
-                m_targetId = model->getPart(i)->getID();
-            }
-            if (is_selected) ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-
-    if (selectedPartIndex >= 0 && selectedPartIndex < numParts)
-        ImGui::Text("Selected ID: %d", model->getPart(selectedPartIndex)->getID());
-}
 
 
     else {
@@ -179,11 +185,17 @@ if (m_applyTo == 0) {
         std::cout << "Total BCs: " << model->getBCCount() << std::endl;
 
         *p_open = false;
+        sel_bc = nullptr;
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) {
         *p_open = false;
+        sel_bc = nullptr;
+    }
+    
+    if (!(*p_open)) {
+      initialized = false;
     }
 
     ImGui::End();

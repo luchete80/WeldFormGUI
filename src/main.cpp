@@ -431,9 +431,9 @@ int main(int argc, char* argv[])
               static bool isCellField = false;
                             
               static std::string activeFieldName = "";
-              auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
                                 
               if (editor->getResults()){
+              auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
               if (!editor->getResults()->frames.empty()) {
                   ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
 

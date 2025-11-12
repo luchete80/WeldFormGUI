@@ -301,7 +301,11 @@ void ShowExampleMenuFile(const Editor &editor)
     //If open
     if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
       InputWriter writer( &getApp().getActiveModel() );
-      writer.writeToFile("Input.json");
+      if ( (getApp().getActiveModel().getHasName()) )
+        //writer.writeToFile("Input.json");
+        writer.writeToFile(getApp().getActiveModel().getName()+"_run.json");
+      else 
+        cout << "File has not name."<<endl;
       }
     if (ImGui::MenuItem("Save", "Ctrl+S")) {
 

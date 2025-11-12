@@ -1152,7 +1152,9 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         //std::string elemType = elem->getType();
 
 //        if (elemType == "BAR" || numNodes == 2) {
-        if ( numNodes == 2) {
+
+        //DIMENSION SHOULD BE 1 TO WRITE THIS 
+        if ( numNodes == 2 && m_dim == 1) {
             // Elemento barra CBAR
             outfile << "CBAR    " << std::setw(8) << i + 1  // EID
                     << std::setw(8) << 1          // PID
