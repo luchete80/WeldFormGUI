@@ -21,6 +21,9 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
             m_vel = sel_bc->getVelocity();
             m_normal = sel_bc->getNormal();
             bcType = (sel_bc->getType() == SymmetryBC ? 2 : 0);
+        } else {
+          
+        m_applyTo = 0;  
         }
         initialized = true;
     }
