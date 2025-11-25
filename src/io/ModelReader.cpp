@@ -192,37 +192,75 @@ bool ModelReader::readFromFile(const std::string& fname) {
         cout << "[ModelReader] Reading " << bcArray.size() << " Boundary Condition(s)" << endl;
 
         for (const auto& jbc : bcArray) {
+
             // --- Tipo de BC ---
             std::string typeStr = jbc.value("type", "VelocityBC");
-            BCType bcType = (typeStr == "DisplacementBC") ? DisplacementBC : VelocityBC;
+            BCType bcType = VelocityBC;
+
+            if (typeStr == "VelocityBC")        bcType = VelocityBC;
+            else if (typeStr == "DisplacementBC") bcType = DisplacementBC;
+            else if (typeStr == "SymmetryBC")     bcType = SymmetryBC;
+            else {
+                cerr << "  [Warning] Unknown BC type: " << typeStr << " → defaulting to VelocityBC" << endl;
+            }
 
             // --- ApplyTo ---
             std::string applyToStr = jbc.value("applyTo", "Part");
             BCApplyTo applyTo = (applyToStr == "Nodes") ? ApplyToNodes : ApplyToPart;
 
-            // --- ID objetivo ---
+            // --- Target ID ---
             int targetId = jbc.value("targetId", -1);
             if (targetId < 0) {
                 cerr << "  [Warning] BoundaryCondition missing targetId, skipping." << endl;
                 continue;
             }
 
-            // --- Valor (3 componentes) ---
+            // --- Valor para Velocity/Displacement ---
             double3 val = make_double3(0.0, 0.0, 0.0);
-            if (jbc.contains("value") && jbc["value"].is_array() && jbc["value"].size() == 3) {
+            if ((bcType == VelocityBC || bcType == DisplacementBC) &&
+                jbc.contains("value") &&
+                jbc["value"].is_array() &&
+                jbc["value"].size() == 3) 
+            {
                 val.x = jbc["value"][0];
                 val.y = jbc["value"][1];
                 val.z = jbc["value"][2];
             }
 
+            // --- Normal para SymmetryBC ---
+            double3 normal = make_double3(0.0, 0.0, 1.0);
+            if (bcType == SymmetryBC &&
+                jbc.contains("normal") &&
+                jbc["normal"].is_array() &&
+                jbc["normal"].size() == 3) 
+            {
+                normal.x = jbc["normal"][0];
+                normal.y = jbc["normal"][1];
+                normal.z = jbc["normal"][2];
+            }
+
             // --- Crear BC ---
-            BoundaryCondition* bc = new BoundaryCondition(bcType, applyTo, targetId, val);
+            BoundaryCondition* bc = nullptr;
+
+            if (bcType == SymmetryBC) {
+                bc = new BoundaryCondition(bcType, applyTo, targetId, normal);
+            } else {
+                bc = new BoundaryCondition(bcType, applyTo, targetId, val);
+            }
+
             m_model->addBoundaryCondition(bc);
 
             cout << "  → Added BC: "
-                 << typeStr << ", ApplyTo=" << applyToStr
-                 << ", TargetID=" << targetId
-                 << ", Value=(" << val.x << ", " << val.y << ", " << val.z << ")" << endl;
+                 << typeStr
+                 << ", ApplyTo=" << applyToStr
+                 << ", TargetID=" << targetId;
+
+            if (bcType == SymmetryBC)
+                cout << ", Normal=(" << normal.x << ", " << normal.y << ", " << normal.z << ")";
+            else
+                cout << ", Value=(" << val.x << ", " << val.y << ", " << val.z << ")";
+
+            cout << endl;
         }
 
         cout << "[ModelReader] Done reading Boundary Conditions." << endl;

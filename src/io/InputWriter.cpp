@@ -227,6 +227,8 @@ void InputWriter::writeToFile(std::string fname){
     
 
     }//Part 
+    
+
 
     if (m_model->getBCCount() > 0) {
         std::cout << "Writing Boundary Conditions..." << std::endl;
@@ -234,6 +236,10 @@ void InputWriter::writeToFile(std::string fname){
         m_json["BoundaryConditions"] = json::array();
 
         for (int i = 0; i < m_model->getBCCount(); ++i) {
+            bool xSymm = false;
+            bool ySymm = false;
+            bool zSymm = false;
+            
             BoundaryCondition* bc = m_model->getBC(i);
             if (!bc) continue;
 
@@ -255,6 +261,20 @@ void InputWriter::writeToFile(std::string fname){
             // Valor (vector 3D)
             double3 v = bc->getVelocity();
             jbc["value"] = {v.x, v.y, v.z};
+
+
+            if (bc->getType() == SymmetryBC) {
+                double3 n = bc->getNormal();
+
+                if (std::fabs(n.x) > 0.5) xSymm = true;
+                if (std::fabs(n.y) > 0.5) ySymm = true;
+                if (std::fabs(n.z) > 0.5) zSymm = true;
+
+                m_json["Configuration"]["xSymm"] = xSymm;
+                m_json["Configuration"]["ySymm"] = ySymm;
+                m_json["Configuration"]["zSymm"] = zSymm;
+
+            }
 
             // Agregar al array principal
             m_json["BoundaryConditions"].push_back(jbc);

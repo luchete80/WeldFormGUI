@@ -17,7 +17,8 @@
 
 enum BCType {
     VelocityBC,
-    DisplacementBC
+    DisplacementBC,
+    SymmetryBC
 };
 
 enum BCApplyTo {
@@ -30,7 +31,7 @@ public:
     BoundaryCondition() : m_type(VelocityBC), m_applyTo(ApplyToPart), m_targetId(-1) {}
     
     BoundaryCondition(BCType type, BCApplyTo applyTo, int targetId, const double3 &vel)
-    : m_type(type), m_applyTo(applyTo), m_targetId(targetId), m_velocity(vel) {}
+    : m_type(type), m_applyTo(applyTo), m_targetId(targetId), m_velocity(vel), m_normal(vel) {}
 
     void setType(BCType t) { m_type = t; }
     void setApplyTo(BCApplyTo a) { m_applyTo = a; }
@@ -41,12 +42,17 @@ public:
     BCApplyTo getApplyTo() const { return m_applyTo; }
     int getTargetId() const { return m_targetId; }
     double3 getVelocity() const { return m_velocity; }
+    
+    void setNormal(const double3 &n) { m_normal = n; }
+    double3 getNormal() const { return m_normal; }
+    
 
 private:
     BCType m_type;
     BCApplyTo m_applyTo;
     int m_targetId;     // ID de parte o de zona/nodo
     double3 m_velocity;
+    double3 m_normal;     // usado en Symmetry
 };
 
 #endif

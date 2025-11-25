@@ -258,7 +258,21 @@ void ModelWriter::writeToFile(std::string fname){
           json jbc;
 
           // Tipo
-          std::string typeStr = (bc->getType() == VelocityBC) ? "VelocityBC" : "DisplacementBC";
+          //std::string typeStr = (bc->getType() == VelocityBC) ? "VelocityBC" : "DisplacementBC";
+          std::string typeStr;
+
+          switch (bc->getType()) {
+              case VelocityBC:       typeStr = "VelocityBC"; break;
+              case DisplacementBC:   typeStr = "DisplacementBC"; break;
+              case SymmetryBC:       typeStr = "SymmetryBC"; break;
+              default:               typeStr = "Unknown"; break;
+          }
+
+          if (bc->getType() == SymmetryBC) {
+              double3 n = bc->getNormal();
+              jbc["normal"] = { n.x, n.y, n.z };
+          }
+          
           jbc["type"] = typeStr;
 
           // ApplyTo

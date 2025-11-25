@@ -25,7 +25,11 @@ public Dialog
   
   int m_applyTo;
   double3 m_vel;
-  
+
+  int bcType = 0;      // 0 = Velocity, 2 = Symmetry
+  double3 m_normal = make_double3(0,0,1);
+    
+      
   const bool & isBCCreated()const{return create_bc;}
   void   Draw(const char* title, bool* p_open, Model* model, BoundaryCondition *sel_bc = nullptr);  
 };
