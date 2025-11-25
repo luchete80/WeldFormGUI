@@ -230,15 +230,16 @@ void InputWriter::writeToFile(std::string fname){
     
 
 
+    bool xSymm = false;
+    bool ySymm = false;
+    bool zSymm = false;
     if (m_model->getBCCount() > 0) {
         std::cout << "Writing Boundary Conditions..." << std::endl;
 
         m_json["BoundaryConditions"] = json::array();
 
         for (int i = 0; i < m_model->getBCCount(); ++i) {
-            bool xSymm = false;
-            bool ySymm = false;
-            bool zSymm = false;
+
             
             BoundaryCondition* bc = m_model->getBC(i);
             if (!bc) continue;
