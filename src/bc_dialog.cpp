@@ -7,20 +7,32 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondition *sel_bc) {
+
+//// IS DOUBLE ONLY TO MODIDY PTR.
+void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondition **sel_bc) {
 
     bool m_isSymmetry = false;
     
-    bool create = (sel_bc == nullptr);  
-    static bool initialized = false;
+    bool create = (*sel_bc == nullptr);  
+    //cout << "sel bc "<<*sel_bc<<endl; 
     
     if (!initialized) {
-        if (!create && sel_bc) {
-            m_applyTo = (sel_bc->getApplyTo() == ApplyToPart) ? 0 : 1;
-            m_targetId = sel_bc->getTargetId();
-            m_vel = sel_bc->getVelocity();
-            m_normal = sel_bc->getNormal();
-            bcType = (sel_bc->getType() == SymmetryBC ? 2 : 0);
+        if (!create && *sel_bc) {
+          BoundaryCondition* bc = *sel_bc;  // ✔ obtener BC real
+            m_applyTo = (bc->getApplyTo() == ApplyToPart) ? 0 : 1;
+            m_targetId = bc->getTargetId();
+            m_vel = bc->getVelocity();
+            m_normal = bc->getNormal();
+            bcType = (bc->getType() == SymmetryBC ? 2 : 0);
+
+        if (bcType == 2) {
+            double3 n = bc->getNormal();
+            if (n.x==0 && n.y==0 && n.z==1) symPreset = 0;
+            else if (n.x==1 && n.y==0 && n.z==0) symPreset = 1;
+            else if (n.x==0 && n.y==1 && n.z==0) symPreset = 2;
+            else symPreset = 3;
+        }
+        
         } else {
           
         m_applyTo = 0;  
@@ -98,7 +110,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
 
         // --- SYMMETRY ---
         if (bcType == 2) {
-            static int symPreset = 0;
+            
 
             ImGui::Text("Symmetry Plane:");
             ImGui::RadioButton("XY", &symPreset, 0);
@@ -148,7 +160,8 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
             model->addBoundaryCondition(bc);
         }
         else {
-            bc = sel_bc;
+            BoundaryCondition* bc = *sel_bc;      // ✔ puntero real
+            
             bc->setApplyTo(target);
             bc->setTargetId(m_targetId);
 
@@ -163,18 +176,20 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
 
         std::cout << (create ? "Created" : "Updated") << " BC\n";
         *p_open = false;
-        sel_bc = nullptr;
+        *sel_bc = nullptr;
     }
 
     // Cancel
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) {
         *p_open = false;
-        sel_bc = nullptr;
+        //sel_bc = nullptr;
     }
 
     if (!(*p_open)) {
         initialized = false;
+        *sel_bc = nullptr;
+        cout << "closed. sel_çbc "<<*sel_bc<<endl;
     }
 
     ImGui::End();

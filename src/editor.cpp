@@ -1852,7 +1852,10 @@ void Editor::drawGui() {
   if (m_show_bc_dlg_edit){
     //std::cout << "Opening BC dialog. selected_bc=" << selected_bc << std::endl;
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-    m_bcdlg.Draw("Boundary Conditions",&m_show_bc_dlg_edit,m_model, selected_bc);
+    m_bcdlg.Draw("Boundary Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc);
+  } else {
+    //cout   
+    selected_bc = nullptr; //IS ALSO MODIDIED IN DIALOG
   }
   
   if (m_show_msh_dlg) {  

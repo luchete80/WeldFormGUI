@@ -148,4 +148,5 @@
          - Added Boundary Conditions Reading and Writing.
 20251112 - Fixed Crash if not result is loaded.
          - Fixed Input, fixed filename, added time and out_time
-         - 
+20251125 - Fixed Symmetry BCs. 
+         - Fixed BC Dialog.
