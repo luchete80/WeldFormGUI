@@ -53,7 +53,7 @@ class Plastic_{
 
   virtual const int getType()const{return Material_model;}
   //THERMAL
-  double k_T, cp_T; ///MAYBE MOVE TO element or nodes
+
   virtual std::vector<double> getPlasticConstants(){
     return std::vector<double>(); // Return empty vector    
   }
@@ -92,8 +92,8 @@ class Material_{
   Plastic_ *m_plastic;
 	double E_m, nu;	//TODO, move to elastic class
   bool m_isplastic = false;
-  
-  
+  double k_T, cp_T; ///MAYBE MOVE TO element or nodes
+  bool thermalCoupling = false;
 
 };
 

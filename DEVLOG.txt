@@ -152,3 +152,4 @@
          - Fixed BC Dialog.
 20251126 - Fixed Material Dialog (was crashing).
          - Fixed Do not Write Symm as BC (only as config) in export input solver file.
+         - Added Thermal Coupling to material

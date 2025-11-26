@@ -26,6 +26,7 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
         hollomon_K = 0.0;
         hollomon_n = 0.0;
         // etc...
+        
         return;
     }
     
@@ -33,6 +34,11 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
     m_density_const = mat->getDensityConstant();
     m_elastic_const = mat->Elastic().E();
     m_poisson_const =  mat->Elastic().nu();
+
+    m_thermal_coupling_flag= mat->thermalCoupling;
+    m_cp_T= mat->cp_T;
+    m_k_T = mat->k_T;   
+
         
     if (mat->isPlastic()) {
         m_pl = mat->getPlastic()->clone(); // su propio clon (virtual)
@@ -109,6 +115,19 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
   ImGui::InputDouble("Poisson Mod", &m_poisson_const, 0.0f, 1.0f, "%.2e");  
 
   const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh"};
+
+  ImGui::Checkbox("Thermal Coupling", &m_thermal_coupling_flag);
+
+  if (m_thermal_coupling_flag) {
+      ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
+      ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
+  } else {
+      // Opcional: mostrar los campos como grises
+      ImGui::BeginDisabled();
+      ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
+      ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
+      ImGui::EndDisabled();
+  }
 
 
   if (ImGui::CollapsingHeader("Plastic"/*, flags*/)){
@@ -193,6 +212,10 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
         mat->elastic_m = Elastic_(m_elastic_const,m_poisson_const);
         //mat->E = m_elastic_const;
         //mat->nu = m_poisson_const;
+
+        mat->thermalCoupling = m_thermal_coupling_flag;
+        mat->cp_T = m_cp_T;
+        mat->k_T = m_k_T;
 
         if (m_selected_model != 0) {
             // Liberar el modelo previo

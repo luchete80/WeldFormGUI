@@ -1,0 +1,40 @@
+1️⃣ charcoal → fondo (ya está usado como bg)
+
+Ideal para contenido técnico
+Contraste perfecto con texto blanco
+Look moderno y consistente
+
+2️⃣ white (text) → texto principal
+Legible sobre charcoal
+Lo usás bien en tus textos hablados y títulos
+
+3️⃣ navy → títulos
+Profesional
+Serio (ingeniería)
+Evita el “circo” de usar colores demasiado saturados en títulos
+Perfecto para títulos y subtítulos estáticos
+(ya está así en add_title)
+
+4️⃣ teal → acentos positivos
+Útil cuando querés resaltar algo importante sin ser agresivo
+Bueno para:
+flechas
+curvas
+remarcar un key term
+highlight suave en ecuaciones
+
+5️⃣ purple → acentos técnicos o matemáticos
+Muy bueno para resaltar variables matemáticas, vectores, matrices
+Da “código/álgebra” vibes
+Útil para:
+iluminar ∇N o componentes del Jacobiano
+borde de matrices
+shape functions
+
+6️⃣ amber → alertas / diferencias / contraste fuerte
+
+Útil cuando querés un “Pop”:
+shear vs scaling
+highlight fuerte al modificar J12 / J21
+cuando una parte del elemento “se deforma”
+Ideal para animaciones técnicas donde querés que el ojo vaya rápido a la zona afectada
