@@ -1331,6 +1331,7 @@ void Editor::drawGui() {
               
             }
             else if (ImGui::Button("Create GEO")){
+              cout << "Creatng geom"<<endl;
               vtkOCCTGeom *geom = new vtkOCCTGeom;
               cout <<"Created OCCvtK: "<<geom<<endl;
               int pc = m_model->getPartCount();

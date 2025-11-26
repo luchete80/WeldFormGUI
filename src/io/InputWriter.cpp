@@ -86,7 +86,7 @@ void InputWriter::writeToFile(std::string fname){
   cout << "Saving model/s"<<endl;
   
   m_json["Configuration"]["cflFactor"] = 0.3;
-  m_json["Configuration"]["fixedTS"] = true;
+  m_json["Configuration"]["fixedTS"] = false;
   m_json["Configuration"]["solver"]    = "WeldForm";
 
   m_json["Configuration"]["simTime"] = 1.0;
@@ -275,11 +275,11 @@ void InputWriter::writeToFile(std::string fname){
                 m_json["Configuration"]["ySymm"] = ySymm;
                 m_json["Configuration"]["zSymm"] = zSymm;
 
+            } else {
+
+              // Agregar al array principal
+              m_json["BoundaryConditions"].push_back(jbc);
             }
-
-            // Agregar al array principal
-            m_json["BoundaryConditions"].push_back(jbc);
-
             std::cout << "  → BC[" << i << "]: "
                       << typeStr << " | ApplyTo=" << applyToStr
                       << " | TargetID=" << bc->getTargetId()

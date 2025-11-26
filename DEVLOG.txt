@@ -150,3 +150,5 @@
          - Fixed Input, fixed filename, added time and out_time
 20251125 - Fixed Symmetry BCs. 
          - Fixed BC Dialog.
+20251126 - Fixed Material Dialog (was crashing).
+         - Fixed Do not Write Symm as BC (only as config) in export input solver file.
