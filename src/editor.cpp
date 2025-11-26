@@ -272,7 +272,7 @@ void ShowExampleMenuFile(const Editor &editor)
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".json", ".");
     }
     if (ImGui::MenuItem("Import", "Ctrl+I")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".json,.vtk", ".");
@@ -960,7 +960,7 @@ void Editor::drawGui() {
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {
             m_show_mat_dlg = true;
-            
+            selected_mat = nullptr;
           }
           ImGui::EndPopup();
         }
@@ -1616,7 +1616,23 @@ void Editor::drawGui() {
 
 
       vtkOCCTGeom *geom = new vtkOCCTGeom;
-      geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
+
+      vtkOCCTReader::Format fmt;
+
+      std::string ext = filePathName.substr(filePathName.find_last_of('.') + 1);
+      for(auto & c : ext) c = toupper(c);
+
+      if(ext == "STEP" || ext == "STP")
+          fmt = vtkOCCTReader::Format::STEP;
+      else if(ext == "IGES" || ext == "IGS")
+          fmt = vtkOCCTReader::Format::IGES;
+      else {
+          std::cerr << "Unsupported geometry format: " << ext << std::endl;
+          fmt = vtkOCCTReader::Format::STEP; // fallback
+      }
+
+      geom->TestReader(filePathName, fmt);
+      //geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
       
       //m_model->addPart(geo);
       

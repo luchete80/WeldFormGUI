@@ -11,6 +11,25 @@ using namespace std;
 
 void MaterialDialog::InitFromMaterial(Material_* mat) {
 
+
+    if (!mat) {
+        // Valores por defecto para creación
+        m_density_const = 1.0;          // elige un valor razonable
+        m_elastic_const = 2.1e11;      // ejemplo
+        m_poisson_const = 0.3;
+        m_pl = nullptr;
+        m_selected_model = 0;
+        m_pl_const.clear();
+        // inicializa variables específicas
+        bilinear_sy0 = 0.0;
+        bilinear_Et = 0.0;
+        hollomon_K = 0.0;
+        hollomon_n = 0.0;
+        // etc...
+        return;
+    }
+    
+    else {
     m_density_const = mat->getDensityConstant();
     m_elastic_const = mat->Elastic().E();
     m_poisson_const =  mat->Elastic().nu();
@@ -53,6 +72,8 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
         m_pl = nullptr;
         m_selected_model = 0;
     }
+    
+  }
 }
 
 void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Material_Db *mat_db){
@@ -67,6 +88,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
   if (!m_initiated){
     InitFromMaterial(mat);
     item_current = m_selected_model;
+    if (mat != nullptr)
     if (mat->isPlastic()){
       open_plastic = true;
       flags |= ImGuiTreeNodeFlags_DefaultOpen;
@@ -216,7 +238,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
         } else {
             cout << "Set material to elastic."<<endl;
-            delete mat->m_plastic;
+            if (mat->m_plastic)
+              delete mat->m_plastic;
             mat->m_plastic = nullptr;
             mat->m_isplastic = false;
         }
@@ -241,7 +264,9 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
   // ImGui::Begin("test", p_open);
   // ImGui::End();
   
-  matdlg->Draw("Material", p_open);
+  //matdlg->Draw("Material", p_open);
+  
+  matdlg->Draw("Material", p_open, nullptr, mat_db);
   
   if (matdlg->isMaterialCreated()){
     *create =true;

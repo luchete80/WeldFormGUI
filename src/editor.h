@@ -250,7 +250,7 @@ protected:
   
   Model *m_model;
   bool is_model;
-  Material_ *selected_mat;
+  Material_ *selected_mat = nullptr;
   Part      *selected_prt;
   Model     *selected_mod;
   BoundaryCondition *selected_bc = nullptr;
