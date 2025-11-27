@@ -28,6 +28,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
 
         if (bcType == 2) {
             double3 n = bc->getNormal();
+            cout << "Normal"<<n.x<<","<<n.y<<","<<n.z<<endl;
             if (n.x==0 && n.y==0 && n.z==1) symPreset = 0;
             else if (n.x==1 && n.y==0 && n.z==0) symPreset = 1;
             else if (n.x==0 && n.y==1 && n.z==0) symPreset = 2;
