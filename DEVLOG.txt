@@ -153,3 +153,5 @@
 20251126 - Fixed Material Dialog (was crashing).
          - Fixed Do not Write Symm as BC (only as config) in export input solver file.
          - Added Thermal Coupling to material
+20251127 - Fixed Critical Issue in primitive geometry creation (was reading an unexisting file instead of creating new)
+        - Fixed critical shortcut interferring with rename or some action involving keys.

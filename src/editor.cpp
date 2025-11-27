@@ -1338,7 +1338,9 @@ void Editor::drawGui() {
               int pc = m_model->getPartCount();
               
               std::string name = m_model->getName()+"_part_" + std::to_string(pc) + ".step";
-              Geom *geo = new Geom(name);
+              //Geom *geo = new Geom(name);
+              Geom *geo = new Geom;
+              geo->setFileName(name);
               //cout << "Creating rectangle"<<endl;
               bool created = false;
               cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
@@ -1405,15 +1407,15 @@ void Editor::drawGui() {
               //geom->actor->GetProperty()->SetColor(1.0, 0.0, 0.0); // rojo para que resalte
                                           
                     
-
-              //geo->ExportSTEP();
+              
+              geo->ExportSTEP();
               
               m_model->addPart(geo);
 
               //m_model->getPart(m_model->getPartCount())->setId(max_pid);
               create_new_part = true;
               
-                      Part* newPart = m_model->getPart(m_model->getPartCount() - 1);
+              Part* newPart = m_model->getPart(m_model->getPartCount() - 1);
         
         
         
@@ -1944,6 +1946,7 @@ static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, 
     editor->Key(key, scancode, action, mods);
 
     if (action == GLFW_PRESS) {
+      //TODO: CHECK IF NO ACTIVE CRITIC DIALOG IS OPEN
         switch(key) {
             case GLFW_KEY_A:
                 std::cout << "Pressed A VIA KEY CALLBACK" << std::endl;
