@@ -272,7 +272,7 @@ void InputWriter::writeToFile(std::string fname){
 
             if (bc->getType() == SymmetryBC) {
                 double3 n = bc->getNormal();
-
+                cout << "BC NORMAL"<<n.x<<", "<<n.y<<", "<<n.z<<endl;
                 if (std::fabs(n.x) > 0.5) xSymm = true;
                 if (std::fabs(n.y) > 0.5) ySymm = true;
                 if (std::fabs(n.z) > 0.5) zSymm = true;
