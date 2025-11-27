@@ -253,7 +253,7 @@ protected:
   Material_ *selected_mat = nullptr;
   Part      *selected_prt;
   Model     *selected_mod;
-  BoundaryCondition *selected_bc = nullptr;
+  Condition *selected_bc = nullptr;
   
   bool m_show_mov_part = false;
     

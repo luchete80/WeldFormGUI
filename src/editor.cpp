@@ -46,7 +46,8 @@
 
 #include "App.h"
 
-
+#include "Condition.h"
+#include "BoundaryCondition.h"
 
 #include "graphics/TransformGizmo.h"
 

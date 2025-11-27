@@ -2,7 +2,7 @@
 #define _BC_DIALOG_H_
 
 
-#include "BoundaryCondition.h"
+#include "Condition.h"
 #include "Dialog.h"
 #include "double3.h"
 
@@ -34,7 +34,7 @@ public Dialog
   //bool initialized = false;    
       
   const bool & isBCCreated()const{return create_bc;}
-  void   Draw(const char* title, bool* p_open, Model* model, BoundaryCondition **sel_bc);  
+  void   Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc);  
 };
 
 

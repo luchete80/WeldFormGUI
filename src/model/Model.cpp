@@ -9,6 +9,7 @@
 #include "gmsh.h"
 #include "ModelWriter.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 
 
 //#include <gmsh.h>

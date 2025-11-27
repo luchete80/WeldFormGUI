@@ -266,7 +266,7 @@ void InputWriter::writeToFile(std::string fname){
             jbc["zoneId"] = bc->getTargetId();
 
             // Valor (vector 3D)
-            double3 v = bc->getVelocity();
+            double3 v = bc->getValue();
             jbc["value"] = {v.x, v.y, v.z};
 
 

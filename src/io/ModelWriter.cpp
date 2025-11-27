@@ -286,7 +286,7 @@ void ModelWriter::writeToFile(std::string fname){
           jbc["targetId"] = bc->getTargetId();
 
           // Valor (velocidad o desplazamiento)
-          double3 v = bc->getVelocity();
+          double3 v = bc->getValue();
           jbc["value"] = {v.x, v.y, v.z};
 
           // Agregar al array

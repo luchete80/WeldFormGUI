@@ -1,6 +1,7 @@
 #include "bc_dialog.h"
 #include <iostream>
 #include "Model.h"
+#include "BoundaryCondition.h"
 #include "Part.h"
 
 #include "imgui.h"
@@ -9,7 +10,7 @@
 
 
 //// IS DOUBLE ONLY TO MODIDY PTR.
-void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondition **sel_bc) {
+void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc) {
 
     bool m_isSymmetry = false;
     
@@ -18,10 +19,10 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
     
     if (!initialized) {
         if (!create && *sel_bc) {
-          BoundaryCondition* bc = *sel_bc;  // ✔ obtener BC real
+          Condition* bc = *sel_bc;  // ✔ obtener BC real
             m_applyTo = (bc->getApplyTo() == ApplyToPart) ? 0 : 1;
             m_targetId = bc->getTargetId();
-            m_vel = bc->getVelocity();
+            m_vel = bc->getValue();
             m_normal = bc->getNormal();
             bcType = (bc->getType() == SymmetryBC ? 2 : 0);
 
@@ -160,14 +161,14 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, BoundaryCondi
             model->addBoundaryCondition(bc);
         }
         else {
-            BoundaryCondition* bc = *sel_bc;      // ✔ puntero real
+            Condition* bc = *sel_bc;      // ✔ puntero real
             
             bc->setApplyTo(target);
             bc->setTargetId(m_targetId);
 
             if (bcType == 0) {
                 bc->setType(VelocityBC);
-                bc->setVelocity(m_vel);
+                bc->setValue(m_vel);
             } else {
                 bc->setType(SymmetryBC);
                 bc->setNormal(m_normal);

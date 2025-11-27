@@ -16,6 +16,7 @@ class Mesh;
 class Particle;
 class Geom;
 class BoundaryCondition;
+class InitialCondition;
 class Vec3_t;
 class Editor;
 class LSDynaWriter;
@@ -106,6 +107,7 @@ protected:
   std::map <std::pair<int,int>, int> m_linemap;
   std::vector <Particle*>   Particles; //SPH
   std::vector <BoundaryCondition*> m_bc;
+  std::vector <InitialCondition*>  m_ic;
   
   model_type m_modeltype;
   

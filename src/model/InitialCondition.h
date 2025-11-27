@@ -12,25 +12,28 @@
 // };
 
 
+
+
 #include <string>
 //#include "double3.h"
 
-enum class InitialConditionType {
+enum class ICType {
     Temperature,
     Velocity,
     CustomFunction
 };
 
-class InitialCondition {
+class InitialCondition:public Condition {
 public:
-    InitialConditionType type;
+    ICType type;
 
-    InitialCondition(InitialConditionType t) : type(t) {}
+    InitialCondition(ICType t) : type(t) {}
     virtual ~InitialCondition() {}
 
     // Devuelve un valor genérico: vector de 3 componentes
     // Para temperatura se usa solo val[0]
-    virtual std::array<double,3> getValue(double x, double y, double z, double t=0.0) const = 0;
+    //double3 getValue(double x, double y, double z, double t=0.0) const = 0{}
+    double3 getValue(){}
 };
 
 #endif
