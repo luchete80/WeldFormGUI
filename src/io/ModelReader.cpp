@@ -78,6 +78,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
         
         if (conf.contains("thermal"))
           m_model->m_thermal_coupling = true;
+        else
+          m_model->m_thermal_coupling = false;
     }
 
     // =============================================================

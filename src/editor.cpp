@@ -1011,6 +1011,50 @@ void Editor::drawGui() {
            // your tree code stuff
            ImGui::TreePop();
         }
+
+        //-----------------------------------------------------
+        open_ = ImGui::TreeNode("Initial Conditions");
+        if (ImGui::BeginPopupContextItem())
+        {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+            ImGui::EndPopup();
+            //m_show_bc_dlg_edit = true;
+        }
+        if (open_)
+        {
+
+          for (int i = 0; i < m_model->getBCCount(); i++)
+          //for (int i = 0; i < m_model->getMaterialCount(); i++)
+          {
+            // Use SetNextItemOpen() so set the default state of a node to be open. We could
+            // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+            if (i == 0)
+              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+            if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
+            {
+              if (ImGui::BeginPopupContextItem())
+              {
+                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                  //m_show_bc_dlg_edit = true;
+                  //selected_mat = m_mats[i];
+                  //selected_bc = m_model->getBC(i);
+                }
+                ImGui::EndPopup();
+              }                    
+                ImGui::SameLine();
+                if (ImGui::SmallButton("button")) {}
+                ImGui::TreePop();
+            }//TreeNode
+          }
+
+           // your tree code stuff
+           ImGui::TreePop();
+        }
+
+
+        //-----------------------------------------------------
+
         //-----------------------------------------------------
         open_ = ImGui::TreeNode("Boundary Conditions");
         if (ImGui::BeginPopupContextItem())
@@ -1947,14 +1991,14 @@ static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, 
 
     if (action == GLFW_PRESS) {
       //TODO: CHECK IF NO ACTIVE CRITIC DIALOG IS OPEN
-        switch(key) {
-            case GLFW_KEY_A:
-                std::cout << "Pressed A VIA KEY CALLBACK" << std::endl;
-                break;
-            case GLFW_KEY_O:
-                std::cout << "Pressed O, opening file" << std::endl;
-                break;
-        }
+        //~ switch(key) {
+            //~ case GLFW_KEY_A:
+                //~ std::cout << "Pressed A VIA KEY CALLBACK" << std::endl;
+                //~ break;
+            //~ case GLFW_KEY_O:
+                //~ std::cout << "Pressed O, opening file" << std::endl;
+                //~ break;
+        //~ }
     }
     
 }
@@ -2564,28 +2608,28 @@ void Editor::processInput(GLFWwindow *window)
     // if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         // glfwSetWindowShouldClose(window, true);
       
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-      cout << "Pressed A"<<endl;
+    //~ if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+      //~ cout << "Pressed A"<<endl;
     
-    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
+    //~ if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
       
-      cout << "Opening file "<<endl;
+      //~ cout << "Opening file "<<endl;
       
-      std::string filename = "out_0.000010.vtk";
-      ResultFrame *frame = new ResultFrame(filename);
-      frame->setActiveScalarField("DISP");      
-      viewer->addActor(frame->actor);
-    }
+      //~ std::string filename = "out_0.000010.vtk";
+      //~ ResultFrame *frame = new ResultFrame(filename);
+      //~ frame->setActiveScalarField("DISP");      
+      //~ viewer->addActor(frame->actor);
+    //~ }
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-      box_select_mode = !box_select_mode;
-      cout << "Pressed S"<<endl;
-      cout << "Box Select Mode ";
-      if (box_select_mode ) cout << "ON "<<endl;
-      else                  cout << "OFF "<<endl;
+    //~ if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+      //~ box_select_mode = !box_select_mode;
+      //~ cout << "Pressed S"<<endl;
+      //~ cout << "Box Select Mode ";
+      //~ if (box_select_mode ) cout << "ON "<<endl;
+      //~ else                  cout << "OFF "<<endl;
 
       
-    }
+    //~ }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
       rotatecam = true;

@@ -19,6 +19,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
       else if (model->getAnalysisType() == Axisymmetric2D)
         m_antype = Axisymmetric2D;
         
+      m_thermal_coupling_flag = model->m_thermal_coupling;
+        
       cout << "Not initialized "<<endl;
   }
     
