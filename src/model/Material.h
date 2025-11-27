@@ -92,8 +92,8 @@ class Material_{
   Plastic_ *m_plastic;
 	double E_m, nu;	//TODO, move to elastic class
   bool m_isplastic = false;
-  double k_T, cp_T; ///MAYBE MOVE TO element or nodes
-  bool thermalCoupling = false;
+  double k_T  = 0.0;
+  double cp_T = 0.0; ///MAYBE MOVE TO element or nodes
 
 };
 

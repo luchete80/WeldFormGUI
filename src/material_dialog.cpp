@@ -35,7 +35,6 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
     m_elastic_const = mat->Elastic().E();
     m_poisson_const =  mat->Elastic().nu();
 
-    m_thermal_coupling_flag= mat->thermalCoupling;
     m_cp_T= mat->cp_T;
     m_k_T = mat->k_T;   
 
@@ -116,18 +115,12 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
   const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh"};
 
-  ImGui::Checkbox("Thermal Coupling", &m_thermal_coupling_flag);
+  // Opcional: mostrar los campos como grises
+  ImGui::BeginDisabled();
+  ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
+  ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
+  ImGui::EndDisabled();
 
-  if (m_thermal_coupling_flag) {
-      ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
-      ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
-  } else {
-      // Opcional: mostrar los campos como grises
-      ImGui::BeginDisabled();
-      ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
-      ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
-      ImGui::EndDisabled();
-  }
 
 
   if (ImGui::CollapsingHeader("Plastic"/*, flags*/)){
@@ -213,7 +206,6 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
         //mat->E = m_elastic_const;
         //mat->nu = m_poisson_const;
 
-        mat->thermalCoupling = m_thermal_coupling_flag;
         mat->cp_T = m_cp_T;
         mat->k_T = m_k_T;
 

@@ -92,6 +92,7 @@ public:
         }
         return -1; // error
     }
+  bool m_thermal_coupling = false;
 
 protected:
   std::vector <Part*>        m_part;

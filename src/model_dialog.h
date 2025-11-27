@@ -18,6 +18,9 @@ struct ModelDialog{
   
   bool cancel_action;
   bool create_part;
+
+
+  bool m_thermal_coupling_flag = false;
   
   const bool & isModelCreated()const{return create_part;}
   void   Draw(const char* title, bool* p_open = NULL, Model* prt = NULL);  

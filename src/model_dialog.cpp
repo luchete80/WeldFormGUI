@@ -33,12 +33,16 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
 
   //~ ImGui::InputInt("Id ", &m_id, 1,10);  
 
+  ImGui::Checkbox("Thermal Coupling", &m_thermal_coupling_flag);
+  
   if (ImGui::RadioButton("Solid 3D", m_antype == Solid3D)) {
       m_antype = Solid3D;
   }
   if (ImGui::RadioButton("AxiSymm 2D", m_antype == Axisymmetric2D)) {
       m_antype = Axisymmetric2D;
   }
+
+
 
 
   
@@ -51,6 +55,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
     //cout << "m_id"<<m_id<<endl;
     m_initialized = false;  // reset para la próxima vez
     model->setAnalysisType(m_antype);
+    if (m_thermal_coupling_flag)
+      model->m_thermal_coupling = true;
     
     //part->setType(part_type);
     *p_open = false;

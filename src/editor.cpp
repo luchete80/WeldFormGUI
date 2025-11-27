@@ -594,6 +594,7 @@ void Editor::drawGui() {
     if (m_model->getAnalysisType() == PlaneStress2D) des = "2D PS";
     else if (m_model->getAnalysisType() == PlaneStrain2D) des = "2D PE";
     else if (m_model->getAnalysisType() == Axisymmetric2D) des = "2D AX";
+    if (m_model->m_thermal_coupling) des += "-Thermal";
    
  
     if (ImGui::TreeNode((void*)"Model %s",des.c_str()))

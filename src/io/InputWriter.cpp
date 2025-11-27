@@ -92,6 +92,9 @@ void InputWriter::writeToFile(std::string fname){
   m_json["Configuration"]["simTime"] = 1.0;
   m_json["Configuration"]["outTime"] =  1.0e-4;
   
+  if (m_model->m_thermal_coupling)
+    m_json["Configuration"]["thermal"] = true;
+  
   
   nlohmann::json cont;
   cont["fricCoeffStatic"] =  0.3;
@@ -128,6 +131,9 @@ void InputWriter::writeToFile(std::string fname){
           mat_json["density0"]      = mat->getDensityConstant();
           mat_json["poissonsRatio"] = mat->Elastic().nu();
           mat_json["youngsModulus"] = mat->Elastic().E();
+          
+          mat_json["thermalHeatCap"] = mat->k_T;
+          mat_json["thermalCond"]    = mat->cp_T;
 
           // Tipo de material
           if (!mat->isPlastic()) {

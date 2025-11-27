@@ -31,7 +31,6 @@ public Dialog{
 
   double hollomon_K;
   double hollomon_n;
-  bool m_thermal_coupling_flag;
   double m_k_T, m_cp_T;
 
   double gmt_n1, gmt_n2, gmt_m1, gmt_m2, gmt_I1, gmt_I2;
