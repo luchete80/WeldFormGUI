@@ -26,6 +26,8 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
         hollomon_K = 0.0;
         hollomon_n = 0.0;
         // etc...
+        m_k_T = 0.0;
+        m_cp_T = 0.0;
         
         return;
     }
@@ -116,10 +118,10 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
   const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh"};
 
   // Opcional: mostrar los campos como grises
-  ImGui::BeginDisabled();
+  //ImGui::BeginDisabled();
   ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
   ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
-  ImGui::EndDisabled();
+  //ImGui::EndDisabled();
 
 
 
