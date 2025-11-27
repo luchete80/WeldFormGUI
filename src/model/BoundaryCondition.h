@@ -49,11 +49,11 @@ public:
     virtual ~BoundaryCondition(){}
 
 private:
-    BCType m_type;
+    // BCType m_type;
 
-    int m_targetId;     // ID de parte o de zona/nodo
-    double3 m_velocity;
-    double3 m_normal;     // usado en Symmetry
+    // int m_targetId;     // ID de parte o de zona/nodo
+    // double3 m_velocity;
+    // double3 m_normal;     // usado en Symmetry
 };
 
 #endif
