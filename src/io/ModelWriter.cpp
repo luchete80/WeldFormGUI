@@ -93,6 +93,9 @@ void ModelWriter::writeToFile(std::string fname){
   m_json["Configuration"]["modelType"] = "SPH";
   m_json["Configuration"]["solver"]    = "WeldForm";
   
+  if (m_model.m_thermal_coupling)
+    m_json["Configuration"]["thermal"] = true; 
+  
   //SHOULD BE AT SPH
   //m_json["Configuration"]["hFactor"] = 1.2;
   m_json["Configuration"]["SPH"]["hFactor"] = 1.2;

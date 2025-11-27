@@ -57,6 +57,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
     model->setAnalysisType(m_antype);
     if (m_thermal_coupling_flag)
       model->m_thermal_coupling = true;
+    else
+      model->m_thermal_coupling = false;
     
     //part->setType(part_type);
     *p_open = false;

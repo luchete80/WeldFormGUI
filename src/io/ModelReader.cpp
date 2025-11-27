@@ -75,6 +75,9 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
         if (conf.contains("SPH") && conf["SPH"].contains("hFactor"))
             cout << "  SPH hFactor: " << conf["SPH"]["hFactor"].get<double>() << endl;
+        
+        if (conf.contains("thermal"))
+          m_model->m_thermal_coupling = true;
     }
 
     // =============================================================
