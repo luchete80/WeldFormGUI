@@ -172,17 +172,6 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     std::string butleg = create ? "Create" : "OK";
     if (ImGui::Button(butleg.c_str())) {
 
-      Condition* cond = *sel_bc;      // ✔ puntero real
-        if (cond->kind == ConditionKind::Boundary) {
-            BCType t = cond->getType();
-            cout << "Creating Boundary Condition"<<endl;
-        }
-        else if (cond->kind == ConditionKind::Initial) {
-            auto ic = static_cast<InitialCondition*>(cond);
-            BCType t = ic->getType();
-            cout << "Creating Initial Condition"<<endl;
-        }
-
 
         BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodes;
         BoundaryCondition *bc = nullptr;
