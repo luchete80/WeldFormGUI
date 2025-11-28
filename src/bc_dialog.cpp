@@ -175,14 +175,21 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
 
         BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodes;
         BoundaryCondition *bc = nullptr;
+        InitialCondition  *ic = nullptr;
 
         if (create) {
+          if (isBoundary){
             if (bcType == 0)
                 bc = new BoundaryCondition(VelocityBC, target, m_targetId, m_vel);
             else
                 bc = new BoundaryCondition(SymmetryBC, target, m_targetId, m_normal);
 
             model->addBoundaryCondition(bc);
+          } else if (isInitial){
+            ic = new InitialCondition(VelocityBC, target, m_targetId, m_vel);
+          
+          }
+          model->addInitialCondition(ic);
         }
         else {
             Condition* bc = *sel_bc;      // ✔ puntero real

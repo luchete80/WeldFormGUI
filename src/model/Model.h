@@ -79,6 +79,9 @@ public:
   string getName(){return m_name;}
   string getPrevName(){return m_prev_name;}
   void addBoundaryCondition(BoundaryCondition *make_double2bc);
+  void addInitialCondition(InitialCondition *bc){m_ic.push_back(bc);}
+
+
   int part_count;
   void delPart(const int &p){m_part.erase(m_part.begin()+p);};
 
