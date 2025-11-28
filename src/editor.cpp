@@ -1026,7 +1026,7 @@ void Editor::drawGui() {
         if (open_)
         {
 
-          for (int i = 0; i < m_model->getBCCount(); i++)
+          for (int i = 0; i < m_model->getICCount(); i++)
           //for (int i = 0; i < m_model->getMaterialCount(); i++)
           {
             // Use SetNextItemOpen() so set the default state of a node to be open. We could

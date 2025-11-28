@@ -68,6 +68,9 @@ public:
 
   int getBCCount(){return m_bc.size();}
   BoundaryCondition* getBC(const int &i){return m_bc[i];}
+
+  int getICCount(){return m_ic.size();}
+  InitialCondition* getIC(const int &i){return m_ic[i];}
     
   bool & getHasName(){return m_hasname;}
   virtual ~Model(){}
