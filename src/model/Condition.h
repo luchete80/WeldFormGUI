@@ -10,28 +10,30 @@ enum BCApplyTo {
     ApplyToNodes
 };
 
+//~ enum BCType {
+    //~ VelocityBC,
+    //~ DisplacementBC,
+    //~ SymmetryBC,
+    //~ TempBC
+//~ };
+
+//~ enum class ICType {
+    //~ Temperature,
+    //~ Velocity,
+    //~ CustomFunction
+//~ };
+
+
 enum BCType {
     VelocityBC,
     DisplacementBC,
     SymmetryBC,
-    TempBC
-};
-
-enum class ICType {
-    Temperature,
-    Velocity,
-    CustomFunction
-};
-
-
-enum class CType {
-    BoundaryVelocity,
-    BoundaryDisplacement,
-    BoundarySymmetry,
-    BoundaryTemp,
-    InitialVelocity,
-    InitialTemperature,
-    InitialCustom
+    TempBC,
+    VelocityIC,
+    DisplacementIC,
+    TempIC
+    
+    // FUNCTIONS AND SOME OTHERS
 };
 
 

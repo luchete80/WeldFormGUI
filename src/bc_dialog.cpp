@@ -20,10 +20,16 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         isBoundary = ((*sel_bc)->kind == ConditionKind::Boundary);
         isInitial  = ((*sel_bc)->kind == ConditionKind::Initial);
     } else {
-    //isBoundary = creatingBoundary;
-    //isInitial  = creatingInitial;     
-      
-    }
+      if (mode == DialogMode::NewBoundary) {
+          isBoundary = true;
+      } else if (mode == DialogMode::NewInitial) {
+          isInitial = true;
+      } else {
+          // Auto + sel_bc==nullptr = ERROR
+          // Podés decidir default boundary
+          isBoundary = true;
+      }
+    }    
 
     bool m_isSymmetry = false;
     
@@ -64,9 +70,12 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     ImGui::Text("Boundary Condition Type:");
     ImGui::RadioButton("Velocity", &bcType, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Symmetry", &bcType, 2);
+    ImGui::RadioButton("Temperature", &bcType, 1);
+    if (isBoundary)
+      ImGui::RadioButton("Symmetry", &bcType, 2);
+    
     ImGui::Separator();
-
+            
     // --- Apply To ---
     ImGui::Text("Apply to:");
     ImGui::RadioButton("Part", &m_applyTo, 0);
@@ -170,7 +179,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         }
         else if (cond->kind == ConditionKind::Initial) {
             auto ic = static_cast<InitialCondition*>(cond);
-            ICType t = ic->type;
+            BCType t = ic->getType();
             cout << "Creating Initial Condition"<<endl;
         }
 

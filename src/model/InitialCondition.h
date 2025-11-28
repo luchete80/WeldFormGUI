@@ -19,19 +19,22 @@
 
 class InitialCondition:public Condition {
 public:
-    ICType type;
 
-    InitialCondition(ICType t) : type(t) {}
+    InitialCondition(BCType t, BCApplyTo a, int id, double3 vel)
+        : Condition(ConditionKind::Initial, a, id)
+    {
+        m_type = t;
+        m_velocity = vel;
+        m_normal = vel;
+    }
+
+
     virtual ~InitialCondition() {}
 
     std::string getName() const override {
         return "InitialCondition";
     }
-    
-    // Devuelve un valor genérico: vector de 3 componentes
-    // Para temperatura se usa solo val[0]
-    //double3 getValue(double x, double y, double z, double t=0.0) const = 0{}
-    double3 getValue(){}
+
 };
 
 #endif
