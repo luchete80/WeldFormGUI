@@ -21,7 +21,7 @@ class BoundaryCondition:public Condition {
 public:
     //BoundaryCondition() : m_type(VelocityBC), m_applyTo(ApplyToPart), m_targetId(-1) {}
     
-    BoundaryCondition::BoundaryCondition(BCType t, BCApplyTo a, int id, double3 vel)
+    BoundaryCondition(BCType t, BCApplyTo a, int id, double3 vel)
         : Condition(ConditionKind::Boundary, a, id)
     {
         m_type = t;
