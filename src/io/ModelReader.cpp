@@ -242,6 +242,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 normal.x = jbc["normal"][0];
                 normal.y = jbc["normal"][1];
                 normal.z = jbc["normal"][2];
+
             }
 
             // --- Crear BC ---

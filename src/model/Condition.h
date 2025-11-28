@@ -23,12 +23,11 @@ class Condition {
 public:
     ConditionKind kind;
 
-    // Qué afecta (part / nodes)
-    BCApplyTo applyTo;
-    int targetId;
 
     Condition(ConditionKind k, BCApplyTo a, int id)
-        : kind(k), applyTo(a), targetId(id) {}
+        : kind(k), m_applyTo(a), m_targetId(id) {
+          
+    }
 
     Condition(){}
     virtual ~Condition() {}
