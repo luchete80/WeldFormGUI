@@ -17,6 +17,22 @@ enum BCType {
     TempBC
 };
 
+enum class ICType {
+    Temperature,
+    Velocity,
+    CustomFunction
+};
+
+
+enum class CType {
+    BoundaryVelocity,
+    BoundaryDisplacement,
+    BoundarySymmetry,
+    BoundaryTemp,
+    InitialVelocity,
+    InitialTemperature,
+    InitialCustom
+};
 
 
 class Condition {

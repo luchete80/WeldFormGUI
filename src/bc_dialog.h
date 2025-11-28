@@ -6,6 +6,12 @@
 #include "Dialog.h"
 #include "double3.h"
 
+enum class DialogMode {
+    Auto,       // usar sel_bc para decidir
+    NewBoundary,
+    NewInitial
+};
+
 class Model;
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
@@ -34,7 +40,7 @@ public Dialog
   //bool initialized = false;    
       
   const bool & isBCCreated()const{return create_bc;}
-  void   Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc);  
+  void   Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc, DialogMode mode);  
 };
 
 

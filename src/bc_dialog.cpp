@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Model.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 #include "Part.h"
 
 #include "imgui.h"
@@ -10,7 +11,19 @@
 
 
 //// IS DOUBLE ONLY TO MODIDY PTR.
-void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc) {
+void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc,  DialogMode mode) {
+
+    bool isBoundary = false;
+    bool isInitial = false;
+
+    if (*sel_bc != nullptr) {
+        isBoundary = ((*sel_bc)->kind == ConditionKind::Boundary);
+        isInitial  = ((*sel_bc)->kind == ConditionKind::Initial);
+    } else {
+    //isBoundary = creatingBoundary;
+    //isInitial  = creatingInitial;     
+      
+    }
 
     bool m_isSymmetry = false;
     
@@ -149,6 +162,18 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     // --- BOTÓN OK / CREATE ---
     std::string butleg = create ? "Create" : "OK";
     if (ImGui::Button(butleg.c_str())) {
+
+      Condition* cond = *sel_bc;      // ✔ puntero real
+        if (cond->kind == ConditionKind::Boundary) {
+            BCType t = cond->getType();
+            cout << "Creating Boundary Condition"<<endl;
+        }
+        else if (cond->kind == ConditionKind::Initial) {
+            auto ic = static_cast<InitialCondition*>(cond);
+            ICType t = ic->type;
+            cout << "Creating Initial Condition"<<endl;
+        }
+
 
         BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodes;
         BoundaryCondition *bc = nullptr;

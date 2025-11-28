@@ -254,6 +254,7 @@ protected:
   Part      *selected_prt;
   Model     *selected_mod;
   Condition *selected_bc = nullptr;
+  int       m_create_bc;  //boundary or initial condition
   
   bool m_show_mov_part = false;
     

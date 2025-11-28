@@ -1019,6 +1019,8 @@ void Editor::drawGui() {
         {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
             ImGui::EndPopup();
+            m_create_bc = 2;
+            m_show_bc_dlg_edit = true;
             //m_show_bc_dlg_edit = true;
         }
         if (open_)
@@ -1037,7 +1039,9 @@ void Editor::drawGui() {
               if (ImGui::BeginPopupContextItem())
               {
                 if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+            
                   //m_show_bc_dlg_edit = true;
+
                   //selected_mat = m_mats[i];
                   //selected_bc = m_model->getBC(i);
                 }
@@ -1063,6 +1067,7 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New", "CTRL+Z")) {}
             ImGui::EndPopup();
             m_show_bc_dlg_edit = true;
+            m_create_bc = 1;
         }
         if (open_)
         {
@@ -1088,6 +1093,7 @@ void Editor::drawGui() {
                   m_show_bc_dlg_edit = true;
                   //selected_mat = m_mats[i];
                   selected_bc = m_model->getBC(i);
+                  m_create_bc = 0;  //auto
                 }
                 ImGui::EndPopup();
               }                    
@@ -1917,7 +1923,12 @@ void Editor::drawGui() {
   if (m_show_bc_dlg_edit){
     //std::cout << "Opening BC dialog. selected_bc=" << selected_bc << std::endl;
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-    m_bcdlg.Draw("Boundary Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc);
+    if (m_create_bc == 0)
+      m_bcdlg.Draw("Edit Condition",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::Auto);//Select from existing
+    else if (m_create_bc == 1)
+      m_bcdlg.Draw("New Boundary Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewBoundary);
+    if (m_create_bc == 2) 
+      m_bcdlg.Draw("New Initial Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewInitial);    
   } else {
     //cout   
     selected_bc = nullptr; //IS ALSO MODIDIED IN DIALOG
