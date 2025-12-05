@@ -105,6 +105,10 @@ void ModelWriter::writeToFile(std::string fname){
     m_json["Materials"]["density0"]      = m_model.getMaterial(0)->getDensityConstant();  
     m_json["Materials"]["poissonsRatio"] = m_model.getMaterial(0)->Elastic().nu();  
     m_json["Materials"]["youngsModulus"] = m_model.getMaterial(0)->Elastic().E();  
+    if (m_model.m_thermal_coupling){
+      m_json["Materials"]["thermalCond"] = m_model.getMaterial(0)->k_T;  
+      m_json["Materials"]["thermalHeatCap"] = m_model.getMaterial(0)->cp_T;        
+    }
     
     cout << "Done."<<endl;
   }

@@ -117,6 +117,13 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     material->m_isplastic = true;
                 }
             }
+        
+            if (m_model->m_thermal_coupling){
+              material->k_T = mat["thermalCond"];  
+              material->cp_T = mat["thermalHeatCap"];        
+            }
+            
+                    
         }
 
         m_model->addMaterial(material);

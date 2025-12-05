@@ -52,7 +52,7 @@ public:
 
     virtual std::string getName() const {return "";}
     
-    virtual double3 getValue() const {return make_double3(0,0,0);}
+    virtual double3 getValue() const {return m_velocity;}
     //virtual std::array<double,3> 
     //virtual double3 getValue(double x, double y, double z, double t=0.0) const = 0;
 
