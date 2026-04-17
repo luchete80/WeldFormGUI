@@ -37,6 +37,7 @@ class ResultFrame;
 struct MultiResult {
     //std::vector<std::unique_ptr<ResultFrame>> frames;
     std::vector<std::unique_ptr<ResultFrame>> frames;
+    void setShowEdges(bool showEdges);
 };
 
 MultiResult LoadResultsFromJson(const std::string& jsonFile);
@@ -52,9 +53,11 @@ public:
     vtkSmartPointer<vtkDataSetMapper> mapper;
     vtkSmartPointer<vtkContourFilter> contourFilter;
     bool useContour;
+    bool showEdges;
     
     // Constructor moderno y seguro
     explicit ResultFrame(const std::string& name_) : name(name_) {
+        showEdges = false;
         loadVTKFile(name_);
         setupRenderingPipeline();
     }
@@ -182,6 +185,9 @@ void loadVTKFile(const std::string& filename) {
             actor->GetProperty()->SetColor(0.8, 0.8, 0.9);
         }
         actor->GetProperty()->SetOpacity(1.0);
+        actor->GetProperty()->SetRepresentationToSurface();
+        actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
+        actor->GetProperty()->EdgeVisibilityOff();
         
         useContour = false;
         std::cout << "Created basic pipeline" << std::endl;
@@ -232,7 +238,7 @@ void loadVTKFile(const std::string& filename) {
         // Configuración estándar
         actor->GetProperty()->SetColor(0.8, 0.8, 0.9);
         actor->GetProperty()->SetOpacity(1.0);
-        actor->GetProperty()->EdgeVisibilityOn();
+        actor->GetProperty()->EdgeVisibilityOff();
         actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
         
         useContour = false;
@@ -434,6 +440,22 @@ public:
             }
         }
     }
+
+    void setShowEdges(bool enabled) {
+        showEdges = enabled;
+        if (!actor || useContour) return;
+
+        actor->GetProperty()->SetRepresentationToSurface();
+        if (enabled) {
+            actor->GetProperty()->EdgeVisibilityOn();
+            actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
+        } else {
+            actor->GetProperty()->EdgeVisibilityOff();
+        }
+        actor->Modified();
+    }
+
+    bool getShowEdges() const { return showEdges; }
     
     // Información del mesh
     void printInfo() const {
@@ -444,6 +466,12 @@ public:
         }
     }
 };
+
+inline void MultiResult::setShowEdges(bool showEdges) {
+    for (auto& frame : frames) {
+        if (frame) frame->setShowEdges(showEdges);
+    }
+}
 
 // Ejemplo de uso:
 /*

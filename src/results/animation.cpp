@@ -3,6 +3,7 @@
 #include <vtkContourFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
+#include <vtkProperty.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -86,6 +87,9 @@ int main()
 
     auto actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
+    actor->GetProperty()->SetRepresentationToSurface();
+    actor->GetProperty()->EdgeVisibilityOff();
+    actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
 
     // Rendering
     auto renderer = vtkSmartPointer<vtkRenderer>::New();

@@ -423,27 +423,39 @@ int main(int argc, char* argv[])
           {
               ImGui::PushFont(font_ubu);
 
-              auto renderer = vtkViewer_res.getRenderer();
+	              auto renderer = vtkViewer_res.getRenderer();
+	              static int currentFrame = 0;
+	              static int lastFrame = -1;
+	              static double globalMin = 0.0;
+	              static double globalMax = 1.0;
+	              
+	              static bool isCellField = false;
+	                            
+	              static std::string activeFieldName = "";
 
-              // Botones de background específicos
-              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
-              
-              static int currentFrame = 0;
-              static int lastFrame = -1;
-              static double globalMin = 0.0;
-              static double globalMax = 1.0;
-              
-              static bool isCellField = false;
-                            
-              static std::string activeFieldName = "";
-                                
-              if (editor->getResults()){
+	              // Botones de background específicos
+	              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
+	              ImGui::SameLine();
+	              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
+	              ImGui::SameLine();
+	              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
+	              ImGui::SameLine();
+	              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+	              ImGui::SameLine();
+	              static bool resultsShowEdges = false;
+	              if (ImGui::Checkbox("Surface with edges", &resultsShowEdges)) {
+	                  if (editor->getResults()) {
+	                      editor->getResults()->setShowEdges(resultsShowEdges);
+	                      if (!editor->getResults()->frames.empty() &&
+	                          currentFrame >= 0 &&
+	                          currentFrame < (int)editor->getResults()->frames.size()) {
+	                          editor->getResults()->frames[currentFrame]->setShowEdges(resultsShowEdges);
+	                          vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
+	                      }
+	                  }
+	              }
+	              
+	              if (editor->getResults()){
               auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
               if (!editor->getResults()->frames.empty()) {
                   ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
