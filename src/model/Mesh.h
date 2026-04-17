@@ -31,6 +31,7 @@ public:
     m_node_count = m_elem_count = 0;
   }
   void genFromGmshModel();
+  void genFromNastranFile(const std::string& filename);
   //void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
   //                  std::vector < std::vector <int> >      elnod_h);
   //This function does not create the pointers

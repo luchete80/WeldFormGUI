@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void MeshDialog::Draw(const char* title, bool* p_open, Part *part){
+void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part){
   
   
   if (!m_initialized) {
@@ -17,9 +17,10 @@ void MeshDialog::Draw(const char* title, bool* p_open, Part *part){
       m_initialized = true;
       //m_v = part->getVel();
       
-      // Inicializar el tamaño de elemento desde la parte
-      //m_element_size = part->getElementSize(); // Asume que Part tiene este método
-      m_element_size = 0.001;
+      if (model != nullptr)
+        m_element_size = model->getElementSize();
+      else
+        m_element_size = 1.0f;
       
       if (part->getType() == Elastic)
         part_type = 0;
@@ -84,7 +85,10 @@ void MeshDialog::Draw(const char* title, bool* p_open, Part *part){
     part->setId(m_id);
     part->setVel(m_v);
     part->setType(part_type);
-    //part->setElementSize(m_element_size); // Guardar el tamaño de elemento
+    if (model != nullptr)
+      model->setElementSize(m_element_size);
+    m_apply_mesh = true;
+    m_mesh_part = part;
     
     m_initialized = false;
     *p_open = false;
@@ -92,6 +96,8 @@ void MeshDialog::Draw(const char* title, bool* p_open, Part *part){
   
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
+    m_apply_mesh = false;
+    m_mesh_part = nullptr;
     m_initialized = false;
     *p_open = false;
   }

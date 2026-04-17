@@ -41,6 +41,7 @@ public:
   Mesh & getRef(){return *m_msh;}
   void setMesh(Mesh* m);
   void generateMesh();
+  void generateMeshFromNastranFile(const std::string& filename);
   void deleteMesh();
   virtual Part_Type getType(){return m_type;}
   void setType(const int &t){

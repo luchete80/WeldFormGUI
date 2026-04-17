@@ -110,6 +110,7 @@ public:
   bool LoadSphere();
   
   void MoveNode();
+  void meshPart(Part* part);
   
   void processInput(GLFWwindow *window);
   void CursorPos(double x, double y);

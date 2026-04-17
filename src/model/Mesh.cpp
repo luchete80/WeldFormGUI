@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "Node.h"
+#include "NastranReader.h"
 
 #include <iostream>
 #include <map>
@@ -734,6 +735,51 @@ void Mesh::genFromGmshModel() {
     //~ } else if(m_dim == 3 && isStructuredMesh(elnodes)) {
         //~ organizeStructuredMesh3D();
     //~ }
+}
+
+void Mesh::genFromNastranFile(const std::string& filename) {
+    m_node.clear();
+    m_elem.clear();
+
+    std::cout << "Opening Nastran mesh " << filename << std::endl;
+    NastranReader reader(filename.c_str());
+
+    const double* nodes = reader.getNodes();
+    const int* connectivity = reader.getConnectivity();
+    const int nodeCount = reader.getNodeCount();
+    const int elemCount = reader.getElemCount();
+    const int maxNodesPerElem = reader.getMaxNodesPerElem();
+
+    for(int i = 0; i < nodeCount; ++i) {
+        m_node.push_back(new Node(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2], i));
+    }
+
+    for(int e = 0; e < elemCount; ++e) {
+        std::vector<Node*> elementNodes;
+        for(int n = 0; n < maxNodesPerElem; ++n) {
+            const int nodeIndex = connectivity[maxNodesPerElem * e + n];
+            if(nodeIndex >= 0 && nodeIndex < nodeCount) {
+                elementNodes.push_back(m_node[nodeIndex]);
+            }
+        }
+
+        if(elementNodes.size() == 2) {
+            m_elem.push_back(new Line(elementNodes));
+        } else if(elementNodes.size() == 3) {
+            m_elem.push_back(new Tria(elementNodes));
+        } else if(elementNodes.size() == 4 && reader.dim == 2) {
+            m_elem.push_back(new Quad(elementNodes));
+        } else {
+            m_elem.push_back(new Element(elementNodes));
+        }
+    }
+
+    m_dim = reader.dim;
+    m_node_count = m_node.size();
+    m_elem_count = m_elem.size();
+
+    std::cout << "Mesh created successfully from Nastran with " << m_node_count
+              << " nodes and " << m_elem_count << " elements" << std::endl;
 }
 
 //~ // Función auxiliar para verificar si la malla es estructurada

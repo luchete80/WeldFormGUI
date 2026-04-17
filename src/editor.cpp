@@ -30,6 +30,8 @@
 
 #include<iostream>
 #include <thread>
+#include <cstdlib>
+#include <filesystem>
 
 #include <gmsh.h>
 
@@ -81,6 +83,95 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     out.precision(n);
     out << std::fixed << a_value;
     return out.str();
+}
+
+void Editor::meshPart(Part* part){
+  if (part == nullptr || part->getGeom() == nullptr){
+    return;
+  }
+
+  Geom *geo = part->getGeom();
+  geo->ExportSTEP();
+  
+  gmsh::clear();
+  int part_index = -1;
+  for (int i = 0; i < m_model->getPartCount(); ++i){
+    if (m_model->getPart(i) == part){
+      part_index = i;
+      break;
+    }
+  }
+
+  if (part_index < 0){
+    cerr << "Could not find selected part in active model" << endl;
+    return;
+  }
+
+  std::string name = m_model->getName() + "_part_" + std::to_string(part_index) + ".step";
+  gmsh::model::add("t20");
+  std::vector<std::pair<int, int> > v;
+  gmsh::model::occ::importShapes(name, v);
+  gmsh::model::occ::synchronize();
+  int gmsh_dim = gmsh::model::getDimension();
+  AnalysisType analysis_type = m_model->getAnalysisType();
+  cout << "Geometry dimension: "<<gmsh_dim<<endl;
+  cout << "Analysis type: "<<analysis_type<<endl;
+
+  bool mesh_ready = false;
+  if (analysis_type == PlaneStress2D ||
+      analysis_type == PlaneStrain2D ||
+      analysis_type == Axisymmetric2D){
+    std::string bdf_name = "output_smoothed.bdf";
+    double element_size = m_model->getElementSize();
+    std::string remesh_cmd = "mesh-adapt \"" + name + "\" " + std::to_string(element_size);
+    cout << "Running 2D remesher: " << remesh_cmd << endl;
+
+    int remesh_status = std::system(remesh_cmd.c_str());
+    if (remesh_status != 0){
+      cerr << "Error running mesh-adapt. Exit code: " << remesh_status << endl;
+    } else if (!std::filesystem::exists(bdf_name)){
+      cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name << endl;
+    } else {
+      part->generateMeshFromNastranFile(bdf_name);
+      mesh_ready = true;
+    }
+  } else {
+    std::vector<std::pair<int, int>> entities;
+    gmsh::model::getEntities(entities);
+    
+    for(auto &e : entities) {
+        if(e.first == 1) {
+            gmsh::model::mesh::setTransfiniteCurve(e.second, 10);
+        }
+        if(e.first == 2) {
+            gmsh::model::mesh::setTransfiniteSurface(e.second);
+            gmsh::model::mesh::setRecombine(2, e.second);
+            cout << "Recombine in 2 dim"<<endl;
+        }
+    }
+    
+    if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);
+    gmsh::merge(name);
+    
+    std::string meshname = m_model->getName()+"_part_" + std::to_string(part_index) + ".msh";
+    gmsh::write(meshname.c_str());
+    
+    part->generateMesh();
+    mesh_ready = true;
+  }
+
+  if (!mesh_ready){
+    return;
+  }
+
+  getApp().setActiveModel(m_model);
+  getApp().Update();
+  getApp().checkUpdate();
+  
+  std::string kname = m_model->getName()+"_part_" + std::to_string(part_index) + ".k";
+  cout << "Exporting to LSDyna..."<<endl;
+  part->getMesh()->exportToLSDYNA(kname);
+  cout << "Done"<<endl;
 }
 
 #define PITCH_WIDTH 20.
@@ -678,103 +769,8 @@ void Editor::drawGui() {
                 m_model->delPart(i);
                 getApp().Update(); //CRASHES
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
-
                 selected_prt = m_model->getPart(i);
-              ////// IF LOADING STEP
-                  //~ // Crear un modelo GMSH desde la forma OCC
-                  //~ GModel* gm = new GModel();
-                  
-                  //~ // Importar la forma OCC al modelo GMSH
-                  //~ GModelIO_OCC::importOCCShape(gm, shape);
-                  
-                  //~ // Sincronizar el modelo OCC de GMSH
-                  //~ gmsh::model::occ::synchronize();
-                  
-                ////// IF LOADING FILE
-                if (m_model->getPart(i)->getGeom() != nullptr){
-                  Geom *geo = m_model->getPart(i)->getGeom();
-                  geo->ExportSTEP();
-                  
-                  gmsh::clear();  //Cleaning
-                  std::string name = m_model->getName() + "_part_" + std::to_string(i) + ".step";
-                  gmsh::model::add("t20");
-                  std::vector<std::pair<int, int> > v;
-                  gmsh::model::occ::importShapes(name, v);
-                  gmsh::model::occ::synchronize();  // Critical for dimension detection
-                  int model_dim = gmsh::model::getDimension();
-                  cout << "Dimension: "<<model_dim<<endl;
-
-
-                    ////////////////////////////////////////
-        
-                  std::vector<std::pair<int, int>> entities;
-                  gmsh::model::getEntities(entities);
-                  
-                  //if (m_model->getAnalysisType() > Solid3D){
-                  if (model_dim<3){
-                    // Recorremos curvas y seteamos transfinite
-                    for(auto &e : entities) {
-                        if(e.first == 1) { // 1 = curva
-                            gmsh::model::mesh::setTransfiniteCurve(e.second, 10); // 10 nodos
-                        }
-                        if(e.first == 2) { // 2 = superficie
-                            gmsh::model::mesh::setTransfiniteSurface(e.second);
-                            gmsh::model::mesh::setRecombine(2, e.second); // QUADS
-                            cout << "Recombine in 2 dim"<<endl; 
-                        }
-                        if(e.first == 3) { // 3 = volumen
-                            //~ gmsh::model::mesh::setTransfiniteVolume(e.second);
-                            //~ gmsh::model::mesh::setRecombine(3, e.second); // HEXES
-                        }
-                    }
-                  }//Model dim <3
-                
-                ////////////////////////
-                              
-                  if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
-
-                  gmsh::merge(name);
-                  
-                  
-                  std::string meshname = m_model->getName()+"_part_" + std::to_string(i) + ".msh";
-                  gmsh::write(meshname.c_str());
-                  
-                  //// HERE WE HAVE 2 WAYS, GENERATING MESH FIRST 
-                  
-                  m_model->getPart(i)->generateMesh();//GENERATE FROM GMSH ACTIVE MODEL
-
-                  getApp().setActiveModel(m_model);
-                  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR) FROM PART MESH
-
-
-                  getApp().checkUpdate(); //to create meshes
-                  
-                  std::string kname = m_model->getName()+"_part_" + std::to_string(i) + ".k";
-                  cout << "Exporting to LSDyna..."<<endl;
-                  m_model->getPart(i)->getMesh()->exportToLSDYNA(kname);
-                  cout << "Done"<<endl;
-                  
-                  ///// OPTION 2 - (OLD, 2 BE DEPRECATED), CREATE POLYDATA WITH NO MESH
-                  //graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-                  //graphic_mesh->createVTKPolyData();
-                  //viewer->addActor(graphic_mesh->getActor());
-
-                  
-
-                  //~ #ifdef BUILD_PYTHON
-                  //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-                  //~ #else
-                    //~ getApp().getActiveModel();
-                  //~ #endif
-
-                  //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-
-                } else { // IF GEO
-                  cout << "No geometry"<<endl;
-                }
-                
                 m_show_msh_dlg = true;
-                                
               }/// "MESH" part
               
               else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
@@ -1936,7 +1932,11 @@ void Editor::drawGui() {
   
   if (m_show_msh_dlg) {  
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-    m_mshdlg.Draw("Part", &m_show_msh_dlg, selected_prt);
+    m_mshdlg.Draw("Part", &m_show_msh_dlg, m_model, selected_prt);
+  }
+  if (m_mshdlg.hasMeshRequest()) {
+    Part* part_to_mesh = m_mshdlg.consumeMeshRequest();
+    meshPart(part_to_mesh);
   }
 
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}

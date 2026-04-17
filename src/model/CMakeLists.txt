@@ -9,6 +9,7 @@ set( MODEL_SRCS         "BoundaryCondition.cpp"
                         "Mesh.cpp"
                         "SPHModel.cpp"
                         "Element.cpp"
+                        "NastranReader.cpp" ##DO NOT USE IN IO
                         #"Geom.cpp"
                                "Model.cpp"
                                "SPHMesh.cpp"

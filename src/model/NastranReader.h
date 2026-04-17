@@ -1,0 +1,78 @@
+/*************************************************************************/
+/*  NastranReader.h                                              */
+/*  WeldformFEM - High-Performance Explicit & Implicit FEM Solvers     */
+/*  (CPU/GPU, C++/CUDA)                                                  */
+/*                                                                       */
+/*  weldform.sph@gmail.com                                                              */
+/*  https://www.opensourcemech.com                                                                */
+/*                                                                       */
+/*  Copyright (c) 2025-2025 Luciano Buglioni          */
+/*                                                                       */
+/*  This file is part of the WeldformFEM project.                     */
+/*  Licensed under the GNU General Public License v3.0 or later. See the LICENSE file in the project    */
+/*  root for full license information.                                   */
+/*************************************************************************/
+
+
+#ifndef NASTRAN_READER_H_
+#define NASTRAN_READER_H_
+
+#include <map>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cctype>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <ostream>
+//#include "matvec.h"
+
+#define FIELD_LENGTH	8
+#include <iomanip>
+
+using namespace std;
+
+
+class Domain_d;  
+class TriMesh_d;
+class NastranReader {
+protected:
+  friend class TriMesh_d;
+  friend class Domain_d;
+	std::vector <std::string> rawData;
+	int line_count;
+	int elem_count;
+	int node_count;
+  int     max_nodes_per_elem;
+  
+  //Flattened arrays such as GPU type in order of mantain this
+  double  *node = nullptr;
+  int     *elcon= nullptr;
+	int 		*nodeid= nullptr;	//If node number does not begin in one
+	std::map <int,int> nodepos;	//id to position
+  
+  //TriMesh trimesh;
+	
+	public:
+  int     dim;
+  NastranReader(){dim=3; max_nodes_per_elem = 3;}
+	NastranReader(const char* fName){read(fName);}
+	
+	void WriteCSV(char const * FileKey);
+	void WriteVTK(char const * FileKey);
+
+  int getNodeCount() const { return node_count; }
+  int getElemCount() const { return elem_count; }
+  int getMaxNodesPerElem() const { return max_nodes_per_elem; }
+  const double* getNodes() const { return node; }
+  const int* getConnectivity() const { return elcon; }
+  const int* getNodeIds() const { return nodeid; }
+	
+  ~NastranReader();
+	void read(const char *fName);
+	
+};
+
+#endif

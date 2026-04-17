@@ -44,6 +44,7 @@ public:
     m_hasname = false;
     m_name = "";
     m_analysisType =  Solid3D;
+    m_element_size = 1.0;
   }
   Model(std::string );
   //Mesh* getPartMesh(const int &i);
@@ -78,6 +79,8 @@ public:
   void setNoSaveAs(){m_prev_name = m_name;}
   string getName(){return m_name;}
   string getPrevName(){return m_prev_name;}
+  void setElementSize(const double &element_size){m_element_size = element_size;}
+  const double & getElementSize() const {return m_element_size;}
   void addBoundaryCondition(BoundaryCondition *make_double2bc);
   void addInitialCondition(InitialCondition *bc){m_ic.push_back(bc);}
 
@@ -124,6 +127,7 @@ protected:
   string m_name;
   string m_prev_name;
   AnalysisType m_analysisType = Solid3D;
+  double m_element_size = 1.0;
 
 
 };
