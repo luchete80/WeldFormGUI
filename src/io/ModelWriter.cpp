@@ -200,16 +200,16 @@ void ModelWriter::writeToFile(std::string fname){
       } 
       if (part->isMeshed()) {
         cout << "Part "<<i << " is meshed."<<endl;
-        bool is_2d = (m_model.getDimension() == 2);
+        bool use_bdf_mesh = (part->getMesh()->getDim() == 1 || m_model.getDimension() == 2);
         std::string meshname;
-        if (is_2d)
+        if (use_bdf_mesh)
           meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".bdf";
         else
           meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".msh";
         fs::path mesh_path = json_dir / meshname;
         jpart["mesh"]["source"] = fs::relative(mesh_path, json_dir).string();
 
-        if (is_2d) {
+        if (use_bdf_mesh) {
           std::error_code ec;
           fs::path src_path = m_model.getPart(i)->getMeshSourceFile();
           if (!src_path.empty() && fs::exists(src_path)) {
@@ -219,7 +219,9 @@ void ModelWriter::writeToFile(std::string fname){
                 std::cerr << "Error copying BDF mesh file: " << ec.message() << std::endl;
             }
           } else {
-            std::cerr << "Warning: missing original BDF mesh source for part " << i << std::endl;
+            cout << "Exporting to Nastran..."<<endl;
+            m_model.getPart(i)->getMesh()->exportToNASTRAN(mesh_path.string());
+            m_model.getPart(i)->setMeshSourceFile(mesh_path.string());
           }
         }
 
@@ -228,7 +230,7 @@ void ModelWriter::writeToFile(std::string fname){
             cout << "Exporting to LSDyna..."<<endl;
             m_model.getPart(i)->getMesh()->exportToLSDYNA(kname);
 
-            if (!is_2d) {
+            if (!use_bdf_mesh) {
               std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".msh";
               std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".msh";
 

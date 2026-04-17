@@ -92,9 +92,6 @@ void Editor::meshPart(Part* part){
   }
 
   Geom *geo = part->getGeom();
-  geo->ExportSTEP();
-  
-  gmsh::clear();
   int part_index = -1;
   for (int i = 0; i < m_model->getPartCount(); ++i){
     if (m_model->getPart(i) == part){
@@ -109,19 +106,25 @@ void Editor::meshPart(Part* part){
   }
 
   std::string name = m_model->getName() + "_part_" + std::to_string(part_index) + ".step";
+  geo->setFileName(name);
+  geo->ExportSTEP();
+
+  gmsh::clear();
   gmsh::model::add("t20");
   std::vector<std::pair<int, int> > v;
   gmsh::model::occ::importShapes(name, v);
   gmsh::model::occ::synchronize();
   int gmsh_dim = gmsh::model::getDimension();
   AnalysisType analysis_type = m_model->getAnalysisType();
+  bool is_2d_analysis = (analysis_type == PlaneStress2D ||
+                         analysis_type == PlaneStrain2D ||
+                         analysis_type == Axisymmetric2D);
+  bool is_rigid_part = (part->getType() == Rigid);
   cout << "Geometry dimension: "<<gmsh_dim<<endl;
   cout << "Analysis type: "<<analysis_type<<endl;
 
   bool mesh_ready = false;
-  if (analysis_type == PlaneStress2D ||
-      analysis_type == PlaneStrain2D ||
-      analysis_type == Axisymmetric2D){
+  if (is_2d_analysis && !is_rigid_part){
     std::string bdf_name = "output_smoothed.bdf";
     std::string bdf_export_name = m_model->getName()+"_part_" + std::to_string(part_index) + ".bdf";
     double element_size = m_model->getElementSize();
@@ -144,6 +147,23 @@ void Editor::meshPart(Part* part){
       part->generateMeshFromNastranFile(bdf_export_name);
       mesh_ready = true;
     }
+  } else if (is_2d_analysis && is_rigid_part) {
+    std::vector<std::pair<int, int>> entities;
+    gmsh::model::getEntities(entities);
+
+    for (auto &e : entities) {
+        if (e.first == 1) {
+            gmsh::model::mesh::setTransfiniteCurve(e.second, 10);
+        }
+    }
+
+    gmsh::model::mesh::generate(1);
+
+    std::string meshname = m_model->getName()+"_part_" + std::to_string(part_index) + ".msh";
+    gmsh::write(meshname.c_str());
+
+    part->generateMesh();
+    mesh_ready = true;
   } else {
     std::vector<std::pair<int, int>> entities;
     gmsh::model::getEntities(entities);
@@ -160,7 +180,6 @@ void Editor::meshPart(Part* part){
     }
     
     if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);
-    gmsh::merge(name);
     
     std::string meshname = m_model->getName()+"_part_" + std::to_string(part_index) + ".msh";
     gmsh::write(meshname.c_str());

@@ -626,6 +626,7 @@ void Mesh::genFromGmshModel() {
 
     // Segunda pasada: procesar elementos
     int elementCount = 0;
+    int max_mesh_dim = 0;
     for(auto &e : entities) {
         int dim = e.first, tag = e.second;
         
@@ -643,8 +644,13 @@ void Mesh::genFromGmshModel() {
                                                    numNodes, param, numPrimaryNodes);
             
             std::cout << "Processing element type: " << elemName << " with " << numNodes << " nodes" << std::endl;
+            if (elemDim > max_mesh_dim)
+                max_mesh_dim = elemDim;
 
             for(std::size_t j = 0; j < elemTags[i].size(); j++) {
+                if (elemDim == 0)
+                    continue;
+
                 std::vector<int> connectivity;
                 
                 // Establecer la conectividad de la celda
@@ -687,42 +693,19 @@ void Mesh::genFromGmshModel() {
             }
         }
 
-        //~ // Crear el elemento según el número de nodos
-        //~ if(numNodes == 2) {
-            //~ // Elemento 1D (Línea)
-            //~ m_elem.push_back(new Line(elementNodes));
-        //~ } else if(numNodes == 3) {
-            //~ // Elemento 2D (Triángulo)
-            //~ m_elem.push_back(new Tria(elementNodes));
-        //~ } else if(numNodes == 4) {
-            //~ // Podría ser Quad 2D o Tetraedro 3D
-            //~ // Verificamos la dimensión máxima de la malla
-            //~ if(max_dim == 2) {
-                //~ m_elem.push_back(new Quad(elementNodes));
-            //~ } else {
-                //~ //m_elem.push_back(new Tetrahedron(elementNodes));
-            //~ }
-        //~ } else if(numNodes == 8) {
-            //~ // Hexaedro 3D
-            //~ //m_elem.push_back(new Hexahedron(elementNodes));
-        //~ } else if(numNodes == 6) {
-            //~ // Prisma triangular 3D
-            //~ //m_elem.push_back(new Wedge(elementNodes));
-        //~ } else if(numNodes == 5) {
-            //~ // Pirámide 3D
-            //~ //m_elem.push_back(new Pyramid(elementNodes));
-        //~ } else {
-            //~ std::cout << "Unsupported element with " << numNodes << " nodes" << std::endl;
-            //~ // Crear elemento genérico
-        
-        
+        if(numNodes == 2) {
+            m_elem.push_back(new Line(elementNodes));
+        } else if(numNodes == 3 && max_dim == 2) {
+            m_elem.push_back(new Tria(elementNodes));
+        } else if(numNodes == 4 && max_dim == 2) {
+            m_elem.push_back(new Quad(elementNodes));
+        } else {
             m_elem.push_back(new Element(elementNodes));
-        
-        //}
+        }
     }
 
-    // Establecer la dimensión de la malla
-    m_dim = max_dim;
+    // Establecer la dimensión de la malla usando la dimensión de los elementos realmente generados
+    m_dim = max_mesh_dim;
     
     m_elem_count  =m_elem.size();
 
