@@ -49,13 +49,13 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
             auto frame = std::make_unique<ResultFrame>(vtk_path.string());
             results.frames.push_back(std::move(frame));
 
-            std::cout << "Loaded frame at time " << time << " from " << vtk_path.string() << std::endl;
+            // std::cout << "Loaded frame at time " << time << " from " << vtk_path.string() << std::endl;
         }
         catch (const std::exception& e) {
             std::cerr << "Error loading " << vtk_path.string() << ": " << e.what() << std::endl;
         }
     }
 
-    std::cout << "Loaded " << results.frames.size() << " frames from JSON." << std::endl;
+    // std::cout << "Loaded " << results.frames.size() << " frames from JSON." << std::endl;
     return results;
 }

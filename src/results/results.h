@@ -10,6 +10,10 @@
 #include <vtkProperty.h>
 #include <vtkContourFilter.h>
 #include <vtkPointData.h>
+#include <vtkLookupTable.h>
+#include <vtkScalarBarActor.h>
+#include <vtkScalarsToColors.h>
+#include <vtkTextProperty.h>
 
 // Includes estándar de C++
 #include <string>
@@ -52,6 +56,7 @@ public:
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<vtkDataSetMapper> mapper;
     vtkSmartPointer<vtkContourFilter> contourFilter;
+    vtkSmartPointer<vtkScalarBarActor> scalarBar;
     bool useContour;
     bool showEdges;
     
@@ -60,6 +65,7 @@ public:
         showEdges = false;
         loadVTKFile(name_);
         setupRenderingPipeline();
+        setupScalarBar();
     }
 
     std::vector<std::string> getAvailableFieldNames() const {
@@ -147,8 +153,8 @@ void loadVTKFile(const std::string& filename) {
         return;
     }
 
-    std::cout << "Loaded " << mesh->GetNumberOfPoints() << " points, "
-              << mesh->GetNumberOfCells() << " cells" << std::endl;
+    // std::cout << "Loaded " << mesh->GetNumberOfPoints() << " points, "
+    //           << mesh->GetNumberOfCells() << " cells" << std::endl;
 }
 
     void setupRenderingPipeline() {
@@ -166,7 +172,7 @@ void loadVTKFile(const std::string& filename) {
         
         if (hasScalars) {
             double* range = mesh->GetScalarRange();
-            std::cout << "Scalar range: [" << range[0] << ", " << range[1] << "]" << std::endl;
+            // std::cout << "Scalar range: [" << range[0] << ", " << range[1] << "]" << std::endl;
             mapper->SetScalarRange(range[0], range[1]);
             mapper->ScalarVisibilityOn();
         } else {
@@ -190,7 +196,29 @@ void loadVTKFile(const std::string& filename) {
         actor->GetProperty()->EdgeVisibilityOff();
         
         useContour = false;
-        std::cout << "Created basic pipeline" << std::endl;
+        // std::cout << "Created basic pipeline" << std::endl;
+    }
+
+    void setupScalarBar() {
+        scalarBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarBar->SetLookupTable(mapper ? mapper->GetLookupTable() : nullptr);
+        scalarBar->SetNumberOfLabels(5);
+        scalarBar->SetUnconstrainedFontSize(true);
+        scalarBar->SetMaximumWidthInPixels(80);
+        scalarBar->SetMaximumHeightInPixels(300);
+        scalarBar->SetPosition(0.88, 0.1);
+        scalarBar->SetWidth(0.1);
+        scalarBar->SetHeight(0.8);
+        scalarBar->SetVisibility(false);
+
+        scalarBar->GetTitleTextProperty()->SetColor(1.0, 1.0, 1.0);
+        scalarBar->GetTitleTextProperty()->BoldOff();
+        scalarBar->GetTitleTextProperty()->ItalicOff();
+        scalarBar->GetTitleTextProperty()->ShadowOff();
+        scalarBar->GetLabelTextProperty()->SetColor(1.0, 1.0, 1.0);
+        scalarBar->GetLabelTextProperty()->BoldOff();
+        scalarBar->GetLabelTextProperty()->ItalicOff();
+        scalarBar->GetLabelTextProperty()->ShadowOff();
     }
     
     void setupContourPipeline() {
@@ -200,7 +228,7 @@ void loadVTKFile(const std::string& filename) {
         
         // Obtener rango de escalares
         double* range = mesh->GetScalarRange();
-        std::cout << "Scalar range: [" << range[0] << ", " << range[1] << "]" << std::endl;
+        // std::cout << "Scalar range: [" << range[0] << ", " << range[1] << "]" << std::endl;
         
         // Crear múltiples contornos
         int numContours = 10;
@@ -222,7 +250,7 @@ void loadVTKFile(const std::string& filename) {
         actor->GetProperty()->EdgeVisibilityOff(); // Los contornos ya son líneas
         
         useContour = true;
-        std::cout << "Created contour with " << numContours << " levels" << std::endl;
+        // std::cout << "Created contour with " << numContours << " levels" << std::endl;
     }
     
     void setupSimplePipeline() {
@@ -348,9 +376,9 @@ public:
                   field->GetRange(range);
 
               mapper->SetScalarRange(range);
-              std::cout << "Set field '" << fieldName << "' ("
-                        << (isCellField ? "CellData" : "PointData") << ") range: ["
-                        << range[0] << ", " << range[1] << "]" << std::endl;
+              // std::cout << "Set field '" << fieldName << "' ("
+              //           << (isCellField ? "CellData" : "PointData") << ") range: ["
+              //           << range[0] << ", " << range[1] << "]" << std::endl;
           }
 
           // --- Forzar actualización ---
@@ -364,13 +392,13 @@ public:
         if (!mesh || !mesh->GetPointData()) return;
         
         vtkPointData* pointData = mesh->GetPointData();
-        std::cout << "Available point data fields:" << std::endl;
+        // std::cout << "Available point data fields:" << std::endl;
         
         for (int i = 0; i < pointData->GetNumberOfArrays(); i++) {
             vtkDataArray* array = pointData->GetArray(i);
-            std::cout << "  [" << i << "] " << array->GetName() 
-                     << " (" << array->GetNumberOfComponents() << " components, "
-                     << array->GetNumberOfTuples() << " values)" << std::endl;
+            // std::cout << "  [" << i << "] " << array->GetName() 
+            //          << " (" << array->GetNumberOfComponents() << " components, "
+            //          << array->GetNumberOfTuples() << " values)" << std::endl;
         }
     }
     
@@ -399,8 +427,8 @@ public:
             mapper->SetScalarRange(range[0], range[1]);
             
             std::string compName[] = {"X", "Y", "Z"};
-            std::cout << "Set " << fieldName << " component " << compName[component] 
-                     << " range: [" << range[0] << ", " << range[1] << "]" << std::endl;
+            // std::cout << "Set " << fieldName << " component " << compName[component] 
+            //          << " range: [" << range[0] << ", " << range[1] << "]" << std::endl;
         }
     }
     void setContourLevels(int numLevels) {
@@ -456,13 +484,56 @@ public:
     }
 
     bool getShowEdges() const { return showEdges; }
+
+    bool getFieldRange(const std::string& fieldName, bool isCellField, double& minValue, double& maxValue) const {
+        if (!mesh) return false;
+
+        vtkDataArray* field = isCellField
+            ? mesh->GetCellData()->GetArray(fieldName.c_str())
+            : mesh->GetPointData()->GetArray(fieldName.c_str());
+
+        if (!field) return false;
+
+        double range[2];
+        if (field->GetNumberOfComponents() == 3)
+            field->GetRange(range, -1);
+        else
+            field->GetRange(range);
+
+        minValue = range[0];
+        maxValue = range[1];
+        return true;
+    }
+
+    void updateScalarBar(const std::string& fieldName, double minValue, double maxValue) {
+        if (!scalarBar || !mapper) return;
+
+        auto newLut = vtkSmartPointer<vtkLookupTable>::New();
+        newLut->SetRange(minValue, maxValue);
+        newLut->SetHueRange(0.66667, 0.0); // azul -> rojo
+        newLut->Build();
+        mapper->SetLookupTable(newLut);
+
+        vtkScalarsToColors* lut = mapper->GetLookupTable();
+
+        scalarBar->SetLookupTable(lut);
+        scalarBar->SetTitle(fieldName.c_str());
+        scalarBar->SetVisibility(true);
+        scalarBar->Modified();
+    }
+
+    void hideScalarBar() {
+        if (scalarBar) scalarBar->SetVisibility(false);
+    }
+
+    vtkSmartPointer<vtkScalarBarActor> getScalarBarActor() const { return scalarBar; }
     
     // Información del mesh
     void printInfo() const {
         if (mesh) {
-            std::cout << "Mesh info for " << name << ":\n";
-            std::cout << "  Points: " << mesh->GetNumberOfPoints() << "\n";
-            std::cout << "  Cells: " << mesh->GetNumberOfCells() << "\n";
+            // std::cout << "Mesh info for " << name << ":\n";
+            // std::cout << "  Points: " << mesh->GetNumberOfPoints() << "\n";
+            // std::cout << "  Cells: " << mesh->GetNumberOfCells() << "\n";
         }
     }
 };

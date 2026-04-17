@@ -42,7 +42,7 @@ public:
             // reinterpret_cast<vtkRenderWindowInteractor*>(caller)->ExitCallback(); // to stop instead
         }
 
-        std::cout << "Frame " << frame << ": " << vtkFiles[frame] << std::endl;
+        // std::cout << "Frame " << frame << ": " << vtkFiles[frame] << std::endl;
 
         reader->SetFileName(vtkFiles[frame].c_str());
         reader->Update();

@@ -32,6 +32,7 @@
 #include <vtkActor.h>
 //#include <vtkArrowSource.h>
 #include <vtkNamedColors.h>
+#include <vtkScalarBarActor.h>
 
 
 #include "graphics/axis.h" //test
@@ -432,6 +433,7 @@ int main(int argc, char* argv[])
 	              static bool isCellField = false;
 	                            
 	              static std::string activeFieldName = "";
+	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
 
 	              // Botones de background específicos
 	              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
@@ -455,32 +457,41 @@ int main(int argc, char* argv[])
 	                  }
 	              }
 	              
-	              if (editor->getResults()){
-              auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
-              if (!editor->getResults()->frames.empty()) {
-                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
+		              if (editor->getResults()){
+	              if (!editor->getResults()->frames.empty()) {
+	                  if (currentFrame >= (int)editor->getResults()->frames.size())
+	                      currentFrame = 0;
+	                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
+	                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
+	                  if (frame.getScalarBarActor() && currentScalarBar != frame.getScalarBarActor()) {
+	                      if (currentScalarBar)
+	                          renderer->RemoveActor2D(currentScalarBar);
+	                      currentScalarBar = frame.getScalarBarActor();
+	                      renderer->AddActor2D(currentScalarBar);
+	                  }
 
-                  if (currentFrame != lastFrame) {              // Solo si cambió el frame
-                      vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
-                      if (!activeFieldName.empty()) {
-                          auto mapper = frame.actor->GetMapper();
+	                  if (currentFrame != lastFrame) {              // Solo si cambió el frame
+	                      vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
+	                      if (!activeFieldName.empty()) {
+	                          auto mapper = editor->getResults()->frames[currentFrame]->actor->GetMapper();
 
-                          if (isCellField)
-                              mapper->SetScalarModeToUseCellFieldData();
-                          else
+	                          if (isCellField)
+	                              mapper->SetScalarModeToUseCellFieldData();
+	                          else
                               mapper->SetScalarModeToUsePointFieldData();
 
-                          mapper->SelectColorArray(activeFieldName.c_str());
-                          mapper->SetScalarRange(globalMin, globalMax);
-                          mapper->ScalarVisibilityOn();
-                          mapper->Update();
-                      }
-                      
-                      lastFrame = currentFrame;                // Actualizamos el frame anterior
+	                          mapper->SelectColorArray(activeFieldName.c_str());
+	                          mapper->SetScalarRange(globalMin, globalMax);
+	                          mapper->ScalarVisibilityOn();
+	                          mapper->Update();
+	                          editor->getResults()->frames[currentFrame]->updateScalarBar(activeFieldName, globalMin, globalMax);
+	                      }
+	                      
+	                      lastFrame = currentFrame;                // Actualizamos el frame anterior
                       //vtkViewer_res.render();
-                  }
+	                  }
 
-                  auto fieldNames = frame.getAvailableFieldNames();
+	                  auto fieldNames = frame.getAvailableFieldNames();
 
                   static int selectedField = 0;
                   //~ if (!fieldNames.empty()) {
@@ -536,19 +547,28 @@ int main(int argc, char* argv[])
                             else
                                 frame.actor->GetMapper()->SetScalarModeToUsePointFieldData();
 
-                            frame.actor->GetMapper()->SelectColorArray(activeFieldName.c_str());
-                            frame.actor->GetMapper()->SetScalarRange(globalMin, globalMax);
-                            frame.actor->GetMapper()->ScalarVisibilityOn();
-                            frame.actor->GetMapper()->Update();
+	                            frame.actor->GetMapper()->SelectColorArray(activeFieldName.c_str());
+	                            frame.actor->GetMapper()->SetScalarRange(globalMin, globalMax);
+	                            frame.actor->GetMapper()->ScalarVisibilityOn();
+	                            frame.actor->GetMapper()->Update();
+	                            frame.updateScalarBar(activeFieldName, globalMin, globalMax);
 
-                            vtkViewer_res.render();
-                        }
-                    } else {
-                        ImGui::Text("No fields available");
-                    }
-                                  
-              }
-            }
+	                            vtkViewer_res.render();
+	                        }
+	                    } else {
+	                        ImGui::Text("No fields available");
+	                    }
+
+	                    if (!activeFieldName.empty()) {
+	                        ImGui::Separator();
+	                        ImGui::Text("Color Bar");
+	                        ImGui::Text("Variable: %s", activeFieldName.c_str());
+	                        ImGui::Text("Min: %.6g", globalMin);
+	                        ImGui::Text("Max: %.6g", globalMax);
+	                    }
+	                                  
+	              }
+	            }
               
               // Slider de alpha del background
               static float vtkResBkgAlpha = 0.2f;
