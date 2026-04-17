@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
 
 using std::cout;
 using std::cerr;
@@ -37,6 +38,7 @@ ModelReader::ModelReader(const char *fname) {
 // Main readFromFile function
 // =============================================================
 bool ModelReader::readFromFile(const std::string& fname) {
+    namespace fs = std::filesystem;
 
     // --- 1. Abrir archivo ---
     std::ifstream i(fname);
@@ -60,6 +62,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
     }
 
     cout << "[ModelReader] Reading model from: " << fname << endl;
+    m_model->setFilePath(fname);
 
     // =============================================================
     // Configuration
@@ -72,6 +75,20 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
         if (conf.contains("solver"))
             cout << "  Solver: " << conf["solver"].get<std::string>() << endl;
+
+        if (conf.contains("analysisType")) {
+            std::string analysisType = conf["analysisType"].get<std::string>();
+            cout << "  Analysis type: " << analysisType << endl;
+
+            if (analysisType == "PlaneStress2D")
+                m_model->setAnalysisType(PlaneStress2D);
+            else if (analysisType == "PlaneStrain2D")
+                m_model->setAnalysisType(PlaneStrain2D);
+            else if (analysisType == "Axisymmetric2D")
+                m_model->setAnalysisType(Axisymmetric2D);
+            else
+                m_model->setAnalysisType(Solid3D);
+        }
 
         if (conf.contains("SPH") && conf["SPH"].contains("hFactor"))
             cout << "  SPH hFactor: " << conf["SPH"]["hFactor"].get<double>() << endl;
@@ -151,8 +168,11 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 readVector(geo["origin"], origin);
 
                 if (!src.empty()) {
+                    fs::path geom_path = fs::path(src);
+                    if (geom_path.is_relative())
+                        geom_path = fs::path(fname).parent_path() / geom_path;
                     cout << "    Geometry source: " << src << endl;
-                    geom = new Geom(src);
+                    geom = new Geom(geom_path.string());
                     part = new Part(geom);
                 }
             }
@@ -173,15 +193,25 @@ bool ModelReader::readFromFile(const std::string& fname) {
             // --- Mesh ---
             if (jpart.contains("mesh") && jpart["mesh"].contains("source")) {
                 std::string meshname = jpart["mesh"]["source"].get<std::string>();
+                fs::path mesh_path = fs::path(meshname);
+                if (mesh_path.is_relative())
+                    mesh_path = fs::path(fname).parent_path() / mesh_path;
                 cout << "    Mesh file: " << meshname << endl;
 
-                if (!fileExists(meshname)) {
-                    cerr << "    [Warning] Mesh file not found: " << meshname << endl;
+                if (!fileExists(mesh_path.string())) {
+                    cerr << "    [Warning] Mesh file not found: " << mesh_path.string() << endl;
                 } else {
-                    gmsh::clear();
-                    gmsh::open(meshname);
-                    gmsh::model::occ::synchronize();
-                    part->generateMesh();
+                    std::string ext = mesh_path.extension().string();
+                    for (auto &c : ext) c = std::tolower(c);
+
+                    if (ext == ".bdf") {
+                        part->generateMeshFromNastranFile(mesh_path.string());
+                    } else {
+                        gmsh::clear();
+                        gmsh::open(mesh_path.string());
+                        gmsh::model::occ::synchronize();
+                        part->generateMesh();
+                    }
                 }
             }
 

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip> //setw
+#include <filesystem>
+#include <system_error>
 #include "Material.h"
 #include "Geom.h"
 
@@ -23,6 +25,7 @@ ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 
 
 void ModelWriter::writeToFile(std::string fname){
+  namespace fs = std::filesystem;
   json m_json;
   
   //json j;
@@ -42,6 +45,8 @@ void ModelWriter::writeToFile(std::string fname){
   //std::ofstream o(m_model.getName());
   std::ofstream o(fname);
   std::string filename = m_model.getName();
+  fs::path json_path(fname);
+  fs::path json_dir = json_path.parent_path();
   if (!m_model.getHasName()) cout << "Not has name!"<<endl;
   std::cout << "Writing to file: " << filename << std::endl;
 
@@ -92,6 +97,21 @@ void ModelWriter::writeToFile(std::string fname){
   
   m_json["Configuration"]["modelType"] = "SPH";
   m_json["Configuration"]["solver"]    = "WeldForm";
+  switch (m_model.getAnalysisType()) {
+    case PlaneStress2D:
+      m_json["Configuration"]["analysisType"] = "PlaneStress2D";
+      break;
+    case PlaneStrain2D:
+      m_json["Configuration"]["analysisType"] = "PlaneStrain2D";
+      break;
+    case Axisymmetric2D:
+      m_json["Configuration"]["analysisType"] = "Axisymmetric2D";
+      break;
+    case Solid3D:
+    default:
+      m_json["Configuration"]["analysisType"] = "Solid3D";
+      break;
+  }
   
   if (m_model.m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true; 
@@ -166,7 +186,10 @@ void ModelWriter::writeToFile(std::string fname){
           }
 
           cout << "Part has geom"<<endl;
-          jpart["geometry"]["source"] = part->getGeom()->getName();
+          fs::path geom_path(part->getGeom()->getName());
+          if (geom_path.is_relative())
+            geom_path = json_dir / geom_path;
+          jpart["geometry"]["source"] = fs::relative(geom_path, json_dir).string();
           jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
           //jpart["geometry"]["representation"] = "BRep";
           //~ jpart["geometry"]["bounding_box"] = {
@@ -177,25 +200,52 @@ void ModelWriter::writeToFile(std::string fname){
       } 
       if (part->isMeshed()) {
         cout << "Part "<<i << " is meshed."<<endl;
-        std::string meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".msh";
-        jpart["mesh"]["source"] = meshname;
+        bool is_2d = (m_model.getDimension() == 2);
+        std::string meshname;
+        if (is_2d)
+          meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".bdf";
+        else
+          meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".msh";
+        fs::path mesh_path = json_dir / meshname;
+        jpart["mesh"]["source"] = fs::relative(mesh_path, json_dir).string();
 
+        if (is_2d) {
+          std::error_code ec;
+          fs::path src_path = m_model.getPart(i)->getMeshSourceFile();
+          if (!src_path.empty() && fs::exists(src_path)) {
+            if (src_path != mesh_path) {
+              fs::copy_file(src_path, mesh_path, fs::copy_options::overwrite_existing, ec);
+              if (ec)
+                std::cerr << "Error copying BDF mesh file: " << ec.message() << std::endl;
+            }
+          } else {
+            std::cerr << "Warning: missing original BDF mesh source for part " << i << std::endl;
+          }
+        }
 
-        //CHANGE THIS BY EXPORTING TO LS-DYNA
         if (m_model.getPrevName()!=m_model.getName()){
          std::string kname = m_model.getName()+"_part_" + std::to_string(i) + ".k";
             cout << "Exporting to LSDyna..."<<endl;
             m_model.getPart(i)->getMesh()->exportToLSDYNA(kname);
-        
 
+            if (!is_2d) {
+              std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".msh";
+              std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".msh";
 
-            std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".msh";
-            std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".msh";
-
-            if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
-                std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
+              if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
+                  std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
+              } else {
+                  std::perror(("Error renaming " + old_name).c_str());
+              }
             } else {
-                std::perror(("Error renaming " + old_name).c_str());
+              std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".bdf";
+              std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".bdf";
+
+              if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
+                  std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
+              } else {
+                  std::perror(("Error renaming " + old_name).c_str());
+              }
             }
         
         }// IF NAME CHANGED

@@ -1091,19 +1091,38 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
     //~ bool exportToNASTRAN(const std::string& filename);
 //~ };
 
-// Función auxiliar para formatear números con ancho fijo de 8 caracteres
+// Formatea un real en campo corto Nastran (8 caracteres), e.g. " 4.125+0" o "-1.342+2".
 std::string formatNastranNumber(double value) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(5);
-    
-    // Para números negativos, el signo ocupa un espacio
-    if (value < 0) {
-        oss << std::setw(7) << value;
-    } else {
-        // Para números positivos, agregamos un espacio extra
-        oss << " " << std::setw(7) << value;
+    if (value == 0.0) return "      0.";
+
+    int exponent = static_cast<int>(std::floor(std::log10(std::abs(value))));
+    double mantissa = value / std::pow(10.0, exponent);
+
+    for (int decimals = 3; decimals >= 0; --decimals) {
+        std::ostringstream mantissa_stream;
+        mantissa_stream << std::fixed << std::setprecision(decimals) << mantissa;
+        std::string mantissa_str = mantissa_stream.str();
+
+        while (mantissa_str.size() > 2 && mantissa_str.back() == '0' && mantissa_str.find('.') != std::string::npos)
+            mantissa_str.pop_back();
+        if (!mantissa_str.empty() && mantissa_str.back() == '.')
+            mantissa_str.push_back('0');
+
+        std::string exponent_str = (exponent >= 0 ? "+" : "-") + std::to_string(std::abs(exponent));
+        std::string result = mantissa_str + exponent_str;
+        if (result.size() <= 8) {
+            if (result.size() < 8)
+                result = std::string(8 - result.size(), ' ') + result;
+            return result;
+        }
     }
-    return oss.str();
+
+    std::ostringstream fallback;
+    fallback << std::scientific << std::setprecision(1) << value;
+    std::string s = fallback.str();
+    if (s.size() > 8) s = s.substr(0, 8);
+    if (s.size() < 8) s = std::string(8 - s.size(), ' ') + s;
+    return s;
 }
 
 //~ // Función auxiliar para formatear números con ancho fijo de 8 caracteres
@@ -1161,25 +1180,34 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     }
 
     // Escribir encabezado del archivo NASTRAN
-    outfile << "NASTRAN bulk data file created by Mesh::exportToNASTRAN()" << std::endl;
+    outfile << "$ WeldFormGUI NASTRAN export" << std::endl;
     outfile << "BEGIN BULK" << std::endl;
+    outfile << "MAT1    " << std::setw(8) << 1
+            << formatNastranNumber(2.1e11)
+            << std::setw(8) << ""
+            << formatNastranNumber(0.3)
+            << std::endl;
+    if (m_dim == 2) {
+        outfile << "PSHELL  " << std::setw(8) << 1
+                << std::setw(8) << 1
+                << formatNastranNumber(1.0)
+                << std::endl;
+    }
 
        
     // Escribir nodos (GRID)
-    outfile << "$ Nodes" << std::endl;
     for (size_t i = 0; i < m_node.size(); i++) {
         Node* node = m_node[i];
         auto pos = node->getPos();
         
         outfile << "GRID    " 
             << std::setw(8) << i + 1  // ID del nodo (1-based)
-            << std::setw(8) << 0       // CP
+            << std::setw(8) << ""      // CP
             << formatNastranNumber(pos[0])
             << formatNastranNumber(pos[1])
             << formatNastranNumber(pos[2]) 
             << std::endl;
     }
-    outfile << "$ End of nodes" << std::endl;
 
     // Contadores para diferentes tipos de elementos
     int cquad4Count = 0;
@@ -1191,7 +1219,6 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     int chexaCount = 0;
 
     // Escribir elementos
-    outfile << "$ Elements" << std::endl;
     for (size_t i = 0; i < m_elem.size(); i++) {
         Element* elem = m_elem[i];
         int numNodes = elem->getNodeCount();
@@ -1222,7 +1249,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         else if (numNodes == 3 && m_dim == 2) {
             // Elemento triangular 2D CTRIA3
             outfile << "CTRIA3  " << std::setw(8) << i + 1  // EID
-                    << std::setw(8) << 3           // PID
+                    << std::setw(8) << 1           // PID
                     << std::setw(8) << elem->getNodeId(0) + 1
                     << std::setw(8) << elem->getNodeId(1) + 1
                     << std::setw(8) << elem->getNodeId(2) + 1
@@ -1231,28 +1258,14 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         }
         else if (numNodes == 4 && m_dim == 2) {
             // Elemento cuadrilátero 2D CQUAD4
-            //~ outfile << "CQUAD4," << std::setw(8) << i + 1  // EID
-                    //~ << std::setw(8) << 4           // PID
-                    //~ << std::setw(8) << elem->getNodeId(0) + 1
-                    //~ << std::setw(8) << elem->getNodeId(1) + 1
-                    //~ << std::setw(8) << elem->getNodeId(2) + 1
-                    //~ << std::setw(8) << elem->getNodeId(3) + 1
-                    //~ << std::endl;
-            //~ cquad4Count++;
-            outfile << "CTRIA3  " << std::setw(8) << 2*i + 1  // EID
-                    << std::setw(8) << 3           // PID
+            outfile << "CQUAD4  " << std::setw(8) << i + 1  // EID
+                    << std::setw(8) << 1           // PID
                     << std::setw(8) << elem->getNodeId(0) + 1
                     << std::setw(8) << elem->getNodeId(1) + 1
                     << std::setw(8) << elem->getNodeId(2) + 1
-                    << std::endl;
-            ctri3Count++;
-            outfile << "CTRIA3  " << std::setw(8) << 2*i + 2  // EID
-                    << std::setw(8) << 3           // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1
-                    << std::setw(8) << elem->getNodeId(2) + 1
                     << std::setw(8) << elem->getNodeId(3) + 1
                     << std::endl;
-            ctri3Count++;
+            cquad4Count++;
         }
         else if (numNodes == 4 && m_dim == 3) {
             // Elemento tetraédrico CTETRA
@@ -1280,10 +1293,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
             chexaCount++;
         }
     }
-    outfile << "$ End of elements" << std::endl;
-
     // Escribir propiedades de elementos (PBAR, PBEAM, PSHELL, etc.)
-    outfile << "$ Properties" << std::endl;
     
     if (cbarCount > 0) {
         outfile << "PBAR    " << std::setw(8) << 1  // PID
@@ -1299,13 +1309,6 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                 << std::endl;
     }
     
-    if (ctri3Count > 0 || cquad4Count > 0) {
-        outfile << "PSHELL  " << std::setw(8) << 3  // PID
-                << std::setw(8) << 1        // MID
-                << ",0.1"                         // thickness
-                << std::endl;
-    }
-
     // Escribir materiales
     //~ outfile << "$ Materials" << std::endl;
     //~ outfile << "MAT1," << std::setw(8) << 1        // MID

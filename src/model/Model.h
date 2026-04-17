@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <string>
+#include <filesystem>
 
 using namespace std;
 
@@ -79,6 +80,12 @@ public:
   void setNoSaveAs(){m_prev_name = m_name;}
   string getName(){return m_name;}
   string getPrevName(){return m_prev_name;}
+  void setFilePath(const std::string &path){m_file_path = path;}
+  const std::string & getFilePath() const {return m_file_path;}
+  std::string getBaseDir() const {
+    if (m_file_path.empty()) return ".";
+    return std::filesystem::path(m_file_path).parent_path().string();
+  }
   void setElementSize(const double &element_size){m_element_size = element_size;}
   const double & getElementSize() const {return m_element_size;}
   void addBoundaryCondition(BoundaryCondition *make_double2bc);
@@ -126,6 +133,7 @@ protected:
   bool m_hasname;
   string m_name;
   string m_prev_name;
+  string m_file_path;
   AnalysisType m_analysisType = Solid3D;
   double m_element_size = 1.0;
 

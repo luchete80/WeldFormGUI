@@ -35,12 +35,14 @@ Part::Part(Geom* geom){
 void Part::generateMesh(){
   this->m_msh = new Mesh;
   this->m_msh->genFromGmshModel();
+  m_mesh_source_file.clear();
   m_ismeshed = true;
 }
 
 void Part::generateMeshFromNastranFile(const std::string& filename){
   this->m_msh = new Mesh;
   this->m_msh->genFromNastranFile(filename);
+  m_mesh_source_file = filename;
   m_ismeshed = true;
 }
 

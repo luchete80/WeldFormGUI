@@ -43,6 +43,8 @@ public:
   void generateMesh();
   void generateMeshFromNastranFile(const std::string& filename);
   void deleteMesh();
+  void setMeshSourceFile(const std::string& filename){m_mesh_source_file = filename;}
+  const std::string& getMeshSourceFile() const {return m_mesh_source_file;}
   virtual Part_Type getType(){return m_type;}
   void setType(const int &t){
     if (t==0) m_type = Elastic;
@@ -56,6 +58,7 @@ protected:
   Mesh* m_msh;
   Part_Type m_type;
   Geom* m_geom = nullptr;
+  std::string m_mesh_source_file;
   bool m_ismeshed;
   bool m_isgeom;
   

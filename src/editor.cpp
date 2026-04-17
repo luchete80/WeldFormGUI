@@ -32,6 +32,7 @@
 #include <thread>
 #include <cstdlib>
 #include <filesystem>
+#include <system_error>
 
 #include <gmsh.h>
 
@@ -122,6 +123,7 @@ void Editor::meshPart(Part* part){
       analysis_type == PlaneStrain2D ||
       analysis_type == Axisymmetric2D){
     std::string bdf_name = "output_smoothed.bdf";
+    std::string bdf_export_name = m_model->getName()+"_part_" + std::to_string(part_index) + ".bdf";
     double element_size = m_model->getElementSize();
     std::string remesh_cmd = "mesh-adapt \"" + name + "\" " + std::to_string(element_size);
     cout << "Running 2D remesher: " << remesh_cmd << endl;
@@ -132,7 +134,14 @@ void Editor::meshPart(Part* part){
     } else if (!std::filesystem::exists(bdf_name)){
       cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name << endl;
     } else {
-      part->generateMeshFromNastranFile(bdf_name);
+      std::error_code ec;
+      std::filesystem::copy_file(bdf_name, bdf_export_name,
+                                 std::filesystem::copy_options::overwrite_existing, ec);
+      if (ec) {
+        cerr << "Error copying remeshed BDF to part file: " << ec.message() << endl;
+        return;
+      }
+      part->generateMeshFromNastranFile(bdf_export_name);
       mesh_ready = true;
     }
   } else {
@@ -403,14 +412,17 @@ void ShowExampleMenuFile(const Editor &editor)
 
 
 
-      if (!(getApp().getActiveModel().getHasName()))
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
-      else {
-        cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
-        ModelWriter mw(getApp().getActiveModel()); //Once it has name
-        mw.writeToFile(getApp().getActiveModel().getName()+".json");
-      
-        //ImGui::OpenPopup("Overwrite?");
+	      if (!(getApp().getActiveModel().getHasName()))
+	        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
+	      else {
+	        cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
+	        ModelWriter mw(getApp().getActiveModel()); //Once it has name
+	        std::string save_path = getApp().getActiveModel().getFilePath();
+	        if (save_path.empty())
+	          save_path = getApp().getActiveModel().getName()+".json";
+	        mw.writeToFile(save_path);
+	      
+	        //ImGui::OpenPopup("Overwrite?");
         //~ if (fileExists(fullName)) {
             //~ ImGui::OpenPopup("Overwrite?");
         //~ }
@@ -1619,9 +1631,10 @@ void Editor::drawGui() {
       size_t dotPos = filePathName.rfind(".json");
       if (dotPos != std::string::npos)
           filePathName = filePathName.substr(0, dotPos);
-      cout << "Setting model name "<<filePathName<<endl;
-      m_model->setName(filePathName);
-      m_model->setNoSaveAs(); //Critic, this is for no changign mesh names
+	      cout << "Setting model name "<<filePathName<<endl;
+	      m_model->setName(filePathName);
+	      m_model->setFilePath(ImGuiFileDialog::Instance()->GetFilePathName());
+	      m_model->setNoSaveAs(); //Critic, this is for no changign mesh names
 
       getApp().setActiveModel(m_model);
       #ifdef BUILD_PYTHON
@@ -1821,10 +1834,11 @@ void Editor::drawGui() {
       if (dotPos != std::string::npos)
           fileName = fileName.substr(0, dotPos);
 
-      getApp().getActiveModel().setName(fileName);
-      cout << "Setting model name: "<<fileName<<"address "<<&getApp().getActiveModel()<<endl;
-      ModelWriter mw(getApp().getActiveModel()); //Once it has name
-      mw.writeToFile(filePathName);
+	      getApp().getActiveModel().setName(fileName);
+	      getApp().getActiveModel().setFilePath(filePathName);
+	      cout << "Setting model name: "<<fileName<<"address "<<&getApp().getActiveModel()<<endl;
+	      ModelWriter mw(getApp().getActiveModel()); //Once it has name
+	      mw.writeToFile(filePathName);
     }
     // close
     ImGuiFileDialog::Instance()->Close();
