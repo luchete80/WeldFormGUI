@@ -34,6 +34,17 @@ enum AnalysisType {
 };
 
 enum model_type {FEM_Model=1, SPH_Model};
+
+struct ContactProperties {
+  double fricCoeffStatic = 0.0;
+  double gapPenaltyScale = 2.0;
+  double heatCondCoeff = 0.5;
+  bool heatConductance = false;
+  double maxAccel = 100000.0;
+  double maxPenetRatio = 0.05;
+  double penaltyFactor = 5000.0;
+  bool useGapPenalty = true;
+};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
   friend Editor;
@@ -94,6 +105,8 @@ public:
   const double & getElementSize() const {return m_element_size;}
   void addBoundaryCondition(BoundaryCondition *make_double2bc);
   void addInitialCondition(InitialCondition *bc){m_ic.push_back(bc);}
+  ContactProperties & contactProps(){return m_contact_props;}
+  const ContactProperties & contactProps() const {return m_contact_props;}
 
 
   int part_count;
@@ -141,6 +154,7 @@ protected:
   string m_file_path;
   AnalysisType m_analysisType = Solid3D;
   double m_element_size = 1.0;
+  ContactProperties m_contact_props;
 
 
 };

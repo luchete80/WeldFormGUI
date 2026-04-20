@@ -445,6 +445,74 @@ int main(int argc, char* argv[])
 	                            
 	              static std::string activeFieldName = "";
 	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
+	              static int activeFieldComponents = 1;
+	              static int selectedFieldComponent = -2;
+	              auto getActiveArray = [&](ResultFrame& resultFrame) -> vtkDataArray* {
+	                  if (activeFieldName.empty() || !resultFrame.mesh)
+	                      return nullptr;
+	                  return isCellField
+	                      ? resultFrame.mesh->GetCellData()->GetArray(activeFieldName.c_str())
+	                      : resultFrame.mesh->GetPointData()->GetArray(activeFieldName.c_str());
+	              };
+	              auto recomputeActiveFieldScale = [&]() {
+	                  if (!editor->getResults() || activeFieldName.empty())
+	                      return;
+
+	                  globalMin = 1.0e10;
+	                  globalMax = -1.0e10;
+
+	                  for (auto& f : editor->getResults()->frames) {
+	                      if (!f || !f->mesh)
+	                          continue;
+
+	                      vtkDataArray* array = getActiveArray(*f);
+
+	                      if (!array)
+	                          continue;
+
+	                      double range[2];
+	                      if (selectedFieldComponent >= 0 &&
+	                          selectedFieldComponent < array->GetNumberOfComponents())
+	                          array->GetRange(range, selectedFieldComponent);
+	                      else if (array->GetNumberOfComponents() == 3 && selectedFieldComponent == 3)
+	                          array->GetRange(range, -1);
+	                      else
+	                          array->GetRange(range);
+
+	                      globalMin = (std::min)(globalMin, range[0]);
+	                      globalMax = (std::max)(globalMax, range[1]);
+	                  }
+	              };
+	              auto applyActiveFieldSelection = [&](ResultFrame& resultFrame) {
+	                  if (activeFieldName.empty())
+	                      return;
+
+	                  auto mapper = resultFrame.actor->GetMapper();
+	                  vtkDataArray* array = getActiveArray(resultFrame);
+	                  if (!mapper || !array)
+	                      return;
+
+	                  if (array->GetNumberOfComponents() == 3 && selectedFieldComponent == 3) {
+	                      resultFrame.setActiveScalarField(activeFieldName);
+	                      resultFrame.updateScalarBar(activeFieldName, globalMin, globalMax);
+	                      return;
+	                  }
+
+	                  if (isCellField)
+	                      mapper->SetScalarModeToUseCellFieldData();
+	                  else
+	                      mapper->SetScalarModeToUsePointFieldData();
+
+	                  mapper->SelectColorArray(activeFieldName.c_str());
+	                  if (selectedFieldComponent >= 0 &&
+	                      selectedFieldComponent < array->GetNumberOfComponents())
+	                      mapper->SetArrayComponent(selectedFieldComponent);
+
+	                  mapper->SetScalarRange(globalMin, globalMax);
+	                  mapper->ScalarVisibilityOn();
+	                  mapper->Update();
+	                  resultFrame.updateScalarBar(activeFieldName, globalMin, globalMax);
+	              };
 
 	              // Botones de background específicos
 	              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
@@ -460,6 +528,7 @@ int main(int argc, char* argv[])
 	                  if (editor->refreshOpenResults()) {
 	                      if (editor->getResults() && !editor->getResults()->frames.empty()) {
 	                          currentFrame = std::min(previousFrame, (int)editor->getResults()->frames.size() - 1);
+	                          recomputeActiveFieldScale();
 	                      } else {
 	                          currentFrame = 0;
 	                      }
@@ -508,19 +577,9 @@ int main(int argc, char* argv[])
 
 	                  if (currentFrame != lastFrame) {              // Solo si cambió el frame
 	                      vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
+	                      renderer->ResetCamera();
 	                      if (!activeFieldName.empty()) {
-	                          auto mapper = editor->getResults()->frames[currentFrame]->actor->GetMapper();
-
-	                          if (isCellField)
-	                              mapper->SetScalarModeToUseCellFieldData();
-	                          else
-                              mapper->SetScalarModeToUsePointFieldData();
-
-	                          mapper->SelectColorArray(activeFieldName.c_str());
-	                          mapper->SetScalarRange(globalMin, globalMax);
-	                          mapper->ScalarVisibilityOn();
-	                          mapper->Update();
-	                          editor->getResults()->frames[currentFrame]->updateScalarBar(activeFieldName, globalMin, globalMax);
+	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
 	                      }
 	                      
 	                      lastFrame = currentFrame;                // Actualizamos el frame anterior
@@ -557,42 +616,51 @@ int main(int argc, char* argv[])
                             std::string selected = fieldNames[selectedField];
                             isCellField = (selected.rfind("[C]", 0) == 0);
                             activeFieldName = selected.substr(4); // remueve "[C] " o "[P] "
+                            vtkDataArray* selectedArray = getActiveArray(frame);
+                            activeFieldComponents = selectedArray ? selectedArray->GetNumberOfComponents() : 1;
+                            selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
+                                                     (activeFieldComponents > 1 ? 0 : -1);
 
-                            // Calcular rango global en todos los frames
-                            // globalMin = std::numeric_limits<double>::max();
-                            // globalMax = -std::numeric_limits<double>::max();
-                            globalMin = 1.0e10;
-                            globalMax = -1.0e10;
-
-
-                            for (auto& f : editor->getResults()->frames) {
-                                vtkDataArray* array = isCellField ?
-                                    f->mesh->GetCellData()->GetArray(activeFieldName.c_str()) :
-                                    f->mesh->GetPointData()->GetArray(activeFieldName.c_str());
-
-                                if (array) {
-                                    double* range = array->GetRange();
-                                    globalMin = (std::min)(globalMin, range[0]);
-                                    globalMax = (std::max)(globalMax, range[1]);
-                                }
-                            }
+                            recomputeActiveFieldScale();
                             cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
-                            // Aplicar al frame actual
-                            if (isCellField)
-                                frame.actor->GetMapper()->SetScalarModeToUseCellFieldData();
-                            else
-                                frame.actor->GetMapper()->SetScalarModeToUsePointFieldData();
-
-	                            frame.actor->GetMapper()->SelectColorArray(activeFieldName.c_str());
-	                            frame.actor->GetMapper()->SetScalarRange(globalMin, globalMax);
-	                            frame.actor->GetMapper()->ScalarVisibilityOn();
-	                            frame.actor->GetMapper()->Update();
-	                            frame.updateScalarBar(activeFieldName, globalMin, globalMax);
+	                            applyActiveFieldSelection(frame);
 
 	                            vtkViewer_res.render();
 	                        }
 	                    } else {
 	                        ImGui::Text("No fields available");
+	                    }
+
+	                        vtkDataArray* activeArray = getActiveArray(frame);
+	                        if (activeArray)
+	                            activeFieldComponents = activeArray->GetNumberOfComponents();
+	                    if (!activeFieldName.empty() && activeFieldComponents > 1) {
+	                        ImGui::Separator();
+	                        ImGui::Text("Component");
+	                        int buttonCount = activeFieldComponents;
+	                        bool vectorMagnitudeButton = (activeFieldComponents == 3);
+	                        if (vectorMagnitudeButton)
+	                            buttonCount = 4;
+
+	                        for (int comp = 0; comp < buttonCount; ++comp) {
+	                            std::string label = std::to_string(comp);
+	                            bool isSelected = (selectedFieldComponent == comp);
+	                            if (isSelected)
+	                                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+
+	                            if (ImGui::Button(label.c_str())) {
+	                                selectedFieldComponent = comp;
+	                                recomputeActiveFieldScale();
+	                                applyActiveFieldSelection(frame);
+	                                vtkViewer_res.render();
+	                            }
+
+	                            if (isSelected)
+	                                ImGui::PopStyleColor();
+
+	                            if (comp + 1 < buttonCount)
+	                                ImGui::SameLine();
+	                        }
 	                    }
 
 	                    if (!activeFieldName.empty()) {

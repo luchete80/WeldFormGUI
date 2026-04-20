@@ -7,8 +7,25 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "ImGuiFileDialog.h"
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
+
+namespace {
+std::string modelStem(Model &model) {
+  std::string model_name = fs::path(model.getName()).stem().string();
+  if (model_name.empty())
+    model_name = fs::path(model.getName()).filename().string();
+  if (model_name.empty())
+    model_name = "model";
+  return model_name;
+}
+
+fs::path modelOutputPath(Model &model, const std::string &filename) {
+  return fs::path(model.getBaseDir()) / filename;
+}
+}
 
 void  JobDialog::Draw(){
 
@@ -29,9 +46,10 @@ void  JobDialog::Draw(){
   if (!m_edit_mode && ImGui::Button("From Model")){
     Model &model = getApp().getActiveModel();
     if (model.getHasName()) {
-      m_filename = model.getName() + "_run.json";
+      fs::path input_path = modelOutputPath(model, modelStem(model) + "_run.json");
+      m_filename = input_path.string();
       InputWriter writer(&model);
-      writer.writeToFile(m_filename);
+      writer.writeToFile(input_path.string());
       create_entity = true;
       m_edit_mode = false;
       m_job = nullptr;

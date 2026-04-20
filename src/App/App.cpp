@@ -60,30 +60,38 @@ void App::updateMeshes(){
   cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
   
   for (int p=0;p<_activeModel->getPartCount();p++){
+    Part* part = _activeModel->getPart(p);
+    if (!part || !part->isMeshed()) {
+      continue;
+    }
     cout << "Checking app new parts "<<endl;
     cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
     bool not_found = true;
+      Mesh* partMesh = part->getMesh();
+      if (partMesh == nullptr) {
+        continue;
+      }
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
-        if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
+        if (m_graphicmeshes[gm]->getMesh() == partMesh){//is related to the part mesh
             not_found = false;
             is_part[gm] = true;
           }
         
         }
       if (not_found){
-        if (_activeModel->getPart(p)->isMeshed()){
+        if (part->isMeshed()){
           
         cout << "Creating Graphic Mesh for part "<<p<<endl;
-        if (_activeModel->getPart(p)->getMesh()!=nullptr){
-          if (_activeModel->getPart(p)->getMesh()->getType()==SPH){
+        if (partMesh != nullptr){
+          if (partMesh->getType()==SPH){
             cout << "Creating SPH graphic mesh-----"<<endl;
-            m_graphicmeshes.push_back( new GraphicSPHMesh(_activeModel->getPart(p)->getMesh())); ///THIS READS FROM GLOBAL GMSH MODEL
-            m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*_activeModel->getPart(p)->getMesh());
+            m_graphicmeshes.push_back( new GraphicSPHMesh(partMesh)); ///THIS READS FROM GLOBAL GMSH MODEL
+            m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*partMesh);
             //ACTOR IS NOT ASSIGNED (THIS IS DONE IN ORDER TO NOT ADD VTK CODE HERE)
             //viewer->addActor(graphic_mesh->getActor());  
           }
           else
-          m_graphicmeshes.push_back(new GraphicMesh(_activeModel->getPart(p)->getMesh()));
+          m_graphicmeshes.push_back(new GraphicMesh(partMesh));
           cout << "Created FEM mesh"<<endl; 
         }else 
           cout << "ERROR: Part mesh is null pointer"<<endl;
@@ -99,8 +107,16 @@ void App::updateMeshes(){
     for (int gm=0;gm<m_graphicmeshes.size();gm++){
       bool del_part = true;
       for (int p=0;p<_activeModel->getPartCount();p++){
-        cout << "sm mesh ptr "<<m_graphicmeshes[gm]->getMesh()<<", "<<" part msh pointer "<<_activeModel->getPart(p)->getMesh()<<endl;
-      if (m_graphicmeshes[gm]->getMesh() == _activeModel->getPart(p)->getMesh()){//is related to the part mesh
+        Part* part = _activeModel->getPart(p);
+        if (!part || !part->isMeshed()) {
+          continue;
+        }
+        Mesh* partMesh = part->getMesh();
+        if (partMesh == nullptr) {
+          continue;
+        }
+        cout << "sm mesh ptr "<<m_graphicmeshes[gm]->getMesh()<<", "<<" part msh pointer "<<partMesh<<endl;
+      if (m_graphicmeshes[gm]->getMesh() == partMesh){//is related to the part mesh
         cout <<"Found one part with corresponding mesh"<<endl;
         del_part = false;
         }

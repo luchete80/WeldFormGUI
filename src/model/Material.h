@@ -94,6 +94,8 @@ class Material_{
   bool m_isplastic = false;
   double k_T  = 0.0;
   double cp_T = 0.0; ///MAYBE MOVE TO element or nodes
+  double yieldStress0 = 190.0E6;
+  std::vector<double> strRange = {0.0, 0.65};
 
 };
 

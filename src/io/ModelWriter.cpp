@@ -116,6 +116,18 @@ void ModelWriter::writeToFile(std::string fname){
   
   if (m_model.m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true; 
+
+  m_json["Contact"] = json::array();
+  m_json["Contact"].push_back({
+    {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
+    {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},
+    {"heatCondCoeff", m_model.contactProps().heatCondCoeff},
+    {"heatConductance", m_model.contactProps().heatConductance},
+    {"maxAccel", m_model.contactProps().maxAccel},
+    {"maxPenetRatio", m_model.contactProps().maxPenetRatio},
+    {"penaltyFactor", m_model.contactProps().penaltyFactor},
+    {"useGapPenalty", m_model.contactProps().useGapPenalty}
+  });
   
   //SHOULD BE AT SPH
   //m_json["Configuration"]["hFactor"] = 1.2;

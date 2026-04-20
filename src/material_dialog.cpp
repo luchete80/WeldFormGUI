@@ -28,6 +28,9 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
         // etc...
         m_k_T = 0.0;
         m_cp_T = 0.0;
+        m_yield_stress0 = 190.0E6;
+        m_strain_range_min = 0.0;
+        m_strain_range_max = 0.65;
         
         return;
     }
@@ -39,6 +42,13 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
 
     m_cp_T= mat->cp_T;
     m_k_T = mat->k_T;   
+    m_yield_stress0 = mat->yieldStress0;
+    m_strain_range_min = 0.0;
+    m_strain_range_max = 0.65;
+    if (mat->strRange.size() >= 2) {
+        m_strain_range_min = mat->strRange[0];
+        m_strain_range_max = mat->strRange[1];
+    }
 
         
     if (mat->isPlastic()) {
@@ -121,6 +131,9 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
   //ImGui::BeginDisabled();
   ImGui::InputDouble("Heat Capacity (cp)", &m_cp_T, 0.0, 1.0, "%.2f");
   ImGui::InputDouble("Thermal Conductivity (k)", &m_k_T, 0.0, 1.0, "%.2f");
+  ImGui::InputDouble("Initial Yield Stress", &m_yield_stress0, 0.0, 1.0, "%.2e");
+  ImGui::InputDouble("Strain Range Min", &m_strain_range_min, 0.0, 1.0, "%.4f");
+  ImGui::InputDouble("Strain Range Max", &m_strain_range_max, 0.0, 1.0, "%.4f");
   //ImGui::EndDisabled();
 
 
@@ -210,6 +223,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
         mat->cp_T = m_cp_T;
         mat->k_T = m_k_T;
+        mat->yieldStress0 = m_yield_stress0;
+        mat->strRange = {m_strain_range_min, m_strain_range_max};
 
         if (m_selected_model != 0) {
             // Liberar el modelo previo

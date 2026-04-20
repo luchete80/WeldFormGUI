@@ -32,6 +32,9 @@ public Dialog{
   double hollomon_K;
   double hollomon_n;
   double m_k_T, m_cp_T;
+  double m_yield_stress0;
+  double m_strain_range_min;
+  double m_strain_range_max;
 
   double gmt_n1, gmt_n2, gmt_m1, gmt_m2, gmt_I1, gmt_I2;
 

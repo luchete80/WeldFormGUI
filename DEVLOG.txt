@@ -162,10 +162,13 @@
 20260417 - Fixed 2D meshing to mesh-adapt (no gmsh) 
          - Exporting bdf as mesh format in model
 20260420 - NEW Added Load Plots with ImPlot. 
+         - NEW Step, Implicit or Explicit, with all solver conditions.
          - NEW Now Generates input file from model
          - Added "Load Results" from both model and job.
          - Added "Refresh Results" Button
          - Auto update of Running Job progress. 
          - Reduced log state to N lines
          - Added Visible in lines
-          
+         - Added Boundary Condition output from model.
+         - Added Vector Component in plot 
+         - Adding contact parameters.

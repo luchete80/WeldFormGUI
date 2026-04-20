@@ -33,8 +33,10 @@ public:
   Mesh* getMesh(){
     if (m_msh != nullptr) {
       //cout << "Address "<<m_msh<<endl;
-    return m_msh;
-    }else cout << "MESH POINTER "<<endl;
+      return m_msh;
+    }
+    cout << "MESH POINTER " << endl;
+    return nullptr;
   }
   void setId(const int &id){m_id = id;}
 

@@ -100,6 +100,19 @@ bool ModelReader::readFromFile(const std::string& fname) {
           m_model->m_thermal_coupling = false;
     }
 
+    if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
+        const auto &contact = j["Contact"][0];
+        ContactProperties &props = m_model->contactProps();
+        props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
+        props.gapPenaltyScale = contact.value("gapPenaltyScale", props.gapPenaltyScale);
+        props.heatCondCoeff = contact.value("heatCondCoeff", props.heatCondCoeff);
+        props.heatConductance = contact.value("heatConductance", props.heatConductance);
+        props.maxAccel = contact.value("maxAccel", props.maxAccel);
+        props.maxPenetRatio = contact.value("maxPenetRatio", props.maxPenetRatio);
+        props.penaltyFactor = contact.value("penaltyFactor", props.penaltyFactor);
+        props.useGapPenalty = contact.value("useGapPenalty", props.useGapPenalty);
+    }
+
     // =============================================================
     // Materials
     // =============================================================
@@ -115,6 +128,10 @@ bool ModelReader::readFromFile(const std::string& fname) {
         Elastic_ elastic(E, nu);
         Material_* material = new Material_(elastic);
         material->setDensityConstant(rho);
+        material->yieldStress0 = mat.value("yieldStress0", material->yieldStress0);
+        if (mat.contains("strRange") && mat["strRange"].is_array() && mat["strRange"].size() >= 2) {
+            material->strRange = {mat["strRange"][0].get<double>(), mat["strRange"][1].get<double>()};
+        }
 
         // Plastic rule (if applicable)
         if (mat.contains("type")) {

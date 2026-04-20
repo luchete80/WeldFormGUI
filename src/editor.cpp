@@ -77,6 +77,24 @@ void processInput(GLFWwindow *window);
 
 ImVec2 vpos, vmin, vmax;
 
+namespace {
+std::string activeModelStem(Model &model)
+{
+    fs::path model_name(model.getName());
+    std::string stem = model_name.stem().string();
+    if (stem.empty())
+        stem = model_name.filename().string();
+    if (stem.empty())
+        stem = "model";
+    return stem;
+}
+
+fs::path activeModelOutputPath(Model &model, const std::string &filename)
+{
+    return fs::path(model.getBaseDir()) / filename;
+}
+}
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -260,14 +278,15 @@ void Editor::meshPart(Part* part){
     return;
   }
 
-  std::string name = m_model->getName() + "_part_" + std::to_string(part_index) + ".step";
-  geo->setFileName(name);
+  fs::path step_path = activeModelOutputPath(*m_model,
+                                             activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".step");
+  geo->setFileName(step_path.string());
   geo->ExportSTEP();
 
   gmsh::clear();
   gmsh::model::add("t20");
   std::vector<std::pair<int, int> > v;
-  gmsh::model::occ::importShapes(name, v);
+  gmsh::model::occ::importShapes(step_path.string(), v);
   gmsh::model::occ::synchronize();
   int gmsh_dim = gmsh::model::getDimension();
   AnalysisType analysis_type = m_model->getAnalysisType();
@@ -280,26 +299,27 @@ void Editor::meshPart(Part* part){
 
   bool mesh_ready = false;
   if (is_2d_analysis && !is_rigid_part){
-    std::string bdf_name = "output_smoothed.bdf";
-    std::string bdf_export_name = m_model->getName()+"_part_" + std::to_string(part_index) + ".bdf";
+    fs::path bdf_name = "output_smoothed.bdf";
+    fs::path bdf_export_path = activeModelOutputPath(*m_model,
+                                                     activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf");
     double element_size = m_model->getElementSize();
-    std::string remesh_cmd = "mesh-adapt \"" + name + "\" " + std::to_string(element_size);
+    std::string remesh_cmd = "mesh-adapt \"" + step_path.string() + "\" " + std::to_string(element_size);
     cout << "Running 2D remesher: " << remesh_cmd << endl;
 
     int remesh_status = std::system(remesh_cmd.c_str());
     if (remesh_status != 0){
       cerr << "Error running mesh-adapt. Exit code: " << remesh_status << endl;
     } else if (!std::filesystem::exists(bdf_name)){
-      cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name << endl;
+      cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name.string() << endl;
     } else {
       std::error_code ec;
-      std::filesystem::copy_file(bdf_name, bdf_export_name,
+      std::filesystem::copy_file(bdf_name, bdf_export_path,
                                  std::filesystem::copy_options::overwrite_existing, ec);
       if (ec) {
         cerr << "Error copying remeshed BDF to part file: " << ec.message() << endl;
         return;
       }
-      part->generateMeshFromNastranFile(bdf_export_name);
+      part->generateMeshFromNastranFile(bdf_export_path.string());
       mesh_ready = true;
     }
   } else if (is_2d_analysis && is_rigid_part) {
@@ -314,8 +334,9 @@ void Editor::meshPart(Part* part){
 
     gmsh::model::mesh::generate(1);
 
-    std::string meshname = m_model->getName()+"_part_" + std::to_string(part_index) + ".msh";
-    gmsh::write(meshname.c_str());
+    fs::path mesh_path = activeModelOutputPath(*m_model,
+                                               activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".msh");
+    gmsh::write(mesh_path.string().c_str());
 
     part->generateMesh();
     mesh_ready = true;
@@ -336,8 +357,9 @@ void Editor::meshPart(Part* part){
     
     if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);
     
-    std::string meshname = m_model->getName()+"_part_" + std::to_string(part_index) + ".msh";
-    gmsh::write(meshname.c_str());
+    fs::path mesh_path = activeModelOutputPath(*m_model,
+                                               activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".msh");
+    gmsh::write(mesh_path.string().c_str());
     
     part->generateMesh();
     mesh_ready = true;
@@ -351,9 +373,10 @@ void Editor::meshPart(Part* part){
   getApp().Update();
   getApp().checkUpdate();
   
-  std::string kname = m_model->getName()+"_part_" + std::to_string(part_index) + ".k";
+  fs::path kpath = activeModelOutputPath(*m_model,
+                                         activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".k");
   cout << "Exporting to LSDyna..."<<endl;
-  part->getMesh()->exportToLSDYNA(kname);
+  part->getMesh()->exportToLSDYNA(kpath.string());
   cout << "Done"<<endl;
 }
 
@@ -576,9 +599,12 @@ void ShowExampleMenuFile(const Editor &editor)
     //If open
     if (ImGui::MenuItem("Write JSON Input", "Ctrl+J")) {
       InputWriter writer( &getApp().getActiveModel() );
-      if ( (getApp().getActiveModel().getHasName()) )
+      if ( (getApp().getActiveModel().getHasName()) ) {
+        fs::path input_path = activeModelOutputPath(getApp().getActiveModel(),
+                                                    activeModelStem(getApp().getActiveModel()) + "_run.json");
         //writer.writeToFile("Input.json");
-        writer.writeToFile(getApp().getActiveModel().getName()+"_run.json");
+        writer.writeToFile(input_path.string());
+      }
       else 
         cout << "File has not name."<<endl;
       }
@@ -1188,12 +1214,22 @@ void Editor::drawGui() {
         open_ = ImGui::TreeNode("InteractionProps");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
+          if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+            m_interactionpropsdlg.setModel(m_model);
+            m_show_interaction_props_dlg = true;
+          }
             ImGui::EndPopup();
           
         }
         if (open_)
         {
+           ContactProperties &contact = m_model->contactProps();
+           ImGui::Text("Static friction: %.4f", contact.fricCoeffStatic);
+           ImGui::Text("Penalty factor: %.4f", contact.penaltyFactor);
+           if (ImGui::Button("Edit Interaction Props")) {
+             m_interactionpropsdlg.setModel(m_model);
+             m_show_interaction_props_dlg = true;
+           }
            // your tree code stuff
            ImGui::TreePop();
         }
@@ -1588,7 +1624,9 @@ void Editor::drawGui() {
               getApp().setActiveModel(m_model);
               getApp().Update(); //Create Graphic Mesh
               
-              p->getMesh()->exportToLSDYNA("test.k");
+              fs::path kpath = activeModelOutputPath(*m_model,
+                                                     activeModelStem(*m_model) + "_part_" + std::to_string(m_model->getPartCount() - 1) + ".k");
+              p->getMesh()->exportToLSDYNA(kpath.string());
                                 
               
               cout << "Done"<<endl;
@@ -1607,10 +1645,11 @@ void Editor::drawGui() {
               cout <<"Created OCCvtK: "<<geom<<endl;
               int pc = m_model->getPartCount();
               
-              std::string name = m_model->getName()+"_part_" + std::to_string(pc) + ".step";
+              fs::path step_path = activeModelOutputPath(*m_model,
+                                                         activeModelStem(*m_model) + "_part_" + std::to_string(pc) + ".step");
               //Geom *geo = new Geom(name);
               Geom *geo = new Geom;
-              geo->setFileName(name);
+              geo->setFileName(step_path.string());
               //cout << "Creating rectangle"<<endl;
               bool created = false;
               cout << "Size: "<<size[0]<<","<<size[1]<<"," << size[2]<<endl; 
@@ -2100,6 +2139,12 @@ void Editor::drawGui() {
   if (m_show_msh_dlg) {  
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     m_mshdlg.Draw("Part", &m_show_msh_dlg, m_model, selected_prt);
+  }
+  if (m_show_interaction_props_dlg) {
+    m_interactionpropsdlg.setModel(m_model);
+    m_interactionpropsdlg.m_show = true;
+    m_interactionpropsdlg.Draw();
+    m_show_interaction_props_dlg = m_interactionpropsdlg.m_show;
   }
   if (m_mshdlg.hasMeshRequest()) {
     Part* part_to_mesh = m_mshdlg.consumeMeshRequest();

@@ -45,6 +45,7 @@
 #include "Material.h"
 
 #include "job_dialog.h"
+#include "interaction_props_dialog.h"
 #include "step_dialog.h"
 #include "bc_dialog.h"
 #include "mesh_dialog.h"
@@ -228,6 +229,7 @@ protected:
   //JobDialog<Job> m_jobdlg;
   JobDialog       m_jobdlg; //creation
   JobShowDialog   m_jobshowdlg;
+  InteractionPropsDialog m_interactionpropsdlg;
   StepDialog      m_stepdlg;
   CreateSetDialog m_setdlg;
   
@@ -241,6 +243,7 @@ protected:
   bool m_show_prt_dlg_edit = false;
   bool m_show_bc_dlg_edit = false;
   bool m_show_step_dlg_edit = false;
+  bool m_show_interaction_props_dlg = false;
   bool create_new_mat;
   bool create_new_part;
   bool create_new_job;

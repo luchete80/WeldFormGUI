@@ -79,6 +79,59 @@ json makeImplicitSolverJson(const Step *step) {
   implicit["timeStepGrowthFactor"] = step ? step->m_timeStepGrowthFactor : 1.2;
   return implicit;
 }
+
+Part *findPartById(Model *model, int part_id) {
+  if (model == nullptr)
+    return nullptr;
+
+  for (int i = 0; i < model->getPartCount(); ++i) {
+    Part *part = model->getPart(i);
+    if (part != nullptr && part->getId() == part_id)
+      return part;
+  }
+
+  return nullptr;
+}
+
+bool appendRigidBoundaryCondition(json &bc_array, Model *model, BoundaryCondition *bc) {
+  if (bc == nullptr)
+    return false;
+
+  if (bc->getApplyTo() != ApplyToPart) {
+    std::cerr << "ERROR: BoundaryCondition export only supports ApplyToPart. TargetId="
+              << bc->getTargetId() << std::endl;
+    return false;
+  }
+
+  Part *part = findPartById(model, bc->getTargetId());
+  if (part == nullptr) {
+    std::cerr << "ERROR: BoundaryCondition target part not found. TargetId="
+              << bc->getTargetId() << std::endl;
+    return false;
+  }
+
+  if (part->getType() != Rigid) {
+    std::cerr << "ERROR: BoundaryCondition on deformable part is not allowed in exported input. PartId="
+              << part->getId() << std::endl;
+    return false;
+  }
+
+  json jbc;
+  jbc["zoneId"] = part->getId();
+
+  if (bc->getType() == DisplacementBC) {
+    jbc["valueType"] = 1;
+    jbc["amplitudeId"] = 1;
+    jbc["amplitudeFactor"] = 1.0;
+  } else {
+    jbc["valueType"] = 0;
+  }
+
+  double3 v = bc->getValue();
+  jbc["value"] = {v.x, v.y, v.z};
+  bc_array.push_back(jbc);
+  return true;
+}
 }
 
 InputWriter::InputWriter(Model*m) : m_model(m) {}
@@ -117,10 +170,16 @@ void InputWriter::writeToFile(std::string fname) {
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
 
+  const ContactProperties &contact = m_model->contactProps();
   json cont;
-  cont["fricCoeffStatic"] = 0.3;
-  cont["fricCoeffDynamic"] = 0.3;
-  cont["penaltyFactor"] = 0.8;
+  cont["fricCoeffStatic"] = contact.fricCoeffStatic;
+  cont["gapPenaltyScale"] = contact.gapPenaltyScale;
+  cont["heatCondCoeff"] = contact.heatCondCoeff;
+  cont["heatConductance"] = contact.heatConductance;
+  cont["maxAccel"] = contact.maxAccel;
+  cont["maxPenetRatio"] = contact.maxPenetRatio;
+  cont["penaltyFactor"] = contact.penaltyFactor;
+  cont["useGapPenalty"] = contact.useGapPenalty;
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back(cont);
 
@@ -205,21 +264,12 @@ void InputWriter::writeToFile(std::string fname) {
   bool xSymm = false;
   bool ySymm = false;
   bool zSymm = false;
+  m_json["BoundaryConditions"] = json::array();
   if (m_model->getBCCount() > 0) {
-    m_json["BoundaryConditions"] = json::array();
-
     for (int i = 0; i < m_model->getBCCount(); ++i) {
       BoundaryCondition* bc = m_model->getBC(i);
       if (!bc)
         continue;
-
-      json jbc;
-      jbc["valueType"] = 0;
-      jbc["applyTo"] = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
-      jbc["zoneId"] = bc->getTargetId();
-
-      double3 v = bc->getValue();
-      jbc["value"] = {v.x, v.y, v.z};
 
       if (bc->getType() == SymmetryBC) {
         double3 n = bc->getNormal();
@@ -231,7 +281,7 @@ void InputWriter::writeToFile(std::string fname) {
         m_json["Configuration"]["ySymm"] = ySymm;
         m_json["Configuration"]["zSymm"] = zSymm;
       } else {
-        m_json["BoundaryConditions"].push_back(jbc);
+        appendRigidBoundaryCondition(m_json["BoundaryConditions"], m_model, bc);
       }
     }
   }
@@ -283,16 +333,17 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Meshing"]["maxElemAngle"] = step ? step->m_maxElemAngle : 150.0;
   m_json["Meshing"]["minElemAngle"] = step ? step->m_minElemAngle : 30.0;
 
+  const ContactProperties &contact = m_model->contactProps();
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
-    {"fricCoeffStatic", 0.0},
-    {"penaltyFactor", 5.0e3},
-    {"heatConductance", false},
-    {"heatCondCoeff", 0.5},
-    {"useGapPenalty", true},
-    {"gapPenaltyScale", 2.0},
-    {"maxPenetRatio", 0.05},
-    {"maxAccel", 1e5}
+    {"fricCoeffStatic", contact.fricCoeffStatic},
+    {"gapPenaltyScale", contact.gapPenaltyScale},
+    {"heatCondCoeff", contact.heatCondCoeff},
+    {"heatConductance", contact.heatConductance},
+    {"maxAccel", contact.maxAccel},
+    {"maxPenetRatio", contact.maxPenetRatio},
+    {"penaltyFactor", contact.penaltyFactor},
+    {"useGapPenalty", contact.useGapPenalty}
   });
 
   m_json["Amplitudes"] = json::array();
@@ -314,8 +365,11 @@ void InputWriter::writeImplicitToFile(std::string fname) {
       mat_json["thermalCond"] = mat->k_T;
       mat_json["youngsModulus"] = mat->Elastic().E();
       mat_json["poissonsRatio"] = mat->Elastic().nu();
-      mat_json["yieldStress0"] = 0.0;
-      mat_json["strRange"] = {0.0, 0.65};
+      mat_json["yieldStress0"] = mat->yieldStress0;
+      if (mat->strRange.size() >= 2)
+        mat_json["strRange"] = {mat->strRange[0], mat->strRange[1]};
+      else
+        mat_json["strRange"] = {0.0, 0.65};
 
       if (!mat->isPlastic()) {
         mat_json["type"] = "Elastic";
@@ -382,12 +436,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     if (bc->getType() == SymmetryBC)
       continue;
 
-    double3 v = bc->getValue();
-    json jbc;
-    jbc["zoneId"] = bc->getTargetId();
-    jbc["value"] = {v.x, v.y, v.z};
-    jbc["valueType"] = 0;
-    m_json["BoundaryConditions"].push_back(jbc);
+    appendRigidBoundaryCondition(m_json["BoundaryConditions"], m_model, bc);
   }
 
   if (m_json["BoundaryConditions"].empty()) {
