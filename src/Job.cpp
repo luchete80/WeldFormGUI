@@ -85,7 +85,7 @@ int Job::Run(){
 
   #ifdef _WIN32
   //str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
-  str = "START /B solvers\\" + solver_name + " \"" + m_path_file+ " \"";
+  str = "START /B solvers\\" + solver_name + " \"" + m_path_file+ "\"";
   cout << "RUNNING "<<str<<endl;
   #elif linux
   str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" &";
