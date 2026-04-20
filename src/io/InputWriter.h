@@ -16,6 +16,7 @@ public:
   bool readFromFile(const std::string& fname) ;
 
   void writeToFile(std::string fname);
+  void writeImplicitToFile(std::string fname);
   
   ~InputWriter(){}  
 

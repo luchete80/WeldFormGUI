@@ -13,6 +13,7 @@
 #include <nlohmann/json.hpp>
 #include "json_io.h"
 #include "BoundaryCondition.h"
+#include "Step.h"
 
 using json = nlohmann::json;
 
@@ -306,6 +307,44 @@ void ModelWriter::writeToFile(std::string fname){
     }//if not nullptr
     cout << "Done."<<endl;
   }// MATERIALS
+
+  if (m_model.getStepCount() > 0) {
+    m_json["Steps"] = json::array();
+    for (int i = 0; i < m_model.getStepCount(); ++i) {
+      Step *step = m_model.getStep(i);
+      if (!step)
+        continue;
+
+      json jstep;
+      jstep["id"] = step->getId();
+      jstep["name"] = step->getName();
+      jstep["type"] = step->isImplicit() ? "Implicit" : "Explicit";
+      jstep["nproc"] = step->m_nproc;
+      jstep["cflFactor"] = step->m_cflFactor;
+      jstep["autoTS"] = {step->m_autoTS[0], step->m_autoTS[1], step->m_autoTS[2]};
+      jstep["kernelGradCorr"] = step->m_kernelGradCorr;
+      jstep["simTime"] = step->m_simTime;
+      jstep["artifViscAlpha"] = step->m_artifViscAlpha;
+      jstep["artifViscBeta"] = step->m_artifViscBeta;
+      jstep["outTime"] = step->m_outTime;
+      jstep["fixedTS"] = step->m_fixedTS;
+      jstep["axiSymmVol"] = step->m_axiSymmVol;
+      jstep["elemLengthFraction"] = step->m_elemLengthFraction;
+      jstep["meshing"]["debug"] = step->m_meshingDebug;
+      jstep["meshing"]["maxElemAngle"] = step->m_maxElemAngle;
+      jstep["meshing"]["minElemAngle"] = step->m_minElemAngle;
+      jstep["implicit"]["type"] = step->m_implicitType;
+      jstep["implicit"]["velTol"] = step->m_velTol;
+      jstep["implicit"]["pressTol"] = step->m_pressTol;
+      jstep["implicit"]["forceTol"] = step->m_forceTol;
+      jstep["implicit"]["divTol"] = step->m_divTol;
+      jstep["implicit"]["omegaV"] = step->m_omegaV;
+      jstep["implicit"]["omegaP"] = step->m_omegaP;
+      jstep["implicit"]["maxIter"] = step->m_maxIter;
+      jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
+      m_json["Steps"].push_back(jstep);
+    }
+  }
 
   if (m_model.getBCCount() > 0) {
       std::cout << "Writing Boundary Conditions..." << std::endl;

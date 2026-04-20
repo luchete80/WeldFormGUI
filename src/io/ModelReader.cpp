@@ -6,6 +6,7 @@
 #include "json_io.h"
 #include "gmsh.h"
 #include "BoundaryCondition.h"
+#include "Step.h"
 
 #include <iostream>
 #include <fstream>
@@ -229,6 +230,58 @@ bool ModelReader::readFromFile(const std::string& fname) {
     // =============================================================
     // Boundary Conditions
     // =============================================================
+    if (j.contains("Steps") && j["Steps"].is_array()) {
+        for (const auto& jstep : j["Steps"]) {
+            Step *step = new Step();
+            if (jstep.contains("id")) {
+                int step_id = jstep["id"].get<int>();
+                step->setId(step_id);
+            }
+            if (jstep.contains("name"))
+                step->setName(jstep["name"].get<std::string>().c_str());
+
+            std::string stepType = jstep.value("type", "Explicit");
+            step->setStepType(stepType == "Implicit" ? ImplicitStep : ExplicitStep);
+
+            step->m_nproc = jstep.value("nproc", 1);
+            step->m_cflFactor = jstep.value("cflFactor", 0.3);
+            if (jstep.contains("autoTS") && jstep["autoTS"].is_array() && jstep["autoTS"].size() == 3) {
+                for (int k = 0; k < 3; ++k)
+                    step->m_autoTS[k] = jstep["autoTS"][k].get<bool>();
+            }
+            step->m_kernelGradCorr = jstep.value("kernelGradCorr", false);
+            step->m_simTime = jstep.value("simTime", 200.0);
+            step->m_artifViscAlpha = jstep.value("artifViscAlpha", 1.0);
+            step->m_artifViscBeta = jstep.value("artifViscBeta", 0.0);
+            step->m_outTime = jstep.value("outTime", 1.0);
+            step->m_fixedTS = jstep.value("fixedTS", false);
+            step->m_axiSymmVol = jstep.value("axiSymmVol", false);
+            step->m_elemLengthFraction = jstep.value("elemLengthFraction", 0.2);
+
+            if (jstep.contains("meshing")) {
+                const auto &meshing = jstep["meshing"];
+                step->m_meshingDebug = meshing.value("debug", true);
+                step->m_maxElemAngle = meshing.value("maxElemAngle", 150.0);
+                step->m_minElemAngle = meshing.value("minElemAngle", 30.0);
+            }
+
+            if (jstep.contains("implicit")) {
+                const auto &implicit = jstep["implicit"];
+                step->m_implicitType = implicit.value("type", "Picard");
+                step->m_velTol = implicit.value("velTol", 5e-2);
+                step->m_pressTol = implicit.value("pressTol", 10.0);
+                step->m_forceTol = implicit.value("forceTol", 10.0);
+                step->m_divTol = implicit.value("divTol", 1.0);
+                step->m_omegaV = implicit.value("omegaV", 0.4);
+                step->m_omegaP = implicit.value("omegaP", 0.1);
+                step->m_maxIter = implicit.value("maxIter", 200);
+                step->m_timeStepGrowthFactor = implicit.value("timeStepGrowthFactor", 1.2);
+            }
+
+            m_model->addStep(step);
+        }
+    }
+
     if (j.contains("BoundaryConditions") && j["BoundaryConditions"].is_array()) {
         const auto& bcArray = j["BoundaryConditions"];
         cout << "[ModelReader] Reading " << bcArray.size() << " Boundary Condition(s)" << endl;

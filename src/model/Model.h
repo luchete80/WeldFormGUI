@@ -24,6 +24,7 @@ class LSDynaWriter;
 class GraphicMesh;
 class ModelWriter;
 class InputWriter;
+class Step;
 
 enum AnalysisType {
     PlaneStress2D,
@@ -73,6 +74,9 @@ public:
 
   int getICCount(){return m_ic.size();}
   InitialCondition* getIC(const int &i){return m_ic[i];}
+  int getStepCount(){return m_steps.size();}
+  Step* getStep(const int &i){return m_steps[i];}
+  void addStep(Step *step){m_steps.push_back(step);}
     
   bool & getHasName(){return m_hasname;}
   virtual ~Model(){}
@@ -124,6 +128,7 @@ protected:
   std::vector <Particle*>   Particles; //SPH
   std::vector <BoundaryCondition*> m_bc;
   std::vector <InitialCondition*>  m_ic;
+  std::vector <Step*>              m_steps;
   
   model_type m_modeltype;
   

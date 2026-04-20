@@ -45,6 +45,7 @@
 #include "Material.h"
 
 #include "job_dialog.h"
+#include "step_dialog.h"
 #include "bc_dialog.h"
 #include "mesh_dialog.h"
 
@@ -222,6 +223,7 @@ protected:
   //JobDialog<Job> m_jobdlg;
   JobDialog       m_jobdlg; //creation
   JobShowDialog   m_jobshowdlg;
+  StepDialog      m_stepdlg;
   CreateSetDialog m_setdlg;
   
   BCDialog        m_bcdlg;
@@ -233,6 +235,7 @@ protected:
   bool m_show_mod_dlg_edit = false;  
   bool m_show_prt_dlg_edit = false;
   bool m_show_bc_dlg_edit = false;
+  bool m_show_step_dlg_edit = false;
   bool create_new_mat;
   bool create_new_part;
   bool create_new_job;
@@ -254,8 +257,10 @@ protected:
   Material_ *selected_mat = nullptr;
   Part      *selected_prt;
   Model     *selected_mod;
+  Step      *selected_step = nullptr;
   Condition *selected_bc = nullptr;
   int       m_create_bc;  //boundary or initial condition
+  bool      m_creating_step = false;
   
   bool m_show_mov_part = false;
     

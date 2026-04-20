@@ -1,304 +1,411 @@
-
 #include "InputWriter.h"
 #include "Model.h"
 #include "Part.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip> //setw
 #include "Material.h"
 #include "Geom.h"
-
 #include "BoundaryCondition.h"
+#include "Step.h"
+
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 
 #include <nlohmann/json.hpp>
 #include "json_io.h"
 
 using json = nlohmann::json;
 
+namespace {
+namespace fs = std::filesystem;
+
+std::string materialIdFromIndex(int index) {
+  if (index == 0)
+    return "Solid";
+  return "Material_" + std::to_string(index);
+}
+
+std::string modelStem(Model *model) {
+  if (model == nullptr)
+    return "model";
+
+  if (!model->getFilePath().empty())
+    return fs::path(model->getFilePath()).stem().string();
+
+  if (model->getHasName()) {
+    fs::path name_path(model->getName());
+    std::string stem = name_path.stem().string();
+    if (!stem.empty())
+      return stem;
+    std::string filename = name_path.filename().string();
+    if (!filename.empty())
+      return filename;
+  }
+
+  return "model";
+}
+
+std::string domTypeFromAnalysis(Model *model) {
+  if (model == nullptr)
+    return "3D";
+
+  switch (model->getAnalysisType()) {
+    case PlaneStress2D:
+      return "PlaneStress";
+    case PlaneStrain2D:
+      return "PlaneStrain";
+    case Axisymmetric2D:
+      return "AxiSymm";
+    case Solid3D:
+    default:
+      return "3D";
+  }
+}
+
+Step *activeStep(Model *model) {
+  if (model == nullptr || model->getStepCount() == 0)
+    return nullptr;
+  return model->getStep(0);
+}
+
+json makeImplicitSolverJson(const Step *step) {
+  json implicit;
+  implicit["type"] = step ? step->m_implicitType : "Picard";
+  implicit["velTol"] = step ? step->m_velTol : 5e-2;
+  implicit["pressTol"] = step ? step->m_pressTol : 10.0;
+  implicit["forceTol"] = step ? step->m_forceTol : 10.0;
+  implicit["divTol"] = step ? step->m_divTol : 1.0;
+  implicit["omegaV"] = step ? step->m_omegaV : 0.4;
+  implicit["omegaP"] = step ? step->m_omegaP : 0.1;
+  implicit["maxIter"] = step ? step->m_maxIter : 200;
+  implicit["timeStepGrowthFactor"] = step ? step->m_timeStepGrowthFactor : 1.2;
+  return implicit;
+}
+}
+
 InputWriter::InputWriter(Model*m) : m_model(m) {}
 
-void InputWriter::writeToFile(std::string fname){
+void InputWriter::writeToFile(std::string fname) {
+  namespace fs = std::filesystem;
+
+  if (m_model == nullptr) {
+    std::cout << "ERROR: null model in InputWriter" << std::endl;
+    return;
+  }
+
+  Step *step = activeStep(m_model);
+  if (step != nullptr && step->isImplicit()) {
+    writeImplicitToFile(fname);
+    return;
+  }
+
   json m_json;
-  
-  //json j;
-	//i >> j;
+  fs::path json_path(fname);
+  fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
+  fs::create_directories(json_dir);
+  std::string base_name = modelStem(m_model);
 
-/*
-	nlohmann::json m_config 		= j["Configuration"];
-	nlohmann::json material 	= j["Materials"];
-	nlohmann::json domblock 	= j["DomainBlocks"];
-	nlohmann::json domzones 	= j["DomainZones"];
-	nlohmann::json amplitudes 	= j["Amplitudes"];
-	nlohmann::json rigbodies 		= j["RigidBodies"];
-  nlohmann::json contact_ 		= j["Contact"];
-	nlohmann::json bcs 			= j["BoundaryConditions"];
-	nlohmann::json ics 			= j["InitialConditions"];
-*/
-  //std::ofstream o(m_model->getName());
   std::ofstream o(fname);
-  std::string filename = m_model->getName();
-  if (!m_model->getHasName()) cout << "Not has name!"<<endl;
-  std::cout << "Writing to file: " << filename << std::endl;
+  if (!o.is_open()) {
+    std::cout << "ERROR: could not open output file " << fname << std::endl;
+    return;
+  }
 
-  //cout << "Exporting Model "<< <<"to json "<<endl;
-
-/*  
-  ostringstream oss;
-  
-  oss << "\"Configuration\":{ \" "            <<endl<<
-           "  \"particleRadius\": 0.001,"       <<endl<<      //
-           "  \"hFactor\": 1.2,\""              <<endl<<
-           "  \"cflMethod\": 1, "               <<endl<< 
-           "  \"cflFactor\": 0.4,"              <<endl<<
-           "  \"sumType\": \"Nishimura\","      <<endl<<
-           "  \"autoTS\": [false,false,false]," <<endl<<
-           "  \"simTime\": 5.0e-7,"             <<endl<<
-           "  \"artifViscAlpha\": 1.0,"         <<endl<<
-           "  \"outTime\": 1.94e-7 "            <<endl<<
-           "},"                                 <<endl;
-  
-  //Can be maintained a Domain Block??
-  oss << "\"Materials\":"                        <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;
-
-  oss << "\"DomainBlocks\":"                     <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;
-
-  //Loop trough sets
-  oss << "\"DomainZones\":"                      <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-  
-  oss << "\"Amplitudes\":"                      <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-    
-  oss << "\"BoundaryConditions\":"               <<endl<< 
-         "[{"                                    <<endl<<
-         "}],"                                   <<endl;  
-  
-  oss << "}"                                   <<endl;    
-
-	of << oss.str();
-*/  
-  cout << "Saving model/s"<<endl;
-  
-  m_json["Configuration"]["cflFactor"] = 0.3;
-  m_json["Configuration"]["fixedTS"] = false;
-  m_json["Configuration"]["solver"]    = "WeldForm";
-
-  m_json["Configuration"]["simTime"] = 1.0;
-  m_json["Configuration"]["outTime"] =  1.0e-4;
-  
+  m_json["Configuration"]["cflFactor"] = step ? step->m_cflFactor : 0.3;
+  m_json["Configuration"]["fixedTS"] = step ? step->m_fixedTS : false;
+  m_json["Configuration"]["solver"] = "WeldForm";
+  m_json["Configuration"]["simTime"] = step ? step->m_simTime : 1.0;
+  m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0e-4;
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
-  
-  
-  nlohmann::json cont;
-  cont["fricCoeffStatic"] =  0.3;
-  cont["fricCoeffDynamic"] =  0.3; 
+
+  json cont;
+  cont["fricCoeffStatic"] = 0.3;
+  cont["fricCoeffDynamic"] = 0.3;
   cont["penaltyFactor"] = 0.8;
-  m_json["Contact"] = nlohmann::json::array();    
+  m_json["Contact"] = json::array();
   m_json["Contact"].push_back(cont);
-  
-    //~ "Nproc":4,
-  //~ "cflFactor": 0.3,
-  //~ "autoTS": [false,false,false],
-
-  //~ "simTime": 1.0e-3,
-
-  //~ "outTime": 1.0e-5,
-  //~ "fixedTS":true,
-  //~ "domType": "AxiSymm",
-  //~ "solver": "Mech-LeapFrog"
-  
-  //SHOULD BE AT SPH
-  //m_json["Configuration"]["hFactor"] = 1.2;
-  //m_json["Configuration"]["SPH"]["hFactor"] = 1.2;
-  
-  cout << "Writing materials .."<<endl;
 
   if (m_model->getMaterialCount() > 0) {
-      m_json["Materials"] = nlohmann::json::array();
+    m_json["Materials"] = json::array();
 
-      for (int i = 0; i < m_model->getMaterialCount(); ++i) {
-          auto* mat = m_model->getMaterial(i);
-          if (mat == nullptr) continue;
+    for (int i = 0; i < m_model->getMaterialCount(); ++i) {
+      auto *mat = m_model->getMaterial(i);
+      if (mat == nullptr)
+        continue;
 
-          nlohmann::json mat_json;
-          mat_json["density0"]      = mat->getDensityConstant();
-          mat_json["poissonsRatio"] = mat->Elastic().nu();
-          mat_json["youngsModulus"] = mat->Elastic().E();
-          
-          mat_json["thermalHeatCap"] = mat->k_T;
-          mat_json["thermalCond"]    = mat->cp_T;
+      json mat_json;
+      mat_json["id"] = materialIdFromIndex(i);
+      mat_json["density0"] = mat->getDensityConstant();
+      mat_json["poissonsRatio"] = mat->Elastic().nu();
+      mat_json["youngsModulus"] = mat->Elastic().E();
+      mat_json["thermalHeatCap"] = mat->cp_T;
+      mat_json["thermalCond"] = mat->k_T;
 
-          // Tipo de material
-          if (!mat->isPlastic()) {
-              mat_json["type"] = "Elastic";
-          } else {
-              switch (mat->m_plastic->Material_model) {
-                  case _GMT_:
-                      mat_json["type"] = "GMT";
-                      break;
-                  case HOLLOMON:
-                      mat_json["type"] = "Hollomon";
-                      break;
-                  default:
-                      mat_json["type"] = "UnknownPlastic";
-                      break;
-              }
-
-              std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
-              if (!plasticConst.empty())
-                  mat_json["const"] = plasticConst;
-              else
-                  cout << "WARNING: No plastic constants for material " << i << endl;
-          }
-
-          // Agregar al array principal
-          m_json["Materials"].push_back(mat_json);
-      }
-
-      cout << "Done." << endl;
-  }
- 
-  bool is_elastic = false;
-  cout << "Loop thorough parts..."<<endl;
-  for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it){
-   Part* part = *it;
-   
-   if (part->getType() == Elastic){
-     if (is_elastic){
-        cout << "ERROR: More than Elastic body not supported. "<<endl;
-        return;
-      }
-      json block;
-     block["type"] = "File";
-
-      if (part->isMeshed()){
-      std::string fname = "part_" + std::to_string(part->getId()) + ".k";
-      part->getMesh()->exportToLSDYNA(fname);
-      block["fileName"] = fname;
-      }
-      else {
-        
-        cout << "ERROR: Part "<<part->getId()<< "is not meshed!"<<endl; 
+      if (!mat->isPlastic()) {
+        mat_json["type"] = "Elastic";
+      } else {
+        switch (mat->m_plastic->Material_model) {
+          case _GMT_:
+            mat_json["type"] = "GMT";
+            break;
+          case HOLLOMON:
+            mat_json["type"] = "Hollomon";
+            break;
+          default:
+            mat_json["type"] = "UnknownPlastic";
+            break;
         }
 
+        std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
+        if (!plasticConst.empty())
+          mat_json["const"] = plasticConst;
+      }
 
+      m_json["Materials"].push_back(mat_json);
+    }
+  }
+
+  bool is_elastic = false;
+  for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
+    Part* part = *it;
+    if (part == nullptr || !part->isMeshed())
+      continue;
+
+    fs::path mesh_path = json_dir / (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
+    part->getMesh()->exportToNASTRAN(mesh_path.string());
+
+    if (part->getType() == Elastic) {
+      if (is_elastic) {
+        std::cout << "ERROR: More than one elastic body not supported in current explicit exporter." << std::endl;
+        continue;
+      }
+      json block;
+      block["type"] = "File";
+      block["fileName"] = fs::relative(mesh_path, json_dir).string();
+      block["scale"] = {1, 1, 1};
       m_json["DomainBlocks"].push_back(block);
-     is_elastic = true;
-  } else { ////RIGID
-
- 
+      is_elastic = true;
+    } else {
       json rigidBody;
       rigidBody["type"] = "File";
       rigidBody["zoneId"] = part->getId();
-      rigidBody["start"] = {-0.02, -0.02, 0.03};
-      rigidBody["dim"] = {0.04, 0.04, 0.0};
-      rigidBody["translation"] = {1.0, 0.0, 0.0};
+      rigidBody["start"] = {0.0, 0.0, 0.0};
       rigidBody["scale"] = {1, 1, 1};
-
-
-      if (part->isMeshed()){
-        std::string fname = "part_" + std::to_string(part->getId()) + ".nas";
-        part->getMesh()->exportToNASTRAN(fname);
-        rigidBody["fileName"] = fname;
-      }
-
-      // Agregarlo al subbloque "RigidBodies"
+      rigidBody["orientNormals"] = true;
+      rigidBody["fileName"] = fs::relative(mesh_path, json_dir).string();
       m_json["RigidBodies"].push_back(rigidBody);
 
-
       json bc;
-      
       bc["zoneId"] = part->getId();
-      bc["value"] = {part->getVel().x,part->getVel().y,part->getVel().z};
-      
+      bc["valueType"] = 0;
+      bc["value"] = {part->getVel().x, part->getVel().y, part->getVel().z};
       m_json["BoundaryConditions"].push_back(bc);
-      
+    }
   }
 
-      json jpart;
-      jpart["id"] = part->getId();
-      
-      //// if part is deformable
-      
-      //m_json["DomainBlocks"]["type"] = "File";
+  bool xSymm = false;
+  bool ySymm = false;
+  bool zSymm = false;
+  if (m_model->getBCCount() > 0) {
+    m_json["BoundaryConditions"] = json::array();
 
+    for (int i = 0; i < m_model->getBCCount(); ++i) {
+      BoundaryCondition* bc = m_model->getBC(i);
+      if (!bc)
+        continue;
 
-    
+      json jbc;
+      jbc["valueType"] = 0;
+      jbc["applyTo"] = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
+      jbc["zoneId"] = bc->getTargetId();
 
-    }//Part 
-    
+      double3 v = bc->getValue();
+      jbc["value"] = {v.x, v.y, v.z};
 
+      if (bc->getType() == SymmetryBC) {
+        double3 n = bc->getNormal();
+        if (std::fabs(n.x) > 0.5) xSymm = true;
+        if (std::fabs(n.y) > 0.5) ySymm = true;
+        if (std::fabs(n.z) > 0.5) zSymm = true;
 
-    bool xSymm = false;
-    bool ySymm = false;
-    bool zSymm = false;
-    if (m_model->getBCCount() > 0) {
-        std::cout << "Writing Boundary Conditions..." << std::endl;
-
-        m_json["BoundaryConditions"] = json::array();
-
-        for (int i = 0; i < m_model->getBCCount(); ++i) {
-
-            
-            BoundaryCondition* bc = m_model->getBC(i);
-            if (!bc) continue;
-
-            json jbc;
-
-            // Tipo: Velocity o Displacement
-            std::string typeStr = (bc->getType() == VelocityBC) ? "Velocity" : "DisplacementBC";
-            //jbc["type"] = typeStr;
-            
-            jbc["valueType"] = 0; //Value, not amplitude
-
-            // Aplicar a Part o Nodes
-            std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
-            jbc["applyTo"] = applyToStr;
-
-            // ID del objetivo (parte o conjunto de nodos)
-            jbc["zoneId"] = bc->getTargetId();
-
-            // Valor (vector 3D)
-            double3 v = bc->getValue();
-            jbc["value"] = {v.x, v.y, v.z};
-
-
-            if (bc->getType() == SymmetryBC) {
-                double3 n = bc->getNormal();
-                cout << "BC NORMAL"<<n.x<<", "<<n.y<<", "<<n.z<<endl;
-                if (std::fabs(n.x) > 0.5) xSymm = true;
-                if (std::fabs(n.y) > 0.5) ySymm = true;
-                if (std::fabs(n.z) > 0.5) zSymm = true;
-
-                m_json["Configuration"]["xSymm"] = xSymm;
-                m_json["Configuration"]["ySymm"] = ySymm;
-                m_json["Configuration"]["zSymm"] = zSymm;
-
-            } else {
-
-              // Agregar al array principal
-              m_json["BoundaryConditions"].push_back(jbc);
-            }
-            std::cout << "  → BC[" << i << "]: "
-                      << typeStr << " | ApplyTo=" << applyToStr
-                      << " | TargetID=" << bc->getTargetId()
-                      << " | Value=(" << v.x << ", " << v.y << ", " << v.z << ")" << std::endl;
-        }
-
-        std::cout << "Done writing " << m_model->getBCCount() << " BCs." << std::endl;
+        m_json["Configuration"]["xSymm"] = xSymm;
+        m_json["Configuration"]["ySymm"] = ySymm;
+        m_json["Configuration"]["zSymm"] = zSymm;
+      } else {
+        m_json["BoundaryConditions"].push_back(jbc);
+      }
     }
-    
-    if (!is_elastic)
-      cout << "ERROR: Not deformable parts"<<endl;
+  }
 
   o << std::setw(4) << m_json << std::endl;
-  
-  o.close();
+}
+
+void InputWriter::writeImplicitToFile(std::string fname) {
+  namespace fs = std::filesystem;
+
+  if (m_model == nullptr) {
+    std::cout << "ERROR: null model in InputWriter" << std::endl;
+    return;
+  }
+
+  Step *step = activeStep(m_model);
+
+  json m_json;
+  fs::path json_path(fname);
+  fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
+  fs::create_directories(json_dir);
+  std::string base_name = modelStem(m_model);
+
+  std::ofstream o(fname);
+  if (!o.is_open()) {
+    std::cout << "ERROR: could not open output file " << fname << std::endl;
+    return;
+  }
+
+  m_json["Configuration"]["Nproc"] = step ? step->m_nproc : 1;
+  m_json["Configuration"]["cflFactor"] = step ? step->m_cflFactor : 0.3;
+  m_json["Configuration"]["autoTS"] = {
+    step ? step->m_autoTS[0] : false,
+    step ? step->m_autoTS[1] : false,
+    step ? step->m_autoTS[2] : false
+  };
+  m_json["Configuration"]["kernelGradCorr"] = step ? step->m_kernelGradCorr : false;
+  m_json["Configuration"]["simTime"] = step ? step->m_simTime : 200.0;
+  m_json["Configuration"]["artifViscAlpha"] = step ? step->m_artifViscAlpha : 1.0;
+  m_json["Configuration"]["artifViscBeta"] = step ? step->m_artifViscBeta : 0.0;
+  m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0;
+  m_json["Configuration"]["fixedTS"] = step ? step->m_fixedTS : false;
+  m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
+  m_json["Configuration"]["AxiSymmVol"] = step ? step->m_axiSymmVol : false;
+  m_json["Configuration"]["elemLentghFraction"] = step ? step->m_elemLengthFraction : 0.2;
+  m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
+
+  m_json["Meshing"]["debug"] = step ? step->m_meshingDebug : true;
+  m_json["Meshing"]["maxElemAngle"] = step ? step->m_maxElemAngle : 150.0;
+  m_json["Meshing"]["minElemAngle"] = step ? step->m_minElemAngle : 30.0;
+
+  m_json["Contact"] = json::array();
+  m_json["Contact"].push_back({
+    {"fricCoeffStatic", 0.0},
+    {"penaltyFactor", 5.0e3},
+    {"heatConductance", false},
+    {"heatCondCoeff", 0.5},
+    {"useGapPenalty", true},
+    {"gapPenaltyScale", 2.0},
+    {"maxPenetRatio", 0.05},
+    {"maxAccel", 1e5}
+  });
+
+  m_json["Amplitudes"] = json::array();
+  m_json["BoundaryConditions"] = json::array();
+  m_json["Materials"] = json::array();
+  m_json["DomainBlocks"] = json::array();
+  m_json["RigidBodies"] = json::array();
+
+  if (m_model->getMaterialCount() > 0) {
+    for (int i = 0; i < m_model->getMaterialCount(); ++i) {
+      auto *mat = m_model->getMaterial(i);
+      if (mat == nullptr)
+        continue;
+
+      json mat_json;
+      mat_json["id"] = materialIdFromIndex(i);
+      mat_json["density0"] = mat->getDensityConstant();
+      mat_json["thermalHeatCap"] = mat->cp_T;
+      mat_json["thermalCond"] = mat->k_T;
+      mat_json["youngsModulus"] = mat->Elastic().E();
+      mat_json["poissonsRatio"] = mat->Elastic().nu();
+      mat_json["yieldStress0"] = 0.0;
+      mat_json["strRange"] = {0.0, 0.65};
+
+      if (!mat->isPlastic()) {
+        mat_json["type"] = "Elastic";
+      } else {
+        switch (mat->m_plastic->Material_model) {
+          case HOLLOMON:
+            mat_json["type"] = "Hollomon";
+            break;
+          case _GMT_:
+            mat_json["type"] = "GMT";
+            break;
+          case BILINEAR:
+            mat_json["type"] = "Bilinear";
+            break;
+          default:
+            mat_json["type"] = "UnknownPlastic";
+            break;
+        }
+
+        std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
+        if (!plasticConst.empty())
+          mat_json["const"] = plasticConst;
+      }
+
+      m_json["Materials"].push_back(mat_json);
+    }
+  }
+
+  int amplitude_id = 1;
+  for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
+    Part* part = *it;
+    if (part == nullptr || !part->isMeshed())
+      continue;
+
+    fs::path mesh_path = json_dir / (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
+    part->getMesh()->exportToNASTRAN(mesh_path.string());
+    std::string relative_mesh = fs::relative(mesh_path, json_dir).string();
+
+    if (part->getType() == Elastic) {
+      m_json["DomainBlocks"].push_back({
+        {"type", "File"},
+        {"fileName", relative_mesh},
+        {"scale", {1, 1, 1}}
+      });
+    } else {
+      double3 origin = make_double3(0.0, 0.0, 0.0);
+      if (part->isGeom())
+        origin = part->getGeom()->getOrigin();
+
+      m_json["RigidBodies"].push_back({
+        {"type", "File"},
+        {"fileName", relative_mesh},
+        {"zoneId", part->getId()},
+        {"start", {origin.x, origin.y, origin.z}},
+        {"orientNormals", true}
+      });
+    }
+  }
+
+  for (int i = 0; i < m_model->getBCCount(); ++i) {
+    BoundaryCondition* bc = m_model->getBC(i);
+    if (!bc)
+      continue;
+    if (bc->getType() == SymmetryBC)
+      continue;
+
+    double3 v = bc->getValue();
+    json jbc;
+    jbc["zoneId"] = bc->getTargetId();
+    jbc["value"] = {v.x, v.y, v.z};
+    jbc["valueType"] = 0;
+    m_json["BoundaryConditions"].push_back(jbc);
+  }
+
+  if (m_json["BoundaryConditions"].empty()) {
+    for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
+      Part* part = *it;
+      if (part == nullptr || part->getType() != Rigid)
+        continue;
+
+      m_json["BoundaryConditions"].push_back({
+        {"zoneId", part->getId()},
+        {"valueType", 0},
+        {"value", {part->getVel().x, part->getVel().y, part->getVel().z}}
+      });
+    }
+  }
+
+  o << std::setw(4) << m_json << std::endl;
 }

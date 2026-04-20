@@ -1139,14 +1139,39 @@ void Editor::drawGui() {
         open_ = ImGui::TreeNode("Steps");
         if (ImGui::BeginPopupContextItem())
         {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
-            ImGui::EndPopup();
-          
+          if (ImGui::MenuItem("New", "CTRL+Z")) {
+            selected_step = new Step();
+            int step_id = m_model->getStepCount();
+            selected_step->setId(step_id);
+            m_creating_step = true;
+            m_show_step_dlg_edit = true;
+          }
+          ImGui::EndPopup();
         }
         if (open_)
         {
-           // your tree code stuff
-           ImGui::TreePop();
+          for (int i = 0; i < m_model->getStepCount(); i++)
+          {
+            Step *step = m_model->getStep(i);
+            if (step == nullptr)
+              continue;
+
+            const char *step_type = step->isImplicit() ? "Implicit" : "Explicit";
+            if (ImGui::TreeNode((void*)(intptr_t)i, "Step %d, %s, %s", step->getId(), step->getName(), step_type))
+            {
+              if (ImGui::BeginPopupContextItem())
+              {
+                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                  selected_step = step;
+                  m_creating_step = false;
+                  m_show_step_dlg_edit = true;
+                }
+                ImGui::EndPopup();
+              }
+              ImGui::TreePop();
+            }
+          }
+          ImGui::TreePop();
         }
 
         
@@ -1976,6 +2001,20 @@ void Editor::drawGui() {
   if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
   if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
   if (m_show_mod_dlg_edit) {ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);}
+  if (m_show_step_dlg_edit) {
+    ShowEditStepDialog(&m_show_step_dlg_edit, &m_stepdlg, selected_step);
+    if (!m_show_step_dlg_edit) {
+      if (m_stepdlg.m_saved && m_creating_step && selected_step != nullptr) {
+        m_model->addStep(selected_step);
+      } else if (m_stepdlg.m_cancelled && m_creating_step && selected_step != nullptr) {
+        delete selected_step;
+      }
+
+      if (m_creating_step)
+        selected_step = nullptr;
+      m_creating_step = false;
+    }
+  }
   else if (m_show_set_dlg) {
   
   /*   
