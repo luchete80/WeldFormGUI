@@ -167,4 +167,5 @@
          - Added "Refresh Results" Button
          - Auto update of Running Job progress. 
          - Reduced log state to N lines
+         - Added Visible in lines
           
