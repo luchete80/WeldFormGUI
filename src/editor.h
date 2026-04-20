@@ -117,6 +117,11 @@ public:
   void CursorPos(double x, double y);
   void drawGui();
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
+  bool openResultsFromPath(const std::string& filePathName);
+  bool openResultsForModel();
+  bool openResultsForJob(Job* job);
+  bool refreshOpenResults();
+  bool consumeResultsViewerActivationRequest();
   
   void CalcFPS();
   void addViewer(VtkViewer *);
@@ -289,6 +294,7 @@ protected:
   vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
   
   MultiResult *m_results = nullptr;
+  bool m_activate_results_viewer = false;
   
   Material_Db m_mat_db;
     

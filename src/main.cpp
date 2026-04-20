@@ -396,6 +396,11 @@ int main(int argc, char* argv[])
 
       if (ImGui::BeginTabBar("##ViewersTabBar", ImGuiTabBarFlags_None))
       {
+          bool activate_results_tab = editor->consumeResultsViewerActivationRequest();
+          if (activate_results_tab) {
+              vtk_res_open = true;
+          }
+
           // ================= TAB: Modelo =================
           if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
           {
@@ -425,7 +430,8 @@ int main(int argc, char* argv[])
           }
 
           // ================= TAB: Resultados =================
-          if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open))
+          ImGuiTabItemFlags results_tab_flags = activate_results_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+          if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
               ImGui::PushFont(font_ubu);
 
@@ -448,6 +454,18 @@ int main(int argc, char* argv[])
 	              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
 	              ImGui::SameLine();
 	              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+	              ImGui::SameLine();
+	              if (ImGui::Button("Refresh Results")) {
+	                  int previousFrame = currentFrame;
+	                  if (editor->refreshOpenResults()) {
+	                      if (editor->getResults() && !editor->getResults()->frames.empty()) {
+	                          currentFrame = std::min(previousFrame, (int)editor->getResults()->frames.size() - 1);
+	                      } else {
+	                          currentFrame = 0;
+	                      }
+	                      lastFrame = -1;
+	                  }
+	              }
 	              ImGui::SameLine();
 	              if (ImGui::Button("load plot")) {
 	                  std::filesystem::path csv_path;

@@ -9,6 +9,7 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
     fs::path json_path(jsonFile);
     fs::path json_dir = json_path.parent_path();
     results.sourceDirectory = json_dir;
+    results.sourceJsonFile = json_path;
 
     if (!fs::exists(jsonFile)) {
         std::cerr << "Error: JSON file not found: " << jsonFile << std::endl;
@@ -22,7 +23,13 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
     }
 
     json data;
-    file >> data;
+    try {
+        file >> data;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error parsing results JSON " << jsonFile << ": " << e.what() << std::endl;
+        return results;
+    }
 
     if (!data.contains("vtk_files") || !data["vtk_files"].is_array()) {
         std::cerr << "Error: JSON does not contain valid 'vtk_files' array." << std::endl;

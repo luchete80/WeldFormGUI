@@ -42,6 +42,7 @@ struct MultiResult {
     //std::vector<std::unique_ptr<ResultFrame>> frames;
     std::vector<std::unique_ptr<ResultFrame>> frames;
     fs::path sourceDirectory;
+    fs::path sourceJsonFile;
     void setShowEdges(bool showEdges);
 };
 

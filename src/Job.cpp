@@ -5,8 +5,13 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <filesystem>
+#include <deque>
+#include <nlohmann/json.hpp>
 
 using namespace std;
+using json = nlohmann::json;
+namespace fs = std::filesystem;
 
 
 Job::Job(std::string str){
@@ -14,29 +19,74 @@ Job::Job(std::string str){
   cout << "path "<<str<<endl;
 }
 
+fs::path Job::getJobDirectory() const{
+  fs::path input_path(m_path_file);
+  fs::path dir = input_path.parent_path();
+  return dir.empty() ? fs::path(".") : dir;
+}
+
+fs::path Job::getLogFilePath() const{
+  return getJobDirectory() / "log.txt";
+}
+
+fs::path Job::getTempLogPath() const{
+  fs::path input_path(m_path_file);
+  std::string stem = input_path.stem().string();
+  if (stem.empty())
+    stem = "job";
+  return getJobDirectory() / (stem + "_log_snapshot.tmp");
+}
+
+bool Job::isImplicit() const{
+  ifstream file(m_path_file);
+  if (!file.is_open())
+    return false;
+
+  json j;
+  try {
+    file >> j;
+  } catch (...) {
+    return false;
+  }
+
+  if (!j.contains("Configuration"))
+    return false;
+
+  const auto &conf = j["Configuration"];
+  if (!conf.contains("solver"))
+    return false;
+
+  if (conf["solver"].is_object() && conf["solver"].contains("implicit"))
+    return true;
+
+  return false;
+}
+
 int Job::Run(){
   // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
   std::string str;
   int returnCode ;
+  const std::string solver_name = isImplicit() ? "weldform_imp" : "weldform_exp";
+  const std::string log_path = getLogFilePath().string();
 
   //int returnCode = system(str.c_str());
   //CATCH ID
   //REMOVE LOG FIRST
   #ifdef _WIN32
-  str =  "del" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";  
+  str =  "del \"" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out\"";  
   //str = "START /B solvers\\WeldForm " + m_path_file;
   #elif linux
   //str = "echo $! > pid.txt";
   //str = "ps -e --sort=start_time | grep \"WeldForm \" ";
   //echo $!
-  str =  "rm" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out";  
+  str =  "rm -f \"" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out\"";  
   #endif
   returnCode = system(str.c_str());  
 
   #ifdef _WIN32
-  str = "START /B solvers\\weldform_exp " + m_path_file + "> log.txt" ;
+  str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
   #elif linux
-  str = "nohup solvers/weldform_exp " + m_path_file + " > log.txt 2>&1  &";
+  str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\" 2>&1 &";
   //echo $!
   #endif
 
@@ -46,48 +96,53 @@ int Job::Run(){
   return returnCode; 
   
 }
-void Job::UpdateOutput(){
-  int returnCode;
-  string str;
-  
-  string cpy_str;
-  //cout << "Update.."<<endl;
-  #ifdef _WIN32
-  system("del temp.out");
-  cpy_str = "copy log.txt temp.out";
-  #elif linux
-  cout << "deleting "<<endl;
-  system("rm temp.out");  
-  cpy_str = "cp log.txt temp.out";
-  //echo $!
-  #endif
-  
-  
-  
-  
-  returnCode = system(cpy_str.c_str());
-  
-  ifstream file;
-	file.open("temp.out");
-
-  int l = 0;
-	if (file.is_open()) {
-		//cout << "[I] Found input file " << fileName << endl;
-  string line;
+void Job::UpdateOutput(int max_lines){
   m_log = "";
 
-  while(getline(file, line))
-    m_log += line + "\n";
-    cout << line.c_str()<<endl;
+  const fs::path log_path = getLogFilePath();
+  const fs::path temp_path = getTempLogPath();
+
+  if (!fs::exists(log_path)) {
+    cout << "[E] Log file could not be found: " << log_path.string() << endl;
+    return;
+  }
+
+  try {
+    fs::copy_file(log_path, temp_path, fs::copy_options::overwrite_existing);
+  } catch (const std::exception& e) {
+    cout << "[E] Could not snapshot log file " << log_path.string() << ": " << e.what() << endl;
+    return;
+  }
+
+  ifstream file(temp_path);
+  if (!file.is_open()) {
+    cout << "[E] Snapshot file could not be opened: " << temp_path.string() << endl;
+    return;
+  }
+
+  int l = 0;
+  string line;
+  std::deque<std::string> last_lines;
+  while (getline(file, line)) {
+    if (!line.empty() && line.back() == '\r')
+      line.pop_back();
+    if (max_lines > 0) {
+      last_lines.push_back(line);
+      if ((int)last_lines.size() > max_lines)
+        last_lines.pop_front();
+    } else {
+      m_log += line + "\n";
+    }
     l++;
-	} else {
-		cout << "[E] Input file " << "temp.out" << " could not be found!!" << endl;
-	}
-  cout << "File size "<<l<<endl;
-  cout << m_log<<endl;
-  
-  file.close();  
-  
+  }
+
+  if (max_lines > 0) {
+    for (const auto& buffered_line : last_lines)
+      m_log += buffered_line + "\n";
+  }
+
+  cout << "File size " << l << endl;
+  cout << m_log << endl;
 }
 
 void Job::Draw(){

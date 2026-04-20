@@ -13,12 +13,16 @@ struct JobDialog:
 public ObjDialog{
   
    bool show_job_files;
+   bool m_edit_mode;
+   Job *m_job;
     
   // //void    AddLog(const char* fmt, ...);
   JobDialog():
   ObjDialog(){
     show_job_files = false;
     create_entity = false;
+    m_edit_mode = false;
+    m_job = nullptr;
   }
   
   std::string m_filename;
@@ -31,8 +35,16 @@ struct JobShowDialog:
 public ObjDialog{
   
   // //void    AddLog(const char* fmt, ...);
-  JobShowDialog(){m_job = nullptr;}
+  JobShowDialog(){
+    m_job = nullptr;
+    m_last_job = nullptr;
+    m_last_refresh_time = -1.0;
+    m_max_visible_lines = 100;
+  }
   Job *m_job;
+  Job *m_last_job;
+  double m_last_refresh_time;
+  int m_max_visible_lines;
   
   const bool & isEntityCreated()const{return create_entity;}  
   void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 

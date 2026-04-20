@@ -30,9 +30,6 @@ std::string modelStem(Model *model) {
   if (model == nullptr)
     return "model";
 
-  if (!model->getFilePath().empty())
-    return fs::path(model->getFilePath()).stem().string();
-
   if (model->getHasName()) {
     fs::path name_path(model->getName());
     std::string stem = name_path.stem().string();

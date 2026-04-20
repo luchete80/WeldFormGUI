@@ -86,6 +86,161 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     return out.str();
 }
 
+bool Editor::openResultsFromPath(const std::string& filePathName)
+{
+  cout << "file path name " << filePathName << endl;
+
+  std::string ext = fs::path(filePathName).extension().string();
+
+  if (ext == ".json") {
+      MultiResult results = LoadResultsFromJson(filePathName);
+      m_results = new MultiResult(std::move(results)); //Because of dstd_unique_ptr
+      if (!m_results->frames.empty()) {
+          //~ for (auto& framePtr : results.frames) {
+              //~ viewer->addActor(framePtr->actor);
+          //~ }
+      //if (m_curr_res_actor) res_viewer->RemoveActor(m_curr_res_actor);
+
+      // mostrar nuevo frame
+      //m_curr_res_actor = results.frames[0]->actor;
+      //res_viewer->addActor(m_curr_res_actor);
+      }
+  } else if (ext == ".vtk") {
+    ResultFrame *frame = new ResultFrame(filePathName);
+    frame->printAvailableFields();
+
+    std::string fieldName;
+    fieldName = "pl_strain";
+    //fieldName = "DISP";
+
+    //IF SCALAR
+    frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
+    //if cell data
+    //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
+    //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+    //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
+
+    //IF VECTOR
+    frame->setActiveScalarField("DISP");
+    frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
+
+    frame->actor->GetMapper()->ScalarVisibilityOn();
+    frame->actor->GetMapper()->Update();
+
+    res_viewer->addActor(frame->actor);
+  } else {
+    return false;
+  }
+
+  m_activate_results_viewer = true;
+
+  getApp().setActiveModel(m_model);
+
+  #ifdef BUILD_PYTHON
+  PyRun_SimpleString("GetApplication().getActiveModel()");
+  #else
+    getApp().getActiveModel();
+  #endif
+
+  getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+  return true;
+}
+
+bool Editor::openResultsForModel()
+{
+  const std::string& modelFilePath = m_model->getFilePath();
+  if (modelFilePath.empty()) {
+    cout << "Model has no file path; cannot locate modelo_res.json" << endl;
+    return false;
+  }
+
+  fs::path resultsPath = fs::path(modelFilePath).parent_path() / "modelo_res.json";
+  if (!fs::exists(resultsPath)) {
+    cout << "Results file not found: " << resultsPath.string() << endl;
+    return false;
+  }
+
+  return openResultsFromPath(resultsPath.string());
+}
+
+bool Editor::openResultsForJob(Job* job)
+{
+  if (job == nullptr) {
+    cout << "Job is null; cannot locate results" << endl;
+    return false;
+  }
+
+  const std::string& jobPath = job->getPathFile();
+  if (jobPath.empty()) {
+    cout << "Job has no run file path; cannot locate results" << endl;
+    return false;
+  }
+
+  fs::path runPath(jobPath);
+  fs::path runDir = runPath.parent_path();
+  std::string stem = runPath.stem().string();
+
+  std::vector<fs::path> candidates;
+  if (stem.size() >= 4 && stem.substr(stem.size() - 4) == "_run") {
+    candidates.push_back(runDir / (stem.substr(0, stem.size() - 4) + "_res.json"));
+  }
+  candidates.push_back(runDir / (stem + "_res.json"));
+  candidates.push_back(runDir / "modelo_res.json");
+
+  for (const auto& candidate : candidates) {
+    if (fs::exists(candidate)) {
+      return openResultsFromPath(candidate.string());
+    }
+  }
+
+  cout << "Could not find results for job: " << jobPath << endl;
+  for (const auto& candidate : candidates) {
+    cout << "  tried: " << candidate.string() << endl;
+  }
+  return false;
+}
+
+bool Editor::refreshOpenResults()
+{
+  if (m_results == nullptr) {
+    cout << "No results loaded; refresh skipped" << endl;
+    return false;
+  }
+
+  if (m_results->sourceJsonFile.empty()) {
+    cout << "Current results were not loaded from a JSON file; refresh skipped" << endl;
+    return false;
+  }
+
+  MultiResult refreshed = LoadResultsFromJson(m_results->sourceJsonFile.string());
+  if (refreshed.sourceJsonFile.empty()) {
+    cout << "Refresh failed; keeping current results" << endl;
+    return false;
+  }
+
+  if (!fs::exists(refreshed.sourceJsonFile)) {
+    cout << "Refresh source JSON no longer exists; keeping current results" << endl;
+    return false;
+  }
+
+  if (refreshed.frames.empty() && !m_results->frames.empty()) {
+    cout << "Refresh produced no frames; keeping current results" << endl;
+    return false;
+  }
+
+  m_results = new MultiResult(std::move(refreshed));
+  m_activate_results_viewer = true;
+  getApp().Update();
+  return true;
+}
+
+bool Editor::consumeResultsViewerActivationRequest()
+{
+  bool activate = m_activate_results_viewer;
+  m_activate_results_viewer = false;
+  return activate;
+}
+
 void Editor::meshPart(Part* part){
   if (part == nullptr || part->getGeom() == nullptr){
     return;
@@ -732,7 +887,10 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("Edit"/*, "CTRL+Z"*/)) { 
             m_show_mod_dlg_edit = true;
             selected_mod = m_model;
-            }
+          }
+          if (ImGui::MenuItem("Load Results")) {
+            openResultsForModel();
+          }
           ImGui::EndPopup();          
         }   
         
@@ -1185,8 +1343,12 @@ void Editor::drawGui() {
     bool open_ = ImGui::TreeNode("Jobs");
     if (ImGui::BeginPopupContextItem())
     {
-      if (ImGui::MenuItem("New", "CTRL+Z")) 
+      if (ImGui::MenuItem("New", "CTRL+Z")) {
+        m_jobdlg.m_edit_mode = false;
+        m_jobdlg.m_job = nullptr;
+        m_jobdlg.m_filename.clear();
         m_jobdlg.m_show=true;
+      }
                        
       ImGui::EndPopup();
     }
@@ -1210,8 +1372,10 @@ void Editor::drawGui() {
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-            m_jobshowdlg.m_show = true;
-            //selected_mat = m_mats[i];
+            m_jobdlg.m_show = true;
+            m_jobdlg.m_edit_mode = true;
+            m_jobdlg.m_job = m_jobs[i];
+            m_jobdlg.m_filename = m_jobs[i]->getPathFile();
           }
           if (ImGui::MenuItem("Show Progress", "")) {
             m_jobshowdlg.m_job = m_jobs[i];
@@ -1223,6 +1387,9 @@ void Editor::drawGui() {
           }
           if (ImGui::MenuItem("Run", "")) {
             m_jobs[i]->Run();
+          }
+          if (ImGui::MenuItem("Load Results", "")) {
+            openResultsForJob(m_jobs[i]);
           }
           ImGui::EndPopup();
         }                    
@@ -1794,65 +1961,7 @@ void Editor::drawGui() {
     if (ImGuiFileDialog::Instance()->IsOk())
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      
-      cout << "file path name "<<filePathName<<endl;
-      
-      std::string ext = fs::path(filePathName).extension().string();
-
-      if (ext == ".json") {
-          MultiResult results = LoadResultsFromJson(filePathName);
-          m_results = new MultiResult(std::move(results)); //Because of dstd_unique_ptr
-          if (!m_results->frames.empty()) {
-              //~ for (auto& framePtr : results.frames) {
-                  //~ viewer->addActor(framePtr->actor);
-              //~ }
-          //if (m_curr_res_actor) res_viewer->RemoveActor(m_curr_res_actor);
-
-          // mostrar nuevo frame
-          //m_curr_res_actor = results.frames[0]->actor;
-          //res_viewer->addActor(m_curr_res_actor);
-                    
-
-          }
-      } else if (ext == ".vtk") { 
-
-
-        ResultFrame *frame = new ResultFrame(filePathName);
-        frame->printAvailableFields();
-
-        std::string fieldName;
-        fieldName = "pl_strain";
-        //fieldName = "DISP";
-
-        //IF SCALAR
-        frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
-        //if cell data
-        //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
-        //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
-        //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
-
-
-        //IF VECTOR
-        frame->setActiveScalarField("DISP");      
-        frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
-
-        frame->actor->GetMapper()->ScalarVisibilityOn();
-        frame->actor->GetMapper()->Update();
-
-        res_viewer->addActor(frame->actor);      
-      }
-      
-      getApp().setActiveModel(m_model);
-
-      #ifdef BUILD_PYTHON
-      PyRun_SimpleString("GetApplication().getActiveModel()");
-      #else
-        getApp().getActiveModel();
-      #endif
-
-      getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-    
+      openResultsFromPath(filePathName);
     }
     
     // close
