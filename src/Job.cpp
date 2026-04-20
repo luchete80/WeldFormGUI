@@ -84,9 +84,12 @@ int Job::Run(){
   returnCode = system(str.c_str());  
 
   #ifdef _WIN32
-  str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
+  //str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
+  str = "START /B solvers\\" + solver_name + " \"" + m_path_file+ " \"";
+  cout << "RUNNING "<<str<<endl;
   #elif linux
-  str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\" 2>&1 &";
+  str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" &";
+  //str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\" 2>&1 &";
   //echo $!
   #endif
 
