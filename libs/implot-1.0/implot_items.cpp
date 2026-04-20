@@ -2138,8 +2138,13 @@ void PlotPolygonEx(const char* label_id, const Getter& getter, const ImPlotSpec&
 
         if (s.RenderFill && getter.Count >= 3) {
             const ImU32 col_fill = ImGui::GetColorU32(s.Spec.FillColor);
-            if (is_concave)
+            if (is_concave) {
+#if IMGUI_VERSION_NUM >= 19100
                 draw_list.AddConcavePolyFilled(points, getter.Count, col_fill);
+#else
+                draw_list.AddConvexPolyFilled(points, getter.Count, col_fill);
+#endif
+            }
             else
                 draw_list.AddConvexPolyFilled(points, getter.Count, col_fill);
         }

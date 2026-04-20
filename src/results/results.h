@@ -41,6 +41,7 @@ class ResultFrame;
 struct MultiResult {
     //std::vector<std::unique_ptr<ResultFrame>> frames;
     std::vector<std::unique_ptr<ResultFrame>> frames;
+    fs::path sourceDirectory;
     void setShowEdges(bool showEdges);
 };
 

@@ -2040,7 +2040,9 @@ bool UpdateInput(ImPlotPlot& plot) {
             const bool equal_zoom   = axis_equal && x_axis.OrthoAxis != nullptr;
             const bool equal_locked = (equal_zoom != false) && x_axis.OrthoAxis->IsInputLocked();
             if (x_hov[i] && !x_axis.IsInputLocked() && !equal_locked) {
+#if IMGUI_VERSION_NUM >= 18966
                 ImGui::SetKeyOwner(ImGuiKey_MouseWheelY, plot.ID);
+#endif
                 if (zoom_rate != 0.0f) {
                     const double plot_l = x_axis.PixelsToPlot(plot.PlotRect.Min.x - rect_size.x * tx * zoom_rate);
                     const double plot_r = x_axis.PixelsToPlot(plot.PlotRect.Max.x + rect_size.x * (1 - tx) * zoom_rate);
@@ -2057,7 +2059,9 @@ bool UpdateInput(ImPlotPlot& plot) {
             const bool equal_zoom   = axis_equal && y_axis.OrthoAxis != nullptr;
             const bool equal_locked = equal_zoom && y_axis.OrthoAxis->IsInputLocked();
             if (y_hov[i] && !y_axis.IsInputLocked() && !equal_locked) {
+#if IMGUI_VERSION_NUM >= 18966
                 ImGui::SetKeyOwner(ImGuiKey_MouseWheelY, plot.ID);
+#endif
                 if (zoom_rate != 0.0f) {
                     const double plot_t = y_axis.PixelsToPlot(plot.PlotRect.Min.y - rect_size.y * ty * zoom_rate);
                     const double plot_b = y_axis.PixelsToPlot(plot.PlotRect.Max.y + rect_size.y * (1 - ty) * zoom_rate);
@@ -3122,7 +3126,9 @@ void EndPlot() {
 
         if (legend_scrollable) {
             if (legend.Hovered) {
+#if IMGUI_VERSION_NUM >= 18966
                 ImGui::SetKeyOwner(ImGuiKey_MouseWheelY, plot.Items.ID);
+#endif
                 if (IO.MouseWheel != 0.0f) {
                     ImVec2 max_step = legend.Rect.GetSize() * 0.67f;
 #if IMGUI_VERSION_NUM < 19172
@@ -3645,7 +3651,9 @@ void EndSubplots() {
 
         if (legend_scrollable) {
             if (legend.Hovered) {
+#if IMGUI_VERSION_NUM >= 18966
                 ImGui::SetKeyOwner(ImGuiKey_MouseWheelY, subplot.Items.ID);
+#endif
                 if (IO.MouseWheel != 0.0f) {
                     ImVec2 max_step = legend.Rect.GetSize() * 0.67f;
 #if IMGUI_VERSION_NUM < 19172

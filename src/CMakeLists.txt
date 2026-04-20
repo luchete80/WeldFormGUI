@@ -64,6 +64,7 @@ endif()
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
                             bc_dialog.cpp
+                            load_plot_dialog.cpp
                             material_dialog.cpp
                             set_dialog.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp
@@ -163,6 +164,14 @@ add_library(imgui STATIC ${imgui_src} ${imgui_backend})
 target_include_directories(imgui PUBLIC ${imgui_dir} ${imgui_dir}/backends)
 target_link_libraries(imgui glfw)
 target_link_libraries(${EXEC_NAME} imgui)
+
+add_library(implot STATIC
+  ${CMAKE_SOURCE_DIR}/libs/implot-1.0/implot.cpp
+  ${CMAKE_SOURCE_DIR}/libs/implot-1.0/implot_items.cpp
+)
+target_include_directories(implot PUBLIC ${CMAKE_SOURCE_DIR}/libs/implot-1.0)
+target_link_libraries(implot PUBLIC imgui)
+target_link_libraries(${EXEC_NAME} implot)
 
 set (GMSH_LIBS gmsh)
 #IF (WIN32)
@@ -401,4 +410,3 @@ target_link_libraries(${EXEC_NAME}
             ${LINK_LIBRARIES}
             ${PYTHON_LIBRARIES}
 )
-

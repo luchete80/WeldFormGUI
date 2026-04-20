@@ -8,6 +8,7 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
     MultiResult results;
     fs::path json_path(jsonFile);
     fs::path json_dir = json_path.parent_path();
+    results.sourceDirectory = json_dir;
 
     if (!fs::exists(jsonFile)) {
         std::cerr << "Error: JSON file not found: " << jsonFile << std::endl;

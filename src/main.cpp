@@ -16,6 +16,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "implot.h"
 #include "VtkViewer.h"
 
 // VTK
@@ -67,6 +68,7 @@
 #include "GraphicMesh.h"
 
 #include "results.h"
+#include "load_plot_dialog.h"
 //using App;
 #include "geom/vtkOCCTGeom.h"
 #include "geom/ShapeToPolyData.h"
@@ -188,6 +190,7 @@ int main(int argc, char* argv[])
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImPlot::CreateContext();
   ImGuiIO& io = ImGui::GetIO(); (void)io;
   ImFont* font1 = io.Fonts->AddFontDefault();
 
@@ -221,6 +224,8 @@ int main(int argc, char* argv[])
   
   VtkViewer vtkViewer2;
   VtkViewer vtkViewer_res;
+  LoadPlotDialog loadPlotDialog;
+  bool showLoadPlotDialog = false;
   //vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
 
   vtkViewer2.getRenderer()->SetBackground(0.2,0.2,0.4);
@@ -444,6 +449,19 @@ int main(int argc, char* argv[])
 	              ImGui::SameLine();
 	              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
 	              ImGui::SameLine();
+	              if (ImGui::Button("load plot")) {
+	                  std::filesystem::path csv_path;
+	                  if (editor->getResults()) {
+	                      if (!editor->getResults()->sourceDirectory.empty()) {
+	                          csv_path = editor->getResults()->sourceDirectory / "Contact_Forces.csv";
+	                      } else if (!editor->getResults()->frames.empty()) {
+	                          csv_path = std::filesystem::path(editor->getResults()->frames.front()->name).parent_path() / "Contact_Forces.csv";
+	                      }
+	                  }
+	                  loadPlotDialog.SetCsvPath(csv_path.string());
+	                  showLoadPlotDialog = true;
+	              }
+	              ImGui::SameLine();
 	              static bool resultsShowEdges = false;
 	              if (ImGui::Checkbox("Surface with edges", &resultsShowEdges)) {
 	                  if (editor->getResults()) {
@@ -586,6 +604,8 @@ int main(int argc, char* argv[])
         }
 
         ImGui::End(); // cierre de la ventana contenedora
+
+    loadPlotDialog.Draw("Load Plot", &showLoadPlotDialog);
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
@@ -645,6 +665,7 @@ int main(int argc, char* argv[])
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
 
   glfwDestroyWindow(window);
