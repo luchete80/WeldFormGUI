@@ -1,19 +1,28 @@
 #include "ShapeToPolyData.h"
 
+#include <unordered_map>
+#include <vector>
+
 // OpenCASCADE includes
 #include <TopoDS.hxx>          // Essential for TopoDS::Face()
 #include <TopoDS_Face.hxx>
+#include <TopoDS_Edge.hxx>
 #include <TopExp_Explorer.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRep_Tool.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <TopLoc_Location.hxx>
 #include <Poly_Triangulation.hxx>
+#include <Geom_Curve.hxx>
 #include <gp_Pnt.hxx>
+#include <GeomAbs_CurveType.hxx>
+#include <GCPnts_QuasiUniformDeflection.hxx>
 
 
 // VTK includes
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
+#include <vtkLine.h>
 #include <vtkTriangle.h>
 #include <vtkPolyData.h>
 
@@ -24,6 +33,7 @@ vtkSmartPointer<vtkPolyData> ShapeToPolyData(const TopoDS_Shape& shape, double d
     
     vtkNew<vtkPoints> points;
     vtkNew<vtkCellArray> triangles;
+    vtkNew<vtkCellArray> lines;
     std::unordered_map<int, vtkIdType> pointMap;
     
     for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next())
@@ -60,10 +70,65 @@ vtkSmartPointer<vtkPolyData> ShapeToPolyData(const TopoDS_Shape& shape, double d
             triangles->InsertNextCell(triangle);
         }
     }
+
+    for (TopExp_Explorer exp(shape, TopAbs_EDGE); exp.More(); exp.Next())
+    {
+        const TopoDS_Edge edge = TopoDS::Edge(exp.Current());
+
+        Standard_Real first = 0.0;
+        Standard_Real last = 0.0;
+        Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, first, last);
+        if (curve.IsNull())
+        {
+            continue;
+        }
+
+        BRepAdaptor_Curve adaptor(edge);
+        std::vector<gp_Pnt> edgePoints;
+
+        if (adaptor.GetType() == GeomAbs_Line)
+        {
+            edgePoints.push_back(curve->Value(first));
+            edgePoints.push_back(curve->Value(last));
+        }
+        else
+        {
+            const double sampledDeflection = deflection > 0.0 ? deflection : 0.01;
+            GCPnts_QuasiUniformDeflection discretizer(adaptor, sampledDeflection);
+
+            if (discretizer.IsDone() && discretizer.NbPoints() >= 2)
+            {
+                for (int i = 1; i <= discretizer.NbPoints(); ++i)
+                {
+                    edgePoints.push_back(discretizer.Value(i));
+                }
+            }
+            else
+            {
+                edgePoints.push_back(curve->Value(first));
+                edgePoints.push_back(curve->Value(last));
+            }
+        }
+
+        for (std::size_t i = 1; i < edgePoints.size(); ++i)
+        {
+            const gp_Pnt& p0 = edgePoints[i - 1];
+            const gp_Pnt& p1 = edgePoints[i];
+
+            vtkIdType id0 = points->InsertNextPoint(p0.X(), p0.Y(), p0.Z());
+            vtkIdType id1 = points->InsertNextPoint(p1.X(), p1.Y(), p1.Z());
+
+            vtkNew<vtkLine> line;
+            line->GetPointIds()->SetId(0, id0);
+            line->GetPointIds()->SetId(1, id1);
+            lines->InsertNextCell(line);
+        }
+    }
     
     vtkNew<vtkPolyData> polyData;
     polyData->SetPoints(points);
     polyData->SetPolys(triangles);
+    polyData->SetLines(lines);
     
     return polyData;
 }

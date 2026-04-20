@@ -15,6 +15,7 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <BRepTools.hxx>
+#include <TopAbs_ShapeEnum.hxx>
 #include <STEPControl_Writer.hxx>
 #include <IFSelect_ReturnStatus.hxx>
 #include "Geom.h"
@@ -217,7 +218,19 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
         actor->SetMapper(m_mapper);
         actor->GetProperty()->SetOpacity(0.5);
         actor->GetProperty()->SetLineWidth(1.0);
-        //actor->GetProperty()->SetRepresentationToWireframe();
+
+        const bool isLineShape =
+            shape.ShapeType() == TopAbs_EDGE || shape.ShapeType() == TopAbs_WIRE;
+        const bool hasOnlyLines =
+            m_polydata->GetNumberOfLines() > 0 && m_polydata->GetNumberOfPolys() == 0;
+
+        if (isLineShape || hasOnlyLines) {
+            actor->GetProperty()->SetOpacity(1.0);
+            actor->GetProperty()->SetLineWidth(4.0);
+            actor->GetProperty()->SetRenderLinesAsTubes(true);
+            actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+        }
+
         actor->Modified();
 
     } catch (const Standard_Failure& e) {
