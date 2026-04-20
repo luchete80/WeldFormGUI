@@ -77,6 +77,11 @@
 #include <vtkFileOutputWindow.h>
 #include <vtkOutputWindow.h>
 
+//THIS IS TO AVOIDERROR WITH MINMAX
+#ifdef _WIN32 
+  #undef min
+  #undef max
+#endif
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
