@@ -1308,16 +1308,23 @@ void Editor::drawGui() {
             if (m_model->getPart(i)->isMeshed()){
               if (ImGui::TreeNode("Mesh"))
               {
+                  bool meshDeleted = false;
                   if (ImGui::BeginPopupContextItem())
                   {
                       if (ImGui::MenuItem("Delete")) {
                         getApp().removeGraphicMeshForPart(m_model->getPart(i));
                         m_model->getPart(i)->deleteMesh();
+                        meshDeleted = true;
                         
                       }
                       ImGui::EndPopup();
                   }
-                  
+
+                  if (meshDeleted || !m_model->getPart(i)->isMeshed() || m_model->getPart(i)->getMesh() == nullptr) {
+                      ImGui::TreePop();
+                      continue;
+                  }
+
                   // Subramas internas
                   if (ImGui::TreeNode("Nodes"))
                   {
