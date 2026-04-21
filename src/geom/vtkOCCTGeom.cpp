@@ -228,7 +228,7 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
             actor->GetProperty()->SetOpacity(1.0);
             actor->GetProperty()->SetLineWidth(4.0);
             actor->GetProperty()->SetRenderLinesAsTubes(true);
-            actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+            actor->GetProperty()->SetColor(0.45, 0.45, 0.45);
         }
 
         actor->Modified();

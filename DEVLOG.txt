@@ -176,3 +176,5 @@
          - Added Progress Bar at Job Run 
          - Add Progress Bar at results loading.
          - FIXED Delete Mesh from tree.
+         - ADDED Graphic NODE showing.
+         - Change color of mesh nodes. 

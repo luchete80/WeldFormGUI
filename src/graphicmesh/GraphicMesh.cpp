@@ -6,7 +6,9 @@
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkPoints.h>
+#include <vtkLookupTable.h>
 #include <gmsh.h>
 #include <vtkLine.h>
 #include <vtkTriangle.h>
@@ -80,7 +82,9 @@ int GraphicMesh::createVTKPolyData() {
     std::map<std::size_t, vtkIdType> gmshToVtkIndex;
     vtkNew<vtkPoints> points;
     vtkNew<vtkCellArray> cells;
+    vtkNew<vtkCellArray> verts;
     vtkNew<vtkFloatArray> scalars;
+    vtkNew<vtkFloatArray> cellScalars;
 
     // Primera pasada: recoger todos los puntos y crear mapeo
     int nodeCount = 0;
@@ -103,6 +107,9 @@ int GraphicMesh::createVTKPolyData() {
                 vtkIdType pointId = points->InsertNextPoint(coord[0], coord[1], coord[2]);
                 gmshToVtkIndex[nodeTags[i]] = pointId;
                 scalars->InsertTuple1(pointId, pointId);
+                verts->InsertNextCell(1);
+                verts->InsertCellPoint(pointId);
+                cellScalars->InsertNextTuple1(0.0);
                 nodeCount++;
             }
         }
@@ -160,6 +167,7 @@ int GraphicMesh::createVTKPolyData() {
                 // Añadir la celda y guardar conectividad
                 cells->InsertNextCell(cell);
                 elnodes.push_back(connectivity);
+                cellScalars->InsertNextTuple1(static_cast<float>(elnodes.size()));
             }
         }
     }
@@ -184,14 +192,32 @@ int GraphicMesh::createVTKPolyData() {
     }
     if (has1DElements) {
         mesh_pdata->SetLines(cells);
+        mesh_pdata->SetVerts(verts);
     }
     
     mesh_pdata->GetPointData()->SetScalars(scalars);
+    mesh_pdata->GetCellData()->SetScalars(cellScalars);
 
     // Configurar mapper y actor
     mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mesh_Mapper->SetInputData(mesh_pdata);
-    mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+    mesh_Mapper->SetScalarModeToUseCellData();
+
+    vtkNew<vtkLookupTable> lut;
+    const vtkIdType tableSize = (cellScalars->GetNumberOfTuples() > 0)
+        ? cellScalars->GetNumberOfTuples() + 1
+        : 2;
+    lut->SetNumberOfTableValues(tableSize);
+    lut->Build();
+    lut->SetTableValue(0, 0.0, 0.0, 0.0, 1.0);
+    for (vtkIdType i = 1; i < tableSize; ++i) {
+        const double t = (tableSize > 2)
+            ? static_cast<double>(i - 1) / static_cast<double>(tableSize - 2)
+            : 0.0;
+        lut->SetTableValue(i, t, 0.3, 1.0 - t, 1.0);
+    }
+    mesh_Mapper->SetLookupTable(lut);
+    mesh_Mapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
     
     mesh_actor = vtkSmartPointer<vtkActor>::New();
     mesh_actor->SetMapper(mesh_Mapper);
@@ -204,6 +230,10 @@ int GraphicMesh::createVTKPolyData() {
     // Solo mostrar wireframe si hay elementos 2D
     if (has2DElements) {
         mesh_actor->GetProperty()->SetRepresentationToWireframe();
+    } else if (has1DElements) {
+        mesh_actor->GetProperty()->SetColor(0.0, 0.0, 0.0);
+        mesh_actor->GetProperty()->SetPointSize(6.0);
+        mesh_actor->GetProperty()->RenderPointsAsSpheresOn();
     }
     
     mesh_actor->Modified();
@@ -323,7 +353,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
     points = vtkSmartPointer<vtkPoints>::New();
     vtkNew<vtkCellArray> cells;
+    vtkNew<vtkCellArray> verts;
     vtkNew<vtkFloatArray> scalars;
+    vtkNew<vtkFloatArray> cellScalars;
 
     std::cout << "Node count: " << mesh.getNodeCount() << std::endl;
 
@@ -335,6 +367,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
         }
         points->InsertPoint(n, coords[0], coords[1], coords[2]);
         scalars->InsertTuple1(n, n);
+        verts->InsertNextCell(1);
+        verts->InsertCellPoint(n);
+        cellScalars->InsertNextTuple1(0.0);
     }
 
     // Segunda pasada: procesar elementos según su tipo
@@ -390,6 +425,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
             }
 
             cells->InsertNextCell(cell);
+            cellScalars->InsertNextTuple1(static_cast<float>(e + 1));
             
         }//Element loop
 
@@ -400,11 +436,13 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
             mesh_pdata->SetPolys(cells);
         } else if (has1DElements) {
             mesh_pdata->SetLines(cells);
+            mesh_pdata->SetVerts(verts);
         } else if (has3DElements) {
             mesh_pdata->SetPolys(cells); // Para elementos 3D también usamos polys en VTK
         }
 
         mesh_pdata->GetPointData()->SetScalars(scalars);
+        mesh_pdata->GetCellData()->SetScalars(cellScalars);
 
     } else if (mesh.getType() == SPH) {
         // Manejo para mallas SPH (partículas)
@@ -418,7 +456,23 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     // Configurar mapper y actor
     mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mesh_Mapper->SetInputData(mesh_pdata);
-    mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+    mesh_Mapper->SetScalarModeToUseCellData();
+
+    vtkNew<vtkLookupTable> lut;
+    const vtkIdType tableSize = (cellScalars->GetNumberOfTuples() > 0)
+        ? cellScalars->GetNumberOfTuples() + 1
+        : 2;
+    lut->SetNumberOfTableValues(tableSize);
+    lut->Build();
+    lut->SetTableValue(0, 0.0, 0.0, 0.0, 1.0);
+    for (vtkIdType i = 1; i < tableSize; ++i) {
+        const double t = (tableSize > 2)
+            ? static_cast<double>(i - 1) / static_cast<double>(tableSize - 2)
+            : 0.0;
+        lut->SetTableValue(i, t, 0.3, 1.0 - t, 1.0);
+    }
+    mesh_Mapper->SetLookupTable(lut);
+    mesh_Mapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
 
     mesh_actor = vtkSmartPointer<vtkActor>::New();
     mesh_actor->SetMapper(mesh_Mapper);
@@ -431,6 +485,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     // Mostrar wireframe para elementos 2D/3D
     if (mesh.getType() == FEM && mesh.getDim() >= 2) {
         mesh_actor->GetProperty()->SetRepresentationToWireframe();
+    } else if (mesh.getType() == FEM && mesh.getDim() == 1) {
+        mesh_actor->GetProperty()->SetPointSize(6.0);
+        mesh_actor->GetProperty()->RenderPointsAsSpheresOn();
     }
     
     mesh_actor->Modified();
