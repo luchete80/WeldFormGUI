@@ -34,6 +34,7 @@
 #include <filesystem>
 #include <system_error>
 #include <chrono>
+#include <cmath>
 
 #include <gmsh.h>
 
@@ -66,6 +67,40 @@
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
+
+namespace {
+int curveNodeCountFromElementSize(int curveTag, double elementSize) {
+  if (elementSize <= 0.0) return 2;
+
+  double xmin = 0.0, ymin = 0.0, zmin = 0.0;
+  double xmax = 0.0, ymax = 0.0, zmax = 0.0;
+  gmsh::model::getBoundingBox(1, curveTag, xmin, ymin, zmin, xmax, ymax, zmax);
+
+  const double dx = xmax - xmin;
+  const double dy = ymax - ymin;
+  const double dz = zmax - zmin;
+  const double approxLength = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+  return std::max(2, static_cast<int>(std::ceil(approxLength / elementSize)) + 1);
+}
+
+void applyMeshSizeToCurrentGmshModel(double elementSize) {
+  if (elementSize <= 0.0) return;
+
+  std::vector<std::pair<int, int>> pointEntities;
+  gmsh::model::getEntities(pointEntities, 0);
+  for (const auto& entity : pointEntities) {
+    gmsh::model::mesh::setSize({entity}, elementSize);
+  }
+
+  std::vector<std::pair<int, int>> curveEntities;
+  gmsh::model::getEntities(curveEntities, 1);
+  for (const auto& entity : curveEntities) {
+    gmsh::model::mesh::setTransfiniteCurve(
+        entity.second, curveNodeCountFromElementSize(entity.second, elementSize));
+  }
+}
+}
 
 
 Editor *editor; //TODO: IMPLEMENT CALLBACK CLASS IN EDITOR
@@ -519,6 +554,7 @@ void Editor::meshPart(Part* part){
                          analysis_type == PlaneStrain2D ||
                          analysis_type == Axisymmetric2D);
   bool is_rigid_part = (part->getType() == Rigid);
+  double element_size = m_model->getElementSize();
   cout << "Geometry dimension: "<<gmsh_dim<<endl;
   cout << "Analysis type: "<<analysis_type<<endl;
 
@@ -527,7 +563,6 @@ void Editor::meshPart(Part* part){
     fs::path bdf_name = "output_smoothed.bdf";
     fs::path bdf_export_path = activeModelOutputPath(*m_model,
                                                      activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf");
-    double element_size = m_model->getElementSize();
     std::string remesh_cmd = "mesh-adapt \"" + step_path.string() + "\" " + std::to_string(element_size);
     cout << "Running 2D remesher: " << remesh_cmd << endl;
 
@@ -548,14 +583,7 @@ void Editor::meshPart(Part* part){
       mesh_ready = true;
     }
   } else if (is_2d_analysis && is_rigid_part) {
-    std::vector<std::pair<int, int>> entities;
-    gmsh::model::getEntities(entities);
-
-    for (auto &e : entities) {
-        if (e.first == 1) {
-            gmsh::model::mesh::setTransfiniteCurve(e.second, 10);
-        }
-    }
+    applyMeshSizeToCurrentGmshModel(element_size);
 
     gmsh::model::mesh::generate(1);
 
@@ -568,11 +596,9 @@ void Editor::meshPart(Part* part){
   } else {
     std::vector<std::pair<int, int>> entities;
     gmsh::model::getEntities(entities);
+    applyMeshSizeToCurrentGmshModel(element_size);
     
     for(auto &e : entities) {
-        if(e.first == 1) {
-            gmsh::model::mesh::setTransfiniteCurve(e.second, 10);
-        }
         if(e.first == 2) {
             gmsh::model::mesh::setTransfiniteSurface(e.second);
             gmsh::model::mesh::setRecombine(2, e.second);

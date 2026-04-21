@@ -177,4 +177,5 @@
          - Add Progress Bar at results loading.
          - FIXED Delete Mesh from tree.
          - ADDED Graphic NODE showing.
-         - Change color of mesh nodes. 
+         - Change color of mesh nodes.
+         - FIXED Element Size in 1d mesh. 
