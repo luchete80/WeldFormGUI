@@ -8,6 +8,18 @@
 
 using namespace std; 
 
+namespace {
+void removeGraphicMeshInstance(std::vector<GraphicMesh*>& graphicMeshes,
+                               std::vector<GraphicMesh*>::iterator& it) {
+    GraphicMesh* gmesh = *it;
+    if (gmesh != nullptr) {
+        gmesh->RemoveActorFromViewer();
+        delete gmesh;
+    }
+    it = graphicMeshes.erase(it);
+}
+}
+
 App * App::_pcSingleton = nullptr;
 
 /*static */ App &getApp(){
@@ -53,10 +65,7 @@ void App::checkUpdate(){
 ////TODO: CHANGE TO CHECK FOR MESH->getPart()
 ////
 void App::updateMeshes(){
-  
-  std::vector <bool> is_part;
-  is_part.resize(m_graphicmeshes.size()); //to delete graphic mesh is part is not present
-   
+
   if (_activeModel!= nullptr){
   cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
   
@@ -75,7 +84,6 @@ void App::updateMeshes(){
       for (int gm=0;gm<m_graphicmeshes.size();gm++){
         if (m_graphicmeshes[gm]->getMesh() == partMesh){//is related to the part mesh
             not_found = false;
-            is_part[gm] = true;
           }
         
         }
@@ -105,8 +113,10 @@ void App::updateMeshes(){
   
   //Second loop fo deleted parts
     cout << "Looking for "<<m_graphicmeshes.size()<<" meshes and "<<_activeModel->getPartCount()<< " parts "<<endl;
-    for (int gm=0;gm<m_graphicmeshes.size();gm++){
+    auto gmIt = m_graphicmeshes.begin();
+    while (gmIt != m_graphicmeshes.end()){
       bool del_part = true;
+      GraphicMesh* graphicMesh = *gmIt;
       for (int p=0;p<_activeModel->getPartCount();p++){
         Part* part = _activeModel->getPart(p);
         if (!part || !part->isMeshed()) {
@@ -116,16 +126,18 @@ void App::updateMeshes(){
         if (partMesh == nullptr) {
           continue;
         }
-        cout << "sm mesh ptr "<<m_graphicmeshes[gm]->getMesh()<<", "<<" part msh pointer "<<partMesh<<endl;
-      if (m_graphicmeshes[gm]->getMesh() == partMesh){//is related to the part mesh
+        cout << "sm mesh ptr "<<graphicMesh->getMesh()<<", "<<" part msh pointer "<<partMesh<<endl;
+      if (graphicMesh->getMesh() == partMesh){//is related to the part mesh
         cout <<"Found one part with corresponding mesh"<<endl;
         del_part = false;
+        break;
         }
       }
       if (del_part){
         cout<<"Deleting graphic mesh for unexisting part"<<endl; 
-        ///REMOVE ACTOR 
-        m_graphicmeshes.erase(m_graphicmeshes.begin()+gm);
+        removeGraphicMeshInstance(m_graphicmeshes, gmIt);
+      } else {
+        ++gmIt;
       }
     }
   
@@ -207,18 +219,7 @@ void App::removeGraphicMeshForPart(Part* part) {
     while (it != m_graphicmeshes.end()) {
         GraphicMesh* gmesh = *it;
         if (gmesh && gmesh->getMesh() == part->getMesh()) {
-            //~ // 1️⃣ Quitar el actor del renderer si existe
-            //~ if (gmesh->getActor() && gmesh->m_viewer) {
-                //~ auto renderer = gmesh->m_viewer->getRenderer();
-                //~ if (renderer)
-                    //~ renderer->RemoveActor(gmesh->getActor());
-            //~ }
-
-            //2. Clean Memory
-            delete gmesh;
-
-            // Borrar del vector
-            it = m_graphicmeshes.erase(it);
+            removeGraphicMeshInstance(m_graphicmeshes, it);
 
             std::cout << "Removed GraphicMesh and actor for part Id: "
                       << part->getId() << std::endl;
@@ -239,10 +240,11 @@ GraphicMesh* App::getGraphicMeshFromPart(Part* part) {
     while (it != m_graphicmeshes.end()) {
         GraphicMesh* gmesh = *it;
         if (gmesh && gmesh->getMesh() == part->getMesh()) {
-    
-    return gmesh;
+            return gmesh;
+        }
+        ++it;
     }
-  }
+    return nullptr;
 }
 
 // Sobrecarga para cuando solo tienes la geometría y quieres que App cree el visual

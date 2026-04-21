@@ -201,12 +201,8 @@ bool Editor::openModelFromPath(const std::string& filePathName)
 
       cout << "Generating mesh from gmsh" << endl;
 
-      if (m_model->getPart(p)->isMeshed()) {
-        graphic_mesh = new GraphicMesh();
-        graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
-
-        viewer->addActor(graphic_mesh->getActor());
-      }
+      // Mesh visualization is synchronized through App::updateMeshes().
+      // Adding it directly here creates duplicate actors that App does not own.
     }
   }
 
@@ -1315,8 +1311,6 @@ void Editor::drawGui() {
                   if (ImGui::BeginPopupContextItem())
                   {
                       if (ImGui::MenuItem("Delete")) {
-
-                        viewer->removeActor(getApp().getGraphicMeshFromPart(m_model->getPart(i))->getActor());
                         getApp().removeGraphicMeshForPart(m_model->getPart(i));
                         m_model->getPart(i)->deleteMesh();
                         

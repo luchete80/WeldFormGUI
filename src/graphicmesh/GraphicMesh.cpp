@@ -518,6 +518,12 @@ m_mesh(mesh)
   
 }
 
+void GraphicMesh::RemoveActorFromViewer() {
+    if (mesh_actor != nullptr && m_viewer != nullptr) {
+        m_viewer->removeActor(mesh_actor);
+    }
+}
+
 GraphicSPHMesh::GraphicSPHMesh(Mesh *mesh)
 {
 

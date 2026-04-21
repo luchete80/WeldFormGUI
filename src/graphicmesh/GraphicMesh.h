@@ -71,6 +71,7 @@ public:
   bool & isPolydataNeeded(){return m_needs_polydata;}
   void setPoints(Mesh &mesh); //NOT VIRTUAL
   void setViewer(VtkViewer* v){m_viewer = v;}
+  void RemoveActorFromViewer();
 
     void SetTransform(vtkSmartPointer<vtkTransform> transform);
     
