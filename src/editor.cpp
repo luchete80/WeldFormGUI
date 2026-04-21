@@ -239,8 +239,12 @@ bool Editor::createJobFromActiveModel(bool runJob)
   Job *job = new Job(input_path.string());
   m_jobs.push_back(job);
 
-  if (runJob)
+  if (runJob) {
     job->Run();
+    job->UpdateOutput();
+    m_jobshowdlg.m_job = job;
+    m_jobshowdlg.m_show = true;
+  }
 
   return true;
 }
