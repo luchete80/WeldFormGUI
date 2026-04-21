@@ -1,5 +1,6 @@
 // Standard Library
 #include <iostream>
+#include <filesystem>
 
 
 /////https://github.com/trlsmax/imgui-vtk/tree/master
@@ -411,16 +412,28 @@ int main(int argc, char* argv[])
           {
               ImGui::PushFont(font_ubu);
 
-              auto renderer = vtkViewer2.getRenderer();
+	              auto renderer = vtkViewer2.getRenderer();
 
-              // Botones de background específicos
-              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
-              ImGui::SameLine();
-              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+	              if (ImGui::Button("Demo")) {
+	                const std::filesystem::path demo_path("./demo/demo.json");
+	                if (std::filesystem::exists(demo_path))
+	                  editor->openModelFromPath(demo_path.string());
+	                else
+	                  std::cout << "Demo file not found: " << demo_path.string() << std::endl;
+	              }
+	              ImGui::SameLine();
+	              if (ImGui::Button("Run")) {
+	                editor->createJobFromActiveModel(true);
+	              }
+
+	              // Botones de background específicos
+	              //~ if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
+	              //~ ImGui::SameLine();
+              //~ if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
+              //~ ImGui::SameLine();
+              //~ if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
+              //~ ImGui::SameLine();
+              //~ if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
 
               // Slider de alpha del background
               static float vtk2BkgAlpha = 0.2f;

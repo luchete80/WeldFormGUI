@@ -164,6 +164,87 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
   return true;
 }
 
+bool Editor::openModelFromPath(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
+  ModelReader mr(m_model);
+  mr.readFromFile(filePathName);
+
+  int pc = m_model->getPartCount();
+  cout << "Model part count: " << pc << endl;
+
+  cout << "Adding vtkgeo meshes" << endl;
+  for (int p = 0; p < pc; p++) {
+    cout << "part " << p << endl;
+    vtkOCCTGeom *geom = new vtkOCCTGeom;
+
+    Geom *geo = m_model->getPart(p)->getGeom();
+    if (geo != nullptr) {
+      geom->LoadFromShape(geo->getShape(), 0.01);
+      cout << "Done." << endl;
+
+      viewer->addActor(geom->actor);
+
+      cout << "Generating mesh from gmsh" << endl;
+
+      if (m_model->getPart(p)->isMeshed()) {
+        graphic_mesh = new GraphicMesh();
+        graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
+
+        viewer->addActor(graphic_mesh->getActor());
+      }
+    }
+  }
+
+  pc = m_model->getPartCount();
+  cout << "Model part count: " << pc << endl;
+  m_model = mr.getModel();
+
+  cout << "Model Material Count: " << m_model->getMaterialCount() << endl;
+
+  std::string model_name = fs::path(filePathName).stem().string();
+  if (model_name.empty())
+    model_name = fs::path(filePathName).filename().string();
+
+  cout << "Setting model name " << model_name << endl;
+  m_model->setName(model_name);
+  m_model->setFilePath(filePathName);
+  m_model->setNoSaveAs();
+
+  getApp().setActiveModel(m_model);
+#ifdef BUILD_PYTHON
+  PyRun_SimpleString("GetApplication().getActiveModel()");
+#else
+  getApp().getActiveModel();
+#endif
+  getApp().Update();
+
+  return true;
+}
+
+bool Editor::createJobFromActiveModel(bool runJob)
+{
+  Model &model = getApp().getActiveModel();
+  if (!model.getHasName()) {
+    cout << "File has not name." << endl;
+    return false;
+  }
+
+  fs::path input_path = activeModelOutputPath(model, activeModelStem(model) + "_run.json");
+  InputWriter writer(&model);
+  writer.writeToFile(input_path.string());
+
+  Job *job = new Job(input_path.string());
+  m_jobs.push_back(job);
+
+  if (runJob)
+    job->Run();
+
+  return true;
+}
+
 bool Editor::openResultsForModel()
 {
   const std::string& modelFilePath = m_model->getFilePath();
@@ -1791,111 +1872,11 @@ void Editor::drawGui() {
     cout << "Open"<<endl;
 
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
 
     if (ImGuiFileDialog::Instance()->IsOk())
-    {          
-    ModelReader mr(m_model);
-    mr.readFromFile(filePathName);
-
-      int pc = m_model->getPartCount();
-      cout << "Model part count: "<<pc<<endl;
-      
-      
-      /////////////////// TODO: MOVE TO READER
-      cout << "Adding vtkgeo meshes"<<endl;
-      for (int p=0;p<pc;p++){
-        cout << "part "<<p<<endl;
-      vtkOCCTGeom *geom = new vtkOCCTGeom;
-
-      std::string name = "part_" + std::to_string(pc) + ".step";
-      Geom *geo = m_model->getPart(p)->getGeom();
-        if (geo != nullptr){
-        geom->LoadFromShape(geo->getShape(), 0.01);
-        cout << "Done."<<endl;
-        //geom->LoadCylinder(0.1,0.1);
-        
-        //widget->SetInteractor(rendersWindowInteractor);
-        viewer->addActor(geom->actor);
-      
-        //~ gmsh::clear();
-
-        //~ std::string meshname = "part_" + std::to_string(p) + ".msh";
-        //~ gmsh::open(meshname.c_str());
-        //~ cout << "Mesh "<< meshname <<" opened."<<endl;
-        
-
-
-        //~ // O también puedes usar merge para añadir a un modelo existente
-        //~ // gmsh::merge(meshname.c_str());
-
-        //~ // Sincronizar después de cargar
-        //~ gmsh::model::occ::synchronize();
-        
-        cout << "Generating mesh from gmsh"<<endl;
-        
-        //m_model->getPart(p)->generateMesh(); //from gmsh
-        
-        if (m_model->getPart(p)->isMeshed()){
-          graphic_mesh = new GraphicMesh(); ///THIS READS FROM GLOBAL GMSH MODEL
-          
-          //graphic_mesh->createVTKPolyData();
-          graphic_mesh->createVTKPolyData(*m_model->getPart(p)->getMesh());
-          
-          viewer->addActor(graphic_mesh->getActor());
-        }
-        //~ #ifdef BUILD_PYTHON
-        //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-        //~ #else
-          //~ getApp().getActiveModel();
-        //~ #endif
-
-        //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)        
-      
-      
-      }
+    {
+      openModelFromPath(filePathName);
     }
-              
-    //~ //m_model = mr.getModel();
-      //~ #ifdef BUILD_PYTHON
-      //~ PyRun_SimpleString("GetApplication().getActiveModel()");
-      //~ #else
-        //~ getApp().getActiveModel();
-      //~ #endif
-
-      //~ getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-
-    // close
-    pc = m_model->getPartCount();
-    cout << "Model part count: "<<pc<<endl;
-      m_model = mr.getModel();
-      
-    cout << "Model Material Count: "<<m_model->getMaterialCount()<<endl;
-
-
-      size_t slashPos = filePathName.find_last_of("/\\"); // por si acaso mezcla los dos tipos
-      if (slashPos != std::string::npos)
-          filePathName = filePathName.substr(slashPos + 1);
-          
-      // --- Quitar la extensión .json si la tiene ---
-      size_t dotPos = filePathName.rfind(".json");
-      if (dotPos != std::string::npos)
-          filePathName = filePathName.substr(0, dotPos);
-	      cout << "Setting model name "<<filePathName<<endl;
-	      m_model->setName(filePathName);
-	      m_model->setFilePath(ImGuiFileDialog::Instance()->GetFilePathName());
-	      m_model->setNoSaveAs(); //Critic, this is for no changign mesh names
-
-      getApp().setActiveModel(m_model);
-      #ifdef BUILD_PYTHON
-      PyRun_SimpleString("GetApplication().getActiveModel()");
-      #else
-        getApp().getActiveModel();
-      #endif
-      getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
-
-              
-    }//If ok 
     ImGuiFileDialog::Instance()->Close();
   }// Open File
 

@@ -118,6 +118,8 @@ public:
   void CursorPos(double x, double y);
   void drawGui();
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
+  bool openModelFromPath(const std::string& filePathName);
+  bool createJobFromActiveModel(bool runJob = false);
   bool openResultsFromPath(const std::string& filePathName);
   bool openResultsForModel();
   bool openResultsForJob(Job* job);
