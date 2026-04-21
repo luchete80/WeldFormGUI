@@ -172,3 +172,6 @@
          - Added Boundary Condition output from model.
          - Added Vector Component in plot 
          - Adding contact parameters.
+20260421 - Added Demo and Run buttons (to avoid Job creation and run)
+         - Added Progress Bar at Job Run 
+         - Add Progress Bar at results loading.

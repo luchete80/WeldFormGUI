@@ -46,6 +46,16 @@ struct MultiResult {
     void setShowEdges(bool showEdges);
 };
 
+struct ResultFrameEntry {
+    fs::path vtkPath;
+    double time = 0.0;
+};
+
+std::vector<ResultFrameEntry> CollectResultFrameEntriesFromJson(
+    const std::string& jsonFile,
+    fs::path* sourceDirectory = nullptr,
+    fs::path* sourceJsonFile = nullptr);
+
 MultiResult LoadResultsFromJson(const std::string& jsonFile);
 
 

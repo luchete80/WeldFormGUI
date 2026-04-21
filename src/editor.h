@@ -125,6 +125,7 @@ public:
   bool openResultsForJob(Job* job);
   bool refreshOpenResults();
   bool consumeResultsViewerActivationRequest();
+  bool isLoadingResults() const;
   
   void CalcFPS();
   void addViewer(VtkViewer *);
@@ -300,6 +301,27 @@ protected:
   
   MultiResult *m_results = nullptr;
   bool m_activate_results_viewer = false;
+
+  struct PendingResultsLoad {
+    bool active = false;
+    bool justStarted = false;
+    fs::path sourceDirectory;
+    fs::path sourceJsonFile;
+    MultiResult results;
+    std::vector<ResultFrameEntry> entries;
+    std::size_t nextIndex = 0;
+    std::size_t loadedFrames = 0;
+    std::size_t skippedFrames = 0;
+    std::string currentFile;
+    std::string errorMessage;
+  };
+
+  PendingResultsLoad m_pending_results_load;
+
+  bool beginResultsLoadFromJson(const std::string& jsonFile);
+  void advanceResultsLoad();
+  void finishResultsLoad();
+  void drawResultsLoadProgress();
   
   Material_Db m_mat_db;
     

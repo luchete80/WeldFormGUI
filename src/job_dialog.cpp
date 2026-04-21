@@ -263,9 +263,20 @@ void JobShowDialog::Draw(){
     m_show=false;
   }
   ImGui::SameLine();
-  if (ImGui::Button("Load Results") && m_open_results) {
-    m_open_results(m_job);
+  const bool canLoadResults = m_open_results && !resultsPath.empty();
+  if (!canLoadResults)
+    ImGui::BeginDisabled();
+  if (ImGui::Button("Load Results")) {
+    if (!resultsPath.empty()) {
+      // cout << "[job-dialog] load results requested for " << resultsPath.string() << endl;
+      m_job->UpdateOutput(m_max_visible_lines);
+      m_open_results(m_job);
+    } else {
+      // cout << "[job-dialog] load results requested but no results json detected yet" << endl;
+    }
   }
+  if (!canLoadResults)
+    ImGui::EndDisabled();
 
   ImGui::End();
   }

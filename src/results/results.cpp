@@ -3,23 +3,28 @@
 
 
 
-MultiResult LoadResultsFromJson(const std::string& jsonFile)
+std::vector<ResultFrameEntry> CollectResultFrameEntriesFromJson(const std::string& jsonFile,
+                                                               fs::path* sourceDirectory,
+                                                               fs::path* sourceJsonFile)
 {
-    MultiResult results;
+    std::vector<ResultFrameEntry> entries;
     fs::path json_path(jsonFile);
     fs::path json_dir = json_path.parent_path();
-    results.sourceDirectory = json_dir;
-    results.sourceJsonFile = json_path;
+
+    if (sourceDirectory != nullptr)
+        *sourceDirectory = json_dir;
+    if (sourceJsonFile != nullptr)
+        *sourceJsonFile = json_path;
 
     if (!fs::exists(jsonFile)) {
         std::cerr << "Error: JSON file not found: " << jsonFile << std::endl;
-        return results;
+        return entries;
     }
 
     std::ifstream file(jsonFile);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open JSON file: " << jsonFile << std::endl;
-        return results;
+        return entries;
     }
 
     json data;
@@ -28,12 +33,12 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
     }
     catch (const std::exception& e) {
         std::cerr << "Error parsing results JSON " << jsonFile << ": " << e.what() << std::endl;
-        return results;
+        return entries;
     }
 
     if (!data.contains("vtk_files") || !data["vtk_files"].is_array()) {
         std::cerr << "Error: JSON does not contain valid 'vtk_files' array." << std::endl;
-        return results;
+        return entries;
     }
 
     for (const auto& entry : data["vtk_files"]) {
@@ -42,25 +47,39 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
             continue;
         }
 
-        std::string vtkFile = entry["file"];
-        double time = entry["time"];
-        fs::path vtk_path(vtkFile);
+        fs::path vtk_path = entry["file"].get<std::string>();
         if (vtk_path.is_relative())
             vtk_path = json_dir / vtk_path;
 
-        if (!fs::exists(vtk_path)) {
-            std::cerr << "Warning: VTK file not found: " << vtk_path.string() << std::endl;
+        ResultFrameEntry frameEntry;
+        frameEntry.vtkPath = vtk_path;
+        frameEntry.time = entry["time"].get<double>();
+        entries.push_back(std::move(frameEntry));
+    }
+
+    return entries;
+}
+
+MultiResult LoadResultsFromJson(const std::string& jsonFile)
+{
+    MultiResult results;
+    std::vector<ResultFrameEntry> entries =
+        CollectResultFrameEntriesFromJson(jsonFile, &results.sourceDirectory, &results.sourceJsonFile);
+
+    for (const auto& entry : entries) {
+        if (!fs::exists(entry.vtkPath)) {
+            std::cerr << "Warning: VTK file not found: " << entry.vtkPath.string() << std::endl;
             continue;
         }
 
         try {
-            auto frame = std::make_unique<ResultFrame>(vtk_path.string());
+            auto frame = std::make_unique<ResultFrame>(entry.vtkPath.string());
             results.frames.push_back(std::move(frame));
 
-            // std::cout << "Loaded frame at time " << time << " from " << vtk_path.string() << std::endl;
+            // std::cout << "Loaded frame at time " << entry.time << " from " << entry.vtkPath.string() << std::endl;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error loading " << vtk_path.string() << ": " << e.what() << std::endl;
+            std::cerr << "Error loading " << entry.vtkPath.string() << ": " << e.what() << std::endl;
         }
     }
 

@@ -36,8 +36,9 @@ void App::setActiveModel(Model *m){
 Model & App::getActiveModel(){
   if (_activeModel==nullptr)
     cout << "ERROR: No Active Model"<<endl;
-  else 
-    cout << "Model address"<<_activeModel<<endl;
+  else {
+    //cout << "Model address"<<_activeModel<<endl;
+  }
   return *_activeModel;
 
 }

@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <system_error>
+#include <chrono>
 
 #include <gmsh.h>
 
@@ -111,18 +112,7 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
   std::string ext = fs::path(filePathName).extension().string();
 
   if (ext == ".json") {
-      MultiResult results = LoadResultsFromJson(filePathName);
-      m_results = new MultiResult(std::move(results)); //Because of dstd_unique_ptr
-      if (!m_results->frames.empty()) {
-          //~ for (auto& framePtr : results.frames) {
-              //~ viewer->addActor(framePtr->actor);
-          //~ }
-      //if (m_curr_res_actor) res_viewer->RemoveActor(m_curr_res_actor);
-
-      // mostrar nuevo frame
-      //m_curr_res_actor = results.frames[0]->actor;
-      //res_viewer->addActor(m_curr_res_actor);
-      }
+      return beginResultsLoadFromJson(filePathName);
   } else if (ext == ".vtk") {
     ResultFrame *frame = new ResultFrame(filePathName);
     frame->printAvailableFields();
@@ -161,6 +151,28 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
   #endif
 
   getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+  return true;
+}
+
+bool Editor::beginResultsLoadFromJson(const std::string& jsonFile)
+{
+  PendingResultsLoad pending;
+  pending.entries = CollectResultFrameEntriesFromJson(jsonFile, &pending.sourceDirectory, &pending.sourceJsonFile);
+  pending.results.sourceDirectory = pending.sourceDirectory;
+  pending.results.sourceJsonFile = pending.sourceJsonFile;
+
+  if (pending.sourceJsonFile.empty() || !fs::exists(pending.sourceJsonFile)) {
+    cout << "Could not prepare results load for JSON: " << jsonFile << endl;
+    return false;
+  }
+
+  m_pending_results_load = std::move(pending);
+  m_pending_results_load.active = true;
+  m_pending_results_load.justStarted = true;
+  m_pending_results_load.currentFile.clear();
+  m_pending_results_load.errorMessage.clear();
+  // cout << "[results-progress] begin load from " << m_pending_results_load.sourceJsonFile.string()
+  //      << " with " << m_pending_results_load.entries.size() << " frame entries" << endl;
   return true;
 }
 
@@ -292,6 +304,8 @@ bool Editor::openResultsForJob(Job* job)
 
   for (const auto& candidate : candidates) {
     if (fs::exists(candidate)) {
+      cout << "[openResultsForJob] opening " << candidate.string()
+           << " for job " << jobPath << endl;
       return openResultsFromPath(candidate.string());
     }
   }
@@ -342,6 +356,136 @@ bool Editor::consumeResultsViewerActivationRequest()
   bool activate = m_activate_results_viewer;
   m_activate_results_viewer = false;
   return activate;
+}
+
+bool Editor::isLoadingResults() const
+{
+  return m_pending_results_load.active;
+}
+
+void Editor::advanceResultsLoad()
+{
+  if (!m_pending_results_load.active)
+    return;
+
+  if (m_pending_results_load.justStarted) {
+    // cout << "[results-progress] first UI frame reserved for progress window" << endl;
+    m_pending_results_load.justStarted = false;
+    return;
+  }
+
+  const auto startTime = std::chrono::steady_clock::now();
+  const auto budget = std::chrono::milliseconds(12);
+  const std::size_t maxFramesPerTick = 1;
+  std::size_t processedThisTick = 0;
+
+  while (m_pending_results_load.nextIndex < m_pending_results_load.entries.size()) {
+    const ResultFrameEntry& entry = m_pending_results_load.entries[m_pending_results_load.nextIndex];
+    m_pending_results_load.currentFile = entry.vtkPath.filename().string();
+
+    if (!fs::exists(entry.vtkPath)) {
+      ++m_pending_results_load.skippedFrames;
+      cout << "Warning: VTK file not found: " << entry.vtkPath.string() << endl;
+    } else {
+      try {
+        auto frame = std::make_unique<ResultFrame>(entry.vtkPath.string());
+        m_pending_results_load.results.frames.push_back(std::move(frame));
+        ++m_pending_results_load.loadedFrames;
+      } catch (const std::exception& e) {
+        ++m_pending_results_load.skippedFrames;
+        m_pending_results_load.errorMessage = e.what();
+        cout << "Error loading " << entry.vtkPath.string() << ": " << e.what() << endl;
+      }
+    }
+
+    ++m_pending_results_load.nextIndex;
+    // cout << "[results-progress] processed " << m_pending_results_load.nextIndex
+    //      << "/" << m_pending_results_load.entries.size()
+    //      << " current=" << m_pending_results_load.currentFile
+    //      << " loaded=" << m_pending_results_load.loadedFrames
+    //      << " skipped=" << m_pending_results_load.skippedFrames << endl;
+    ++processedThisTick;
+
+    if (processedThisTick >= maxFramesPerTick ||
+        (std::chrono::steady_clock::now() - startTime) >= budget)
+      break;
+  }
+
+  if (m_pending_results_load.nextIndex >= m_pending_results_load.entries.size())
+    finishResultsLoad();
+}
+
+void Editor::finishResultsLoad()
+{
+  if (!m_pending_results_load.active)
+    return;
+
+  m_results = new MultiResult(std::move(m_pending_results_load.results));
+  m_activate_results_viewer = true;
+  getApp().Update();
+
+  cout << "Loaded " << m_pending_results_load.loadedFrames
+       << " result frames";
+  if (m_pending_results_load.skippedFrames > 0)
+    cout << " (" << m_pending_results_load.skippedFrames << " skipped)";
+  cout << endl;
+
+  m_pending_results_load = PendingResultsLoad{};
+}
+
+void Editor::drawResultsLoadProgress()
+{
+  if (!m_pending_results_load.active)
+    return;
+
+  ImGui::OpenPopup("Loading Results");
+
+  const std::size_t total = m_pending_results_load.entries.size();
+  const std::size_t processed = m_pending_results_load.nextIndex;
+  const float progress = total > 0
+    ? static_cast<float>(processed) / static_cast<float>(total)
+    : 1.0f;
+
+  static std::size_t lastLoggedProcessed = static_cast<std::size_t>(-1);
+  if (processed != lastLoggedProcessed) {
+    // cout << "[results-progress] draw window processed=" << processed
+    //      << "/" << total
+    //      << " progress=" << progress;
+    // if (!m_pending_results_load.currentFile.empty())
+    //   cout << " current=" << m_pending_results_load.currentFile;
+    // cout << endl;
+    lastLoggedProcessed = processed;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(520.0f, 0.0f), ImGuiCond_Appearing);
+  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                          ImGuiCond_Appearing,
+                          ImVec2(0.5f, 0.5f));
+
+  ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
+                           ImGuiWindowFlags_NoCollapse |
+                           ImGuiWindowFlags_NoResize |
+                           ImGuiWindowFlags_NoSavedSettings;
+  if (ImGui::BeginPopupModal("Loading Results", nullptr, flags)) {
+    ImGui::Text("Opening %zu / %zu frames", processed, total);
+    ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
+
+    if (!m_pending_results_load.currentFile.empty())
+      ImGui::Text("Current: %s", m_pending_results_load.currentFile.c_str());
+    else
+      ImGui::TextUnformatted("Current: preparing frame list...");
+
+    ImGui::Text("Loaded: %zu", m_pending_results_load.loadedFrames);
+    if (m_pending_results_load.skippedFrames > 0)
+      ImGui::Text("Skipped: %zu", m_pending_results_load.skippedFrames);
+
+    if (!m_pending_results_load.errorMessage.empty())
+      ImGui::TextWrapped("Last error: %s", m_pending_results_load.errorMessage.c_str());
+
+    // cout << "[results-progress] modal visible processed=" << processed
+    //      << "/" << total << endl;
+  }
+  ImGui::EndPopup();
 }
 
 void Editor::meshPart(Part* part){
@@ -2206,6 +2350,9 @@ void Editor::drawGui() {
     static ExampleAppConsole console;
     console.Draw("Example: Console", &m_show_app_console);    
     }            //ShowExampleAppConsole(&m_show_app_console);
+
+  drawResultsLoadProgress();
+  advanceResultsLoad();
   
   ImGui::End();
 
