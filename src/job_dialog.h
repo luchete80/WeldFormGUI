@@ -2,6 +2,7 @@
 #define _JOB_DIALOG_H_
 
 #include "Job.h"
+#include <functional>
 
 
 //template  EntityDialog<Job>;
@@ -15,6 +16,7 @@ public ObjDialog{
    bool show_job_files;
    bool m_edit_mode;
    Job *m_job;
+   std::function<bool(Job*)> m_open_results;
     
   // //void    AddLog(const char* fmt, ...);
   JobDialog():
@@ -43,6 +45,7 @@ public ObjDialog{
   }
   Job *m_job;
   Job *m_last_job;
+  std::function<bool(Job*)> m_open_results;
   double m_last_refresh_time;
   int m_max_visible_lines;
   

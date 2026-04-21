@@ -239,12 +239,8 @@ bool Editor::createJobFromActiveModel(bool runJob)
   Job *job = new Job(input_path.string());
   m_jobs.push_back(job);
 
-  if (runJob) {
+  if (runJob)
     job->Run();
-    m_jobshowdlg.m_job = job;
-    job->UpdateOutput();
-    m_jobshowdlg.m_show = true;
-  }
 
   return true;
 }
@@ -2498,6 +2494,8 @@ void Editor::scroll(double xoffset, double yoffset)
 
 
 Editor::Editor(){
+  m_jobdlg.m_open_results = [this](Job* job) { return openResultsForJob(job); };
+  m_jobshowdlg.m_open_results = [this](Job* job) { return openResultsForJob(job); };
   /*
   //window = NULL;
   SCR_WIDTH = 800;

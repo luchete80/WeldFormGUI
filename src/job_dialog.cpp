@@ -169,6 +169,18 @@ void  JobDialog::Draw(){
     m_job = nullptr;
     m_show = false;
   }
+  if (((m_edit_mode && m_job != nullptr) || !m_filename.empty()) && m_open_results) {
+    ImGui::SameLine();
+    if (ImGui::Button("Load Results")) {
+      if (m_edit_mode && m_job != nullptr) {
+        m_open_results(m_job);
+      } else if (!m_filename.empty()) {
+        Job tempJob;
+        tempJob.setPathFile(m_filename);
+        m_open_results(&tempJob);
+      }
+    }
+  }
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
     cancel_action = false; //REMOVE
@@ -249,6 +261,10 @@ void JobShowDialog::Draw(){
   if (ImGui::Button("Close")){
     m_last_refresh_time = -1.0;
     m_show=false;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Load Results") && m_open_results) {
+    m_open_results(m_job);
   }
 
   ImGui::End();
