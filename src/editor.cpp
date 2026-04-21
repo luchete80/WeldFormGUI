@@ -239,8 +239,12 @@ bool Editor::createJobFromActiveModel(bool runJob)
   Job *job = new Job(input_path.string());
   m_jobs.push_back(job);
 
-  if (runJob)
+  if (runJob) {
     job->Run();
+    m_jobshowdlg.m_job = job;
+    job->UpdateOutput();
+    m_jobshowdlg.m_show = true;
+  }
 
   return true;
 }
@@ -1470,10 +1474,6 @@ void Editor::drawGui() {
       ImGui::EndPopup();
     }
 
-    m_jobdlg.ShowIfEnabled();
-
-    m_jobshowdlg.ShowIfEnabled();
-
     for (int i = 0; i < m_jobs.size(); i++)
     {
       
@@ -1504,6 +1504,9 @@ void Editor::drawGui() {
           }
           if (ImGui::MenuItem("Run", "")) {
             m_jobs[i]->Run();
+            m_jobshowdlg.m_job = m_jobs[i];
+            m_jobs[i]->UpdateOutput();
+            m_jobshowdlg.m_show = true;
           }
           if (ImGui::MenuItem("Load Results", "")) {
             openResultsForJob(m_jobs[i]);
@@ -1517,6 +1520,10 @@ void Editor::drawGui() {
       
       
     }//Jobs
+
+    m_jobdlg.ShowIfEnabled();
+
+    m_jobshowdlg.ShowIfEnabled();
 
     if (open_)
     {
