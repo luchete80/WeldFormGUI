@@ -178,4 +178,7 @@
          - FIXED Delete Mesh from tree.
          - ADDED Graphic NODE showing.
          - Change color of mesh nodes.
-         - FIXED Element Size in 1d mesh. 
+         - FIXED Element Size in 1d mesh.
+20260422 - Fixed InputWriter To axisymm in explicit.
+         - Fixed no reset camera at result change.  
+         - Select plot color scale results to manual/auto 

@@ -35,6 +35,7 @@
 //#include <vtkArrowSource.h>
 #include <vtkNamedColors.h>
 #include <vtkScalarBarActor.h>
+#include <vtkCamera.h>
 
 
 #include "graphics/axis.h" //test
@@ -458,6 +459,9 @@ int main(int argc, char* argv[])
 	              static int lastFrame = -1;
 	              static double globalMin = 0.0;
 	              static double globalMax = 1.0;
+	              static bool manualColorScale = false;
+	              static double manualMin = 0.0;
+	              static double manualMax = 1.0;
 	              
 	              static bool isCellField = false;
 	                            
@@ -473,6 +477,11 @@ int main(int argc, char* argv[])
 	                      : resultFrame.mesh->GetPointData()->GetArray(activeFieldName.c_str());
 	              };
 	              auto recomputeActiveFieldScale = [&]() {
+	                  if (manualColorScale) {
+	                      globalMin = manualMin;
+	                      globalMax = manualMax;
+	                      return;
+	                  }
 	                  if (!editor->getResults() || activeFieldName.empty())
 	                      return;
 
@@ -500,6 +509,13 @@ int main(int argc, char* argv[])
 	                      globalMin = (std::min)(globalMin, range[0]);
 	                      globalMax = (std::max)(globalMax, range[1]);
 	                  }
+
+	                  if (globalMin > globalMax) {
+	                      globalMin = 0.0;
+	                      globalMax = 1.0;
+	                  }
+	                  manualMin = globalMin;
+	                  manualMax = globalMax;
 	              };
 	              auto applyActiveFieldSelection = [&](ResultFrame& resultFrame) {
 	                  if (activeFieldName.empty())
@@ -531,6 +547,14 @@ int main(int argc, char* argv[])
 	                  mapper->Update();
 	                  resultFrame.updateScalarBar(activeFieldName, globalMin, globalMax);
 	              };
+	              auto applyActiveFieldSelectionToAllFrames = [&]() {
+	                  if (!editor->getResults() || activeFieldName.empty())
+	                      return;
+	                  for (auto& resultFrame : editor->getResults()->frames) {
+	                      if (resultFrame)
+	                          applyActiveFieldSelection(*resultFrame);
+	                  }
+	              };
 
 	              // Botones de background específicos
 	              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
@@ -547,6 +571,7 @@ int main(int argc, char* argv[])
 	                      if (editor->getResults() && !editor->getResults()->frames.empty()) {
 	                          currentFrame = std::min(previousFrame, (int)editor->getResults()->frames.size() - 1);
 	                          recomputeActiveFieldScale();
+	                          applyActiveFieldSelectionToAllFrames();
 	                      } else {
 	                          currentFrame = 0;
 	                      }
@@ -594,8 +619,38 @@ int main(int argc, char* argv[])
 	                  }
 
 	                  if (currentFrame != lastFrame) {              // Solo si cambió el frame
+	                      vtkCamera* camera = renderer->GetActiveCamera();
+	                      bool preserveView = (lastFrame >= 0 && camera != nullptr);
+	                      double cameraPosition[3] = {0.0, 0.0, 1.0};
+	                      double cameraFocalPoint[3] = {0.0, 0.0, 0.0};
+	                      double cameraViewUp[3] = {0.0, 1.0, 0.0};
+	                      double cameraClippingRange[2] = {0.1, 1000.0};
+	                      double cameraParallelScale = 1.0;
+	                      double cameraViewAngle = 30.0;
+	                      int cameraParallelProjection = 0;
+	                      if (preserveView) {
+	                          camera->GetPosition(cameraPosition);
+	                          camera->GetFocalPoint(cameraFocalPoint);
+	                          camera->GetViewUp(cameraViewUp);
+	                          camera->GetClippingRange(cameraClippingRange);
+	                          cameraParallelScale = camera->GetParallelScale();
+	                          cameraViewAngle = camera->GetViewAngle();
+	                          cameraParallelProjection = camera->GetParallelProjection();
+	                      }
+
 	                      vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
-	                      renderer->ResetCamera();
+	                      if (preserveView) {
+	                          camera->SetPosition(cameraPosition);
+	                          camera->SetFocalPoint(cameraFocalPoint);
+	                          camera->SetViewUp(cameraViewUp);
+	                          camera->SetClippingRange(cameraClippingRange);
+	                          camera->SetParallelScale(cameraParallelScale);
+	                          camera->SetViewAngle(cameraViewAngle);
+	                          camera->SetParallelProjection(cameraParallelProjection);
+	                          renderer->ResetCameraClippingRange();
+	                      } else {
+	                          renderer->ResetCamera();
+	                      }
 	                      if (!activeFieldName.empty()) {
 	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
 	                      }
@@ -624,9 +679,9 @@ int main(int argc, char* argv[])
                   //~ }
 
 
-                    if (!fieldNames.empty()) {
-                        std::vector<const char*> fieldCStrs;
-                        for (auto& s : fieldNames) fieldCStrs.push_back(s.c_str());
+	                    if (!fieldNames.empty()) {
+	                        std::vector<const char*> fieldCStrs;
+	                        for (auto& s : fieldNames) fieldCStrs.push_back(s.c_str());
 
                         ImGui::Text("Active Field:");
                         if (ImGui::Combo("##FieldSelector", &selectedField, fieldCStrs.data(), fieldCStrs.size())) {
@@ -636,12 +691,12 @@ int main(int argc, char* argv[])
                             activeFieldName = selected.substr(4); // remueve "[C] " o "[P] "
                             vtkDataArray* selectedArray = getActiveArray(frame);
                             activeFieldComponents = selectedArray ? selectedArray->GetNumberOfComponents() : 1;
-                            selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
-                                                     (activeFieldComponents > 1 ? 0 : -1);
+	                            selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
+	                                                     (activeFieldComponents > 1 ? 0 : -1);
 
-                            recomputeActiveFieldScale();
+	                            recomputeActiveFieldScale();
                             cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
-	                            applyActiveFieldSelection(frame);
+	                            applyActiveFieldSelectionToAllFrames();
 
 	                            vtkViewer_res.render();
 	                        }
@@ -669,7 +724,7 @@ int main(int argc, char* argv[])
 	                            if (ImGui::Button(label.c_str())) {
 	                                selectedFieldComponent = comp;
 	                                recomputeActiveFieldScale();
-	                                applyActiveFieldSelection(frame);
+	                                applyActiveFieldSelectionToAllFrames();
 	                                vtkViewer_res.render();
 	                            }
 
@@ -684,6 +739,29 @@ int main(int argc, char* argv[])
 	                    if (!activeFieldName.empty()) {
 	                        ImGui::Separator();
 	                        ImGui::Text("Color Bar");
+	                        bool autoScale = !manualColorScale;
+	                        if (ImGui::RadioButton("Auto", autoScale)) {
+	                            manualColorScale = false;
+	                            recomputeActiveFieldScale();
+	                            applyActiveFieldSelectionToAllFrames();
+	                        }
+	                        ImGui::SameLine();
+	                        if (ImGui::RadioButton("Manual", manualColorScale)) {
+	                            manualColorScale = true;
+	                            manualMin = globalMin;
+	                            manualMax = globalMax;
+	                        }
+	                        if (manualColorScale) {
+	                            bool changed = false;
+	                            changed |= ImGui::InputDouble("Min##ManualColorScale", &manualMin, 0.0, 0.0, "%.6g");
+	                            changed |= ImGui::InputDouble("Max##ManualColorScale", &manualMax, 0.0, 0.0, "%.6g");
+	                            if (manualMax < manualMin)
+	                                manualMax = manualMin;
+	                            if (changed) {
+	                                recomputeActiveFieldScale();
+	                                applyActiveFieldSelectionToAllFrames();
+	                            }
+	                        }
 	                        ImGui::Text("Variable: %s", activeFieldName.c_str());
 	                        ImGui::Text("Min: %.6g", globalMin);
 	                        ImGui::Text("Max: %.6g", globalMax);
