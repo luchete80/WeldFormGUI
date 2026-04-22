@@ -10,10 +10,13 @@ using namespace std;
 
 namespace {
 void removeGraphicMeshInstance(std::vector<GraphicMesh*>& graphicMeshes,
-                               std::vector<GraphicMesh*>::iterator& it) {
+                               std::vector<GraphicMesh*>::iterator& it,
+                               std::vector<vtkSmartPointer<vtkProp>>& pendingActorRemovals) {
     GraphicMesh* gmesh = *it;
     if (gmesh != nullptr) {
-        gmesh->RemoveActorFromViewer();
+        if (gmesh->getActor() != nullptr) {
+            pendingActorRemovals.push_back(gmesh->getActor());
+        }
         delete gmesh;
     }
     it = graphicMeshes.erase(it);
@@ -135,7 +138,7 @@ void App::updateMeshes(){
       }
       if (del_part){
         cout<<"Deleting graphic mesh for unexisting part"<<endl; 
-        removeGraphicMeshInstance(m_graphicmeshes, gmIt);
+        removeGraphicMeshInstance(m_graphicmeshes, gmIt, m_pendingActorRemovals);
       } else {
         ++gmIt;
       }
@@ -219,7 +222,7 @@ void App::removeGraphicMeshForPart(Part* part) {
     while (it != m_graphicmeshes.end()) {
         GraphicMesh* gmesh = *it;
         if (gmesh && gmesh->getMesh() == part->getMesh()) {
-            removeGraphicMeshInstance(m_graphicmeshes, it);
+            removeGraphicMeshInstance(m_graphicmeshes, it, m_pendingActorRemovals);
 
             std::cout << "Removed GraphicMesh and actor for part Id: "
                       << part->getId() << std::endl;

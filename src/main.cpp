@@ -712,6 +712,13 @@ int main(int argc, char* argv[])
     loadPlotDialog.Draw("Load Plot", &showLoadPlotDialog);
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
+    for (vtkSmartPointer<vtkProp>& actor : getApp().getPendingActorRemovals()) {
+      if (actor != nullptr) {
+        vtkViewer2.removeActor(actor);
+      }
+    }
+    getApp().clearPendingActorRemovals();
+
     for (int gm=0;gm<getApp().getGraphicMeshCount();gm++) {
       //cout << "is actor needed for mesh "<<gm<<": "<<getApp().getGraphicMesh(gm)->isActorNeeded()<<endl;
         if (getApp().getGraphicMesh(gm)->isActorNeeded()){
@@ -727,7 +734,6 @@ int main(int argc, char* argv[])
             cout <<"ERROR:Null mesh ptr"<<endl;
           cout << "added "<<endl;
           getApp().getGraphicMesh(gm)->setActorNeeded(false); //CHANGE THIS TO SOMEHOW CONTAIN THE RENDERER
-          getApp().getGraphicMesh(gm)->setViewer(&vtkViewer2);
           
         }
       //cout << "graphi mesh count "<<getApp().getGraphicMeshCount()<<endl;

@@ -570,15 +570,8 @@ m_mesh(mesh)
     m_needs_actor = true;
     mesh_actor = nullptr;
     m_needs_viewer = true;
-    m_viewer = nullptr;
     createVTKPolyData(*mesh);
   
-}
-
-void GraphicMesh::RemoveActorFromViewer() {
-    if (mesh_actor != nullptr && m_viewer != nullptr) {
-        m_viewer->removeActor(mesh_actor);
-    }
 }
 
 GraphicSPHMesh::GraphicSPHMesh(Mesh *mesh)

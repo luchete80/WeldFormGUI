@@ -31,14 +31,12 @@ class Element;
 class Node;
 class Model;
 class Mesh;
-class VtkViewer;
 
 //INHERIT SPH & FEM
 
 class GraphicMesh{
   friend class Model;
-  friend class VtkViewer;
-  friend class App;  // access to  m_viewer, mesh_actor, etc.
+  friend class App;
 public:
   GraphicMesh(){  
     m_needs_polydata = true;
@@ -70,8 +68,6 @@ public:
   Mesh* getMesh() {return m_mesh;}
   bool & isPolydataNeeded(){return m_needs_polydata;}
   void setPoints(Mesh &mesh); //NOT VIRTUAL
-  void setViewer(VtkViewer* v){m_viewer = v;}
-  void RemoveActorFromViewer();
 
     void SetTransform(vtkSmartPointer<vtkTransform> transform);
     
@@ -96,7 +92,6 @@ protected:
   
   std::vector < Set<Element> >  m_set_elem;
   std::vector <Node*>     m_set_node;
-  VtkViewer*              m_viewer;
   
   vtkSmartPointer<vtkTransform> m_transform;
   

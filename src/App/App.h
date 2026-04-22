@@ -7,9 +7,11 @@
 #include "geom/vtkOCCTGeom.h"
 #include "geom/Geom.h"
 #include <unordered_map>
+#include <vtkSmartPointer.h>
 //#define MY_DLL_API __declspec(dllexport)
 #include "Part.h"
 
+class vtkProp;
 
 
 using namespace std;
@@ -90,15 +92,18 @@ public:
         }
     }
 
-    void removeGraphicMeshForPart(Part* part);
+  void removeGraphicMeshForPart(Part* part);
+  std::vector<vtkSmartPointer<vtkProp>>& getPendingActorRemovals(){return m_pendingActorRemovals;}
+  void clearPendingActorRemovals(){m_pendingActorRemovals.clear();}
     
-    GraphicMesh* getGraphicMeshFromPart(Part *part);
+  GraphicMesh* getGraphicMeshFromPart(Part *part);
     
 private:
   static App *_pcSingleton;  
   Model *_activeModel;
   bool _updateNeeded;
   std::vector <GraphicMesh *> m_graphicmeshes;
+  std::vector<vtkSmartPointer<vtkProp>> m_pendingActorRemovals;
   std::vector <vtkOCCTGeom*> m_geoms;
     //std::vector<std::shared_ptr<Geometry>> m_orphanGeometries;
   std::vector <Geom*> m_orphangeoms;
