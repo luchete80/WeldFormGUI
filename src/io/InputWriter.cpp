@@ -167,6 +167,7 @@ void InputWriter::writeToFile(std::string fname) {
   m_json["Configuration"]["solver"] = "WeldForm";
   m_json["Configuration"]["simTime"] = step ? step->m_simTime : 1.0;
   m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0e-4;
+  m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
 
