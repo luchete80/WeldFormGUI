@@ -557,14 +557,14 @@ int main(int argc, char* argv[])
 	              };
 
 	              // Botones de background específicos
-	              if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
-	              ImGui::SameLine();
-	              if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
-	              ImGui::SameLine();
-	              if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
-	              ImGui::SameLine();
-	              if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
-	              ImGui::SameLine();
+	              //~ if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
+	              //~ ImGui::SameLine();
+	              //~ if (ImGui::Button("Red BG"))          renderer->SetBackground(1,0,0);
+	              //~ ImGui::SameLine();
+	              //~ if (ImGui::Button("Green BG"))        renderer->SetBackground(0,1,0);
+	              //~ ImGui::SameLine();
+	              //~ if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
+	              //~ ImGui::SameLine();
 	              if (ImGui::Button("Refresh Results")) {
 	                  int previousFrame = currentFrame;
 	                  if (editor->refreshOpenResults()) {
