@@ -311,6 +311,22 @@ void Editor::closeCurrentModel()
     delete oldModel;
 }
 
+void Editor::closeCurrentResults()
+{
+  if (res_viewer != nullptr) {
+    res_viewer->setActor(nullptr);
+  }
+
+  if (m_results != nullptr) {
+    delete m_results;
+    m_results = nullptr;
+  }
+
+  if (m_pending_results_load.active) {
+    m_pending_results_load = PendingResultsLoad{};
+  }
+}
+
 bool Editor::createJobFromActiveModel(bool runJob)
 {
   Model &model = getApp().getActiveModel();
@@ -1746,6 +1762,7 @@ void Editor::drawGui() {
     
     
     if (ImGui::BeginTabItem("Results")) { 
+      bool close_results_requested = false;
       bool open_ = ImGui::TreeNode("History");      
       if (ImGui::BeginPopupContextItem())
       {
@@ -1761,6 +1778,10 @@ void Editor::drawGui() {
       open_ = ImGui::TreeNode("Loaded Results");
       if (ImGui::BeginPopupContextItem())
       {
+          if ((m_results != nullptr || m_pending_results_load.active) &&
+              ImGui::MenuItem("Close Results")) {
+            close_results_requested = true;
+          }
           ImGui::EndPopup();
       }
       if (open_)
@@ -1787,6 +1808,10 @@ void Editor::drawGui() {
            ImGui::TextUnformatted("No results loaded.");
          }
          ImGui::TreePop();
+      }
+
+      if (close_results_requested) {
+        closeCurrentResults();
       }
 
       open_ = ImGui::TreeNode("Element Sets");      

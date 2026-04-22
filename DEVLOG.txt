@@ -182,4 +182,4 @@
 20260422 - Fixed InputWriter To axisymm in explicit.
          - Fixed no reset camera at result change.  
          - Select plot color scale results to manual/auto 
-         - Added close Model feature. 
+         - Added close Model and clsoe Results features. 
