@@ -3,6 +3,7 @@
 #include "GraphicMesh.h"
 #include "Part.h"
 #include "Mesh.h"
+#include <algorithm>
 
 //#include "VtkViewer.h"
 
@@ -204,11 +205,19 @@ void App::registerGeometry(Geom* geo, vtkOCCTGeom* visual) {
     if (!geo || !visual) return;
     
     visual->SetGeometry(geo);
-    visual->BuildVTKData();
-    visual->isRendered = true;
+    if (visual->actor == nullptr) {
+        cout << "[registerGeometry] building new visual for geom " << geo << endl;
+        visual->BuildVTKData();
+        visual->isRendered = false;
+    } else {
+        cout << "[registerGeometry] reusing existing visual for geom " << geo
+             << " actor=" << visual->actor.GetPointer() << endl;
+    }
     
     geomToVisual[geo] = visual;
-    m_orphangeoms.emplace_back(geo);
+    if (std::find(m_orphangeoms.begin(), m_orphangeoms.end(), geo) == m_orphangeoms.end()) {
+        m_orphangeoms.emplace_back(geo);
+    }
     _updateNeeded = true;
     
     //std::cout << "Registered geometry: " << geo->m_name << std::endl;
@@ -230,6 +239,88 @@ void App::removeGraphicMeshForPart(Part* part) {
             ++it;
         }
     }
+
+    _updateNeeded = true;
+}
+
+void App::clearVisualsForModel(Model* model) {
+    if (!model) return;
+
+    cout << "[clearVisualsForModel] begin for model " << model
+         << " parts=" << model->getPartCount()
+         << " graphicMeshes=" << m_graphicmeshes.size()
+         << " geomToVisual=" << geomToVisual.size()
+         << " partToVisual=" << partToVisual.size()
+         << " orphanGeoms=" << m_orphangeoms.size() << endl;
+
+    auto gmIt = m_graphicmeshes.begin();
+    while (gmIt != m_graphicmeshes.end()) {
+        removeGraphicMeshInstance(m_graphicmeshes, gmIt, m_pendingActorRemovals);
+    }
+
+    for (int i = 0; i < model->getPartCount(); ++i) {
+        Part* part = model->getPart(i);
+        if (!part) continue;
+
+        cout << "[clearVisualsForModel] part[" << i << "]=" << part
+             << " geom=" << part->getGeom()
+             << " mesh=" << part->getMesh() << endl;
+
+        Geom* geom = part->getGeom();
+        if (geom != nullptr) {
+            auto geomVisualIt = geomToVisual.find(geom);
+            if (geomVisualIt != geomToVisual.end()) {
+                vtkOCCTGeom* geomVisual = geomVisualIt->second;
+                if (geomVisual && geomVisual->actor) {
+                    cout << "[clearVisualsForModel] queue geom visual actor "
+                         << geomVisual->actor.GetPointer()
+                         << " class=" << geomVisual->actor->GetClassName()
+                         << " for geom " << geom << endl;
+                    m_pendingActorRemovals.push_back(geomVisual->actor);
+                }
+                if (geomVisual != nullptr) {
+                    bool alsoOwnedByPart = false;
+                    auto visualIt = partToVisual.find(part);
+                    if (visualIt != partToVisual.end() && visualIt->second == geomVisual)
+                        alsoOwnedByPart = true;
+                    cout << "[clearVisualsForModel] geom visual " << geomVisual
+                         << " alsoOwnedByPart=" << alsoOwnedByPart << endl;
+                    if (!alsoOwnedByPart)
+                        delete geomVisual;
+                }
+                geomToVisual.erase(geomVisualIt);
+            } else {
+                cout << "[clearVisualsForModel] no geomToVisual entry for geom " << geom << endl;
+            }
+
+            m_orphangeoms.erase(
+                std::remove(m_orphangeoms.begin(), m_orphangeoms.end(), geom),
+                m_orphangeoms.end());
+        }
+
+        auto visualIt = partToVisual.find(part);
+        if (visualIt != partToVisual.end()) {
+            vtkOCCTGeom* visual = visualIt->second;
+            if (visual && visual->actor) {
+                cout << "[clearVisualsForModel] queue part visual actor "
+                     << visual->actor.GetPointer()
+                     << " class=" << visual->actor->GetClassName()
+                     << " for part " << part << endl;
+                m_pendingActorRemovals.push_back(visual->actor);
+            }
+            cout << "[clearVisualsForModel] deleting part visual " << visual
+                 << " for part " << part << endl;
+            delete visual;
+            partToVisual.erase(visualIt);
+        } else {
+            cout << "[clearVisualsForModel] no partToVisual entry for part " << part << endl;
+        }
+    }
+
+    cout << "[clearVisualsForModel] end pendingRemovals=" << m_pendingActorRemovals.size()
+         << " geomToVisual=" << geomToVisual.size()
+         << " partToVisual=" << partToVisual.size()
+         << " orphanGeoms=" << m_orphangeoms.size() << endl;
 
     _updateNeeded = true;
 }

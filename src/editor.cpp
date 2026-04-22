@@ -227,12 +227,17 @@ bool Editor::openModelFromPath(const std::string& filePathName)
     cout << "part " << p << endl;
     vtkOCCTGeom *geom = new vtkOCCTGeom;
 
-    Geom *geo = m_model->getPart(p)->getGeom();
+    Part *part = m_model->getPart(p);
+    Geom *geo = part ? part->getGeom() : nullptr;
     if (geo != nullptr) {
       geom->LoadFromShape(geo->getShape(), 0.01);
       cout << "Done." << endl;
 
       viewer->addActor(geom->actor);
+      getApp().registerGeometry(geo, geom);
+      if (part != nullptr) {
+        getApp().registerPartVisual(part, geom);
+      }
 
       cout << "Generating mesh from gmsh" << endl;
 
@@ -265,6 +270,45 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   getApp().Update();
 
   return true;
+}
+
+void Editor::closeCurrentModel()
+{
+  if (m_moving_mode) {
+    m_moving_mode = false;
+    m_show_mov_part = false;
+    if (viewer != nullptr) {
+      viewer->resetInteractor();
+      if (gizmo) {
+        gizmo->Hide();
+        for (int i = 0; i < 3; ++i)
+          viewer->removeActor(gizmo->getActor(i));
+      }
+    }
+  }
+
+  Model* oldModel = m_model;
+  if (oldModel != nullptr) {
+    getApp().clearVisualsForModel(oldModel);
+  }
+
+  selected_prt = nullptr;
+  selected_mod = nullptr;
+  selected_step = nullptr;
+  selected_bc = nullptr;
+  m_show_mod_dlg_edit = false;
+  m_show_prt_dlg_edit = false;
+  m_show_step_dlg_edit = false;
+  m_show_bc_dlg_edit = false;
+  m_show_interaction_props_dlg = false;
+  m_showNewDomain = false;
+
+  m_model = new Model();
+  getApp().setActiveModel(m_model);
+  getApp().Update();
+
+  if (oldModel != nullptr)
+    delete oldModel;
 }
 
 bool Editor::createJobFromActiveModel(bool runJob)
@@ -1152,11 +1196,24 @@ void Editor::drawGui() {
     if (m_model->m_thermal_coupling) des += "-Thermal";
    
  
-    if (ImGui::TreeNode((void*)"Model %s",des.c_str()))
+    bool close_model_requested = false;
+    const bool has_loaded_model =
+      m_model != nullptr &&
+      (m_model->getHasName() ||
+       !m_model->getFilePath().empty() ||
+       m_model->getPartCount() > 0 ||
+       m_model->getMaterialCount() > 0 ||
+       m_model->getStepCount() > 0 ||
+       m_model->getBCCount() > 0 ||
+       m_model->getICCount() > 0);
+
+    if (ImGui::TreeNode("Models"))
     {
+      if (has_loaded_model) {
+        std::string modelTreeLabel = "Model (" + des + ")";
+        bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
         if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
           m_show_mod_dlg_edit = true;
-          //selected_mat = m_mats[i];
           selected_mod = m_model;
         }
         if (ImGui::BeginPopupContextItem())
@@ -1168,8 +1225,13 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("Load Results")) {
             openResultsForModel();
           }
+          if (ImGui::MenuItem("Close Model")) {
+            close_model_requested = true;
+          }
           ImGui::EndPopup();          
         }   
+        if (model_tree_open)
+        {
         
         bool open_ = ImGui::TreeNode("Parts");
         if (ImGui::BeginPopupContextItem())
@@ -1408,220 +1470,192 @@ void Editor::drawGui() {
       
            ImGui::TreePop();
         }//If model tree open
-        //-----------------------
-        open_ = ImGui::TreeNode("Sets");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {
-            
-            m_show_set_dlg = true;
-          }
-          ImGui::EndPopup();
-        }
-        if (open_) //Expand
-        {
-           // your tree code stuff
-           ImGui::TreePop();
-        }
-
-        open_ = ImGui::TreeNode("Materials");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {
-            m_show_mat_dlg = true;
-            selected_mat = nullptr;
-          }
-          ImGui::EndPopup();
-        }
-        if (open_){
-        for (int i = 0; i < m_model->getMaterialCount(); i++)
-        //for (int i = 0; i < m_model->getMaterialCount(); i++)
-        {
-          // Use SetNextItemOpen() so set the default state of a node to be open. We could
-          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-          if (i == 0)
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-          if (ImGui::TreeNode((void*)(intptr_t)i, "Material %d", i))
+      } else {
+        ImGui::TextUnformatted("No models loaded.");
+      }
+      ImGui::TreePop();
+    }
+        if (has_loaded_model) {
+          bool open_ = false;
+          //-----------------------
+          open_ = ImGui::TreeNode("Sets");
+          if (ImGui::BeginPopupContextItem())
           {
-            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-              m_show_mat_dlg_edit = true;
-              //selected_mat = m_mats[i];
-              selected_mat = m_model->getMaterial(i);
+            if (ImGui::MenuItem("New", "CTRL+Z")) {
+              
+              m_show_set_dlg = true;
             }
-            if (ImGui::BeginPopupContextItem())
+            ImGui::EndPopup();
+          }
+          if (open_) //Expand
+          {
+             ImGui::TreePop();
+          }
+
+          open_ = ImGui::TreeNode("Materials");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("New", "CTRL+Z")) {
+              m_show_mat_dlg = true;
+              selected_mat = nullptr;
+            }
+            ImGui::EndPopup();
+          }
+          if (open_){
+          for (int i = 0; i < m_model->getMaterialCount(); i++)
+          {
+            if (i == 0)
+              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+            if (ImGui::TreeNode((void*)(intptr_t)i, "Material %d", i))
             {
-              if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+              if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
                 m_show_mat_dlg_edit = true;
-                //selected_mat = m_mats[i];
                 selected_mat = m_model->getMaterial(i);
               }
-              ImGui::EndPopup();
-            }                    
-              ImGui::SameLine();
-              if (ImGui::SmallButton("button")) {}
-              ImGui::TreePop();
-          }
-        }
-                       // your tree code stuff
-           ImGui::TreePop();
-        }
-        //-----------------------------------------------------
-        open_ = ImGui::TreeNode("InteractionProps");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-            m_interactionpropsdlg.setModel(m_model);
-            m_show_interaction_props_dlg = true;
-          }
-            ImGui::EndPopup();
-          
-        }
-        if (open_)
-        {
-           ContactProperties &contact = m_model->contactProps();
-           ImGui::Text("Static friction: %.4f", contact.fricCoeffStatic);
-           ImGui::Text("Penalty factor: %.4f", contact.penaltyFactor);
-           if (ImGui::Button("Edit Interaction Props")) {
-             m_interactionpropsdlg.setModel(m_model);
-             m_show_interaction_props_dlg = true;
-           }
-           // your tree code stuff
-           ImGui::TreePop();
-        }
-
-        //-----------------------------------------------------
-        open_ = ImGui::TreeNode("Initial Conditions");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
-            ImGui::EndPopup();
-            m_create_bc = 2;
-            m_show_bc_dlg_edit = true;
-            //m_show_bc_dlg_edit = true;
-        }
-        if (open_)
-        {
-
-          for (int i = 0; i < m_model->getICCount(); i++)
-          //for (int i = 0; i < m_model->getMaterialCount(); i++)
-          {
-            // Use SetNextItemOpen() so set the default state of a node to be open. We could
-            // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-            if (i == 0)
-              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-            if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
-            {
               if (ImGui::BeginPopupContextItem())
               {
                 if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-            
-                  //m_show_bc_dlg_edit = true;
-
-                  //selected_mat = m_mats[i];
-                  //selected_bc = m_model->getBC(i);
+                  m_show_mat_dlg_edit = true;
+                  selected_mat = m_model->getMaterial(i);
                 }
                 ImGui::EndPopup();
               }                    
                 ImGui::SameLine();
                 if (ImGui::SmallButton("button")) {}
                 ImGui::TreePop();
-            }//TreeNode
-          }
-
-           // your tree code stuff
-           ImGui::TreePop();
-        }
-
-
-        //-----------------------------------------------------
-
-        //-----------------------------------------------------
-        open_ = ImGui::TreeNode("Boundary Conditions");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {}
-            ImGui::EndPopup();
-            m_show_bc_dlg_edit = true;
-            m_create_bc = 1;
-        }
-        if (open_)
-        {
-
-          for (int i = 0; i < m_model->getBCCount(); i++)
-          //for (int i = 0; i < m_model->getMaterialCount(); i++)
-          {
-            // Use SetNextItemOpen() so set the default state of a node to be open. We could
-            // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-            if (i == 0)
-              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-            if (ImGui::TreeNode((void*)(intptr_t)i, "Boundary Condition %d", i))
-            {
-              //~ if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-                //~ m_show_bc_dlg_edit = true;
-                //~ //selected_mat = m_mats[i];
-                //~ selected_bc = m_model->getBC(i);
-              //~ }
-              if (ImGui::BeginPopupContextItem())
-              {
-                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                  m_show_bc_dlg_edit = true;
-                  //selected_mat = m_mats[i];
-                  selected_bc = m_model->getBC(i);
-                  m_create_bc = 0;  //auto
-                }
-                ImGui::EndPopup();
-              }                    
-                ImGui::SameLine();
-                if (ImGui::SmallButton("button")) {}
-                ImGui::TreePop();
-            }//TreeNode
-          }
-
-           // your tree code stuff
-           ImGui::TreePop();
-        }
-
-
-        //-----------------------------------------------------
-        open_ = ImGui::TreeNode("Steps");
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("New", "CTRL+Z")) {
-            selected_step = new Step();
-            int step_id = m_model->getStepCount();
-            selected_step->setId(step_id);
-            m_creating_step = true;
-            m_show_step_dlg_edit = true;
-          }
-          ImGui::EndPopup();
-        }
-        if (open_)
-        {
-          for (int i = 0; i < m_model->getStepCount(); i++)
-          {
-            Step *step = m_model->getStep(i);
-            if (step == nullptr)
-              continue;
-
-            const char *step_type = step->isImplicit() ? "Implicit" : "Explicit";
-            if (ImGui::TreeNode((void*)(intptr_t)i, "Step %d, %s, %s", step->getId(), step->getName(), step_type))
-            {
-              if (ImGui::BeginPopupContextItem())
-              {
-                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                  selected_step = step;
-                  m_creating_step = false;
-                  m_show_step_dlg_edit = true;
-                }
-                ImGui::EndPopup();
-              }
-              ImGui::TreePop();
             }
           }
-          ImGui::TreePop();
+             ImGui::TreePop();
+          }
+          //-----------------------------------------------------
+          open_ = ImGui::TreeNode("InteractionProps");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+              m_interactionpropsdlg.setModel(m_model);
+              m_show_interaction_props_dlg = true;
+            }
+              ImGui::EndPopup();
+            
+          }
+          if (open_)
+          {
+             ContactProperties &contact = m_model->contactProps();
+             ImGui::Text("Static friction: %.4f", contact.fricCoeffStatic);
+             ImGui::Text("Penalty factor: %.4f", contact.penaltyFactor);
+             if (ImGui::Button("Edit Interaction Props")) {
+               m_interactionpropsdlg.setModel(m_model);
+               m_show_interaction_props_dlg = true;
+             }
+             ImGui::TreePop();
+          }
+
+          //-----------------------------------------------------
+          open_ = ImGui::TreeNode("Initial Conditions");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("New", "CTRL+Z")) {}
+              ImGui::EndPopup();
+              m_create_bc = 2;
+              m_show_bc_dlg_edit = true;
+          }
+          if (open_)
+          {
+            for (int i = 0; i < m_model->getICCount(); i++)
+            {
+              if (i == 0)
+                ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+              if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
+              {
+                if (ImGui::BeginPopupContextItem())
+                {
+                  if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                  }
+                  ImGui::EndPopup();
+                }                    
+                  ImGui::SameLine();
+                  if (ImGui::SmallButton("button")) {}
+                  ImGui::TreePop();
+              }
+            }
+             ImGui::TreePop();
+          }
+
+          //-----------------------------------------------------
+          open_ = ImGui::TreeNode("Boundary Conditions");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("New", "CTRL+Z")) {}
+              ImGui::EndPopup();
+              m_show_bc_dlg_edit = true;
+              m_create_bc = 1;
+          }
+          if (open_)
+          {
+            for (int i = 0; i < m_model->getBCCount(); i++)
+            {
+              if (i == 0)
+                ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+              if (ImGui::TreeNode((void*)(intptr_t)i, "Boundary Condition %d", i))
+              {
+                if (ImGui::BeginPopupContextItem())
+                {
+                  if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                    m_show_bc_dlg_edit = true;
+                    selected_bc = m_model->getBC(i);
+                    m_create_bc = 0;
+                  }
+                  ImGui::EndPopup();
+                }                    
+                  ImGui::SameLine();
+                  if (ImGui::SmallButton("button")) {}
+                  ImGui::TreePop();
+              }
+            }
+             ImGui::TreePop();
+          }
+
+          //-----------------------------------------------------
+          open_ = ImGui::TreeNode("Steps");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("New", "CTRL+Z")) {
+              selected_step = new Step();
+              int step_id = m_model->getStepCount();
+              selected_step->setId(step_id);
+              m_creating_step = true;
+              m_show_step_dlg_edit = true;
+            }
+            ImGui::EndPopup();
+          }
+          if (open_)
+          {
+            for (int i = 0; i < m_model->getStepCount(); i++)
+            {
+              Step *step = m_model->getStep(i);
+              if (step == nullptr)
+                continue;
+
+              const char *step_type = step->isImplicit() ? "Implicit" : "Explicit";
+              if (ImGui::TreeNode((void*)(intptr_t)i, "Step %d, %s, %s", step->getId(), step->getName(), step_type))
+              {
+                if (ImGui::BeginPopupContextItem())
+                {
+                  if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                    selected_step = step;
+                    m_creating_step = false;
+                    m_show_step_dlg_edit = true;
+                  }
+                  ImGui::EndPopup();
+                }
+                ImGui::TreePop();
+              }
+            }
+            ImGui::TreePop();
+          }
         }
 
         
@@ -1702,6 +1736,10 @@ void Editor::drawGui() {
        ImGui::TreePop();
     }
         
+    if (close_model_requested) {
+      closeCurrentModel();
+    }
+
     ImGui::EndTabItem(); 
     
   } //END MODEL TAB
@@ -1720,6 +1758,37 @@ void Editor::drawGui() {
            // your tree code stuff
            ImGui::TreePop();
         }      
+      open_ = ImGui::TreeNode("Loaded Results");
+      if (ImGui::BeginPopupContextItem())
+      {
+          ImGui::EndPopup();
+      }
+      if (open_)
+      {
+         if (m_pending_results_load.active) {
+           const fs::path pendingPath = m_pending_results_load.sourceJsonFile;
+           ImGui::Text("Loading: %s",
+                       pendingPath.empty() ? "(unknown)" : pendingPath.string().c_str());
+           ImGui::Text("Progress: %zu / %zu",
+                       m_pending_results_load.nextIndex,
+                       m_pending_results_load.entries.size());
+         } else if (m_results != nullptr) {
+           const fs::path resultsPath = m_results->sourceJsonFile;
+           if (!resultsPath.empty())
+             ImGui::TextWrapped("Path: %s", resultsPath.string().c_str());
+           else
+             ImGui::TextUnformatted("Path: (not available)");
+
+           if (!m_results->sourceDirectory.empty())
+             ImGui::TextWrapped("Directory: %s", m_results->sourceDirectory.string().c_str());
+
+           ImGui::Text("Frames: %zu", m_results->frames.size());
+         } else {
+           ImGui::TextUnformatted("No results loaded.");
+         }
+         ImGui::TreePop();
+      }
+
       open_ = ImGui::TreeNode("Element Sets");      
       if (ImGui::BeginPopupContextItem())
       {

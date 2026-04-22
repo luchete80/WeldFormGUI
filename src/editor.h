@@ -126,6 +126,7 @@ public:
   bool refreshOpenResults();
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
+  void closeCurrentModel();
   
   void CalcFPS();
   void addViewer(VtkViewer *);

@@ -792,7 +792,11 @@ int main(int argc, char* argv[])
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (vtkSmartPointer<vtkProp>& actor : getApp().getPendingActorRemovals()) {
       if (actor != nullptr) {
+        std::cout << "[main] removing pending actor " << actor.GetPointer()
+                  << " class=" << actor->GetClassName() << std::endl;
         vtkViewer2.removeActor(actor);
+      } else {
+        std::cout << "[main] pending actor is null" << std::endl;
       }
     }
     getApp().clearPendingActorRemovals();

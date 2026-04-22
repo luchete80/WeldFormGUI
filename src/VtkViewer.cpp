@@ -202,7 +202,21 @@ void VtkViewer::addActors(const vtkSmartPointer<vtkPropCollection>& actors){
 }
 
 void VtkViewer::removeActor(const vtkSmartPointer<vtkProp>& actor){
-	renderer->RemoveActor(actor);
+	if (!renderer || !actor) {
+		cout << "[VtkViewer::removeActor] renderer or actor is null" << endl;
+		return;
+	}
+
+	cout << "[VtkViewer::removeActor] removing actor " << actor.GetPointer()
+	     << " class=" << actor->GetClassName()
+	     << " hasBefore=" << renderer->HasViewProp(actor) << endl;
+
+	while (renderer->HasViewProp(actor)) {
+		renderer->RemoveViewProp(actor);
+	}
+
+	cout << "[VtkViewer::removeActor] removed actor " << actor.GetPointer()
+	     << " hasAfter=" << renderer->HasViewProp(actor) << endl;
 }
 
 void VtkViewer::setViewportSize(const ImVec2 newSize){
@@ -269,4 +283,3 @@ void VtkViewer::arrowtest(){
   renderWindowInteractor->SetRenderWindow(renderWindow);
   */
 }
-
