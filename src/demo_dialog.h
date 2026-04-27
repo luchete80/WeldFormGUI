@@ -16,6 +16,8 @@ public:
 
     std::string selectedDemoPath;
 
+    std::string ConsumeSelectedDemoPath();
+    
 private:
     std::string m_demoRoot;
     std::vector<DemoEntry> m_demos;

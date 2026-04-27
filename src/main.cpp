@@ -424,11 +424,11 @@ int main(int argc, char* argv[])
 
 	              if (ImGui::Button("Demo")) {
                   showDemoDialog = true;
-	                const std::filesystem::path demo_path("./demo/demo.json");
-	                if (std::filesystem::exists(demo_path))
-	                  editor->openModelFromPath(demo_path.string());
-	                else
-	                  std::cout << "Demo file not found: " << demo_path.string() << std::endl;
+	                // const std::filesystem::path demo_path("./demo/demo.json");
+	                // if (std::filesystem::exists(demo_path))
+	                  // editor->openModelFromPath(demo_path.string());
+	                // else
+	                  // std::cout << "Demo file not found: " << demo_path.string() << std::endl;
 	              }
 	              ImGui::SameLine();
 	              if (ImGui::Button("Run")) {
@@ -802,6 +802,23 @@ int main(int argc, char* argv[])
 
     loadPlotDialog.Draw("Load Plot", &showLoadPlotDialog);
     demoDialog.Draw("Available Demos", &showDemoDialog);
+    std::string selectedDemoFolder = demoDialog.ConsumeSelectedDemoPath();
+
+    if (!selectedDemoFolder.empty()) {
+        std::filesystem::path demoJson =
+            std::filesystem::path(selectedDemoFolder) / "demo.json";
+
+	      std::cout << "Opening model: " << demoJson.string() << std::endl;
+        if (std::filesystem::exists(demoJson)) {
+            editor->openModelFromPath(demoJson.string());
+
+            vtkViewer2.getRenderer()->ResetCamera();
+            vtkViewer2.getRenderer()->ResetCameraClippingRange();
+        } else {
+            std::cout << "Demo JSON not found: "
+                      << demoJson.string() << std::endl;
+        }
+    }
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (vtkSmartPointer<vtkProp>& actor : getApp().getPendingActorRemovals()) {

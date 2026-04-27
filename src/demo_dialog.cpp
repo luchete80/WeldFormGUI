@@ -154,3 +154,9 @@ void DemoDialog::Draw(const char* title, bool* p_open) {
 
     ImGui::End();
 }
+
+std::string DemoDialog::ConsumeSelectedDemoPath() {
+    std::string path = selectedDemoPath;
+    selectedDemoPath.clear();
+    return path;
+}
