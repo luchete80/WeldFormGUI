@@ -423,7 +423,7 @@ int main(int argc, char* argv[])
 	              auto renderer = vtkViewer2.getRenderer();
 
 	              if (ImGui::Button("Demo")) {
-                  demoDialog.Draw("Available Demos", &showDemoDialog);
+                  showDemoDialog = true;
 	                const std::filesystem::path demo_path("./demo/demo.json");
 	                if (std::filesystem::exists(demo_path))
 	                  editor->openModelFromPath(demo_path.string());
@@ -801,6 +801,7 @@ int main(int argc, char* argv[])
         ImGui::End(); // cierre de la ventana contenedora
 
     loadPlotDialog.Draw("Load Plot", &showLoadPlotDialog);
+    demoDialog.Draw("Available Demos", &showDemoDialog);
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (vtkSmartPointer<vtkProp>& actor : getApp().getPendingActorRemovals()) {
