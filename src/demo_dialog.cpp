@@ -144,6 +144,8 @@ void DemoDialog::Draw(const char* title, bool* p_open) {
 
         if (ImGui::Button("Load Demo")) {
             selectedDemoPath = demo.path;
+            if (p_open)
+                *p_open = false;  // ← esto cierra la ventana
         }
 
         ImGui::EndChild();
