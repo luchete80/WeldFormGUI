@@ -40,6 +40,8 @@ public:
   void LoadCylinder(double radius, double height);
   
   const double3 & getOrigin()const{return m_origin;}
+  void setOrigin(const double3 &origin){m_origin = origin;}
+  void setOrigin(double x, double y, double z){m_origin = make_double3(x, y, z);}
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
   

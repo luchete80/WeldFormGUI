@@ -186,4 +186,5 @@
 20260427 - Added Part Scale. 
          - FIXED PART MOVE Drag Selector!!! Problem was in vtk getpos.
          - Added 2D Plain Strain Model
-          
+         - Corrected STEP writing when importing. 
+         - FIXED PART POSITIONING AT MODEL OPEN (ORIGIN WAS MISSING) 

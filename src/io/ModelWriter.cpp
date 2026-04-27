@@ -47,7 +47,9 @@ void ModelWriter::writeToFile(std::string fname){
   std::ofstream o(fname);
   std::string filename = m_model.getName();
   fs::path json_path(fname);
-  fs::path json_dir = json_path.parent_path();
+  fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
+  std::error_code mkdir_ec;
+  fs::create_directories(json_dir, mkdir_ec);
   if (!m_model.getHasName()) cout << "Not has name!"<<endl;
   std::cout << "Writing to file: " << filename << std::endl;
 
@@ -191,17 +193,16 @@ void ModelWriter::writeToFile(std::string fname){
         //~ jpart["isRigid"] = false;
       //~ // Geometry (si existe)
       if (part->isGeom()) {
-          //If save as first time or save as
-          if (m_model.getPrevName()!=m_model.getName()){
-            std::string name = m_model.getName()+"_part_" + std::to_string(i) + ".step";
-            part->getGeom()->setFileName(name);
-            part->getGeom()->ExportSTEP();
+          const std::string step_filename =
+              m_model.getName() + "_part_" + std::to_string(part->getId()) + ".step";
+          fs::path geom_path = json_dir / step_filename;
+
+          part->getGeom()->setFileName(geom_path.string());
+          if (!part->getGeom()->ExportSTEP()) {
+            std::cerr << "Error exporting geometry STEP: " << geom_path << std::endl;
           }
 
           cout << "Part has geom"<<endl;
-          fs::path geom_path(part->getGeom()->getName());
-          if (geom_path.is_relative())
-            geom_path = json_dir / geom_path;
           jpart["geometry"]["source"] = fs::relative(geom_path, json_dir).string();
           jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
           //jpart["geometry"]["representation"] = "BRep";

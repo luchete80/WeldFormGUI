@@ -191,7 +191,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
                         geom_path = fs::path(fname).parent_path() / geom_path;
                     cout << "    Geometry source: " << src << endl;
                     geom = new Geom();
-                    geom->LoadSTEP(geom_path.string(), origin.x, origin.y, origin.z);
+                    geom->LoadSTEP(geom_path.string());
+                    geom->setOrigin(origin);
                     part = new Part(geom);
                 }
             }

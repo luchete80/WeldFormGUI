@@ -426,6 +426,11 @@ int main(int argc, char* argv[])
 	              if (ImGui::Button("Run")) {
 	                editor->createJobFromActiveModel(true);
 	              }
+	              ImGui::SameLine();
+	              if (ImGui::Button("Zoom all")) {
+	                renderer->ResetCamera();
+	                renderer->ResetCameraClippingRange();
+	              }
 
 	              // Botones de background específicos
 	              //~ if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
