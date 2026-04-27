@@ -260,6 +260,8 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   m_model->setName(model_name);
   m_model->setFilePath(filePathName);
   m_model->setNoSaveAs();
+  is_model = true;
+  m_creating_model = false;
 
   getApp().setActiveModel(m_model);
 #ifdef BUILD_PYTHON
@@ -297,6 +299,7 @@ void Editor::closeCurrentModel()
   selected_step = nullptr;
   selected_bc = nullptr;
   m_show_mod_dlg_edit = false;
+  m_creating_model = false;
   m_show_prt_dlg_edit = false;
   m_show_step_dlg_edit = false;
   m_show_bc_dlg_edit = false;
@@ -304,6 +307,7 @@ void Editor::closeCurrentModel()
   m_showNewDomain = false;
 
   m_model = new Model();
+  is_model = false;
   getApp().setActiveModel(m_model);
   getApp().Update();
 
@@ -1215,7 +1219,8 @@ void Editor::drawGui() {
     bool close_model_requested = false;
     const bool has_loaded_model =
       m_model != nullptr &&
-      (m_model->getHasName() ||
+      (is_model ||
+       m_model->getHasName() ||
        !m_model->getFilePath().empty() ||
        m_model->getPartCount() > 0 ||
        m_model->getMaterialCount() > 0 ||
@@ -1225,6 +1230,16 @@ void Editor::drawGui() {
 
     if (ImGui::TreeNode("Models"))
     {
+      if (ImGui::BeginPopupContextItem())
+      {
+        if (!has_loaded_model && ImGui::MenuItem("New Model")) {
+          selected_mod = m_model;
+          m_creating_model = true;
+          m_show_mod_dlg_edit = true;
+        }
+        ImGui::EndPopup();
+      }
+
       if (has_loaded_model) {
         std::string modelTreeLabel = "Model (" + des + ")";
         bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
@@ -2407,7 +2422,20 @@ void Editor::drawGui() {
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
   if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
   if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
-  if (m_show_mod_dlg_edit) {ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);}
+  if (m_show_mod_dlg_edit) {
+    ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);
+    if (!m_show_mod_dlg_edit) {
+      if (m_creating_model && m_moddlg.m_saved && selected_mod == m_model) {
+        is_model = true;
+      }
+
+      if (m_creating_model) {
+        m_creating_model = false;
+      }
+
+      selected_mod = nullptr;
+    }
+  }
   if (m_show_step_dlg_edit) {
     ShowEditStepDialog(&m_show_step_dlg_edit, &m_stepdlg, selected_step);
     if (!m_show_step_dlg_edit) {

@@ -15,6 +15,8 @@ struct ModelDialog{
   AnalysisType m_antype = Solid3D ;
   
   bool m_initialized = false;
+  bool m_saved = false;
+  bool m_cancelled = false;
   
   bool cancel_action;
   bool create_part;

@@ -14,6 +14,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
   if (!m_initialized) {
       //m_id = part->m_id;  // inicializamos la UI solo la primera vez
       m_initialized = true;
+      m_saved = false;
+      m_cancelled = false;
       if (model->getAnalysisType() == Solid3D)
         m_antype = Solid3D;
       else if (model->getAnalysisType() == Axisymmetric2D)
@@ -61,6 +63,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
       model->m_thermal_coupling = true;
     else
       model->m_thermal_coupling = false;
+    m_saved = true;
+    m_cancelled = false;
     
     //part->setType(part_type);
     *p_open = false;
@@ -69,6 +73,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
   ImGui::SameLine();
   if (ImGui::Button("Cancel")) {
     m_initialized = false;  // cancelamos cambios
+    m_saved = false;
+    m_cancelled = true;
 
     *p_open = false;    //cancel_action = false;
   }
@@ -105,7 +111,7 @@ Model ShowCreateModelDialog(bool* p_open, ModelDialog *matdlg, bool *create){
 bool ShowEditModelDialog(bool* p_open, ModelDialog *moddlg, Model *model){
   bool ret = true;
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  moddlg->Draw("Part", p_open, model);
+  moddlg->Draw("Model", p_open, model);
 
   return ret;
   

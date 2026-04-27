@@ -245,6 +245,7 @@ protected:
   bool m_show_set_dlg;
   bool m_show_mat_dlg_edit = false;
   bool m_show_mod_dlg_edit = false;  
+  bool m_creating_model = false;
   bool m_show_prt_dlg_edit = false;
   bool m_show_bc_dlg_edit = false;
   bool m_show_step_dlg_edit = false;
@@ -266,10 +267,10 @@ protected:
   std::vector <Job *> m_jobs;
   
   Model *m_model;
-  bool is_model;
+  bool is_model = false;
   Material_ *selected_mat = nullptr;
-  Part      *selected_prt;
-  Model     *selected_mod;
+  Part      *selected_prt = nullptr;
+  Model     *selected_mod = nullptr;
   Step      *selected_step = nullptr;
   Condition *selected_bc = nullptr;
   int       m_create_bc;  //boundary or initial condition
