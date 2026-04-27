@@ -65,6 +65,7 @@ add_executable(${EXEC_NAME} main.cpp
                             editor.cpp
                             bc_dialog.cpp
                             load_plot_dialog.cpp
+                            demo_dialog.cpp
                             material_dialog.cpp
                             set_dialog.cpp
                             ${CMAKE_SOURCE_DIR}/libs/ImGuiFileDialog-0.6.4/ImGuiFileDialog.cpp

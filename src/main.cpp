@@ -85,6 +85,8 @@
   #undef max
 #endif
 
+#include "demo_dialog.h"
+
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -233,6 +235,11 @@ int main(int argc, char* argv[])
   VtkViewer vtkViewer_res;
   LoadPlotDialog loadPlotDialog;
   bool showLoadPlotDialog = false;
+
+  static DemoDialog demoDialog;
+  static bool showDemoDialog = false;
+  demoDialog.SetDemoRoot("examples/demo");
+
   //vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
 
   vtkViewer2.getRenderer()->SetBackground(0.2,0.2,0.4);
@@ -416,6 +423,7 @@ int main(int argc, char* argv[])
 	              auto renderer = vtkViewer2.getRenderer();
 
 	              if (ImGui::Button("Demo")) {
+                  demoDialog.Draw("Available Demos", &showDemoDialog);
 	                const std::filesystem::path demo_path("./demo/demo.json");
 	                if (std::filesystem::exists(demo_path))
 	                  editor->openModelFromPath(demo_path.string());
