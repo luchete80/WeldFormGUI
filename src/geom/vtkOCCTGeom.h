@@ -49,6 +49,7 @@ public:
   void SetGeometry(Geom* g);
 
   void BuildVTKData();
+  void ReloadFromGeometry(double deflection = 0.01);
   void LoadFromShape(const TopoDS_Shape& shape, double deflection = 0.01);
 
 

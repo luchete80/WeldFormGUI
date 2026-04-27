@@ -183,3 +183,7 @@
          - Fixed no reset camera at result change.  
          - Select plot color scale results to manual/auto 
          - Added close Model and clsoe Results features. 
+20260427 - Added Part Scale. 
+         - FIXED PART MOVE Drag Selector!!! Problem was in vtk getpos.
+         - Added 2D Plain Strain Model
+          

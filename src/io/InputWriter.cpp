@@ -51,7 +51,7 @@ std::string domTypeFromAnalysis(Model *model) {
     case PlaneStress2D:
       return "PlaneStress";
     case PlaneStrain2D:
-      return "PlaneStrain";
+      return "plStrain";
     case Axisymmetric2D:
       return "AxiSymm";
     case Solid3D:

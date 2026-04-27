@@ -54,6 +54,8 @@ private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
 	bool firstRender;
+  ImVec2 viewportScreenMin = ImVec2(0, 0);
+  ImVec2 viewportScreenMax = ImVec2(0, 0);
   
   vtkSmartPointer<vtkActor> currentActor = nullptr;
 
@@ -121,6 +123,15 @@ public:
     renderWindow->SetInteractor(interactor);
 
     }
+
+  void restoreDefaultInteractorStyle(){
+    if (!interactor || !interactorStyle)
+      return;
+
+    interactorStyle->SetDefaultRenderer(renderer);
+    interactor->SetInteractorStyle(interactorStyle);
+    interactor->EnableRenderOff();
+  }
 
 	inline vtkSmartPointer<vtkRenderer>& getRenderer() {
 		return renderer;

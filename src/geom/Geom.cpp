@@ -24,9 +24,11 @@
 #include <BRepBuilderAPI_Transform.hxx> // Necesario para transformaciones
 #include <gp_Trsf.hxx>                 // Necesario para definición de transformaciones
 #include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
 
+#include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 
 void Geom::Move(const double &dx, const double &dy, const double &dz){
@@ -52,11 +54,52 @@ void Geom::Move(const double &dx, const double &dy, const double &dz){
     //
     *m_shape = movedShape;
 
-    // 4️⃣ Actualizar el origen de la geometría
-    //m_origin.x += dx;
-    //m_origin.y += dy;
-    //m_origin.z += dz;
+    m_origin.x += dx;
+    m_origin.y += dy;
+    m_origin.z += dz;
     
+}
+
+bool Geom::Scale(const double &factor){
+    if (!m_shape) {
+        std::cerr << "Error: No Shape to scale." << std::endl;
+        return false;
+    }
+
+    if (factor <= 0.0) {
+        std::cerr << "Error: scale factor must be greater than zero." << std::endl;
+        return false;
+    }
+
+    Bnd_Box bbox;
+    BRepBndLib::Add(*m_shape, bbox);
+
+    double xMin = 0.0, yMin = 0.0, zMin = 0.0;
+    double xMax = 0.0, yMax = 0.0, zMax = 0.0;
+    bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+
+    gp_Pnt center((xMin + xMax) * 0.5,
+                  (yMin + yMax) * 0.5,
+                  (zMin + zMax) * 0.5);
+
+    gp_Trsf tr;
+    tr.SetScale(center, factor);
+
+    BRepBuilderAPI_Transform transformer(*m_shape, tr, true);
+    TopoDS_Shape scaledShape = transformer.Shape();
+    if (scaledShape.IsNull()) {
+        std::cerr << "Error: scale transformation failed." << std::endl;
+        return false;
+    }
+
+    *m_shape = scaledShape;
+
+    gp_Pnt originPoint(m_origin.x, m_origin.y, m_origin.z);
+    originPoint.Transform(tr);
+    m_origin.x = originPoint.X();
+    m_origin.y = originPoint.Y();
+    m_origin.z = originPoint.Z();
+    return true;
 }
 
 // Geom::Geom(std::string fname){
@@ -173,6 +216,7 @@ bool Geom::LoadSTEP(const std::string& fname) {
     // Guardamos en el miembro
     m_shape = new TopoDS_Shape(shape);
     m_fileName = fname;
+    m_origin = make_double3(0.0, 0.0, 0.0);
     return true;
 }
 
@@ -241,11 +285,9 @@ bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targe
     // Guardamos en el miembro
     m_shape = new TopoDS_Shape(transformedShape);
     m_fileName = fname;
-    
-    // Actualizar el origen de la geometría
-    //m_origin.x = targetOriginX;
-    //m_origin.y = targetOriginY;
-    // Si tienes coordenada z en m_origin, también actualízala
+    m_origin.x = targetOriginX;
+    m_origin.y = targetOriginY;
+    m_origin.z = targetOriginZ;
     
     return true;
 }

@@ -124,6 +124,7 @@ public:
   bool openResultsForModel();
   bool openResultsForJob(Job* job);
   bool refreshOpenResults();
+  bool scalePartGeometry(Part* part, double factor);
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
   void closeCurrentModel();

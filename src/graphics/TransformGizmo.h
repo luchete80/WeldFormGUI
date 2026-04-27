@@ -1,245 +1,289 @@
 #ifndef _TRANSFORMGIZMO_H_
 #define _TRANSFORMGIZMO_H_
 
+#include <array>
+#include <algorithm>
+#include <cmath>
 
-#include <vtkLineSource.h>
+#include <vtkActor.h>
+#include <vtkCellPicker.h>
+#include <vtkCylinderSource.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkMath.h>
+#include <vtkNew.h>
+#include <vtkObject.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkActor.h>
-#include <vtkSmartPointer.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkPropPicker.h>
-#include <vtkTransform.h>
-#include <vtkCommand.h>
-#include <vtkObject.h>  // Add this include
-#include <array>
-#include <vtkTransformFilter.h>
-#include "../model/Part.h"
-#include <vtkCellPicker.h> 
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
-#include <vtkArrowSource.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkSmartPointer.h>
+#include <vtkTransform.h>
+#include <vtkTransformFilter.h>
 
-#include <vtkTransformPolyDataFilter.h>
-#include <vtkCylinderSource.h>
-#include <vtkCoordinate.h>
+#include "../geom/Geom.h"
+#include "../model/Part.h"
 
-using namespace std;
-
-double ComputeGizmoScale(vtkActor* actor) {
-    double bounds[6];
-    actor->GetBounds(bounds);
-    double maxDim = std::max({bounds[1]-bounds[0], bounds[3]-bounds[2], bounds[5]-bounds[4]});
-    return maxDim * 0.5; // eje del gizmo = mitad del tamaño máximo de la pieza
-}
-
-
-    double DistanceToLineSegment(const double point[3], const double lineStart[3], const double lineEnd[3]) {
-        double lineVec[3] = {lineEnd[0] - lineStart[0], lineEnd[1] - lineStart[1], lineEnd[2] - lineStart[2]};
-        double pointVec[3] = {point[0] - lineStart[0], point[1] - lineStart[1], point[2] - lineStart[2]};
-        
-        double lineLengthSquared = vtkMath::Dot(lineVec, lineVec);
-        
-        if (lineLengthSquared == 0.0) {
-            return vtkMath::Norm(pointVec); // El segmento es un punto
-        }
-        
-        // Proyectar el punto sobre la línea
-        double t = vtkMath::Dot(pointVec, lineVec) / lineLengthSquared;
-        t = std::max(0.0, std::min(1.0, t)); // Clamp al segmento
-        
-        // Calcular el punto más cercano en el segmento
-        double closestPoint[3] = {
-            lineStart[0] + t * lineVec[0],
-            lineStart[1] + t * lineVec[1],
-            lineStart[2] + t * lineVec[2]
-        };
-        
-        // Calcular distancia
-        double diff[3] = {
-            point[0] - closestPoint[0],
-            point[1] - closestPoint[1],
-            point[2] - closestPoint[2]
-        };
-        
-        return vtkMath::Norm(diff);
-    }
-
-
-/////// CYLINDER
 class TransformGizmo : public vtkObject {
 public:
     vtkTypeMacro(TransformGizmo, vtkObject);
     static TransformGizmo* New();
 
     TransformGizmo() {
-        CreateAxes();
+        CreateActors();
+    }
+
+    void SetDimension(int dimension) {
+        Dimension = (dimension == 2) ? 2 : 3;
+        ApplyDimensionVisibility();
     }
 
     void Hide() {
-        for (int i = 0; i < 3; i++)
-            Axes[i]->SetVisibility(0);
+        IsVisibleFlag = false;
+        ApplyDimensionVisibility();
     }
 
     void Show() {
-        for (int i = 0; i < 3; i++)
-            Axes[i]->SetVisibility(1);
+        IsVisibleFlag = true;
+        ApplyDimensionVisibility();
     }
 
-    vtkSmartPointer<vtkActor> getActor(const int& i) { return Axes[i]; }
+    void AddToRenderer(vtkRenderer* renderer) {
+        if (!renderer) return;
+
+        for (auto& actor : DragAxes)
+            renderer->AddActor(actor);
+        for (auto& actor : PickAxes)
+            renderer->AddActor(actor);
+        for (auto& actor : OriginAxes)
+            renderer->AddActor(actor);
+    }
+
+    void RemoveFromRenderer(vtkRenderer* renderer) {
+        if (!renderer) return;
+
+        for (auto& actor : DragAxes)
+            renderer->RemoveActor(actor);
+        for (auto& actor : PickAxes)
+            renderer->RemoveActor(actor);
+        for (auto& actor : OriginAxes)
+            renderer->RemoveActor(actor);
+    }
 
     void SetTargetActor(vtkSmartPointer<vtkActor> actor) {
         this->TargetActor = actor;
-        //UpdateGizmoPosition();
-        Rescale(actor);
+        UpdatePlacementFromTargetActor();
     }
 
-    std::array<vtkSmartPointer<vtkActor>, 3> GetAxes() const { return Axes; }
-
-    void AddToRenderer(vtkSmartPointer<vtkRenderer> renderer) {
-        for (auto& axis : Axes)
-            renderer->AddActor(axis);
+    void SetOriginPosition(const double origin[3]) {
+        if (!origin) return;
+        for (int i = 0; i < 3; ++i)
+            OriginPosition[i] = origin[i];
+        UpdateOriginPlacement();
     }
 
-    void RemoveFromRenderer(vtkSmartPointer<vtkRenderer> renderer) {
-        for (auto& axis : Axes)
-            renderer->RemoveActor(axis);
+    void SetOriginPosition(double x, double y, double z) {
+        double origin[3] = {x, y, z};
+        SetOriginPosition(origin);
     }
 
-    void UpdateGizmoPosition() {
+    void UpdatePlacementFromTargetActor() {
         if (!TargetActor) return;
 
-        double* pos = TargetActor->GetPosition();
-        for (auto& axis : Axes)
-            axis->SetPosition(pos);
-    }
-
-    void SetVisible(bool visible) {
-        for (auto& axis : Axes)
-            axis->SetVisibility(visible);
-    }
-
-    bool IsVisible() const {
-        return Axes[0]->GetVisibility();
-    }
-
-    void Rescale(vtkActor* targetActor);
-
-
-
-void updateAxis(vtkPolyData *m_polydata) {
-
-    if (!TargetActor && !m_polydata) return;
-
-    // Calcular el centro de referencia
-    double center[3] = {0.0, 0.0, 0.0};
-
-    if (m_polydata) {
         double bounds[6];
-        m_polydata->GetBounds(bounds);
-        center[0] = (bounds[0] + bounds[1]) / 2.0;
-        center[1] = (bounds[2] + bounds[3]) / 2.0;
-        center[2] = (bounds[4] + bounds[5]) / 2.0;
-    } else if (TargetActor) {
-        double* pos = TargetActor->GetPosition();
-        center[0] = pos[0];
-        center[1] = pos[1];
-        center[2] = pos[2];
-    }
+        TargetActor->GetBounds(bounds);
 
-    // Actualizar posición de cada eje
-    for (int i = 0; i < 3; ++i) {
-        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        const double center[3] = {
+            0.5 * (bounds[0] + bounds[1]),
+            0.5 * (bounds[2] + bounds[3]),
+            0.5 * (bounds[4] + bounds[5])
+        };
+        DragCenter = {center[0], center[1], center[2]};
 
-        // Aplicar posición central
-        transform->Translate(center);
+        const double maxDim = std::max({
+            bounds[1] - bounds[0],
+            bounds[3] - bounds[2],
+            bounds[5] - bounds[4]
+        });
+        const double effectiveDim = std::max(maxDim, 1e-9);
 
-        // Mantener orientación del cilindro
-        //~ if (i == 0) transform->RotateZ(90);   // X
-        //~ if (i == 2) transform->RotateX(90);   // Z
-        //~ // Y ya apunta a Y por defecto
-        double length = 2.0;
-        if (i == 0) {
-            //transform->RotateZ(90);
-            //transform->RotateZ(90);
-            //transform->Translate(length/2.0, 0, 0);
-        } else if (i == 1) {
-            transform->Translate(0, 1.0, 0);
-        } else if (i == 2) {
-            //transform->RotateX(90);
-            transform->Translate(0, 2.0, 0.0);
+        DragLength = std::max(effectiveDim * 0.55, 1e-6);
+        DragRadius = std::max(effectiveDim * 0.015, 5e-7);
+        PickRadius = std::max(effectiveDim * 0.06, DragRadius * 3.5);
+        OriginLength = std::max(effectiveDim * 0.18, 1e-6);
+        OriginRadius = std::max(effectiveDim * 0.008, 2.5e-7);
+
+        for (int axis = 0; axis < 3; ++axis) {
+            ApplyAxisPose(DragSources[axis], DragAxes[axis], center, axis, DragLength, DragRadius);
+            ApplyAxisPose(PickSources[axis], PickAxes[axis], center, axis, DragLength, PickRadius);
         }
 
-        vtkSmartPointer<vtkTransformPolyDataFilter> tf = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-        tf->SetTransform(transform);
-        tf->SetInputConnection(AxisSources[i]->GetOutputPort());
-        tf->Update();
-
-        Axes[i]->GetMapper()->SetInputConnection(tf->GetOutputPort());
-        Axes[i]->Modified();  // fuerza actualización
+        UpdateOriginPlacement();
     }
-}
 
+    std::array<vtkSmartPointer<vtkActor>, 3> GetDragAxes() const { return DragAxes; }
+    std::array<vtkSmartPointer<vtkActor>, 3> GetPickAxes() const { return PickAxes; }
+    std::array<vtkSmartPointer<vtkActor>, 3> GetOriginAxes() const { return OriginAxes; }
+    bool IsAxisActive(int axis) const { return axis >= 0 && axis < Dimension; }
+    const std::array<double, 3>& GetDragCenter() const { return DragCenter; }
+    double GetDragLength() const { return DragLength; }
+
+    void HighlightAxis(int axis) {
+        const std::array<std::array<double, 3>, 3> baseColors = {{
+            {0.95, 0.25, 0.25},
+            {0.20, 0.85, 0.30},
+            {0.25, 0.45, 0.95}
+        }};
+        for (int i = 0; i < 3; ++i) {
+            if (!DragAxes[i]) continue;
+            double color[3] = {
+                baseColors[i][0],
+                baseColors[i][1],
+                baseColors[i][2]
+            };
+            if (i == axis) {
+                color[0] = 1.0;
+                color[1] = 1.0;
+                color[2] = 0.35;
+            }
+            DragAxes[i]->GetProperty()->SetColor(color);
+            DragAxes[i]->GetProperty()->SetOpacity(i == axis ? 1.0 : 0.45);
+            DragAxes[i]->GetProperty()->SetLineWidth(i == axis ? 6.0 : 1.0);
+        }
+    }
+
+    void ClearHighlight() {
+        const std::array<std::array<double, 3>, 3> baseColors = {{
+            {0.95, 0.25, 0.25},
+            {0.20, 0.85, 0.30},
+            {0.25, 0.45, 0.95}
+        }};
+        for (int i = 0; i < 3; ++i) {
+            auto& actor = DragAxes[i];
+            if (!actor) continue;
+            actor->GetProperty()->SetColor(baseColors[i][0], baseColors[i][1], baseColors[i][2]);
+            actor->GetProperty()->SetOpacity(0.45);
+            actor->GetProperty()->SetLineWidth(2.0);
+        }
+    }
 
 private:
-void CreateAxes() {
-    const std::array<std::array<double, 3>, 3> colors = {{
-        {1.0, 0.0, 0.0}, // X: rojo
-        {0.0, 1.0, 0.0}, // Y: verde
-        {0.0, 0.0, 1.0}  // Z: azul
-    }};
+    void CreateActors() {
+        const std::array<std::array<double, 3>, 3> dragColors = {{
+            {0.95, 0.25, 0.25},
+            {0.20, 0.85, 0.30},
+            {0.25, 0.45, 0.95}
+        }};
+        const std::array<std::array<double, 3>, 3> originColors = {{
+            {1.0, 0.75, 0.25},
+            {0.95, 0.85, 0.35},
+            {1.0, 0.95, 0.55}
+        }};
 
-    double length = 2.0;
-    double radius = 0.02;
+        for (int i = 0; i < 3; ++i) {
+            DragSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
+            PickSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
+            OriginSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
 
-    for (int i = 0; i < 3; ++i) {
-        AxisSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
-        AxisSources[i]->SetHeight(length);
-        AxisSources[i]->SetRadius(radius);
-        AxisSources[i]->SetResolution(32);
-        AxisSources[i]->CappingOn();
-        AxisSources[i]->Update();
+            ConfigureCylinder(DragSources[i], 1.0, 0.03);
+            ConfigureCylinder(PickSources[i], 1.0, 0.09);
+            ConfigureCylinder(OriginSources[i], 0.35, 0.015);
 
-        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+            DragAxes[i] = CreateActorFromSource(DragSources[i], dragColors[i].data(), 0.75, true);
+            PickAxes[i] = CreateActorFromSource(PickSources[i], dragColors[i].data(), 0.02, true);
+            OriginAxes[i] = CreateActorFromSource(OriginSources[i], originColors[i].data(), 0.95, false);
 
-        // Orientar cilindro según eje
-        if (i == 0) transform->RotateZ(90); // X
-        else if (i == 2) transform->RotateX(90); // Z
-
-        // Aplicar posición inicial del TargetActor si existe
-        if (TargetActor) {
-            double* pos = TargetActor->GetPosition();
-            transform->Translate(pos);
-            
+            PickAxes[i]->GetProperty()->SetRepresentationToSurface();
+            OriginAxes[i]->GetProperty()->SetRepresentationToSurface();
         }
 
-        vtkSmartPointer<vtkTransformPolyDataFilter> tf = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-        tf->SetTransform(transform);
-        tf->SetInputConnection(AxisSources[i]->GetOutputPort());
-        tf->Update();
+        Hide();
+    }
 
+    static void ConfigureCylinder(vtkCylinderSource* source, double height, double radius) {
+        source->SetHeight(height);
+        source->SetRadius(radius);
+        source->SetResolution(24);
+        source->CappingOn();
+        source->Update();
+    }
+
+    static vtkSmartPointer<vtkActor> CreateActorFromSource(vtkCylinderSource* source,
+                                                           const double color[3],
+                                                           double opacity,
+                                                           bool pickable) {
         vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        mapper->SetInputConnection(tf->GetOutputPort());
+        mapper->SetInputConnection(source->GetOutputPort());
 
         vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(mapper);
-        actor->GetProperty()->SetColor(colors[i].data()[0], colors[i].data()[1], colors[i].data()[2]);
-        actor->PickableOn();
-        actor->DragableOn();
-
-        Axes[i] = actor;
-        
-        Axes[i]->GetProperty()->SetOpacity(0.5);
+        actor->GetProperty()->SetColor(color[0], color[1], color[2]);
+        actor->GetProperty()->SetOpacity(opacity);
+        actor->SetPickable(pickable ? 1 : 0);
+        actor->SetDragable(pickable ? 1 : 0);
+        return actor;
     }
-}
 
+    void SetActorsVisible(const std::array<vtkSmartPointer<vtkActor>, 3>& actors, bool visible) {
+        for (int i = 0; i < 3; ++i) {
+            auto& actor = actors[i];
+            if (actor)
+                actor->SetVisibility((visible && IsAxisActive(i)) ? 1 : 0);
+        }
+    }
+
+    void ApplyDimensionVisibility() {
+        SetActorsVisible(DragAxes, IsVisibleFlag);
+        SetActorsVisible(PickAxes, IsVisibleFlag);
+        SetActorsVisible(OriginAxes, IsVisibleFlag);
+    }
+
+    static void ApplyAxisPose(vtkCylinderSource* source,
+                              vtkActor* actor,
+                              const double center[3],
+                              int axis,
+                              double length,
+                              double radius) {
+        ConfigureCylinder(source, length, radius);
+
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        transform->PostMultiply();
+        if (axis == 0)
+            transform->RotateZ(90.0);
+        else if (axis == 2)
+            transform->RotateX(-90.0);
+
+        transform->Translate(center);
+
+        actor->SetUserTransform(transform);
+        actor->Modified();
+    }
+
+    void UpdateOriginPlacement() {
+        for (int axis = 0; axis < 3; ++axis) {
+            ApplyAxisPose(OriginSources[axis], OriginAxes[axis], OriginPosition.data(),
+                          axis, OriginLength, OriginRadius);
+        }
+    }
 
 private:
-    std::array<vtkSmartPointer<vtkActor>, 3> Axes;
-    std::array<vtkSmartPointer<vtkCylinderSource>, 3> AxisSources;
+    std::array<vtkSmartPointer<vtkCylinderSource>, 3> DragSources;
+    std::array<vtkSmartPointer<vtkCylinderSource>, 3> PickSources;
+    std::array<vtkSmartPointer<vtkCylinderSource>, 3> OriginSources;
+    std::array<vtkSmartPointer<vtkActor>, 3> DragAxes;
+    std::array<vtkSmartPointer<vtkActor>, 3> PickAxes;
+    std::array<vtkSmartPointer<vtkActor>, 3> OriginAxes;
     vtkSmartPointer<vtkActor> TargetActor;
+    std::array<double, 3> OriginPosition = {0.0, 0.0, 0.0};
+    std::array<double, 3> DragCenter = {0.0, 0.0, 0.0};
+    int Dimension = 3;
+    bool IsVisibleFlag = false;
+    double DragLength = 1e-3;
+    double DragRadius = 2.5e-5;
+    double PickRadius = 8e-5;
+    double OriginLength = 3e-4;
+    double OriginRadius = 1.2e-5;
 };
 
 TransformGizmo* TransformGizmo::New() {
@@ -247,34 +291,36 @@ TransformGizmo* TransformGizmo::New() {
     return newGizmo;
 }
 
-void TransformGizmo::Rescale(vtkActor* targetActor) {
-    if (!targetActor) return;
-
-    double bounds[6];
-    targetActor->GetBounds(bounds);
-    double maxDim = std::max({bounds[1] - bounds[0], bounds[3] - bounds[2], bounds[5] - bounds[4]});
-
-    double scaleLength = maxDim * 2.0;
-    double scaleRadius = maxDim * 0.05;
-    cout << "MaxDim: "<< maxDim<<endl;
-
-    for (int i = 0; i < 3; i++) {
-        AxisSources[i]->SetHeight(scaleLength);
-        AxisSources[i]->SetRadius(scaleRadius);
-        AxisSources[i]->Update();
+namespace {
+double DistancePointToSegment2D(double px, double py,
+                                double ax, double ay,
+                                double bx, double by)
+{
+    const double abx = bx - ax;
+    const double aby = by - ay;
+    const double ab_len2 = abx * abx + aby * aby;
+    if (ab_len2 <= 1e-12) {
+        const double dx = px - ax;
+        const double dy = py - ay;
+        return std::sqrt(dx * dx + dy * dy);
     }
+
+    double t = ((px - ax) * abx + (py - ay) * aby) / ab_len2;
+    t = std::max(0.0, std::min(1.0, t));
+    const double cx = ax + t * abx;
+    const double cy = ay + t * aby;
+    const double dx = px - cx;
+    const double dy = py - cy;
+    return std::sqrt(dx * dx + dy * dy);
 }
 
-
-//~ vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
-//~ cone->SetHeight(scaleLength * 0.2);
-//~ cone->SetRadius(scaleRadius * 2);
-//~ cone->SetResolution(32);
-
-
-//////////////////////////////////
-
-
+void WorldToDisplayPoint(vtkRenderer* renderer, const double world[3], double display[3])
+{
+    renderer->SetWorldPoint(world[0], world[1], world[2], 1.0);
+    renderer->WorldToDisplay();
+    renderer->GetDisplayPoint(display);
+}
+}
 
 class GizmoInteractorStyle : public vtkInteractorStyleTrackballCamera
 {
@@ -282,314 +328,201 @@ public:
     static GizmoInteractorStyle* New();
     vtkTypeMacro(GizmoInteractorStyle, vtkInteractorStyleTrackballCamera);
 
-    void SetTargetActor(vtkSmartPointer<vtkActor> actor) { 
-        this->TargetActor = actor; 
+    void SetTargetActor(vtkSmartPointer<vtkActor> actor) {
+        this->TargetActor = actor;
     }
 
-    void SetPolyData(vtkSmartPointer<vtkPolyData> pd) { 
-        this->m_polydata = pd; 
+    void SetPolyData(vtkSmartPointer<vtkPolyData> pd) {
+        this->m_polydata = pd;
     }
-    
-    void SetPart(Part* pt){
-      this->m_part = pt;
-      
-      }
-        
-    void SetGizmoAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) { 
-        this->Axes = axes; 
+
+    void SetPart(Part* pt) {
+        this->m_part = pt;
+    }
+
+    void SetGizmoAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) {
+        this->Axes = axes;
+    }
+
+    void SetPickAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) {
+        this->PickAxes = axes;
     }
 
     void SetTransformGizmo(vtkSmartPointer<TransformGizmo> gizmo) {
         this->Gizmo = gizmo;
     }
-    
+
     void OnLeftButtonDown() override {
+        int* clickPos = this->GetInteractor()->GetEventPosition();
+        this->ClickPos[0] = clickPos[0];
+        this->ClickPos[1] = clickPos[1];
 
-        int closestAxis = -1;
+        this->SelectedAxis = PickAxisAt(clickPos[0], clickPos[1]);
+        if (this->SelectedAxis >= 0) {
+            if (this->Gizmo)
+                this->Gizmo->HighlightAxis(this->SelectedAxis);
+            this->GetInteractor()->GetRenderWindow()->Render();
+            return;
+        }
 
-
-          int* clickPos = this->GetInteractor()->GetEventPosition();
-          this->ClickPos[0] = clickPos[0];  // guardar posición inicial
-          this->ClickPos[1] = clickPos[1];
-
-          vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
-          picker->SetTolerance(0.2); // ajustable        
-          picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
-
-          vtkActor* pickedActor = picker->GetActor();
-          if (!pickedActor) {
-              std::cout << "Not edge selected" << std::endl;
-              this->SelectedAxis = -1;
-          } else {
-              // Comprobar cuál de los ejes es
-              for (int i = 0; i < 3; ++i) {
-                  if (pickedActor == Axes[i]) {
-                      this->SelectedAxis = i;
-                      std::cout << "Axis selected: " << (i==0?"X":i==1?"Y":"Z") << std::endl;
-                      break;
-                  }
-              }
-              
-              std::cout << "Pick Position Z: " << picker->GetPickPosition()[2] << std::endl;
-
-
-          for (int i = 0; i < 3; ++i) {
-              if (pickedActor == Axes[i]) {
-                  SelectedAxis = i;
-                  Axes[i]->GetProperty()->SetLineWidth(8.0);
-                  Axes[i]->GetProperty()->SetOpacity(1.0);
-                  std::cout << "Axis selected: " << (i==0?"X":i==1?"Y":"Z") << std::endl;
-                  break;
-              }
-          }
-
-          }
- 
- 
-          if (!pickedActor) {
-              double clickWorld[3];
-              //this->ComputeDisplayToWorld(clickPos, clickWorld);
-              vtkRenderer* ren = this->GetDefaultRenderer();
-
-              //~ double displayCoords[3];
-              //~ displayCoords[0] = clickPos[0];
-              //~ displayCoords[1] = clickPos[1];
-
-              //~ double displayZ = ren->GetZ (clickPos[0], clickPos[1]); // <- verdadero Z de la cámara
-
-              //~ ren->SetDisplayPoint(displayCoords[0], displayCoords[1], displayZ);
-              //~ ren->DisplayToWorld();
-              //~ double worldPoint[4];
-              //~ ren->GetWorldPoint(worldPoint);
-
-              //~ if (worldPoint[3] != 0.0) {
-                  //~ clickWorld[0] = worldPoint[0] / worldPoint[3];
-                  //~ clickWorld[1] = worldPoint[1] / worldPoint[3];
-                  //~ clickWorld[2] = worldPoint[2] / worldPoint[3];
-              //~ }
-
-              //~ double minDist = 0.1; // ajustable según escala
-              //~ int closest = -1;
-
-              //~ for (int i = 0; i < 3; ++i) {
-                  //~ double start[3], end[3];
-                  //~ Axes[i]->GetPosition(start);
-                  //~ double dir[3] = {0,0,0};
-                  //~ dir[i] = 1.0; // X, Y, Z
-
-                  //~ end[0] = start[0] + dir[0]*2.0;
-                  //~ end[1] = start[1] + dir[1]*2.0;
-                  //~ end[2] = start[2] + dir[2]*2.0;
-                  
-                  //~ double d = DistanceToLineSegment(clickWorld, start, end);
-                  //~ if (d < minDist) {
-                      //~ minDist = d;
-                      //~ closest = i;
-                  //~ }
-              //~ }
-              //~ cout << "Click World "<<clickWorld[0]<<", "<<clickWorld[1]<<", "<<clickWorld[2]<<endl;
-              //~ if (closest != -1) {
-                  //~ SelectedAxis = closest;
-                  //~ std::cout << "Axis selected (approx): " << (closest==0?"X":closest==1?"Y":"Z") << std::endl;
-              //~ }
-              vtkSmartPointer<vtkCoordinate> coordinate = vtkSmartPointer<vtkCoordinate>::New();
-              coordinate->SetCoordinateSystemToDisplay();
-              coordinate->SetValue(clickPos[0], clickPos[1], 0); // z=0 plano frontal de la cámara
-
-              double* world = coordinate->GetComputedWorldValue(this->GetDefaultRenderer());
-
-              clickWorld[0] = world[0];
-              clickWorld[1] = world[1];
-              clickWorld[2] = world[2];
-
-              std::cout << "Click World: " << clickWorld[0] << ", " 
-                        << clickWorld[1] << ", " 
-                        << clickWorld[2] << std::endl;
-                        } 
-                      
-        
-
-
-        ///// Si no se seleccionó ningún eje, comportamiento por defecto
         vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
     }
 
-//~ void OnLeftButtonDown() override {
-    //~ int* clickPos = this->GetInteractor()->GetEventPosition();
-    //~ this->ClickPos[0] = clickPos[0];
-    //~ this->ClickPos[1] = clickPos[1];
-
-    //~ // SOLUTION 1 & 2: Use vtkCellPicker with adjusted tolerance
-    //~ vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
-    //~ picker->SetTolerance(0.1); // Increased tolerance for easier picking
-
-    //~ // SOLUTION 2: Configure picker behavior
-    //~ picker->PickFromListOn(); // Optional: Restrict picking to a specific list
-    //~ // InitializePickList and AddPickList would be used if you enable PickFromList
-
-    //~ picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
-    //~ vtkActor* pickedActor = picker->GetActor();
-
-    //~ if (!pickedActor) {
-        //~ std::cout << "No actor selected" << std::endl;
-        //~ this->SelectedAxis = -1;
-    //~ } else {
-        //~ // Identify which axis was picked
-        //~ this->SelectedAxis = -1;
-        //~ for (int i = 0; i < 3; ++i) {
-            //~ if (pickedActor == this->Axes[i].Get()) { // Use Get() for raw pointer comparison
-                //~ this->SelectedAxis = i;
-                //~ // Visual feedback for selection
-                //~ this->Axes[i]->GetProperty()->SetColor(1.0, 1.0, 0.0); // Highlight in yellow
-                //~ std::cout << "Axis selected: " << (i==0?"X":i==1?"Y":"Z") << std::endl;
-                //~ break;
-            //~ }
-        //~ }
-        //~ // If the picked actor wasn't a gizmo axis, do nothing or reset selection.
-        //~ if (this->SelectedAxis == -1) {
-            //~ // Optionally reset any previous axis highlighting here
-            //~ std::cout << "Selected actor is not a gizmo axis." << std::endl;
-        //~ }
-    //~ }
-
-    //~ vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
-//~ }
-
     void OnMouseMove() override {
-    // Highlight del eje bajo el cursor (antes de la selección)
-    if (this->SelectedAxis == -1) {
-        int* pos = this->GetInteractor()->GetEventPosition();
-        //~ int closestAxis = FindClosestAxis(pos[0], pos[1]);
-        
-        //~ // Resetear colores anteriores
-        //~ for (int i = 0; i < 3; ++i) {
-            //~ if (this->Axes[i]) {
-                //~ double color[3] = {i==0?1.0:0.0, i==1?1.0:0.0, i==2?1.0:0.0};
-                //~ this->Axes[i]->GetProperty()->SetColor(color);
-            //~ }
-        //~ }
-        
-        //~ // Highlight del eje más cercano
-        //~ if (closestAxis != -1 && this->Axes[closestAxis]) {
-            //~ this->Axes[closestAxis]->GetProperty()->SetColor(1.0, 1.0, 0.0); // Amarillo
-            //~ this->GetInteractor()->GetRenderWindow()->Render();
-        //~ }
-        //
-    }
-    //std::cout << "Selected Axis: "<< SelectedAxis<<std::endl;
-    
-    if (this->SelectedAxis >= 0 && this->TargetActor) {
-        int* currPos = this->GetInteractor()->GetEventPosition();
-        double dx = currPos[0] - this->ClickPos[0];
-        double dy = currPos[1] - this->ClickPos[1];
-
-        double translate[3] = {0, 0, 0};
-        
-        
-                
-        //~ double movement = (dx + dy) * 0.001;
-        //~ translate[this->SelectedAxis] = movement;
-
-          
-          
-          const std::array<std::array<double, 3>, 3> directions = {{
-              {{1.0, 0.0, 0.0}}, // X
-              {{0.0, 1.0, 0.0}}, // Y
-              {{0.0, 0.0, 1.0}}  // Z
-          }};
-
-          vtkSmartPointer<vtkRenderer> renderer = this->GetDefaultRenderer();
-
-          // Obtener vector de movimiento en cámara
-          double worldDelta[3];
-          renderer->SetDisplayPoint(currPos[0], currPos[1], 0);
-          renderer->DisplayToWorld();
-          double worldPos1[4]; renderer->GetWorldPoint(worldPos1);
-
-          renderer->SetDisplayPoint(ClickPos[0], ClickPos[1], 0);
-          renderer->DisplayToWorld();
-          double worldPos0[4]; renderer->GetWorldPoint(worldPos0);
-
-          // Normalizar y proyectar sobre dirección del eje
-          double moveVec[3] = {worldPos1[0]-worldPos0[0],
-                               worldPos1[1]-worldPos0[1],
-                               worldPos1[2]-worldPos0[2]};
-          double dot = vtkMath::Dot(moveVec, directions[SelectedAxis]);
-          translate[0] = directions[SelectedAxis][0]*dot;
-          translate[1] = directions[SelectedAxis][1]*dot;
-          translate[2] = directions[SelectedAxis][2]*dot;
-
-        //~ // Aplicar transformación
-        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-        transform->Translate(translate[0],translate[1],translate[2]);
-        
-        
-        //// A. Transformation over the actor
-        ///this->TargetActor->SetUserTransform(transform);
-
-        //// B. If moving polyata
-        vtkNew<vtkTransformFilter> tf;
-        if (m_polydata){
-
-        //IF MOVE THE POLYDATA
-        tf->SetInputData(m_polydata);
-        tf->SetTransform(transform);
-        tf->Update();
-        m_polydata->ShallowCopy(tf->GetOutput());
-
-
-        //this->TargetActor->GetMapper()->SetInputData(m_polydata);
-        
-        //m_part->getGeom()->Move(movement,0.,0.);
-        m_part->getGeom()->Move(translate[0],translate[1],translate[2]);
-      } else {
-        
-        std::cout << "ERROR: NO POLYDATA"<<endl;
+        if (this->SelectedAxis == -1) {
+            int* pos = this->GetInteractor()->GetEventPosition();
+            int hoveredAxis = PickAxisAt(pos[0], pos[1]);
+            if (hoveredAxis != this->HoveredAxis) {
+                this->HoveredAxis = hoveredAxis;
+                if (this->Gizmo) {
+                    if (hoveredAxis >= 0)
+                        this->Gizmo->HighlightAxis(hoveredAxis);
+                    else
+                        this->Gizmo->ClearHighlight();
+                }
+                this->GetInteractor()->GetRenderWindow()->Render();
+            }
+            vtkInteractorStyleTrackballCamera::OnMouseMove();
+            return;
         }
 
-        // DEBUG: Verificar después de mover
-        double* posAfter = this->TargetActor->GetPosition();
-        //~ std::cout << "Position after: " << posAfter[0] << ", " << posAfter[1] << ", " << posAfter[2] << std::endl;
-        //~ std::cout << "Transform applied: " << translate[0] << ", " << translate[1] << ", " << translate[2] << std::endl;
+        if (this->SelectedAxis >= 0 && this->TargetActor) {
+            int* currPos = this->GetInteractor()->GetEventPosition();
 
+            const std::array<std::array<double, 3>, 3> directions = {{
+                {{1.0, 0.0, 0.0}},
+                {{0.0, 1.0, 0.0}},
+                {{0.0, 0.0, 1.0}}
+            }};
 
-        //~ std::cout << TargetActor->GetMapper()->GetClassName() << std::endl;
-        //~ std::cout << TargetActor->GetMapper()->GetInput()->GetClassName() << std::endl;
+            vtkRenderer* renderer = this->GetDefaultRenderer();
+            renderer->SetDisplayPoint(currPos[0], currPos[1], 0);
+            renderer->DisplayToWorld();
+            double worldPos1[4];
+            renderer->GetWorldPoint(worldPos1);
 
-      //~ double origin[3] = {0,0,0};
-      //~ double transformed[3];
-      //~ TargetActor->GetUserTransform()->TransformPoint(origin, transformed);
-      //~ std::cout << "Actual visual position: " 
-                //~ << transformed[0] << ", " 
-                //~ << transformed[1] << ", " 
-                //~ << transformed[2] << std::endl;
-                
+            renderer->SetDisplayPoint(ClickPos[0], ClickPos[1], 0);
+            renderer->DisplayToWorld();
+            double worldPos0[4];
+            renderer->GetWorldPoint(worldPos0);
 
-        this->GetInteractor()->GetRenderWindow()->Render();
-    } else {
+            double moveVec[3] = {
+                worldPos1[0] - worldPos0[0],
+                worldPos1[1] - worldPos0[1],
+                worldPos1[2] - worldPos0[2]
+            };
+
+            double dot = vtkMath::Dot(moveVec, directions[SelectedAxis].data());
+            double translate[3] = {
+                directions[SelectedAxis][0] * dot,
+                directions[SelectedAxis][1] * dot,
+                directions[SelectedAxis][2] * dot
+            };
+
+            vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+            transform->Translate(translate);
+
+            vtkNew<vtkTransformFilter> tf;
+            if (m_polydata) {
+                tf->SetInputData(m_polydata);
+                tf->SetTransform(transform);
+                tf->Update();
+                m_polydata->ShallowCopy(tf->GetOutput());
+
+                if (m_part && m_part->getGeom()) {
+                    m_part->getGeom()->Move(translate[0], translate[1], translate[2]);
+                    if (Gizmo) {
+                        Gizmo->UpdatePlacementFromTargetActor();
+                        Gizmo->SetOriginPosition(0.0, 0.0, 0.0);
+                    }
+                }
+            }
+
+            this->ClickPos[0] = currPos[0];
+            this->ClickPos[1] = currPos[1];
+            this->GetInteractor()->GetRenderWindow()->Render();
+            return;
+        }
+
         vtkInteractorStyleTrackballCamera::OnMouseMove();
-    } 
-        
-
     }
 
     void OnLeftButtonUp() override {
         this->SelectedAxis = -1;
+        this->HoveredAxis = -1;
+        if (this->Gizmo)
+            this->Gizmo->ClearHighlight();
+        this->GetInteractor()->GetRenderWindow()->Render();
         vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
     }
 
 private:
+    int PickAxisAt(int x, int y) {
+        if (!Gizmo || !this->GetDefaultRenderer())
+            return -1;
 
+        const std::array<std::array<double, 3>, 3> directions = {{
+            {{1.0, 0.0, 0.0}},
+            {{0.0, 1.0, 0.0}},
+            {{0.0, 0.0, 1.0}}
+        }};
+
+        const std::array<double, 3>& center = Gizmo->GetDragCenter();
+        const double halfLength = 0.5 * Gizmo->GetDragLength();
+        vtkRenderer* renderer = this->GetDefaultRenderer();
+
+        int bestAxis = -1;
+        double bestDistance = 1e100;
+        const double pixelThreshold = 20.0;
+
+        for (int i = 0; i < 3; ++i) {
+            if (!Gizmo->IsAxisActive(i))
+                continue;
+
+            double start[3] = {
+                center[0] - directions[i][0] * halfLength,
+                center[1] - directions[i][1] * halfLength,
+                center[2] - directions[i][2] * halfLength
+            };
+            double end[3] = {
+                center[0] + directions[i][0] * halfLength,
+                center[1] + directions[i][1] * halfLength,
+                center[2] + directions[i][2] * halfLength
+            };
+
+            double startDisplay[3];
+            double endDisplay[3];
+            WorldToDisplayPoint(renderer, start, startDisplay);
+            WorldToDisplayPoint(renderer, end, endDisplay);
+
+            const double distance = DistancePointToSegment2D(
+                static_cast<double>(x),
+                static_cast<double>(y),
+                startDisplay[0], startDisplay[1],
+                endDisplay[0], endDisplay[1]);
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestAxis = i;
+            }
+        }
+
+        if (bestDistance > pixelThreshold)
+            return -1;
+
+        return bestAxis;
+    }
+
+private:
     vtkSmartPointer<vtkPolyData> m_polydata;
-    Part* m_part;
-    
+    Part* m_part = nullptr;
     vtkSmartPointer<vtkActor> TargetActor;
     std::array<vtkSmartPointer<vtkActor>, 3> Axes;
+    std::array<vtkSmartPointer<vtkActor>, 3> PickAxes;
     vtkSmartPointer<TransformGizmo> Gizmo;
     int SelectedAxis = -1;
-    int LastPos[2];
-    int ClickPos[2];
-    
+    int HoveredAxis = -1;
+    int ClickPos[2] = {0, 0};
 };
 
 vtkStandardNewMacro(GizmoInteractorStyle);

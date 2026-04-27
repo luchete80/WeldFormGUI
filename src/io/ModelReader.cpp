@@ -190,7 +190,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     if (geom_path.is_relative())
                         geom_path = fs::path(fname).parent_path() / geom_path;
                     cout << "    Geometry source: " << src << endl;
-                    geom = new Geom(geom_path.string());
+                    geom = new Geom();
+                    geom->LoadSTEP(geom_path.string(), origin.x, origin.y, origin.z);
                     part = new Part(geom);
                 }
             }

@@ -42,23 +42,22 @@ void VtkViewer::isCurrentCallbackFn(vtkObject* caller, long unsigned int eventId
 }
 
 void VtkViewer::processEvents(){
-	if (!ImGui::IsWindowFocused() && !ImGui::IsWindowHovered()){
+	const bool viewportHovered = ImGui::IsMouseHoveringRect(viewportScreenMin, viewportScreenMax, false);
+	if (!ImGui::IsWindowFocused() && !viewportHovered){
 		return;
 	}
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigWindowsMoveFromTitleBarOnly = true; // don't drag window when clicking on image.
-	ImVec2 viewportPos = ImGui::GetCursorStartPos();
-
-	double xpos = static_cast<double>(io.MousePos[0]) - static_cast<double>(viewportPos.x);
-	double ypos = static_cast<double>(io.MousePos[1]) - static_cast<double>(viewportPos.y);
+	double xpos = static_cast<double>(io.MousePos.x - viewportScreenMin.x);
+	double ypos = static_cast<double>(io.MousePos.y - viewportScreenMin.y);
 	int ctrl = static_cast<int>(io.KeyCtrl);
 	int shift = static_cast<int>(io.KeyShift);
 	bool dclick = io.MouseDoubleClicked[0] || io.MouseDoubleClicked[1] || io.MouseDoubleClicked[2];
 
 	interactor->SetEventInformationFlipY(xpos, ypos, ctrl, shift, dclick);
 
-	if (ImGui::IsWindowHovered()){
+	if (viewportHovered){
 		if (io.MouseClicked[ImGuiMouseButton_Left]){
 			interactor->InvokeEvent(vtkCommand::LeftButtonPressEvent, nullptr);
 		}
@@ -175,6 +174,8 @@ void VtkViewer::render(const ImVec2 size){
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
 	ImGui::BeginChild("##Viewport", size, true, VtkViewer::NoScrollFlags());
 	ImGui::Image(reinterpret_cast<void*>(tex), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+	viewportScreenMin = ImGui::GetItemRectMin();
+	viewportScreenMax = ImGui::GetItemRectMax();
 	processEvents();
 	ImGui::EndChild();
 	ImGui::PopStyleVar();

@@ -280,11 +280,10 @@ void Editor::closeCurrentModel()
     m_moving_mode = false;
     m_show_mov_part = false;
     if (viewer != nullptr) {
-      viewer->resetInteractor();
+      viewer->restoreDefaultInteractorStyle();
       if (gizmo) {
         gizmo->Hide();
-        for (int i = 0; i < 3; ++i)
-          viewer->removeActor(gizmo->getActor(i));
+        gizmo->RemoveFromRenderer(viewer->getRenderer());
       }
     }
   }
@@ -353,6 +352,48 @@ bool Editor::createJobFromActiveModel(bool runJob)
     m_jobshowdlg.m_show = true;
   }
 
+  return true;
+}
+
+bool Editor::scalePartGeometry(Part* part, double factor)
+{
+  if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
+    cout << "Scale is only available for geometry parts." << endl;
+    return false;
+  }
+
+  if (factor <= 0.0) {
+    cout << "Scale factor must be greater than zero." << endl;
+    return false;
+  }
+
+  Geom* geom = part->getGeom();
+  if (!geom->Scale(factor)) {
+    return false;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr) {
+    visual->SetGeometry(geom);
+    visual->ReloadFromGeometry();
+  } else {
+    vtkOCCTGeom* newVisual = new vtkOCCTGeom();
+    newVisual->SetGeometry(geom);
+    newVisual->BuildVTKData();
+    getApp().registerGeometry(geom, newVisual);
+    getApp().registerPartVisual(part, newVisual);
+    if (viewer != nullptr && newVisual->actor != nullptr) {
+      viewer->addActor(newVisual->actor);
+    }
+  }
+
+  if (part->isMeshed()) {
+    getApp().removeGraphicMeshForPart(part);
+    part->deleteMesh();
+    cout << "Deleted mesh after scaling geometry because it became outdated." << endl;
+  }
+
+  getApp().Update();
   return true;
 }
 
@@ -1284,6 +1325,9 @@ void Editor::drawGui() {
         static bool show_rename_popup = false;
         static char new_name[128] = "";
         static int rename_part_index = -1;
+        static bool show_scale_popup = false;
+        static double scale_factor = 1.0;
+        static Part* scale_part = nullptr;
                 
         /////////////////////// PART TREE
         if (open_){ 
@@ -1372,12 +1416,12 @@ void Editor::drawGui() {
                 }
                 
                 if (mesh_actor != nullptr){
+                gizmo->SetDimension(m_model->getDimension());
                 gizmo->Show();
                 gizmo->SetTargetActor(mesh_actor);
+                gizmo->SetOriginPosition(0.0, 0.0, 0.0);
 
-                //gizmo->updateAxis(getApp().getVisualForPart(currentPart)->getPolydata());
-
-                for (int i=0;i<3;i++) viewer->addActor(gizmo->getActor(i));
+                gizmo->AddToRenderer(viewer->getRenderer());
                 
                 // The rest of your setup code remains the same
                 vtkSmartPointer<GizmoInteractorStyle> style = vtkSmartPointer<GizmoInteractorStyle>::New();
@@ -1387,7 +1431,8 @@ void Editor::drawGui() {
                 style->SetTargetActor(mesh_actor);
                 style->SetPart(m_model->getPart(i));
                 style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
-                style->SetGizmoAxes(gizmo->GetAxes());
+                style->SetGizmoAxes(gizmo->GetDragAxes());
+                style->SetPickAxes(gizmo->GetPickAxes());
                 style->SetTransformGizmo(gizmo);
 
                 //interactor->SetInteractorStyle(style);
@@ -1412,6 +1457,11 @@ void Editor::drawGui() {
               }
   
             }///// MESH MOVE
+              else if (m_model->getPart(i)->isGeom() && ImGui::MenuItem("Scale")) {
+                show_scale_popup = true;
+                scale_factor = 1.0;
+                scale_part = m_model->getPart(i);
+              }
                
               ImGui::EndPopup();
             }//PART CONTEXT MENU 
@@ -1495,6 +1545,34 @@ void Editor::drawGui() {
             if (ImGui::Button("Cancel", ImVec2(120, 0))) {
                 ImGui::CloseCurrentPopup();
                 rename_part_index = -1;
+            }
+            ImGui::EndPopup();
+        }
+
+        if (show_scale_popup) {
+            ImGui::OpenPopup("Scale Geometry");
+            show_scale_popup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Scale Geometry", NULL,
+                                   ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::InputDouble("Factor", &scale_factor, 0.0, 0.0, "%.6f");
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                bool close_popup = true;
+                if (scale_part != nullptr) {
+                    close_popup = scalePartGeometry(scale_part, scale_factor);
+                }
+                if (close_popup) {
+                    scale_part = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                scale_part = nullptr;
+                ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
         }
@@ -3172,10 +3250,10 @@ void Editor::processInput(GLFWwindow *window)
       if (m_moving_mode){
         m_moving_mode = false;
         m_show_mov_part = false;
-        viewer->resetInteractor();
+        viewer->restoreDefaultInteractorStyle();
         gizmo->Hide();
         cout << "MOVE OFF. Reset interactor."<<endl;
-        for (int i=0;i<3;i++) viewer->removeActor(gizmo->getActor(i));
+        gizmo->RemoveFromRenderer(viewer->getRenderer());
         
       }
     }   

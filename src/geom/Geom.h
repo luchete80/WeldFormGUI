@@ -35,6 +35,7 @@ public:
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
   
   void Move(const double &x, const double &y, const double &z);
+  bool Scale(const double &factor);
   
   void LoadCylinder(double radius, double height);
   

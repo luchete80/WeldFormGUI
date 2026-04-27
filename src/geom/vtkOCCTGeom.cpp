@@ -181,43 +181,48 @@ void vtkOCCTGeom::SetGeometry(Geom* g) {
   geom = g;
 }
 
-  void vtkOCCTGeom::BuildVTKData(/*double deflection = 0.01*/) {
+void vtkOCCTGeom::BuildVTKData(/*double deflection = 0.01*/) {
   double deflection = 0.01;
-    if (!geom) return;
+  if (!geom) return;
 
-    vtkSmartPointer<vtkPolyData> poly = ShapeToPolyData(geom->getShape(), deflection);
-    vtkNew<vtkPolyDataMapper> mapper;
-    mapper->SetInputData(poly);
+  LoadFromShape(geom->getShape(), deflection);
+}
 
-    actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
-  }
-  
-  
+void vtkOCCTGeom::ReloadFromGeometry(double deflection)
+{
+  if (!geom) return;
+  LoadFromShape(geom->getShape(), deflection);
+}
+
 void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
 {
     try {
-        // Convert OCC shape to VTK polydata
-        m_polydata = vtkSmartPointer<vtkPolyData>::New();
-        //vtkSmartPointer<vtkPolyData> polyData = ShapeToPolyData(shape, deflection);
-        m_polydata = ShapeToPolyData(shape, deflection);
-        m_polydata->Modified();
-
-        if (!m_polydata || m_polydata->GetNumberOfPoints() == 0) {
+        vtkSmartPointer<vtkPolyData> updatedPolyData = ShapeToPolyData(shape, deflection);
+        if (!updatedPolyData || updatedPolyData->GetNumberOfPoints() == 0) {
             std::cerr << "Error: Failed to create polyData from shape" << std::endl;
             return;
         }
 
-        // Create mapper and actor
-        m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        m_polydata = updatedPolyData;
+        m_polydata->Modified();
 
+        if (!m_mapper) {
+            m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        }
         m_mapper->SetInputData(m_polydata);
         m_mapper->SetScalarRange(m_polydata->GetScalarRange());
-    
-        actor = vtkSmartPointer<vtkActor>::New();
-        actor->SetMapper(m_mapper);
+
+        if (!actor) {
+            actor = vtkSmartPointer<vtkActor>::New();
+            actor->SetMapper(m_mapper);
+        } else if (actor->GetMapper() != m_mapper) {
+            actor->SetMapper(m_mapper);
+        }
+
+        actor->GetProperty()->SetRenderLinesAsTubes(false);
         actor->GetProperty()->SetOpacity(0.5);
         actor->GetProperty()->SetLineWidth(1.0);
+        actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
 
         const bool isLineShape =
             shape.ShapeType() == TopAbs_EDGE || shape.ShapeType() == TopAbs_WIRE;
@@ -231,6 +236,7 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
             actor->GetProperty()->SetColor(0.45, 0.45, 0.45);
         }
 
+        m_mapper->Update();
         actor->Modified();
 
     } catch (const Standard_Failure& e) {
