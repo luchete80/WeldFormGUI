@@ -7,7 +7,11 @@ using namespace std;
 Part::Part(int &id, Mesh *m)
 //:Entity(id),
 :m_msh(m){
-  
+  m_id = id;
+  m_geom = nullptr;
+  m_ismeshed = (m != nullptr);
+  m_isgeom = false;
+  m_type = Elastic;
   }
 
 Part::Part(int &id)
@@ -18,18 +22,23 @@ Part::Part(int &id)
 Part::Part(Mesh *mesh):
 m_msh(mesh){
   m_id = -1;
+  m_geom = nullptr;
   if (mesh==nullptr){
     cout << "ERROR, NULL mesh pointer"<<endl;
   }
-  m_ismeshed = true;
+  m_ismeshed = (mesh != nullptr);
+  m_isgeom = false;
+  m_type = Elastic;
   
 }
 
 Part::Part(Geom* geom){
+  m_id = -1;
+  m_msh = nullptr;
   m_ismeshed = false;
-  
-  m_isgeom = true;
+  m_isgeom = (geom != nullptr);
   m_geom = geom;
+  m_type = Elastic;
 }
 
 void Part::generateMesh(){

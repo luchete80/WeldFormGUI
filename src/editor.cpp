@@ -274,6 +274,33 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   return true;
 }
 
+bool Editor::importMeshPartFromPath(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
+  fs::path mesh_path(filePathName);
+  std::string ext = mesh_path.extension().string();
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+    return static_cast<char>(std::tolower(c));
+  });
+
+  if (ext != ".bdf") {
+    cout << "Unsupported orphan mesh format: " << filePathName << endl;
+    return false;
+  }
+
+  Part* part = new Part();
+  part->generateMeshFromNastranFile(filePathName);
+  part->setName(mesh_path.stem().string().c_str());
+  part->setId(m_model->getPartCount());
+  m_model->addPart(part);
+
+  getApp().setActiveModel(m_model);
+  getApp().Update();
+  return true;
+}
+
 void Editor::closeCurrentModel()
 {
   if (m_moving_mode) {
@@ -928,6 +955,9 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Import", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
     }
+    if (ImGui::MenuItem("Import Mesh", "Ctrl+M")){
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
+    }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".json,.vtk", ".");
     }
@@ -1317,7 +1347,9 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("New Geometry...", "CTRL+Z")) {
             m_showNewDomain = true;
           }
-          if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
+          if (ImGui::MenuItem("New Mesh from file", "CTRL+Z")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
+          }
           ImGui::EndPopup();          
         }
         
@@ -1379,7 +1411,9 @@ void Editor::drawGui() {
               else if (ImGui::MenuItem("Move"/*, "CTRL+Z"*/)){
                 
                               
-                vtkSmartPointer<vtkActor> mesh_actor; 
+                vtkSmartPointer<vtkActor> move_actor;
+                vtkSmartPointer<vtkPolyData> move_polydata;
+                GraphicMesh* graphicMesh = nullptr;
                 
 
                 //~ ///// IF MOVING BY MESH. THIS WORKS OK
@@ -1400,25 +1434,23 @@ void Editor::drawGui() {
                 
                 
                 ////// IF MOVING BY GEOM, DOES NOT WORK
-                Part* currentPart = m_model->getPart(i);              
+                Part* currentPart = m_model->getPart(i);
                 cout << "Looking for visual for part: " << currentPart << endl;
-                // Buscar por PARTE directamente
                 vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
-                if (getApp().hasVisualForPart(currentPart)) {//search for vtkOCCTgeom
-                    
-                    mesh_actor = visual->actor;
-                    //~ cout << "Visual Geom OCCTVTK: " << visual << " actor assigned to be moved. Actor: " << mesh_actor<<endl;
-                    //~ std::cout << "Mapper class: " << mesh_actor->GetMapper()->GetClassName() << std::endl;
-                    //~ std::cout << "Input class: " << mesh_actor->GetMapper()->GetInputDataObject(0, 0)->GetClassName() << std::endl;
-
-                } else {
-                    cout << "No visual found for part: " << currentPart << endl;
+                if (visual && visual->actor) {
+                    move_actor = visual->actor;
+                    move_polydata = visual->getPolydata();
                 }
-                
-                if (mesh_actor != nullptr){
+
+                graphicMesh = getApp().getGraphicMeshFromPart(currentPart);
+                if (!move_actor && graphicMesh) {
+                    move_actor = graphicMesh->getActor();
+                }
+
+                if (move_actor != nullptr){
                 gizmo->SetDimension(m_model->getDimension());
                 gizmo->Show();
-                gizmo->SetTargetActor(mesh_actor);
+                gizmo->SetTargetActor(move_actor);
                 gizmo->SetOriginPosition(0.0, 0.0, 0.0);
 
                 gizmo->AddToRenderer(viewer->getRenderer());
@@ -1428,9 +1460,10 @@ void Editor::drawGui() {
                 style->SetDefaultRenderer(viewer->getRenderer());
                 style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
 
-                style->SetTargetActor(mesh_actor);
+                style->SetTargetActor(move_actor);
                 style->SetPart(m_model->getPart(i));
-                style->SetPolyData(getApp().getVisualForPart(currentPart)->getPolydata());
+                style->SetPolyData(move_polydata);
+                style->SetGraphicMesh(graphicMesh);
                 style->SetGizmoAxes(gizmo->GetDragAxes());
                 style->SetPickAxes(gizmo->GetPickAxes());
                 style->SetTransformGizmo(gizmo);
@@ -1451,9 +1484,9 @@ void Editor::drawGui() {
                 
                 selected_prt = currentPart;
               
-              }else{ //NO mesh_actor
+              }else{
                 
-                cout << "ERROR. No geometry part actor"<<endl;
+                cout << "ERROR. No actor found for part move"<<endl;
               }
   
             }///// MESH MOVE
@@ -2337,8 +2370,18 @@ void Editor::drawGui() {
     
     // close
     ImGuiFileDialog::Instance()->Close();
-  }
+  }  
 
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgImportMesh"))
+  {
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      importMeshPartFromPath(filePathName);
+    }
+    ImGuiFileDialog::Instance()->Close();
+  }
+  
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenRes")) 
   {

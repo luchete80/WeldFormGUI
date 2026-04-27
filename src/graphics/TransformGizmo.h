@@ -23,6 +23,7 @@
 #include <vtkTransformFilter.h>
 
 #include "../geom/Geom.h"
+#include "../graphicmesh/GraphicMesh.h"
 #include "../model/Part.h"
 
 class TransformGizmo : public vtkObject {
@@ -340,6 +341,10 @@ public:
         this->m_part = pt;
     }
 
+    void SetGraphicMesh(GraphicMesh* gmesh) {
+        this->m_graphicMesh = gmesh;
+    }
+
     void SetGizmoAxes(std::array<vtkSmartPointer<vtkActor>, 3> axes) {
         this->Axes = axes;
     }
@@ -419,23 +424,28 @@ public:
                 directions[SelectedAxis][2] * dot
             };
 
-            vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-            transform->Translate(translate);
-
-            vtkNew<vtkTransformFilter> tf;
             if (m_polydata) {
+                vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+                transform->Translate(translate);
+
+                vtkNew<vtkTransformFilter> tf;
                 tf->SetInputData(m_polydata);
                 tf->SetTransform(transform);
                 tf->Update();
                 m_polydata->ShallowCopy(tf->GetOutput());
+            }
 
-                if (m_part && m_part->getGeom()) {
-                    m_part->getGeom()->Move(translate[0], translate[1], translate[2]);
-                    if (Gizmo) {
-                        Gizmo->UpdatePlacementFromTargetActor();
-                        Gizmo->SetOriginPosition(0.0, 0.0, 0.0);
-                    }
-                }
+            if (m_part && m_part->getGeom()) {
+                m_part->getGeom()->Move(translate[0], translate[1], translate[2]);
+            }
+
+            if (m_graphicMesh) {
+                m_graphicMesh->Translate(translate[0], translate[1], translate[2]);
+            }
+
+            if (Gizmo) {
+                Gizmo->UpdatePlacementFromTargetActor();
+                Gizmo->SetOriginPosition(0.0, 0.0, 0.0);
             }
 
             this->ClickPos[0] = currPos[0];
@@ -516,6 +526,7 @@ private:
 private:
     vtkSmartPointer<vtkPolyData> m_polydata;
     Part* m_part = nullptr;
+    GraphicMesh* m_graphicMesh = nullptr;
     vtkSmartPointer<vtkActor> TargetActor;
     std::array<vtkSmartPointer<vtkActor>, 3> Axes;
     std::array<vtkSmartPointer<vtkActor>, 3> PickAxes;

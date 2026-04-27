@@ -78,6 +78,7 @@ public:
     Vector3f GetPosition() const;
     
     void SetPosition(const Vector3f& position);
+    void Translate(double dx, double dy, double dz);
     
 protected:
   bool                  m_needs_polydata;

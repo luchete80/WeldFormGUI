@@ -635,4 +635,29 @@ GraphicSPHMesh::GraphicSPHMesh()
             mesh_actor->SetUserTransform(m_transform);
         }
         UpdateMeshPosition();
-    } 
+    }
+
+    void GraphicMesh::Translate(double dx, double dy, double dz) {
+        if (!m_mesh) return;
+
+        for (int i = 0; i < m_mesh->getNodeCount(); ++i) {
+            Node* node = m_mesh->getNode(i);
+            if (!node) continue;
+            node->translate(dx, dy, dz);
+
+            if (points) {
+                const Vector3f& pos = node->getPos();
+                points->SetPoint(i, pos[0], pos[1], pos[2]);
+            }
+        }
+
+        if (points) {
+            points->Modified();
+        }
+        if (mesh_pdata) {
+            mesh_pdata->Modified();
+        }
+        if (mesh_actor) {
+            mesh_actor->Modified();
+        }
+    }

@@ -74,5 +74,6 @@ void Axis::setInteractor(vtkSmartPointer <vtkRenderWindowInteractor> rwi){
 widget->SetInteractor(rwi);
 widget->SetViewport(0.0, 0.0, 0.4, 0.4);
 widget->SetEnabled(1);
-widget->InteractiveOn();
+widget->InteractiveOff();
+actor->PickableOff();
 }

@@ -188,3 +188,6 @@
          - Added 2D Plain Strain Model
          - Corrected STEP writing when importing. 
          - FIXED PART POSITIONING AT MODEL OPEN (ORIGIN WAS MISSING) 
+         - Added Import Mesh in File Dialog.
+         - Make orientation gizmo no selectable.
+         

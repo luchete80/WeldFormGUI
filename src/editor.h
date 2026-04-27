@@ -119,6 +119,7 @@ public:
   void drawGui();
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   bool openModelFromPath(const std::string& filePathName);
+  bool importMeshPartFromPath(const std::string& filePathName);
   bool createJobFromActiveModel(bool runJob = false);
   bool openResultsFromPath(const std::string& filePathName);
   bool openResultsForModel();

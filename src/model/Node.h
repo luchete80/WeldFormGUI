@@ -20,6 +20,9 @@ public:
   }  
   const Vector3f & getPos()const {return m_pos;}
   const double & getPos(int i)const {return m_pos[i];}
+  void setPos(const Vector3f& pos){m_pos = pos;}
+  void setPos(const double &x, const double &y, const double &z = 0){m_pos = Vector3f(x,y,z);}
+  void translate(const double &dx, const double &dy, const double &dz){m_pos += Vector3f(dx,dy,dz);}
 
   //const int & getId()const{return m_id;}
 
