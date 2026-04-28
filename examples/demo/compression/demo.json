@@ -6,7 +6,7 @@
             "type": "VelocityBC",
             "value": [
                 0.0,
-                -0.00120,
+                -0.0012,
                 0.0
             ]
         }
@@ -21,13 +21,13 @@
     },
     "Contact": [
         {
-            "fricCoeffStatic": 0.3,
+            "fricCoeffStatic": 0.2,
             "gapPenaltyScale": 2.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 10.0,
+            "penaltyFactor": 30.0,
             "useGapPenalty": true
         }
     ],
@@ -88,12 +88,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "compression_part_0.step"
+                    "source": "demo_part_0.step"
                 },
                 "id": 0,
                 "isRigid": false,
                 "mesh": {
-                    "source": "compression_part_0.bdf"
+                    "source": "demo_part_0.bdf"
                 },
                 "name": ""
             },
@@ -104,12 +104,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "compression_part_1.step"
+                    "source": "demo_part_1.step"
                 },
                 "id": 1,
                 "isRigid": true,
                 "mesh": {
-                    "source": "compression_part_1.bdf"
+                    "source": "demo_part_1.bdf"
                 },
                 "name": ""
             },
@@ -120,12 +120,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "compression_part_2.step"
+                    "source": "demo_part_2.step"
                 },
                 "id": 2,
                 "isRigid": true,
                 "mesh": {
-                    "source": "compression_part_2.bdf"
+                    "source": "demo_part_2.bdf"
                 },
                 "name": ""
             }

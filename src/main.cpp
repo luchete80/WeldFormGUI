@@ -248,9 +248,11 @@ int main(int argc, char* argv[])
 
   Axis axis;  
   axis.setInteractor(vtkViewer2.getInteractor(), vtkViewer2.getRenderer());  
+  Axis axis_res;
 
   vtkViewer_res.getRenderer()->SetBackground(0.2,0.2,0.4);
   vtkViewer_res.getRenderer()->SetBackground2(0.8,0.8,0.8);
+  axis_res.setInteractor(vtkViewer_res.getInteractor(), vtkViewer_res.getRenderer());
 
   //vtkViewer2.addActor(actor);
 
