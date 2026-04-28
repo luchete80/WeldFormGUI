@@ -1,0 +1,93 @@
+{
+    "BoundaryConditions": [
+        {
+            "value": [
+                0.0,
+                -1.0,
+                0.0
+            ],
+            "valueType": 0,
+            "zoneId": 2
+        }
+    ],
+    "Configuration": {
+        "cflFactor": 0.3,
+        "domType": "AxiSymm",
+        "fixedTS": false,
+        "outTime": 0.0001,
+        "simTime": 0.01,
+        "solver": "WeldForm"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.3,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 10.0,
+            "useGapPenalty": true
+        }
+    ],
+    "DomainBlocks": [
+        {
+            "fileName": "demo_part_0.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "Materials": [
+        {
+            "const": [
+                387000000.0,
+                0.154
+            ],
+            "density0": 785000.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "thermalCond": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "youngsModulus": 210000000000.0
+        }
+    ],
+    "RigidBodies": [
+        {
+            "fileName": "demo_part_1.bdf",
+            "orientNormals": true,
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 1
+        },
+        {
+            "fileName": "demo_part_2.bdf",
+            "orientNormals": true,
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 2
+        }
+    ]
+}

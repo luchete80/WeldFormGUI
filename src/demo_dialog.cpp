@@ -100,8 +100,11 @@ void DemoDialog::Draw(const char* title, bool* p_open) {
         return;
 
     ImGui::SetNextWindowSize(ImVec2(650, 420), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                            ImGuiCond_Appearing,
+                            ImVec2(0.5f, 0.5f));
 
-    if (!ImGui::Begin(title, p_open)) {
+    if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_NoSavedSettings)) {
         ImGui::End();
         return;
     }
