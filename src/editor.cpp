@@ -379,7 +379,7 @@ bool Editor::createJobFromActiveModel(bool runJob)
     return false;
   }
 
-  fs::path input_path = activeModelOutputPath(model, activeModelStem(model) + "_run.json");
+  fs::path input_path = activeModelOutputPath(model, activeModelStem(model) + ".wfinput");
   InputWriter writer(&model);
   writer.writeToFile(input_path.string());
 
@@ -1403,7 +1403,7 @@ void ShowExampleMenuFile(const Editor &editor)
       InputWriter writer( &getApp().getActiveModel() );
       if ( (getApp().getActiveModel().getHasName()) ) {
         fs::path input_path = activeModelOutputPath(getApp().getActiveModel(),
-                                                    activeModelStem(getApp().getActiveModel()) + "_run.json");
+                                                    activeModelStem(getApp().getActiveModel()) + ".wfinput");
         //writer.writeToFile("Input.json");
         writer.writeToFile(input_path.string());
       }
