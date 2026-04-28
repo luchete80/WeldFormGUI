@@ -60,6 +60,16 @@
 
 //#include "graphics/ModelGizmo.h"
 
+#include <vtkArrowSource.h>
+#include <vtkBillboardTextActor3D.h>
+#include <vtkCenterOfMass.h>
+#include <vtkMapper.h>
+#include <vtkMath.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
+#include <vtkTextProperty.h>
+
 
 //~ #include <GModel.h>
 //~ #include <GModelIO_OCC.h>
@@ -303,6 +313,9 @@ bool Editor::importMeshPartFromPath(const std::string& filePathName)
 
 void Editor::closeCurrentModel()
 {
+  clearBoundaryConditionOverlay();
+  clearPartOverlay();
+
   if (m_moving_mode) {
     m_moving_mode = false;
     m_show_mov_part = false;
@@ -321,6 +334,7 @@ void Editor::closeCurrentModel()
   }
 
   selected_prt = nullptr;
+  highlighted_prt = nullptr;
   selected_mod = nullptr;
   selected_step = nullptr;
   selected_bc = nullptr;
@@ -512,6 +526,408 @@ bool Editor::refreshOpenResults()
   m_activate_results_viewer = true;
   getApp().Update();
   return true;
+}
+
+void Editor::applyPartTranslation(Part* part, double dx, double dy, double dz)
+{
+  if (part == nullptr) {
+    return;
+  }
+
+  if (std::abs(dx) <= 1.0e-12 && std::abs(dy) <= 1.0e-12 && std::abs(dz) <= 1.0e-12) {
+    return;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr && visual->getPolydata() != nullptr) {
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Translate(dx, dy, dz);
+
+    vtkNew<vtkTransformFilter> tf;
+    tf->SetInputData(visual->getPolydata());
+    tf->SetTransform(transform);
+    tf->Update();
+    visual->getPolydata()->ShallowCopy(tf->GetOutput());
+  }
+
+  if (part->getGeom() != nullptr) {
+    part->getGeom()->Move(dx, dy, dz);
+  }
+
+  GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
+  if (graphicMesh != nullptr) {
+    graphicMesh->Translate(dx, dy, dz);
+  }
+
+  if (gizmo != nullptr && selected_prt == part) {
+    vtkSmartPointer<vtkActor> targetActor = nullptr;
+    if (visual != nullptr && visual->actor != nullptr) {
+      targetActor = visual->actor;
+    } else if (graphicMesh != nullptr) {
+      targetActor = graphicMesh->getActor();
+    }
+    if (targetActor != nullptr) {
+      gizmo->SetTargetActor(targetActor);
+      gizmo->SetOriginPosition(0.0, 0.0, 0.0);
+    }
+  }
+}
+
+bool Editor::getPartVisualCenter(Part* part, double center[3]) const
+{
+  if (part == nullptr || center == nullptr) {
+    return false;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr && visual->actor != nullptr) {
+    double bounds[6];
+    visual->actor->GetBounds(bounds);
+    center[0] = 0.5 * (bounds[0] + bounds[1]);
+    center[1] = 0.5 * (bounds[2] + bounds[3]);
+    center[2] = 0.5 * (bounds[4] + bounds[5]);
+    return true;
+  }
+
+  GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
+  if (graphicMesh != nullptr && graphicMesh->getActor() != nullptr) {
+    double bounds[6];
+    graphicMesh->getActor()->GetBounds(bounds);
+    center[0] = 0.5 * (bounds[0] + bounds[1]);
+    center[1] = 0.5 * (bounds[2] + bounds[3]);
+    center[2] = 0.5 * (bounds[4] + bounds[5]);
+    return true;
+  }
+
+  return false;
+}
+
+void Editor::updateMovePartOffsetFromCurrentState()
+{
+  if (!m_moving_mode || selected_prt == nullptr) {
+    return;
+  }
+
+  double currentCenter[3];
+  if (!getPartVisualCenter(selected_prt, currentCenter)) {
+    return;
+  }
+
+  m_move_part_offset[0] = currentCenter[0] - m_move_part_initial_center[0];
+  m_move_part_offset[1] = currentCenter[1] - m_move_part_initial_center[1];
+  m_move_part_offset[2] = currentCenter[2] - m_move_part_initial_center[2];
+}
+
+void Editor::resetCurrentPartTransform()
+{
+  if (selected_prt == nullptr) {
+    return;
+  }
+
+  updateMovePartOffsetFromCurrentState();
+  applyPartTranslation(selected_prt, -m_move_part_offset[0], -m_move_part_offset[1], -m_move_part_offset[2]);
+  m_move_part_offset[0] = 0.0;
+  m_move_part_offset[1] = 0.0;
+  m_move_part_offset[2] = 0.0;
+}
+
+void Editor::clearBoundaryConditionOverlay()
+{
+  if (viewer == nullptr || viewer->getRenderer() == nullptr) {
+    m_bc_overlay_actors.clear();
+    return;
+  }
+
+  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+  for (std::size_t i = 0; i < m_bc_overlay_actors.size(); ++i) {
+    vtkSmartPointer<vtkProp> actor = m_bc_overlay_actors[i];
+    if (actor != nullptr && renderer->HasViewProp(actor)) {
+      renderer->RemoveViewProp(actor);
+    }
+  }
+  m_bc_overlay_actors.clear();
+}
+
+void Editor::clearPartOverlay()
+{
+  if (viewer == nullptr || viewer->getRenderer() == nullptr) {
+    m_part_overlay_actors.clear();
+    return;
+  }
+
+  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+  for (std::size_t i = 0; i < m_part_overlay_actors.size(); ++i) {
+    vtkSmartPointer<vtkProp> actor = m_part_overlay_actors[i];
+    if (actor != nullptr && renderer->HasViewProp(actor)) {
+      renderer->RemoveViewProp(actor);
+    }
+  }
+  m_part_overlay_actors.clear();
+}
+
+Part* Editor::findBoundaryConditionTargetPart(const Condition* condition) const
+{
+  if (condition == nullptr || m_model == nullptr) {
+    return nullptr;
+  }
+
+  const int targetId = condition->getTargetId();
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part != nullptr && part->getId() == targetId) {
+      return part;
+    }
+  }
+
+  if (targetId >= 0 && targetId < m_model->getPartCount()) {
+    return m_model->getPart(targetId);
+  }
+
+  return nullptr;
+}
+
+vtkSmartPointer<vtkPolyData> Editor::getBoundaryConditionTargetPolyData(Part* part) const
+{
+  if (part == nullptr) {
+    return nullptr;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr && visual->getPolydata() != nullptr) {
+    return visual->getPolydata();
+  }
+
+  GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
+  if (graphicMesh != nullptr) {
+    vtkSmartPointer<vtkActor> actor = graphicMesh->getActor();
+    if (actor != nullptr && actor->GetMapper() != nullptr) {
+      return vtkPolyData::SafeDownCast(actor->GetMapper()->GetInput());
+    }
+  }
+
+  return nullptr;
+}
+
+vtkSmartPointer<vtkActor> Editor::getPartVisualActor(Part* part) const
+{
+  if (part == nullptr) {
+    return nullptr;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr && visual->actor != nullptr) {
+    return visual->actor;
+  }
+
+  GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
+  if (graphicMesh != nullptr) {
+    return graphicMesh->getActor();
+  }
+
+  return nullptr;
+}
+
+void Editor::updateBoundaryConditionOverlay()
+{
+  clearBoundaryConditionOverlay();
+
+  if (viewer == nullptr || viewer->getRenderer() == nullptr || m_model == nullptr) {
+    return;
+  }
+
+  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+
+  for (int i = 0; i < m_model->getBCCount(); ++i) {
+    Condition* condition = m_model->getBC(i);
+    if (condition == nullptr) {
+      continue;
+    }
+
+    Part* targetPart = findBoundaryConditionTargetPart(condition);
+    vtkSmartPointer<vtkPolyData> targetPolyData = getBoundaryConditionTargetPolyData(targetPart);
+    if (targetPart == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+      continue;
+    }
+
+    double3 velocity = condition->getValue();
+    const double velocityMagnitude = length(velocity);
+    double bounds[6];
+    targetPolyData->GetBounds(bounds);
+
+    const double dx = bounds[1] - bounds[0];
+    const double dy = bounds[3] - bounds[2];
+    const double dz = bounds[5] - bounds[4];
+    double arrowLength = std::max(dx, std::max(dy, dz)) * 0.35;
+    if (arrowLength <= 1.0e-12) {
+      arrowLength = std::sqrt(dx * dx + dy * dy + dz * dz) * 0.35;
+    }
+    if (arrowLength <= 1.0e-12) {
+      arrowLength = 1.0;
+    }
+
+    vtkNew<vtkCenterOfMass> centerOfMass;
+    centerOfMass->SetInputData(targetPolyData);
+    centerOfMass->SetUseScalarsAsWeights(false);
+    centerOfMass->Update();
+    double center[3];
+    centerOfMass->GetCenter(center);
+
+    if (velocityMagnitude > 1.0e-12) {
+
+      double direction[3] = {velocity.x, velocity.y, velocity.z};
+      vtkMath::Normalize(direction);
+
+      vtkNew<vtkArrowSource> arrowSource;
+      arrowSource->SetTipLength(0.33);
+      arrowSource->SetTipRadius(0.20);
+      arrowSource->SetShaftRadius(0.09);
+      arrowSource->SetTipResolution(24);
+      arrowSource->SetShaftResolution(24);
+
+      vtkNew<vtkPolyDataMapper> arrowMapper;
+      arrowMapper->SetInputConnection(arrowSource->GetOutputPort());
+
+      vtkSmartPointer<vtkActor> arrowActor = vtkSmartPointer<vtkActor>::New();
+      arrowActor->SetMapper(arrowMapper);
+
+      const double thickness = std::max(arrowLength * 0.18, 1.0e-3);
+      arrowActor->SetScale(arrowLength, thickness, thickness);
+      arrowActor->SetPosition(center[0] - 0.5 * arrowLength * direction[0],
+                              center[1] - 0.5 * arrowLength * direction[1],
+                              center[2] - 0.5 * arrowLength * direction[2]);
+
+      const double xAxis[3] = {1.0, 0.0, 0.0};
+      double rotationAxis[3];
+      vtkMath::Cross(xAxis, direction, rotationAxis);
+      const double dotValue = std::max(-1.0, std::min(1.0, vtkMath::Dot(xAxis, direction)));
+      const double axisNorm = vtkMath::Norm(rotationAxis);
+      if (axisNorm > 1.0e-12) {
+        vtkMath::Normalize(rotationAxis);
+        arrowActor->RotateWXYZ(vtkMath::DegreesFromRadians(std::acos(dotValue)),
+                               rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+      } else if (dotValue < 0.0) {
+        arrowActor->RotateWXYZ(180.0, 0.0, 1.0, 0.0);
+      }
+
+      arrowActor->PickableOff();
+      arrowActor->GetProperty()->SetColor(0.95, 0.35, 0.1);
+      arrowActor->GetProperty()->SetAmbient(1.0);
+      arrowActor->GetProperty()->SetDiffuse(0.0);
+      renderer->AddActor(arrowActor);
+      m_bc_overlay_actors.push_back(arrowActor);
+    }
+
+    if (selected_bc == condition || hovered_bc == condition) {
+      vtkNew<vtkPolyDataMapper> surfaceMapper;
+      surfaceMapper->SetInputData(targetPolyData);
+
+      vtkSmartPointer<vtkActor> surfaceActor = vtkSmartPointer<vtkActor>::New();
+      surfaceActor->SetMapper(surfaceMapper);
+      surfaceActor->PickableOff();
+      surfaceActor->GetProperty()->SetColor(1.0, 0.95, 0.1);
+      surfaceActor->GetProperty()->SetOpacity(0.22);
+      surfaceActor->GetProperty()->LightingOff();
+      renderer->AddActor(surfaceActor);
+      m_bc_overlay_actors.push_back(surfaceActor);
+
+      vtkNew<vtkPolyDataMapper> edgeMapper;
+      edgeMapper->SetInputData(targetPolyData);
+
+      vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
+      edgeActor->SetMapper(edgeMapper);
+      edgeActor->PickableOff();
+      edgeActor->GetProperty()->SetColor(1.0, 0.95, 0.1);
+      edgeActor->GetProperty()->SetOpacity(1.0);
+      edgeActor->GetProperty()->SetLineWidth(5.0);
+      edgeActor->GetProperty()->SetRepresentationToWireframe();
+      edgeActor->GetProperty()->LightingOff();
+      edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
+      edgeActor->GetProperty()->RenderPointsAsSpheresOn();
+      edgeActor->GetProperty()->SetPointSize(9.0);
+      renderer->AddActor(edgeActor);
+      m_bc_overlay_actors.push_back(edgeActor);
+
+      if (selected_bc == condition) {
+        std::ostringstream label;
+        label << "v = ("
+              << to_string_with_precision(velocity.x, 3) << ", "
+              << to_string_with_precision(velocity.y, 3) << ", "
+              << to_string_with_precision(velocity.z, 3) << ")";
+
+        vtkSmartPointer<vtkBillboardTextActor3D> textActor =
+            vtkSmartPointer<vtkBillboardTextActor3D>::New();
+        textActor->SetInput(label.str().c_str());
+        textActor->SetPosition(center[0], center[1], center[2] + arrowLength * 0.20);
+        textActor->PickableOff();
+        textActor->GetTextProperty()->SetFontSize(18);
+        textActor->GetTextProperty()->SetColor(1.0, 0.95, 0.1);
+        textActor->GetTextProperty()->SetBold(true);
+        textActor->GetTextProperty()->SetBackgroundColor(0.0, 0.0, 0.0);
+        textActor->GetTextProperty()->SetBackgroundOpacity(0.45);
+        renderer->AddActor(textActor);
+        m_bc_overlay_actors.push_back(textActor);
+      }
+    }
+  }
+}
+
+void Editor::updatePartOverlay()
+{
+  clearPartOverlay();
+
+  if (viewer == nullptr || viewer->getRenderer() == nullptr || highlighted_prt == nullptr) {
+    return;
+  }
+
+  vtkSmartPointer<vtkActor> sourceActor = getPartVisualActor(highlighted_prt);
+  vtkSmartPointer<vtkPolyData> targetPolyData = getBoundaryConditionTargetPolyData(highlighted_prt);
+  if (sourceActor == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+    return;
+  }
+
+  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+  const bool hasFaces = targetPolyData->GetNumberOfPolys() > 0;
+  const bool hasLines = targetPolyData->GetNumberOfLines() > 0;
+  const bool hasVerts = targetPolyData->GetNumberOfVerts() > 0;
+
+  if (hasFaces) {
+    vtkNew<vtkPolyDataMapper> surfaceMapper;
+    surfaceMapper->SetInputData(targetPolyData);
+
+    vtkSmartPointer<vtkActor> surfaceActor = vtkSmartPointer<vtkActor>::New();
+    surfaceActor->SetMapper(surfaceMapper);
+    surfaceActor->PickableOff();
+    surfaceActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
+    surfaceActor->GetProperty()->SetOpacity(0.18);
+    surfaceActor->GetProperty()->LightingOff();
+    renderer->AddActor(surfaceActor);
+    m_part_overlay_actors.push_back(surfaceActor);
+  }
+
+  vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
+  edgeActor->SetMapper(sourceActor->GetMapper());
+  edgeActor->SetUserTransform(sourceActor->GetUserTransform());
+  if (sourceActor->GetTexture() != nullptr) {
+    edgeActor->SetTexture(sourceActor->GetTexture());
+  }
+  vtkSmartPointer<vtkProperty> overlayProperty = vtkSmartPointer<vtkProperty>::New();
+  overlayProperty->DeepCopy(sourceActor->GetProperty());
+  edgeActor->SetProperty(overlayProperty);
+  edgeActor->PickableOff();
+  edgeActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
+  edgeActor->GetProperty()->SetOpacity(1.0);
+  edgeActor->GetProperty()->LightingOff();
+  edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
+  edgeActor->GetProperty()->RenderPointsAsSpheresOn();
+  edgeActor->GetProperty()->SetLineWidth((hasLines || hasVerts) ? 8.0 : 4.0);
+  edgeActor->GetProperty()->SetPointSize((hasLines || hasVerts) ? 11.0 : 8.0);
+  if (hasFaces) {
+    edgeActor->GetProperty()->SetRepresentationToWireframe();
+  } else {
+    edgeActor->GetProperty()->SetRepresentation(sourceActor->GetProperty()->GetRepresentation());
+  }
+  renderer->AddActor(edgeActor);
+  m_part_overlay_actors.push_back(edgeActor);
 }
 
 bool Editor::consumeResultsViewerActivationRequest()
@@ -1133,6 +1549,10 @@ void ShowExampleMenuFile(const Editor &editor)
 }
 
 void Editor::drawGui() { 
+  hovered_bc = nullptr;
+  hovered_prt = nullptr;
+  bool model_tree_item_clicked = false;
+  bool model_tree_part_clicked = false;
 
   ImGui::Begin("Hello, world!"); 
   // Menu Bar
@@ -1299,9 +1719,12 @@ void Editor::drawGui() {
        m_model->getBCCount() > 0 ||
        m_model->getICCount() > 0);
 
-    if (ImGui::TreeNode("Models"))
-    {
-      if (ImGui::BeginPopupContextItem())
+	    if (ImGui::TreeNode("Models"))
+	    {
+	      if (ImGui::IsItemClicked()) {
+	        model_tree_item_clicked = true;
+	      }
+	      if (ImGui::BeginPopupContextItem())
       {
         if (!has_loaded_model && ImGui::MenuItem("New Model")) {
           selected_mod = m_model;
@@ -1312,9 +1735,12 @@ void Editor::drawGui() {
       }
 
       if (has_loaded_model) {
-        std::string modelTreeLabel = "Model (" + des + ")";
-        bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
-        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+	        std::string modelTreeLabel = "Model (" + des + ")";
+	        bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
+	        if (ImGui::IsItemClicked()) {
+	          model_tree_item_clicked = true;
+	        }
+	        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
           m_show_mod_dlg_edit = true;
           selected_mod = m_model;
         }
@@ -1335,7 +1761,10 @@ void Editor::drawGui() {
         if (model_tree_open)
         {
         
-        bool open_ = ImGui::TreeNode("Parts");
+	        bool open_ = ImGui::TreeNode("Parts");
+	        if (ImGui::IsItemClicked()) {
+	          model_tree_item_clicked = true;
+	        }
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
@@ -1363,20 +1792,29 @@ void Editor::drawGui() {
                 
         /////////////////////// PART TREE
         if (open_){ 
-        for (int i = 0; i < m_model->getPartCount(); i++)
-        {
-          // Use SetNextItemOpen() so set the default state of a node to be open. We could
-          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-          if (i == 0)
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	        for (int i = 0; i < m_model->getPartCount(); i++)
+	        {
+	          Part* treePart = m_model->getPart(i);
+	          // Use SetNextItemOpen() so set the default state of a node to be open. We could
+	          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+	          if (i == 0)
+	            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
-          std::string des;
-          if (m_model->getPart(i)->getType() == Elastic) des = "Deformable";
-          else                                des = "Rigid";
-          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", m_model->getPart(i)->getId(), m_model->getPart(i)->getName(), des.c_str()))
-          {
-            //cout << "Model part count "<<m_model->getPartCount()<<endl;
-            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+	          std::string des;
+	          if (treePart->getType() == Elastic) des = "Deformable";
+	          else                                des = "Rigid";
+	          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", treePart->getId(), treePart->getName(), des.c_str()))
+	          {
+	            if (ImGui::IsItemHovered()) {
+	              hovered_prt = treePart;
+	            }
+	            if (ImGui::IsItemClicked()) {
+	              model_tree_item_clicked = true;
+	              model_tree_part_clicked = true;
+	              highlighted_prt = treePart;
+	            }
+	            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+	            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
               m_show_mat_dlg_edit = true;
               //selected_mat = m_mats[i];
               selected_mat = m_model->getMaterial(i);
@@ -1391,20 +1829,20 @@ void Editor::drawGui() {
               if (ImGui::MenuItem("Rename")) {
                   show_rename_popup = true;
                   rename_part_index = i;  // recordamos qué parte queremos renombrar
-                  strcpy(new_name, m_model->getPart(i)->getName());
+	                  strcpy(new_name, treePart->getName());
               }
               
 
           
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_prt_dlg_edit = true;
-                selected_prt = m_model->getPart(i);
+	                selected_prt = treePart;
               }
               else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
                 m_model->delPart(i);
                 getApp().Update(); //CRASHES
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
-                selected_prt = m_model->getPart(i);
+	                selected_prt = treePart;
                 m_show_msh_dlg = true;
               }/// "MESH" part
               
@@ -1434,7 +1872,7 @@ void Editor::drawGui() {
                 
                 
                 ////// IF MOVING BY GEOM, DOES NOT WORK
-                Part* currentPart = m_model->getPart(i);
+	                Part* currentPart = treePart;
                 cout << "Looking for visual for part: " << currentPart << endl;
                 vtkOCCTGeom* visual = getApp().getVisualForPart(currentPart);
                 if (visual && visual->actor) {
@@ -1461,7 +1899,7 @@ void Editor::drawGui() {
                 style->SetCurrentRenderer(viewer->getRenderer()); // Método adicional importante
 
                 style->SetTargetActor(move_actor);
-                style->SetPart(m_model->getPart(i));
+	                style->SetPart(treePart);
                 style->SetPolyData(move_polydata);
                 style->SetGraphicMesh(graphicMesh);
                 style->SetGizmoAxes(gizmo->GetDragAxes());
@@ -1473,6 +1911,9 @@ void Editor::drawGui() {
                 
                 m_moving_mode = true;
                 m_show_mov_part = true;
+                m_move_part_offset[0] = 0.0;
+                m_move_part_offset[1] = 0.0;
+                m_move_part_offset[2] = 0.0;
 
                 GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 
@@ -1483,6 +1924,7 @@ void Editor::drawGui() {
                 //ImGui_ImplGlfw_UpdateMouseCursor();
                 
                 selected_prt = currentPart;
+                getPartVisualCenter(selected_prt, m_move_part_initial_center);
               
               }else{
                 
@@ -1490,49 +1932,55 @@ void Editor::drawGui() {
               }
   
             }///// MESH MOVE
-              else if (m_model->getPart(i)->isGeom() && ImGui::MenuItem("Scale")) {
-                show_scale_popup = true;
-                scale_factor = 1.0;
-                scale_part = m_model->getPart(i);
+	              else if (treePart->isGeom() && ImGui::MenuItem("Scale")) {
+	                show_scale_popup = true;
+	                scale_factor = 1.0;
+	                scale_part = treePart;
               }
                
               ImGui::EndPopup();
             }//PART CONTEXT MENU 
                    
                                
-              ImGui::SameLine();
-              if (ImGui::SmallButton("edit")) {
-                m_show_prt_dlg_edit = true;
-                selected_prt = m_model->getPart(i);                  
-              }
+	              ImGui::SameLine();
+	              if (ImGui::SmallButton("edit")) {
+	                m_show_prt_dlg_edit = true;
+	                selected_prt = treePart;                  
+	              }
 
 
-            if (m_model->getPart(i)->isMeshed()){
-              if (ImGui::TreeNode("Mesh"))
-              {
-                  bool meshDeleted = false;
+	            if (treePart->isMeshed()){
+	              if (ImGui::TreeNode("Mesh"))
+	              {
+	                  if (ImGui::IsItemClicked()) {
+	                    model_tree_item_clicked = true;
+	                  }
+	                  bool meshDeleted = false;
                   if (ImGui::BeginPopupContextItem())
                   {
-                      if (ImGui::MenuItem("Delete")) {
-                        getApp().removeGraphicMeshForPart(m_model->getPart(i));
-                        m_model->getPart(i)->deleteMesh();
-                        meshDeleted = true;
+	                      if (ImGui::MenuItem("Delete")) {
+	                        getApp().removeGraphicMeshForPart(treePart);
+	                        treePart->deleteMesh();
+	                        meshDeleted = true;
                         
                       }
                       ImGui::EndPopup();
                   }
 
-                  if (meshDeleted || !m_model->getPart(i)->isMeshed() || m_model->getPart(i)->getMesh() == nullptr) {
-                      ImGui::TreePop();
-                      continue;
+	                  if (meshDeleted || !treePart->isMeshed() || treePart->getMesh() == nullptr) {
+	                      ImGui::TreePop();
+	                      continue;
                   }
 
                   // Subramas internas
-                  if (ImGui::TreeNode("Nodes"))
-                  {
-                      ImGui::Text("Count: %d", m_model->getPart(i)->getMesh()->getNodeCount());
-                      ImGui::TreePop();
-                  }
+	                  if (ImGui::TreeNode("Nodes"))
+	                  {
+	                      if (ImGui::IsItemClicked()) {
+	                        model_tree_item_clicked = true;
+	                      }
+	                      ImGui::Text("Count: %d", treePart->getMesh()->getNodeCount());
+	                      ImGui::TreePop();
+	                  }
 
                   //~ if (ImGui::TreeNode("Elements"))
                   //~ {
@@ -1547,10 +1995,16 @@ void Editor::drawGui() {
             }
 
               ImGui::TreePop();
-          }
-        }//FOR PART
-        
-        // --- Popup modal centrado (se dibuja después del loop, no dentro) ---
+	          } else if (ImGui::IsItemHovered()) {
+	            hovered_prt = treePart;
+	          } else if (ImGui::IsItemClicked()) {
+	            model_tree_item_clicked = true;
+	            model_tree_part_clicked = true;
+	            highlighted_prt = treePart;
+	          }
+	        }//FOR PART
+	        
+	        // --- Popup modal centrado (se dibuja después del loop, no dentro) ---
         if (show_rename_popup) {
             ImGui::OpenPopup("Rename Part");
             show_rename_popup = false;
@@ -1694,7 +2148,10 @@ void Editor::drawGui() {
           }
 
           //-----------------------------------------------------
-          open_ = ImGui::TreeNode("Initial Conditions");
+	          open_ = ImGui::TreeNode("Initial Conditions");
+	          if (ImGui::IsItemClicked()) {
+	            model_tree_item_clicked = true;
+	          }
           if (ImGui::BeginPopupContextItem())
           {
             if (ImGui::MenuItem("New", "CTRL+Z")) {}
@@ -1709,8 +2166,11 @@ void Editor::drawGui() {
               if (i == 0)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
-              if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
-              {
+	              if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
+	              {
+	                if (ImGui::IsItemClicked()) {
+	                  model_tree_item_clicked = true;
+	                }
                 if (ImGui::BeginPopupContextItem())
                 {
                   if (ImGui::MenuItem("Edit", "CTRL+Z")) {
@@ -1726,7 +2186,10 @@ void Editor::drawGui() {
           }
 
           //-----------------------------------------------------
-          open_ = ImGui::TreeNode("Boundary Conditions");
+	          open_ = ImGui::TreeNode("Boundary Conditions");
+	          if (ImGui::IsItemClicked()) {
+	            model_tree_item_clicked = true;
+	          }
           if (ImGui::BeginPopupContextItem())
           {
             if (ImGui::MenuItem("New", "CTRL+Z")) {}
@@ -1741,13 +2204,27 @@ void Editor::drawGui() {
               if (i == 0)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
-              if (ImGui::TreeNode((void*)(intptr_t)i, "Boundary Condition %d", i))
-              {
+              Condition* bc = m_model->getBC(i);
+              ImGuiTreeNodeFlags bc_flags = ImGuiTreeNodeFlags_OpenOnArrow |
+                                            ImGuiTreeNodeFlags_OpenOnDoubleClick;
+              if (selected_bc == bc) {
+                bc_flags |= ImGuiTreeNodeFlags_Selected;
+              }
+
+	              if (ImGui::TreeNodeEx((void*)(intptr_t)i, bc_flags, "Boundary Condition %d", i))
+	              {
+	                model_tree_item_clicked = model_tree_item_clicked || ImGui::IsItemClicked();
+	                if (ImGui::IsItemClicked()) {
+	                  selected_bc = bc;
+	                }
+                if (ImGui::IsItemHovered()) {
+                  hovered_bc = bc;
+                }
                 if (ImGui::BeginPopupContextItem())
                 {
                   if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                     m_show_bc_dlg_edit = true;
-                    selected_bc = m_model->getBC(i);
+                    selected_bc = bc;
                     m_create_bc = 0;
                   }
                   ImGui::EndPopup();
@@ -1755,13 +2232,21 @@ void Editor::drawGui() {
                   ImGui::SameLine();
                   if (ImGui::SmallButton("button")) {}
                   ImGui::TreePop();
-              }
+	              } else if (ImGui::IsItemClicked()) {
+	                model_tree_item_clicked = true;
+	                selected_bc = bc;
+	              } else if (ImGui::IsItemHovered()) {
+	                hovered_bc = bc;
+	              }
             }
              ImGui::TreePop();
           }
 
           //-----------------------------------------------------
-          open_ = ImGui::TreeNode("Steps");
+	          open_ = ImGui::TreeNode("Steps");
+	          if (ImGui::IsItemClicked()) {
+	            model_tree_item_clicked = true;
+	          }
           if (ImGui::BeginPopupContextItem())
           {
             if (ImGui::MenuItem("New", "CTRL+Z")) {
@@ -2395,6 +2880,22 @@ void Editor::drawGui() {
     // close
     ImGuiFileDialog::Instance()->Close();
   }  
+
+  if (selected_bc != nullptr &&
+      hovered_bc == nullptr &&
+      ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
+      ImGui::IsAnyItemHovered()) {
+    selected_bc = nullptr;
+  }
+
+  if (highlighted_prt != nullptr &&
+      ImGui::IsMouseClicked(0) &&
+      ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
+      ImGui::IsAnyItemHovered() &&
+      !model_tree_part_clicked &&
+      hovered_prt == nullptr) {
+    highlighted_prt = nullptr;
+  }
   
   ////// FILE SAVE
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgSave")) 
@@ -2463,47 +2964,25 @@ void Editor::drawGui() {
   create_new_set  = false;
   create_new_part = false;
 
-  static double position[3] = {0,0,0};
-  static double step = 0.1;
-  
   if (m_moving_mode) {
-    MoveCommand move = m_movprtdlg.Draw(step, position, &m_show_mov_part);
+    updateMovePartOffsetFromCurrentState();
+    MoveCommand move = m_movprtdlg.Draw(m_move_part_step, m_move_part_offset, &m_show_mov_part);
     
     bool auto_;
     double axis[3];
     
     if (move.active) {
-      
-      
-      cout << "Position "<<position[0]<<", "<<position[1]<<", "<<position[2]<<", "<<endl;
+      cout << "Position "<<m_move_part_offset[0]<<", "<<m_move_part_offset[1]
+           <<", "<<m_move_part_offset[2]<<", "<<endl;
 
-      vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-      //transform->Translate(position[0],position[1],position[2]);
-
-    transform->Translate(move.axis==0 ? move.delta : 0.0,
-                         move.axis==1 ? move.delta : 0.0,
-                         move.axis==2 ? move.delta : 0.0);
-                         
-      vtkNew<vtkTransformFilter> tf;
-      vtkPolyData *m_polydata = getApp().getVisualForPart(selected_prt)->getPolydata();
-
-      if (m_polydata){
-
-      //IF MOVE THE POLYDATA
-      tf->SetInputData(m_polydata);
-      tf->SetTransform(transform);
-      tf->Update();
-      m_polydata->ShallowCopy(tf->GetOutput());
-      
-      position[move.axis] += move.delta;
-      double move_[] = {0,0,0};
-      move_[move.axis] = move.delta;
-      selected_prt->getGeom()->Move(move_[0],move_[1],move_[2]);
-     } else {
-       
-       cout << "ERROR. No polydata on Geometry"<<endl;
-     }
-        
+      if (move.type == MoveCommandType::Reset) {
+        resetCurrentPartTransform();
+      } else if (move.type == MoveCommandType::Translate && selected_prt != nullptr) {
+        double move_vec[3] = {0.0, 0.0, 0.0};
+        move_vec[move.axis] = move.delta;
+        applyPartTranslation(selected_prt, move_vec[0], move_vec[1], move_vec[2]);
+        m_move_part_offset[move.axis] += move.delta;
+      }
     }
   }// if move active
 
@@ -2520,9 +2999,6 @@ void Editor::drawGui() {
       m_bcdlg.Draw("New Boundary Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewBoundary);
     if (m_create_bc == 2) 
       m_bcdlg.Draw("New Initial Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewInitial);    
-  } else {
-    //cout   
-    selected_bc = nullptr; //IS ALSO MODIDIED IN DIALOG
   }
   
   if (m_show_msh_dlg) {  
@@ -2623,6 +3099,8 @@ void Editor::drawGui() {
 
   drawResultsLoadProgress();
   advanceResultsLoad();
+  updatePartOverlay();
+  updateBoundaryConditionOverlay();
   
   ImGui::End();
 

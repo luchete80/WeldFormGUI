@@ -4,7 +4,9 @@
 #include "implot.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -44,11 +46,37 @@ bool TryParseDouble(const std::string& token, double& value) {
   char* end_ptr = nullptr;
   errno = 0;
   const double parsed = std::strtod(trimmed.c_str(), &end_ptr);
-  if (end_ptr == trimmed.c_str() || *end_ptr != '\0' || errno == ERANGE) {
+  if (end_ptr == trimmed.c_str() || *end_ptr != '\0') {
+    return false;
+  }
+
+  // Accept subnormal/underflowed values such as 2.4e-311, but still reject
+  // true overflow/non-finite results.
+  if (errno == ERANGE && !std::isfinite(parsed)) {
     return false;
   }
 
   value = parsed;
+  return true;
+}
+
+bool IsLoadSeriesColumn(const std::string& token) {
+  const std::string trimmed = Trim(token);
+  if (trimmed.size() < 2) {
+    return false;
+  }
+
+  const char first = static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[0])));
+  if (first != 'f') {
+    return false;
+  }
+
+  for (std::size_t i = 1; i < trimmed.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(trimmed[i]))) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -83,6 +111,7 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
   std::string line;
   bool header_processed = false;
   int line_number = 0;
+  std::vector<std::size_t> selected_series_columns;
 
   while (std::getline(file, line)) {
     ++line_number;
@@ -108,11 +137,19 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     if (!header_processed && !numeric_row) {
       m_x_label = tokens[0].empty() ? "Time" : tokens[0];
       for (std::size_t i = 1; i < tokens.size(); ++i) {
+        if (!IsLoadSeriesColumn(tokens[i])) {
+          continue;
+        }
+        selected_series_columns.push_back(i);
         if (tokens[i].empty()) {
-          m_series_names.push_back("Rigid Body " + std::to_string(i));
+          m_series_names.push_back("Load " + std::to_string(i));
         } else {
           m_series_names.push_back(tokens[i]);
         }
+      }
+      if (selected_series_columns.empty()) {
+        m_error_message = "No load columns matching f<number> were found in the header.";
+        return false;
       }
       header_processed = true;
       continue;
@@ -128,12 +165,21 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     if (!header_processed) {
       header_processed = true;
       m_series_names.resize(tokens.size() - 1);
+      selected_series_columns.resize(tokens.size() - 1);
       for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+        selected_series_columns[i] = i + 1;
         m_series_names[i] = "Rigid Body " + std::to_string(i + 1);
       }
     }
 
-    if (tokens.size() - 1 != m_series_names.size()) {
+    if (selected_series_columns.empty()) {
+      m_error_message = "No series columns selected for plotting.";
+      m_time_values.clear();
+      m_series_values.clear();
+      return false;
+    }
+
+    if (tokens.size() <= selected_series_columns.back()) {
       m_error_message = "Inconsistent column count in line " + std::to_string(line_number) + ".";
       m_time_values.clear();
       m_series_values.clear();
@@ -141,12 +187,12 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     }
 
     if (m_series_values.empty()) {
-      m_series_values.resize(m_series_names.size());
+      m_series_values.resize(selected_series_columns.size());
     }
 
     m_time_values.push_back(numeric_values[0]);
-    for (std::size_t i = 1; i < numeric_values.size(); ++i) {
-      m_series_values[i - 1].push_back(numeric_values[i]);
+    for (std::size_t i = 0; i < selected_series_columns.size(); ++i) {
+      m_series_values[i].push_back(numeric_values[selected_series_columns[i]]);
     }
   }
 

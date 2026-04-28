@@ -2,7 +2,14 @@
 #define _MOVE_PART_DIALOG_H_
 
 
+enum class MoveCommandType {
+    None,
+    Translate,
+    Reset
+};
+
 struct MoveCommand {
+    MoveCommandType type;
     int axis;      // 0=X, 1=Y, 2=Z
     double delta;  // movimiento
     bool active;   // true si hay acción

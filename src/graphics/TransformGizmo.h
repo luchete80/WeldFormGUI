@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include <vtkActor.h>
+#include <vtkArrowSource.h>
 #include <vtkCellPicker.h>
 #include <vtkCylinderSource.h>
 #include <vtkInteractorStyleTrackballCamera.h>
@@ -55,6 +56,8 @@ public:
 
         for (auto& actor : DragAxes)
             renderer->AddActor(actor);
+        for (auto& actor : DragTips)
+            renderer->AddActor(actor);
         for (auto& actor : PickAxes)
             renderer->AddActor(actor);
         for (auto& actor : OriginAxes)
@@ -65,6 +68,8 @@ public:
         if (!renderer) return;
 
         for (auto& actor : DragAxes)
+            renderer->RemoveActor(actor);
+        for (auto& actor : DragTips)
             renderer->RemoveActor(actor);
         for (auto& actor : PickAxes)
             renderer->RemoveActor(actor);
@@ -112,12 +117,15 @@ public:
         DragLength = std::max(effectiveDim * 0.55, 1e-6);
         DragRadius = std::max(effectiveDim * 0.015, 5e-7);
         PickRadius = std::max(effectiveDim * 0.06, DragRadius * 3.5);
+        TipLength = std::max(effectiveDim * 0.16, 1e-6);
+        TipRadius = std::max(effectiveDim * 0.055, DragRadius * 2.0);
         OriginLength = std::max(effectiveDim * 0.18, 1e-6);
         OriginRadius = std::max(effectiveDim * 0.008, 2.5e-7);
 
         for (int axis = 0; axis < 3; ++axis) {
-            ApplyAxisPose(DragSources[axis], DragAxes[axis], center, axis, DragLength, DragRadius);
-            ApplyAxisPose(PickSources[axis], PickAxes[axis], center, axis, DragLength, PickRadius);
+            ApplyPositiveAxisPose(DragSources[axis], DragAxes[axis], center, axis, DragLength, DragRadius);
+            ApplyPositiveAxisPose(PickSources[axis], PickAxes[axis], center, axis, DragLength, PickRadius);
+            ApplyArrowTipPose(TipSources[axis], DragTips[axis], center, axis, DragLength, TipLength, TipRadius);
         }
 
         UpdateOriginPlacement();
@@ -151,6 +159,11 @@ public:
             DragAxes[i]->GetProperty()->SetColor(color);
             DragAxes[i]->GetProperty()->SetOpacity(i == axis ? 1.0 : 0.45);
             DragAxes[i]->GetProperty()->SetLineWidth(i == axis ? 6.0 : 1.0);
+            if (DragTips[i]) {
+                DragTips[i]->GetProperty()->SetColor(color);
+                DragTips[i]->GetProperty()->SetOpacity(i == axis ? 1.0 : 0.85);
+                DragTips[i]->GetProperty()->SetLineWidth(i == axis ? 6.0 : 1.0);
+            }
         }
     }
 
@@ -166,6 +179,11 @@ public:
             actor->GetProperty()->SetColor(baseColors[i][0], baseColors[i][1], baseColors[i][2]);
             actor->GetProperty()->SetOpacity(0.45);
             actor->GetProperty()->SetLineWidth(2.0);
+            if (DragTips[i]) {
+                DragTips[i]->GetProperty()->SetColor(baseColors[i][0], baseColors[i][1], baseColors[i][2]);
+                DragTips[i]->GetProperty()->SetOpacity(0.85);
+                DragTips[i]->GetProperty()->SetLineWidth(2.0);
+            }
         }
     }
 
@@ -185,16 +203,20 @@ private:
         for (int i = 0; i < 3; ++i) {
             DragSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
             PickSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
+            TipSources[i] = vtkSmartPointer<vtkArrowSource>::New();
             OriginSources[i] = vtkSmartPointer<vtkCylinderSource>::New();
 
             ConfigureCylinder(DragSources[i], 1.0, 0.03);
             ConfigureCylinder(PickSources[i], 1.0, 0.09);
+            ConfigureArrow(TipSources[i]);
             ConfigureCylinder(OriginSources[i], 0.35, 0.015);
 
             DragAxes[i] = CreateActorFromSource(DragSources[i], dragColors[i].data(), 0.75, true);
+            DragTips[i] = CreateActorFromArrowSource(TipSources[i], dragColors[i].data(), 0.85, true);
             PickAxes[i] = CreateActorFromSource(PickSources[i], dragColors[i].data(), 0.02, true);
             OriginAxes[i] = CreateActorFromSource(OriginSources[i], originColors[i].data(), 0.95, false);
 
+            DragTips[i]->GetProperty()->SetRepresentationToSurface();
             PickAxes[i]->GetProperty()->SetRepresentationToSurface();
             OriginAxes[i]->GetProperty()->SetRepresentationToSurface();
         }
@@ -210,10 +232,35 @@ private:
         source->Update();
     }
 
+    static void ConfigureArrow(vtkArrowSource* source) {
+        source->SetTipLength(0.32);
+        source->SetTipRadius(0.22);
+        source->SetShaftRadius(0.10);
+        source->SetTipResolution(24);
+        source->SetShaftResolution(24);
+        source->Update();
+    }
+
     static vtkSmartPointer<vtkActor> CreateActorFromSource(vtkCylinderSource* source,
                                                            const double color[3],
                                                            double opacity,
                                                            bool pickable) {
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(source->GetOutputPort());
+
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        actor->GetProperty()->SetColor(color[0], color[1], color[2]);
+        actor->GetProperty()->SetOpacity(opacity);
+        actor->SetPickable(pickable ? 1 : 0);
+        actor->SetDragable(pickable ? 1 : 0);
+        return actor;
+    }
+
+    static vtkSmartPointer<vtkActor> CreateActorFromArrowSource(vtkArrowSource* source,
+                                                                const double color[3],
+                                                                double opacity,
+                                                                bool pickable) {
         vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
         mapper->SetInputConnection(source->GetOutputPort());
 
@@ -236,16 +283,17 @@ private:
 
     void ApplyDimensionVisibility() {
         SetActorsVisible(DragAxes, IsVisibleFlag);
+        SetActorsVisible(DragTips, IsVisibleFlag);
         SetActorsVisible(PickAxes, IsVisibleFlag);
         SetActorsVisible(OriginAxes, IsVisibleFlag);
     }
 
-    static void ApplyAxisPose(vtkCylinderSource* source,
-                              vtkActor* actor,
-                              const double center[3],
-                              int axis,
-                              double length,
-                              double radius) {
+    static void ApplyPositiveAxisPose(vtkCylinderSource* source,
+                                      vtkActor* actor,
+                                      const double center[3],
+                                      int axis,
+                                      double length,
+                                      double radius) {
         ConfigureCylinder(source, length, radius);
 
         vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
@@ -255,7 +303,36 @@ private:
         else if (axis == 2)
             transform->RotateX(-90.0);
 
-        transform->Translate(center);
+        double shiftedCenter[3] = {center[0], center[1], center[2]};
+        shiftedCenter[axis] += 0.5 * length;
+        transform->Translate(shiftedCenter);
+
+        actor->SetUserTransform(transform);
+        actor->Modified();
+    }
+
+    static void ApplyArrowTipPose(vtkArrowSource* source,
+                                  vtkActor* actor,
+                                  const double center[3],
+                                  int axis,
+                                  double shaftLength,
+                                  double tipLength,
+                                  double tipRadius) {
+        ConfigureArrow(source);
+
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        transform->PostMultiply();
+        if (axis == 1) {
+            transform->RotateZ(90.0);
+        } else if (axis == 2) {
+            transform->RotateY(-90.0);
+        }
+
+        transform->Scale(tipLength, tipRadius, tipRadius);
+
+        double tipBase[3] = {center[0], center[1], center[2]};
+        tipBase[axis] += shaftLength;
+        transform->Translate(tipBase);
 
         actor->SetUserTransform(transform);
         actor->Modified();
@@ -263,7 +340,7 @@ private:
 
     void UpdateOriginPlacement() {
         for (int axis = 0; axis < 3; ++axis) {
-            ApplyAxisPose(OriginSources[axis], OriginAxes[axis], OriginPosition.data(),
+            ApplyPositiveAxisPose(OriginSources[axis], OriginAxes[axis], OriginPosition.data(),
                           axis, OriginLength, OriginRadius);
         }
     }
@@ -271,8 +348,10 @@ private:
 private:
     std::array<vtkSmartPointer<vtkCylinderSource>, 3> DragSources;
     std::array<vtkSmartPointer<vtkCylinderSource>, 3> PickSources;
+    std::array<vtkSmartPointer<vtkArrowSource>, 3> TipSources;
     std::array<vtkSmartPointer<vtkCylinderSource>, 3> OriginSources;
     std::array<vtkSmartPointer<vtkActor>, 3> DragAxes;
+    std::array<vtkSmartPointer<vtkActor>, 3> DragTips;
     std::array<vtkSmartPointer<vtkActor>, 3> PickAxes;
     std::array<vtkSmartPointer<vtkActor>, 3> OriginAxes;
     vtkSmartPointer<vtkActor> TargetActor;
@@ -283,6 +362,8 @@ private:
     double DragLength = 1e-3;
     double DragRadius = 2.5e-5;
     double PickRadius = 8e-5;
+    double TipLength = 2.2e-4;
+    double TipRadius = 7.5e-5;
     double OriginLength = 3e-4;
     double OriginRadius = 1.2e-5;
 };
@@ -478,7 +559,7 @@ private:
         }};
 
         const std::array<double, 3>& center = Gizmo->GetDragCenter();
-        const double halfLength = 0.5 * Gizmo->GetDragLength();
+        const double length = Gizmo->GetDragLength();
         vtkRenderer* renderer = this->GetDefaultRenderer();
 
         int bestAxis = -1;
@@ -490,14 +571,14 @@ private:
                 continue;
 
             double start[3] = {
-                center[0] - directions[i][0] * halfLength,
-                center[1] - directions[i][1] * halfLength,
-                center[2] - directions[i][2] * halfLength
+                center[0],
+                center[1],
+                center[2]
             };
             double end[3] = {
-                center[0] + directions[i][0] * halfLength,
-                center[1] + directions[i][1] * halfLength,
-                center[2] + directions[i][2] * halfLength
+                center[0] + directions[i][0] * length,
+                center[1] + directions[i][1] * length,
+                center[2] + directions[i][2] * length
             };
 
             double startDisplay[3];

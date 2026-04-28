@@ -88,12 +88,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "test_part_0.step"
+                    "source": "compression_part_0.step"
                 },
                 "id": 0,
                 "isRigid": false,
                 "mesh": {
-                    "source": "test_part_0.bdf"
+                    "source": "compression_part_0.bdf"
                 },
                 "name": ""
             },
@@ -104,12 +104,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "test_part_1.step"
+                    "source": "compression_part_1.step"
                 },
                 "id": 1,
                 "isRigid": true,
                 "mesh": {
-                    "source": "test_part_1.bdf"
+                    "source": "compression_part_1.bdf"
                 },
                 "name": ""
             },
@@ -120,12 +120,12 @@
                         0.0,
                         0.0
                     ],
-                    "source": "test_part_2.step"
+                    "source": "compression_part_2.step"
                 },
                 "id": 2,
                 "isRigid": true,
                 "mesh": {
-                    "source": "test_part_2.bdf"
+                    "source": "compression_part_2.bdf"
                 },
                 "name": ""
             }

@@ -214,55 +214,20 @@ void ModelWriter::writeToFile(std::string fname){
       } 
       if (part->isMeshed()) {
         cout << "Part "<<i << " is meshed."<<endl;
-        bool use_bdf_mesh = (part->getMesh()->getDim() == 1 || m_model.getDimension() == 2);
-        std::string meshname;
-        if (use_bdf_mesh)
-          meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".bdf";
-        else
-          meshname = m_model.getName() + "_part_" + std::to_string(part->getId()) + ".msh";
+        const bool use_bdf_mesh = true;
+        const std::string meshname =
+            m_model.getName() + "_part_" + std::to_string(part->getId()) + ".bdf";
         fs::path mesh_path = json_dir / meshname;
         jpart["mesh"]["source"] = fs::relative(mesh_path, json_dir).string();
 
-        if (use_bdf_mesh) {
-          std::error_code ec;
-          fs::path src_path = m_model.getPart(i)->getMeshSourceFile();
-          if (!src_path.empty() && fs::exists(src_path)) {
-            if (src_path != mesh_path) {
-              fs::copy_file(src_path, mesh_path, fs::copy_options::overwrite_existing, ec);
-              if (ec)
-                std::cerr << "Error copying BDF mesh file: " << ec.message() << std::endl;
-            }
-          } else {
-            cout << "Exporting to Nastran..."<<endl;
-            m_model.getPart(i)->getMesh()->exportToNASTRAN(mesh_path.string());
-            m_model.getPart(i)->setMeshSourceFile(mesh_path.string());
-          }
-        }
+        cout << "Exporting current mesh to Nastran..."<<endl;
+        m_model.getPart(i)->getMesh()->exportToNASTRAN(mesh_path.string());
+        m_model.getPart(i)->setMeshSourceFile(mesh_path.string());
 
         if (m_model.getPrevName()!=m_model.getName()){
          std::string kname = m_model.getName()+"_part_" + std::to_string(i) + ".k";
             cout << "Exporting to LSDyna..."<<endl;
             m_model.getPart(i)->getMesh()->exportToLSDYNA(kname);
-
-            if (!use_bdf_mesh) {
-              std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".msh";
-              std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".msh";
-
-              if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
-                  std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
-              } else {
-                  std::perror(("Error renaming " + old_name).c_str());
-              }
-            } else {
-              std::string old_name = m_model.getPrevName() + "_part_" + std::to_string(i) + ".bdf";
-              std::string new_name = m_model.getName() + "_part_" + std::to_string(i) + ".bdf";
-
-              if (std::rename(old_name.c_str(), new_name.c_str()) == 0) {
-                  std::cout << "Mesh file renamed: " << old_name << " -> " << new_name << std::endl;
-              } else {
-                  std::perror(("Error renaming " + old_name).c_str());
-              }
-            }
         
         }// IF NAME CHANGED
       } else {

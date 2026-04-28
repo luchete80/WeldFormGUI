@@ -190,4 +190,11 @@
          - FIXED PART POSITIONING AT MODEL OPEN (ORIGIN WAS MISSING) 
          - Added Import Mesh in File Dialog.
          - Make orientation gizmo no selectable.
-         
+         - Added new demo selector
+20260428 - Fixed Move Gizmo to arrows
+         - Added reset button to move gizmo. 
+         - Added select plane from orientatio gizmo click.
+         - Fixed Load Plot from explicit solver.
+         - Added selected part highlight.
+         - Added VcDirection, marnitude and application zone visualization
+         - Added Action Message at Load Demo. 

@@ -238,6 +238,7 @@ int main(int argc, char* argv[])
 
   static DemoDialog demoDialog;
   static bool showDemoDialog = false;
+  static bool showDemoLoadedPopup = false;
   demoDialog.SetDemoRoot("examples/demo");
 
   //vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
@@ -246,7 +247,7 @@ int main(int argc, char* argv[])
   vtkViewer2.getRenderer()->SetBackground2(0.8,0.8,0.8);
 
   Axis axis;  
-  axis.setInteractor(vtkViewer2.getInteractor());  
+  axis.setInteractor(vtkViewer2.getInteractor(), vtkViewer2.getRenderer());  
 
   vtkViewer_res.getRenderer()->SetBackground(0.2,0.2,0.4);
   vtkViewer_res.getRenderer()->SetBackground2(0.8,0.8,0.8);
@@ -811,6 +812,7 @@ int main(int argc, char* argv[])
 	      std::cout << "Opening model: " << demoJson.string() << std::endl;
         if (std::filesystem::exists(demoJson)) {
             editor->openModelFromPath(demoJson.string());
+            showDemoLoadedPopup = true;
 
             vtkViewer2.getRenderer()->ResetCamera();
             vtkViewer2.getRenderer()->ResetCameraClippingRange();
@@ -818,6 +820,27 @@ int main(int argc, char* argv[])
             std::cout << "Demo JSON not found: "
                       << demoJson.string() << std::endl;
         }
+    }
+
+    if (showDemoLoadedPopup) {
+        ImGui::OpenPopup("Demo Loaded");
+        showDemoLoadedPopup = false;
+    }
+
+    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                            ImGuiCond_Appearing,
+                            ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("Demo Loaded", nullptr,
+                               ImGuiWindowFlags_AlwaysAutoResize |
+                               ImGuiWindowFlags_NoResize |
+                               ImGuiWindowFlags_NoSavedSettings)) {
+        ImGui::TextWrapped("Demo loaded. Click on \"Run\" and then \"Load Results\".");
+        ImGui::Spacing();
+        if (ImGui::Button("OK", ImVec2(120.0f, 0.0f))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on

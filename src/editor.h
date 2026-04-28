@@ -70,6 +70,7 @@ class ViewportWindow;
 class VtkViewer;
 class GraphicMesh;
 class Material_Db;
+class vtkPolyData;
 
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -272,13 +273,19 @@ protected:
   bool is_model = false;
   Material_ *selected_mat = nullptr;
   Part      *selected_prt = nullptr;
+  Part      *highlighted_prt = nullptr;
+  Part      *hovered_prt = nullptr;
   Model     *selected_mod = nullptr;
   Step      *selected_step = nullptr;
   Condition *selected_bc = nullptr;
+  Condition *hovered_bc = nullptr;
   int       m_create_bc;  //boundary or initial condition
   bool      m_creating_step = false;
   
   bool m_show_mov_part = false;
+  double m_move_part_offset[3] = {0.0, 0.0, 0.0};
+  double m_move_part_initial_center[3] = {0.0, 0.0, 0.0};
+  double m_move_part_step = 0.1;
     
   //Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
@@ -306,6 +313,8 @@ protected:
   
   MultiResult *m_results = nullptr;
   bool m_activate_results_viewer = false;
+  std::vector<vtkSmartPointer<vtkProp>> m_bc_overlay_actors;
+  std::vector<vtkSmartPointer<vtkProp>> m_part_overlay_actors;
 
   struct PendingResultsLoad {
     bool active = false;
@@ -327,6 +336,17 @@ protected:
   void advanceResultsLoad();
   void finishResultsLoad();
   void drawResultsLoadProgress();
+  void clearBoundaryConditionOverlay();
+  void updateBoundaryConditionOverlay();
+  void clearPartOverlay();
+  void updatePartOverlay();
+  vtkSmartPointer<vtkActor> getPartVisualActor(Part* part) const;
+  void applyPartTranslation(Part* part, double dx, double dy, double dz);
+  bool getPartVisualCenter(Part* part, double center[3]) const;
+  void updateMovePartOffsetFromCurrentState();
+  void resetCurrentPartTransform();
+  Part* findBoundaryConditionTargetPart(const Condition* condition) const;
+  vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(Part* part) const;
   
   Material_Db m_mat_db;
     

@@ -12,7 +12,7 @@ using namespace std;
 //// To know 
 MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
 
-    MoveCommand cmd = {-1, 0.0, false};  
+    MoveCommand cmd = {MoveCommandType::None, -1, 0.0, false};  
   if (*open){
 
 
@@ -30,6 +30,7 @@ MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
         ImGui::SameLine(40);
 
         if (ImGui::Button("-")) {
+            cmd.type = MoveCommandType::Translate;
             cmd.axis = i;
             cmd.delta = -step;
             cmd.active = true;
@@ -37,6 +38,7 @@ MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
 
         ImGui::SameLine();
         if (ImGui::Button("+")) {
+            cmd.type = MoveCommandType::Translate;
             cmd.axis = i;
             cmd.delta = step;
             cmd.active = true;
@@ -53,6 +55,11 @@ MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
     ImGui::Separator();
     ImGui::Text("Current position: X=%.3f, Y=%.3f, Z=%.3f", pos[0], pos[1], pos[2]);
 
+    if (ImGui::Button("Reset Transform")) {
+        cmd.type = MoveCommandType::Reset;
+        cmd.active = true;
+    }
+
     if (ImGui::Button("Close")) {
         *open = false;
         cmd.active = false;
@@ -62,4 +69,3 @@ MoveCommand MovePartDialog::Draw(double &step, double* pos, bool *open){
   }
     return cmd;
 }
-
