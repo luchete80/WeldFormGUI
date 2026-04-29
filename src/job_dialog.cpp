@@ -278,6 +278,8 @@ void JobShowDialog::Draw(){
       // cout << "[job-dialog] load results requested for " << resultsPath.string() << endl;
       m_job->UpdateOutput(m_max_visible_lines);
       m_open_results(m_job);
+      m_last_refresh_time = -1.0;
+      m_show = false;
     } else {
       // cout << "[job-dialog] load results requested but no results json detected yet" << endl;
     }
