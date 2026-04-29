@@ -1,6 +1,5 @@
 # WeldFormGUI
-WeldForm & WeldFormGPU simple, intuitive, native and light 
-Graphical User Interface to generate model and export solver input
+FEM Graphical User Interaface for large deformation workflows with integrated student explicit and implicit solvers.
 
 
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_1.png)
