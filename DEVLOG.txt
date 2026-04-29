@@ -198,3 +198,5 @@
          - Added selected part highlight.
          - Added VcDirection, marnitude and application zone visualization
          - Added Action Message at Load Demo. 
+20260429 - Changed extensions of input, results and model
+         - Fixed mesh orgiin position at input writing.

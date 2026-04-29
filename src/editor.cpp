@@ -156,7 +156,7 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
 
   std::string ext = fs::path(filePathName).extension().string();
 
-  if (ext == ".json") {
+  if (ext == ".json" || ext == ".wfresult") {
       return beginResultsLoadFromJson(filePathName);
   } else if (ext == ".vtk") {
     ResultFrame *frame = new ResultFrame(filePathName);
@@ -442,11 +442,11 @@ bool Editor::openResultsForModel()
 {
   const std::string& modelFilePath = m_model->getFilePath();
   if (modelFilePath.empty()) {
-    cout << "Model has no file path; cannot locate modelo_res.json" << endl;
+    cout << "Model has no file path; cannot locate modelo.wfresult" << endl;
     return false;
   }
 
-  fs::path resultsPath = fs::path(modelFilePath).parent_path() / "modelo_res.json";
+  fs::path resultsPath = fs::path(modelFilePath).parent_path() / "modelo.wfresult";
   if (!fs::exists(resultsPath)) {
     cout << "Results file not found: " << resultsPath.string() << endl;
     return false;
@@ -473,11 +473,11 @@ bool Editor::openResultsForJob(Job* job)
   std::string stem = runPath.stem().string();
 
   std::vector<fs::path> candidates;
-  if (stem.size() >= 4 && stem.substr(stem.size() - 4) == "_run") {
-    candidates.push_back(runDir / (stem.substr(0, stem.size() - 4) + "_res.json"));
+  if (runPath.extension() == ".wfinput") {
+    candidates.push_back(runDir / (runPath.stem().string() + ".wfresult"));
   }
-  candidates.push_back(runDir / (stem + "_res.json"));
-  candidates.push_back(runDir / "modelo_res.json");
+  candidates.push_back(runDir / (stem + ".wfresult"));
+  candidates.push_back(runDir / "modelo.wfresult");
 
   for (const auto& candidate : candidates) {
     if (fs::exists(candidate)) {
@@ -1366,16 +1366,16 @@ void ShowExampleMenuFile(const Editor &editor)
     if (ImGui::MenuItem("Open", "Ctrl+O")) {
         // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".json", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".wfmodel", ".");
     }
-    if (ImGui::MenuItem("Import", "Ctrl+I")){
+    if (ImGui::MenuItem("Import Geometry", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
     }
     if (ImGui::MenuItem("Import Mesh", "Ctrl+M")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".json,.vtk", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".wfresult,.vtk", ".");
     }
     if (ImGui::MenuItem("Export LS-Dyna", "Ctrl+S")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgExport", "Choose File", ".k", ".");
@@ -1415,13 +1415,13 @@ void ShowExampleMenuFile(const Editor &editor)
 
 
 	      if (!(getApp().getActiveModel().getHasName()))
-	        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".json", ".");      
+	        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".wfmodel", ".");      
 	      else {
 	        cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
 	        ModelWriter mw(getApp().getActiveModel()); //Once it has name
 	        std::string save_path = getApp().getActiveModel().getFilePath();
 	        if (save_path.empty())
-	          save_path = getApp().getActiveModel().getName()+".json";
+	          save_path = getApp().getActiveModel().getName()+".wfmodel";
 	        mw.writeToFile(save_path);
 	      
 	        //ImGui::OpenPopup("Overwrite?");
@@ -2905,14 +2905,20 @@ void Editor::drawGui() {
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+      fs::path savePath(filePathName);
+
+      if (savePath.extension() != ".wfmodel") {
+        savePath += ".wfmodel";
+        filePathName = savePath.string();
+      }
 
       size_t lastSlash = filePathName.find_last_of("/\\");
       std::string fileName = (lastSlash == std::string::npos)
                                  ? filePathName
                                  : filePathName.substr(lastSlash + 1);
 
-      // --- Quitar la extensión .json si la tiene ---
-      size_t dotPos = fileName.rfind(".json");
+      // --- Quitar la extensión .wfmodel si la tiene ---
+      size_t dotPos = fileName.rfind(".wfmodel");
       if (dotPos != std::string::npos)
           fileName = fileName.substr(0, dotPos);
 

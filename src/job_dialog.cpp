@@ -42,10 +42,10 @@ fs::path findResultsJsonForJob(Job &job) {
   std::string stem = runPath.stem().string();
 
   std::vector<fs::path> candidates;
-  if (stem.size() >= 4 && stem.substr(stem.size() - 4) == "_run")
-    candidates.push_back(runDir / (stem.substr(0, stem.size() - 4) + "_res.json"));
-  candidates.push_back(runDir / (stem + "_res.json"));
-  candidates.push_back(runDir / "modelo_res.json");
+  if (runPath.extension() == ".wfinput")
+    candidates.push_back(runDir / (runPath.stem().string() + ".wfresult"));
+  candidates.push_back(runDir / (stem + ".wfresult"));
+  candidates.push_back(runDir / "modelo.wfresult");
 
   for (const auto &candidate : candidates) {
     if (fs::exists(candidate))
@@ -118,7 +118,7 @@ void  JobDialog::Draw(){
   if (!m_edit_mode && ImGui::Button("From Model")){
     Model &model = getApp().getActiveModel();
     if (model.getHasName()) {
-      fs::path input_path = modelOutputPath(model, modelStem(model) + "_run.json");
+      fs::path input_path = modelOutputPath(model, modelStem(model) + ".wfinput");
       m_filename = input_path.string();
       InputWriter writer(&model);
       writer.writeToFile(input_path.string());
@@ -136,7 +136,7 @@ void  JobDialog::Draw(){
     ImGui::SameLine();
 
   if (ImGui::Button("Choose File")){
-    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportJob", "Choose File", ".json,.k", ".");
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportJob", "Choose File", ".wfinput,.json,.k", ".");
     show_job_files = true;
   }
       
@@ -245,7 +245,7 @@ void JobShowDialog::Draw(){
   if (!resultsPath.empty()) {
     ImGui::Text("Results: %s", resultsPath.string().c_str());
   } else {
-    ImGui::TextUnformatted("Results: waiting for *_res.json");
+    ImGui::TextUnformatted("Results: waiting for *.wfresult");
   }
   ImGui::Separator();
 

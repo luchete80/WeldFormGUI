@@ -416,15 +416,13 @@ void InputWriter::writeImplicitToFile(std::string fname) {
         {"scale", {1, 1, 1}}
       });
     } else {
-      double3 origin = make_double3(0.0, 0.0, 0.0);
-      if (part->isGeom())
-        origin = part->getGeom()->getOrigin();
-
       m_json["RigidBodies"].push_back({
         {"type", "File"},
         {"fileName", relative_mesh},
         {"zoneId", part->getId()},
-        {"start", {origin.x, origin.y, origin.z}},
+        // The exported BDF already contains the current transformed node coordinates.
+        // Using the geometry origin here would apply the same translation twice.
+        {"start", {0.0, 0.0, 0.0}},
         {"orientNormals", true}
       });
     }

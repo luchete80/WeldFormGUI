@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
 
 	              if (ImGui::Button("Demo")) {
                   showDemoDialog = true;
-	                // const std::filesystem::path demo_path("./demo/demo.json");
+	                // const std::filesystem::path demo_path("./demo/demo.wfmodel");
 	                // if (std::filesystem::exists(demo_path))
 	                  // editor->openModelFromPath(demo_path.string());
 	                // else
@@ -808,19 +808,19 @@ int main(int argc, char* argv[])
     std::string selectedDemoFolder = demoDialog.ConsumeSelectedDemoPath();
 
     if (!selectedDemoFolder.empty()) {
-        std::filesystem::path demoJson =
-            std::filesystem::path(selectedDemoFolder) / "demo.json";
+        std::filesystem::path demoModel =
+            std::filesystem::path(selectedDemoFolder) / "demo.wfmodel";
 
-	      std::cout << "Opening model: " << demoJson.string() << std::endl;
-        if (std::filesystem::exists(demoJson)) {
-            editor->openModelFromPath(demoJson.string());
+	      std::cout << "Opening model: " << demoModel.string() << std::endl;
+        if (std::filesystem::exists(demoModel)) {
+            editor->openModelFromPath(demoModel.string());
             showDemoLoadedPopup = true;
 
             vtkViewer2.getRenderer()->ResetCamera();
             vtkViewer2.getRenderer()->ResetCameraClippingRange();
         } else {
-            std::cout << "Demo JSON not found: "
-                      << demoJson.string() << std::endl;
+            std::cout << "Demo model not found: "
+                      << demoModel.string() << std::endl;
         }
     }
 

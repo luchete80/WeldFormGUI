@@ -66,7 +66,7 @@ int Job::Run(){
   // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
   std::string str;
   int returnCode ;
-  const std::string solver_name = isImplicit() ? "weldform_imp" : "weldform_exp";
+  const std::string solver_name = isImplicit() ? "weldform_imp_std" : "weldform_exp_std";
   const std::string log_path = getLogFilePath().string();
 
   //int returnCode = system(str.c_str());
