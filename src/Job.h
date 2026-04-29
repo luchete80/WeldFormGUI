@@ -13,17 +13,20 @@ public:
   Job(std::string );
   virtual void Draw();
   int Run();
+  bool Stop();
   void UpdateOutput(int max_lines = 100);
   std::string & getPathFile(){return m_path_file;}
   std::string & getLog(){return m_log;  }
   void setPathFile(const std::string &path){m_path_file = path;}
   bool isImplicit() const;
+  int getPid() const;
 protected:
   std::filesystem::path getJobDirectory() const;
   std::filesystem::path getLogFilePath() const;
   std::filesystem::path getTempLogPath() const;
+  std::filesystem::path getPidFilePath() const;
   std::string m_path_file;
-  int m_pid;
+  int m_pid = -1;
   std::string m_filename;
   std::string m_log;
   

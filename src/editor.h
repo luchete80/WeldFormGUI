@@ -129,6 +129,7 @@ public:
   bool scalePartGeometry(Part* part, double factor);
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
+  bool hasBlockingDialogOpen() const;
   void closeCurrentModel();
   void closeCurrentResults();
   

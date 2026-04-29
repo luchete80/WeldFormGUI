@@ -3,6 +3,9 @@ WeldForm & WeldFormGPU simple, intuitive, native and light
 Graphical User Interface to generate model and export solver input
 
 
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_1.png)
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_2.png)
+
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_01.png)
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_02.png)
 

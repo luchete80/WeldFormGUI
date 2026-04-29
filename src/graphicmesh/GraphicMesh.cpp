@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <set>
 #include "Mesh.h"
 #include "Node.h"
 #include "Element.h"
@@ -640,13 +641,33 @@ GraphicSPHMesh::GraphicSPHMesh()
     void GraphicMesh::Translate(double dx, double dy, double dz) {
         if (!m_mesh) return;
 
+        static const std::set<int> debugNodeIds = {5, 8, 27};
+
+        std::cout << "[GraphicMesh::Translate] delta=("
+                  << dx << ", " << dy << ", " << dz << ")" << std::endl;
+
         for (int i = 0; i < m_mesh->getNodeCount(); ++i) {
             Node* node = m_mesh->getNode(i);
             if (!node) continue;
+
+            const int nodeId = node->getId() + 1;
+            if (debugNodeIds.count(nodeId) > 0) {
+                const Vector3f& before = node->getPos();
+                std::cout << "  node " << nodeId
+                          << " before=(" << before.x << ", " << before.y << ", " << before.z << ")"
+                          << std::endl;
+            }
+
             node->translate(dx, dy, dz);
 
+            const Vector3f& pos = node->getPos();
+            if (debugNodeIds.count(nodeId) > 0) {
+                std::cout << "  node " << nodeId
+                          << " after =(" << pos.x << ", " << pos.y << ", " << pos.z << ")"
+                          << std::endl;
+            }
+
             if (points) {
-                const Vector3f& pos = node->getPos();
                 points->SetPoint(i, pos[0], pos[1], pos[2]);
             }
         }

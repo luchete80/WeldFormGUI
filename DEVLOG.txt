@@ -200,3 +200,6 @@
          - Added Action Message at Load Demo. 
 20260429 - Changed extensions of input, results and model
          - Fixed mesh orgiin position at input writing.
+         - Fixed Part ID assigment
+         - Added CTRL+S to save (and console msg)
+         - 

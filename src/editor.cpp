@@ -124,6 +124,8 @@ void processInput(GLFWwindow *window);
 ImVec2 vpos, vmin, vmax;
 
 namespace {
+ExampleAppConsole* g_app_console = nullptr;
+
 std::string activeModelStem(Model &model)
 {
     fs::path model_name(model.getName());
@@ -139,6 +141,50 @@ fs::path activeModelOutputPath(Model &model, const std::string &filename)
 {
     return fs::path(model.getBaseDir()) / filename;
 }
+
+std::string ensureWfmodelPath(const std::string& filePathName)
+{
+    fs::path savePath(filePathName);
+    if (savePath.extension() != ".wfmodel")
+        savePath += ".wfmodel";
+    return savePath.string();
+}
+
+void appendToAppConsole(const std::string& text)
+{
+    if (g_app_console != nullptr) {
+        g_app_console->AddLogString(text);
+    }
+}
+
+bool appendFileToAppConsole(const std::string& path)
+{
+    if (g_app_console == nullptr)
+        return false;
+    return g_app_console->AddLogFile(path);
+}
+
+bool saveModelToPath(Model& model, const std::string& filePathName)
+{
+    const std::string normalizedPath = ensureWfmodelPath(filePathName);
+    fs::path savePath(normalizedPath);
+    std::string fileName = savePath.filename().string();
+    const std::string suffix = ".wfmodel";
+    if (fileName.size() >= suffix.size() &&
+        fileName.compare(fileName.size() - suffix.size(), suffix.size(), suffix) == 0) {
+        fileName.resize(fileName.size() - suffix.size());
+    }
+
+    model.setName(fileName);
+    model.setFilePath(normalizedPath);
+
+    ModelWriter writer(model);
+    writer.writeToFile(normalizedPath);
+
+    appendToAppConsole("Saved Model: " + normalizedPath + "\n");
+    cout << "Saved Model: " << normalizedPath << endl;
+    return true;
+}
 }
 
 template <typename T>
@@ -147,6 +193,15 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     std::ostringstream out;
     out.precision(n);
     out << std::fixed << a_value;
+    return out.str();
+}
+
+template <typename T>
+std::string to_string_scientific(const T a_value, const int n = 3)
+{
+    std::ostringstream out;
+    out.precision(n);
+    out << std::scientific << a_value;
     return out.str();
 }
 
@@ -528,6 +583,22 @@ bool Editor::refreshOpenResults()
   return true;
 }
 
+bool Editor::hasBlockingDialogOpen() const
+{
+  return m_show_mat_dlg ||
+         m_show_set_dlg ||
+         m_show_mat_dlg_edit ||
+         m_show_mod_dlg_edit ||
+         m_show_prt_dlg_edit ||
+         m_show_bc_dlg_edit ||
+         m_show_step_dlg_edit ||
+         m_show_interaction_props_dlg ||
+         m_show_msh_dlg ||
+         m_show_mov_part ||
+         m_jobdlg.m_show ||
+         m_jobshowdlg.m_show;
+}
+
 void Editor::applyPartTranslation(Part* part, double dx, double dy, double dz)
 {
   if (part == nullptr) {
@@ -850,9 +921,9 @@ void Editor::updateBoundaryConditionOverlay()
       if (selected_bc == condition) {
         std::ostringstream label;
         label << "v = ("
-              << to_string_with_precision(velocity.x, 3) << ", "
-              << to_string_with_precision(velocity.y, 3) << ", "
-              << to_string_with_precision(velocity.z, 3) << ")";
+              << to_string_scientific(velocity.x, 3) << ", "
+              << to_string_scientific(velocity.y, 3) << ", "
+              << to_string_scientific(velocity.z, 3) << ")";
 
         vtkSmartPointer<vtkBillboardTextActor3D> textActor =
             vtkSmartPointer<vtkBillboardTextActor3D>::New();
@@ -1111,20 +1182,31 @@ void Editor::meshPart(Part* part){
     fs::path bdf_name = "output_smoothed.bdf";
     fs::path bdf_export_path = activeModelOutputPath(*m_model,
                                                      activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf");
-    std::string remesh_cmd = "mesh-adapt \"" + step_path.string() + "\" " + std::to_string(element_size);
+    fs::path remesh_log_path = activeModelOutputPath(*m_model,
+                                                     activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp");
+    std::string remesh_cmd = "mesh-adapt_std \"" + step_path.string() + "\" " +
+                             std::to_string(element_size) + " > \"" +
+                             remesh_log_path.string() + "\" 2>&1";
     cout << "Running 2D remesher: " << remesh_cmd << endl;
+    appendToAppConsole("Running 2D remesher: " + remesh_cmd + "\n");
 
     int remesh_status = std::system(remesh_cmd.c_str());
+    appendFileToAppConsole(remesh_log_path.string());
+    std::error_code remesh_log_ec;
+    std::filesystem::remove(remesh_log_path, remesh_log_ec);
     if (remesh_status != 0){
       cerr << "Error running mesh-adapt. Exit code: " << remesh_status << endl;
+      appendToAppConsole("Error running mesh-adapt_std. Exit code: " + std::to_string(remesh_status) + "\n");
     } else if (!std::filesystem::exists(bdf_name)){
       cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name.string() << endl;
+      appendToAppConsole("mesh-adapt_std finished but BDF file was not found: " + bdf_name.string() + "\n");
     } else {
       std::error_code ec;
       std::filesystem::copy_file(bdf_name, bdf_export_path,
                                  std::filesystem::copy_options::overwrite_existing, ec);
       if (ec) {
         cerr << "Error copying remeshed BDF to part file: " << ec.message() << endl;
+        appendToAppConsole("Error copying remeshed BDF to part file: " + ec.message() + "\n");
         return;
       }
       part->generateMeshFromNastranFile(bdf_export_path.string());
@@ -1418,11 +1500,10 @@ void ShowExampleMenuFile(const Editor &editor)
 	        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".wfmodel", ".");      
 	      else {
 	        cout << "Model has a name! "<<getApp().getActiveModel().getName()<<endl;
-	        ModelWriter mw(getApp().getActiveModel()); //Once it has name
 	        std::string save_path = getApp().getActiveModel().getFilePath();
 	        if (save_path.empty())
 	          save_path = getApp().getActiveModel().getName()+".wfmodel";
-	        mw.writeToFile(save_path);
+	        saveModelToPath(getApp().getActiveModel(), save_path);
 	      
 	        //ImGui::OpenPopup("Overwrite?");
         //~ if (fileExists(fullName)) {
@@ -1795,6 +1876,7 @@ void Editor::drawGui() {
 	        for (int i = 0; i < m_model->getPartCount(); i++)
 	        {
 	          Part* treePart = m_model->getPart(i);
+            bool part_branch_hovered = false;
 	          // Use SetNextItemOpen() so set the default state of a node to be open. We could
 	          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
 	          if (i == 0)
@@ -1806,6 +1888,7 @@ void Editor::drawGui() {
 	          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", treePart->getId(), treePart->getName(), des.c_str()))
 	          {
 	            if (ImGui::IsItemHovered()) {
+                part_branch_hovered = true;
 	              hovered_prt = treePart;
 	            }
 	            if (ImGui::IsItemClicked()) {
@@ -1947,11 +2030,19 @@ void Editor::drawGui() {
 	                m_show_prt_dlg_edit = true;
 	                selected_prt = treePart;                  
 	              }
+                if (ImGui::IsItemHovered()) {
+                  part_branch_hovered = true;
+                  hovered_prt = treePart;
+                }
 
 
 	            if (treePart->isMeshed()){
 	              if (ImGui::TreeNode("Mesh"))
 	              {
+                    if (ImGui::IsItemHovered()) {
+                      part_branch_hovered = true;
+                      hovered_prt = treePart;
+                    }
 	                  if (ImGui::IsItemClicked()) {
 	                    model_tree_item_clicked = true;
 	                  }
@@ -1975,6 +2066,10 @@ void Editor::drawGui() {
                   // Subramas internas
 	                  if (ImGui::TreeNode("Nodes"))
 	                  {
+                        if (ImGui::IsItemHovered()) {
+                          part_branch_hovered = true;
+                          hovered_prt = treePart;
+                        }
 	                      if (ImGui::IsItemClicked()) {
 	                        model_tree_item_clicked = true;
 	                      }
@@ -1993,6 +2088,10 @@ void Editor::drawGui() {
 
               
             }
+
+              if (part_branch_hovered) {
+                hovered_prt = treePart;
+              }
 
               ImGui::TreePop();
 	          } else if (ImGui::IsItemHovered()) {
@@ -2205,6 +2304,7 @@ void Editor::drawGui() {
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
               Condition* bc = m_model->getBC(i);
+              bool bc_branch_hovered = false;
               ImGuiTreeNodeFlags bc_flags = ImGuiTreeNodeFlags_OpenOnArrow |
                                             ImGuiTreeNodeFlags_OpenOnDoubleClick;
               if (selected_bc == bc) {
@@ -2218,6 +2318,34 @@ void Editor::drawGui() {
 	                  selected_bc = bc;
 	                }
                 if (ImGui::IsItemHovered()) {
+                  bc_branch_hovered = true;
+                  hovered_bc = bc;
+                }
+                if (bc != nullptr) {
+                  if (bc->getType() == SymmetryBC) {
+                    double3 normal = bc->getNormal();
+                    ImGui::Text("Normal: (%s, %s, %s)",
+                                to_string_scientific(normal.x, 3).c_str(),
+                                to_string_scientific(normal.y, 3).c_str(),
+                                to_string_scientific(normal.z, 3).c_str());
+                    if (ImGui::IsItemHovered()) {
+                      bc_branch_hovered = true;
+                      hovered_bc = bc;
+                    }
+                  } else {
+                    double3 velocity = bc->getValue();
+                    ImGui::Text("Velocity: (%s, %s, %s)",
+                                to_string_scientific(velocity.x, 3).c_str(),
+                                to_string_scientific(velocity.y, 3).c_str(),
+                                to_string_scientific(velocity.z, 3).c_str());
+                    if (ImGui::IsItemHovered()) {
+                      bc_branch_hovered = true;
+                      hovered_bc = bc;
+                    }
+                  }
+                }
+                if (ImGui::IsItemHovered()) {
+                  bc_branch_hovered = true;
                   hovered_bc = bc;
                 }
                 if (ImGui::BeginPopupContextItem())
@@ -2231,6 +2359,13 @@ void Editor::drawGui() {
                 }                    
                   ImGui::SameLine();
                   if (ImGui::SmallButton("button")) {}
+                  if (ImGui::IsItemHovered()) {
+                    bc_branch_hovered = true;
+                    hovered_bc = bc;
+                  }
+                  if (bc_branch_hovered) {
+                    hovered_bc = bc;
+                  }
                   ImGui::TreePop();
 	              } else if (ImGui::IsItemClicked()) {
 	                model_tree_item_clicked = true;
@@ -2464,7 +2599,7 @@ void Editor::drawGui() {
                   items = { "Box", "Cylinder", "Plane" };
                   break;
               case Axisymmetric2D:
-                  items = {"Cylinder"};
+                  items = {"Profile"};
                   break;
               case PlaneStress2D:
                   break;
@@ -2517,7 +2652,9 @@ void Editor::drawGui() {
                   //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
                 break;
             case Axisymmetric2D:
-
+                label[0] = "radial ";
+                label[1] = "axial ";
+                label[2] = "out-of-plane ";
                 break;
             case PlaneStress2D:
                 break;
@@ -2531,7 +2668,7 @@ void Editor::drawGui() {
               
         ImGui::InputDouble(label[0].c_str(), &size[0], 0.01f, 1.0f, "%.4f");
         if (show_size[1])
-        ImGui::InputDouble("y ", &size[1], 0.01f, 1.0f, "%.4f");
+        ImGui::InputDouble(label[1].c_str(), &size[1], 0.01f, 1.0f, "%.4f");
         
         
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
@@ -2655,15 +2792,19 @@ void Editor::drawGui() {
                   
               if (size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
-                if (size[1]>0.0){
-                  geo->LoadRectangle(size[0],size[1],origin[0],origin[1],origin[2]);
-                  cout << "Loading Rectanbgle "<<endl;
-                  created = true;
-                } else{//DIMENSION 1
+                const bool has_x = std::abs(size[0]) > 1.0e-12;
+                const bool has_y = std::abs(size[1]) > 1.0e-12;
 
+                if (has_x && has_y) {
+                  geo->LoadRectangle(size[0],size[1],origin[0],origin[1],origin[2]);
+                  cout << "Loading rectangle "<<endl;
+                  created = true;
+                } else if (has_x || has_y) {
                   geo->LoadLine(size[0],size[1],origin[0],origin[1]);
                   cout << "Loading line "<<endl;
                   created = true;
+                } else {
+                  cout << "Not geometry created: zero-size 2D entity" << endl;
                 }
               }
               
@@ -2904,29 +3045,7 @@ void Editor::drawGui() {
     if (ImGuiFileDialog::Instance()->IsOk())
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      fs::path savePath(filePathName);
-
-      if (savePath.extension() != ".wfmodel") {
-        savePath += ".wfmodel";
-        filePathName = savePath.string();
-      }
-
-      size_t lastSlash = filePathName.find_last_of("/\\");
-      std::string fileName = (lastSlash == std::string::npos)
-                                 ? filePathName
-                                 : filePathName.substr(lastSlash + 1);
-
-      // --- Quitar la extensión .wfmodel si la tiene ---
-      size_t dotPos = fileName.rfind(".wfmodel");
-      if (dotPos != std::string::npos)
-          fileName = fileName.substr(0, dotPos);
-
-	      getApp().getActiveModel().setName(fileName);
-	      getApp().getActiveModel().setFilePath(filePathName);
-	      cout << "Setting model name: "<<fileName<<"address "<<&getApp().getActiveModel()<<endl;
-	      ModelWriter mw(getApp().getActiveModel()); //Once it has name
-	      mw.writeToFile(filePathName);
+      saveModelToPath(getApp().getActiveModel(), filePathName);
     }
     // close
     ImGuiFileDialog::Instance()->Close();
@@ -2959,6 +3078,26 @@ void Editor::drawGui() {
   }
   
   ShowExampleAppMainMenuBar(this);
+
+  ImGuiIO& saveShortcutIo = ImGui::GetIO();
+  const bool saveShortcutPressed =
+      saveShortcutIo.KeyCtrl &&
+      !saveShortcutIo.KeyAlt &&
+      !saveShortcutIo.KeySuper &&
+      !saveShortcutIo.WantTextInput &&
+      ImGui::IsKeyPressed(ImGuiKey_S, false);
+
+  if (saveShortcutPressed) {
+    Model& activeModel = getApp().getActiveModel();
+    if (!activeModel.getHasName()) {
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".wfmodel", ".");
+    } else {
+      std::string save_path = activeModel.getFilePath();
+      if (save_path.empty())
+        save_path = activeModel.getName() + ".wfmodel";
+      saveModelToPath(activeModel, save_path);
+    }
+  }
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
@@ -3100,8 +3239,11 @@ void Editor::drawGui() {
     
   if (m_show_app_console) {
     static ExampleAppConsole console;
+    g_app_console = &console;
     console.Draw("Example: Console", &m_show_app_console);    
-    }            //ShowExampleAppConsole(&m_show_app_console);
+  } else {
+    g_app_console = nullptr;
+  }            //ShowExampleAppConsole(&m_show_app_console);
 
   drawResultsLoadProgress();
   advanceResultsLoad();

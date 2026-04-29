@@ -1,5 +1,6 @@
 //From imgui
 #include <cstdlib>
+#include <fstream>
 
 #define PY_SSIZE_T_CLEAN
 #ifdef BUILD_PYTHON
@@ -112,6 +113,26 @@ struct ExampleAppConsole
         buf[IM_ARRAYSIZE(buf)-1] = 0;
         va_end(args);
         Items.push_back(Strdup(buf));
+    }
+
+    void AddLogString(const std::string& text)
+    {
+        if (text.empty())
+            return;
+        AddLog("%s", text.c_str());
+    }
+
+    bool AddLogFile(const std::string& path)
+    {
+        std::ifstream file(path);
+        if (!file.is_open())
+            return false;
+
+        std::string line;
+        while (std::getline(file, line)) {
+            AddLog("%s\n", line.c_str());
+        }
+        return true;
     }
 
     void    Draw(const char* title, bool* p_open)

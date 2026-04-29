@@ -42,6 +42,9 @@ void VtkViewer::isCurrentCallbackFn(vtkObject* caller, long unsigned int eventId
 }
 
 void VtkViewer::processEvents(){
+	if (!inputEnabled)
+		return;
+
 	const bool viewportHovered = ImGui::IsMouseHoveringRect(viewportScreenMin, viewportScreenMax, false);
 	if (!ImGui::IsWindowFocused() && !viewportHovered){
 		return;

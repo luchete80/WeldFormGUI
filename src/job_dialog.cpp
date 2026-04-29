@@ -263,6 +263,13 @@ void JobShowDialog::Draw(){
     m_show=false;
   }
   ImGui::SameLine();
+  if (ImGui::Button("Stop Run")) {
+    if (m_job != nullptr) {
+      m_job->Stop();
+      m_job->UpdateOutput(m_max_visible_lines);
+    }
+  }
+  ImGui::SameLine();
   const bool canLoadResults = m_open_results && !resultsPath.empty();
   if (!canLoadResults)
     ImGui::BeginDisabled();

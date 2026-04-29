@@ -844,6 +844,14 @@ int main(int argc, char* argv[])
         }
         ImGui::EndPopup();
     }
+
+    const bool blockViewerInteraction =
+        editor->hasBlockingDialogOpen() ||
+        showLoadPlotDialog ||
+        showDemoDialog ||
+        ImGui::IsPopupOpen("Demo Loaded");
+    vtkViewer2.setInputEnabled(!blockViewerInteraction);
+    vtkViewer_res.setInputEnabled(!blockViewerInteraction);
     
     getApp().checkUpdate(); //To new Graphics Meshed and so on
     for (vtkSmartPointer<vtkProp>& actor : getApp().getPendingActorRemovals()) {

@@ -54,6 +54,7 @@ private:
 	unsigned int viewportWidth, viewportHeight;
 	unsigned int tex;
 	bool firstRender;
+	bool inputEnabled = true;
   ImVec2 viewportScreenMin = ImVec2(0, 0);
   ImVec2 viewportScreenMax = ImVec2(0, 0);
   
@@ -78,6 +79,8 @@ public:
 	IMGUI_IMPL_API void addActors(const vtkSmartPointer<vtkPropCollection>& actors);
 	IMGUI_IMPL_API void removeActor(const vtkSmartPointer<vtkProp>& actor);
 	void setViewportSize(const ImVec2 newSize);
+	void setInputEnabled(bool enabled) { inputEnabled = enabled; }
+	bool isInputEnabled() const { return inputEnabled; }
 public:
 	static inline unsigned int NoScrollFlags(){
 		return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;

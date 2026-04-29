@@ -820,6 +820,7 @@ void Mesh::genFromNastranFile(const std::string& filename) {
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <set>
 
 std::string formatLSDynaNumber(double value) {
     std::ostringstream oss;
@@ -1178,13 +1179,24 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     }
 
        
+    static const std::set<int> debugNodeIds = {5, 8, 27};
+
+    std::cout << "[Mesh::exportToNASTRAN] writing " << filename << std::endl;
+
     // Escribir nodos (GRID)
     for (size_t i = 0; i < m_node.size(); i++) {
         Node* node = m_node[i];
         auto pos = node->getPos();
+
+        const int nodeId = static_cast<int>(i) + 1;
+        if (debugNodeIds.count(nodeId) > 0) {
+            std::cout << "  node " << nodeId
+                      << " export=(" << pos.x << ", " << pos.y << ", " << pos.z << ")"
+                      << std::endl;
+        }
         
         outfile << "GRID    " 
-            << std::setw(8) << i + 1  // ID del nodo (1-based)
+            << std::setw(8) << nodeId  // ID del nodo (1-based)
             << std::setw(8) << ""      // CP
             << formatNastranNumber(pos[0])
             << formatNastranNumber(pos[1])

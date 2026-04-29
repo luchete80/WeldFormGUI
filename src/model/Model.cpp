@@ -100,29 +100,34 @@ Model::Model(string name){
   }
 }
 
+namespace {
+int nextAvailablePartId(const std::vector<Part*>& parts) {
+  int maxId = -1;
+  for (Part* part : parts) {
+    if (part != nullptr && part->getId() > maxId)
+      maxId = part->getId();
+  }
+  return maxId + 1;
+}
+}
+
 void Model::addPart(Part *part){
   cout << "Adding part"<<endl;
   int id = part->getId();
   cout << "ID GET"<<endl;
   std::vector<Entity*> nlist(m_part.begin(),m_part.end());
   cout << "Max ID "<<getMaxId(nlist);
-  if (id>-1){
-    
-  }
-  else {
-    int id = part->getId();
-    cout << "part id "<<id <<endl;
-    if (m_part.size()>0){
-      //cout << m_part[0]->getId()<<endl;
-      //cout << "max id "<<endl;
-      //cout << "Max ID "<<getMaxId(nlist);
-      //part->setId(getMaxId(nlist));
+  bool idInUse = false;
+  for (Part* existingPart : m_part) {
+    if (existingPart != nullptr && existingPart->getId() == id) {
+      idInUse = true;
+      break;
     }
-    
-    //cout << "SET ID "<<endl;
-    
-    //TEST
-    //processObjects<Entity>(m_part);
+  }
+
+  if (id < 0 || idInUse) {
+    int nextId = nextAvailablePartId(m_part);
+    part->setId(nextId);
   }
   m_part.push_back(part);
   if (part->isMeshed()){
@@ -135,8 +140,10 @@ void Model::addPart(Part *part){
 }
 
 void Model::addPart(Geom *geom){
-  m_part.push_back(new Part(geom));
-  m_part[m_part.size()-1]->setId(m_part.size()-1);
+  Part* part = new Part(geom);
+  int nextId = nextAvailablePartId(m_part);
+  part->setId(nextId);
+  m_part.push_back(part);
 }
 
 void Model::addGeom(Geom *geom){
@@ -147,4 +154,3 @@ void Model::addBoundaryCondition(BoundaryCondition *bc)
 {
   m_bc.push_back(bc);
 }
-

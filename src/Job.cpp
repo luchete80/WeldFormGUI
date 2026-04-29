@@ -7,6 +7,7 @@
 #include <fstream>
 #include <filesystem>
 #include <deque>
+#include <cstdio>
 #include <nlohmann/json.hpp>
 
 using namespace std;
@@ -35,6 +36,30 @@ fs::path Job::getTempLogPath() const{
   if (stem.empty())
     stem = "job";
   return getJobDirectory() / (stem + "_log_snapshot.tmp");
+}
+
+fs::path Job::getPidFilePath() const{
+  fs::path input_path(m_path_file);
+  std::string stem = input_path.stem().string();
+  if (stem.empty())
+    stem = "job";
+  return getJobDirectory() / (stem + ".pid");
+}
+
+int Job::getPid() const{
+  if (m_pid > 0)
+    return m_pid;
+
+  const fs::path pid_path = getPidFilePath();
+  if (!fs::exists(pid_path))
+    return -1;
+
+  std::ifstream file(pid_path);
+  int pid = -1;
+  if (!(file >> pid))
+    return -1;
+
+  return pid;
 }
 
 bool Job::isImplicit() const{
@@ -68,6 +93,7 @@ int Job::Run(){
   int returnCode ;
   const std::string solver_name = isImplicit() ? "weldform_imp_std" : "weldform_exp_std";
   const std::string log_path = getLogFilePath().string();
+  const std::string pid_path = getPidFilePath().string();
 
   //int returnCode = system(str.c_str());
   //CATCH ID
@@ -83,21 +109,52 @@ int Job::Run(){
   #endif
   returnCode = system(str.c_str());  
 
+  std::remove(pid_path.c_str());
+  m_pid = -1;
+
   #ifdef _WIN32
   //str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
   str = "START /B solvers\\" + solver_name + " \"" + m_path_file+ "\"";
   cout << "RUNNING "<<str<<endl;
   #elif linux
-  str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" &";
-  //str = "nohup solvers/" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\" 2>&1 &";
-  //echo $!
+  str = "sh -c 'nohup solvers/" + solver_name + " \"" + m_path_file +
+        "\" > \"" + log_path + "\" 2>&1 & echo $! > \"" + pid_path + "\"'";
   #endif
 
   returnCode = system(str.c_str());    
-  
-  cout << "Process ID "<< returnCode<<endl;
+
+  m_pid = getPid();
+  cout << "Process ID "<< m_pid <<endl;
   return returnCode; 
   
+}
+
+bool Job::Stop(){
+  const int pid = getPid();
+  if (pid <= 0) {
+    cout << "[Job::Stop] No valid PID available for " << m_path_file << endl;
+    return false;
+  }
+
+  std::string str;
+  int returnCode = -1;
+
+  #ifdef _WIN32
+  str = "taskkill /PID " + std::to_string(pid) + " /T /F";
+  #elif linux
+  str = "kill -TERM " + std::to_string(pid);
+  #endif
+
+  returnCode = system(str.c_str());
+  if (returnCode != 0) {
+    cout << "[Job::Stop] Failed to stop PID " << pid << " for " << m_path_file << endl;
+    return false;
+  }
+
+  std::remove(getPidFilePath().string().c_str());
+  m_pid = -1;
+  cout << "[Job::Stop] Stopped PID " << pid << " for " << m_path_file << endl;
+  return true;
 }
 void Job::UpdateOutput(int max_lines){
   m_log = "";
