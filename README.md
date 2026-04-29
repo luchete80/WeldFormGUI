@@ -2,6 +2,7 @@
 FEM Graphical User Interaface for large deformation workflows with integrated student explicit and implicit solvers.
 
 
+![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/202605_GUI.gif)
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_1.png)
 ![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_2.png)
 
