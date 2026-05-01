@@ -1,22 +1,16 @@
 # WeldFormGUI
 
-FEM Graphical User Interface for large deformation workflows with integrated student explicit and implicit solvers.
+WeldFormGUI
+Open-source simulation and scripting platform for engineering workflows.
+Featuring:
+- geometry creation,
+- meshing (gmsh & own quad mesher),
+- Python scripting,
+- integrated solver workflows,
+- postprocessing and animation,
+- visualization tools,
+and extensible automation pipelines.
 
-Open-source CAE platform for:
-- forging,
-- extrusion,
-- forming,
-- contact-heavy simulations,
-- educational and research workflows.
-
-WeldFormGUI integrates:
-- geometry,
-- meshing,
-- preprocessing,
-- explicit and implicit solvers,
-- postprocessing,
-- animation,
-- and scripting
 
 # Downloads
 
