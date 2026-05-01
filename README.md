@@ -5,7 +5,7 @@ Open-source simulation and scripting platform for engineering workflows.
 Featuring:
 - geometry creation,
 - meshing (gmsh & own quad mesher),
-- Python scripting,
+- early Python scripting support,
 - integrated solver workflows,
 - postprocessing and animation,
 - visualization tools,
