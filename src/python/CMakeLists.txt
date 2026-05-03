@@ -55,23 +55,17 @@ SOURCE_GROUP(generated        REGULAR_EXPRESSION ".*\\.(cxx|py)")
 
 set(PYTHON_WRAPPER_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 
-# Copy the Python extension and .py wrapper after build
 add_custom_command(TARGET _dnlPython POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${PYTHON_WRAPPER_OUTPUT_DIR}"
-  # Copy the compiled Python extension module (.so or .pyd)
-  COMMAND ${CMAKE_COMMAND} -E copy
+
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
       $<TARGET_FILE:_dnlPython>
-      ${PYTHON_WRAPPER_OUTPUT_DIR}
+      "${PYTHON_WRAPPER_OUTPUT_DIR}"
 
-  # Copy the SWIG-generated Python wrapper
-  COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_BINARY_DIR}/dnlPython.py
-      ${PYTHON_WRAPPER_OUTPUT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${CMAKE_CURRENT_BINARY_DIR}/model.py"
+      "${PYTHON_WRAPPER_OUTPUT_DIR}"
 
-  # Copy your own model.py file
-  COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_BINARY_DIR}/model.py
-      ${PYTHON_WRAPPER_OUTPUT_DIR}
-  COMMENT "Copying SWIG Python wrapper (.py) and extension module (.pyd/.so) to python folder"
+  COMMENT "Copying SWIG Python wrapper and extension module to output folder"
 )
 
