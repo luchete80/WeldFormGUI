@@ -27,7 +27,6 @@
 // Or forward declare it as an opaque type
 
 %ignore TopoDS_Shape;
-%ignore TopoDS_Shape::*;
 class TopoDS_Shape;
 
 //%opaque TopoDS_Shape;
