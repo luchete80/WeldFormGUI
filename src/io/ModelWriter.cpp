@@ -395,6 +395,7 @@ void ModelWriter::writeToFile(std::string fname){
           // Valor (velocidad o desplazamiento)
           double3 v = bc->getValue();
           jbc["value"] = {v.x, v.y, v.z};
+          jbc["dofMask"] = {bc->getDofMaskX(), bc->getDofMaskY(), bc->getDofMaskZ()};
 
           // Agregar al array
           m_json["BoundaryConditions"].push_back(jbc);

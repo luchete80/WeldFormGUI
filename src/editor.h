@@ -102,6 +102,7 @@ public:
   void Run();
   int Terminate();
   void Update();
+  void showScriptBrowser();
   
 
   
@@ -307,6 +308,9 @@ protected:
   
   bool m_show_app_main_menu_bar;
   bool m_show_app_console;
+  bool m_show_script_browser = false;
+  std::vector<fs::path> m_script_browser_entries;
+  int m_selected_script_browser_index = -1;
   
   bool m_moving_mode = false;
   int  m_mov_part = -1;
@@ -360,6 +364,8 @@ protected:
   bool getPartVisualCenter(Part* part, double center[3]) const;
   void updateMovePartOffsetFromCurrentState();
   void resetCurrentPartTransform();
+  void refreshScriptBrowser();
+  void drawScriptBrowserWindow();
   Part* findBoundaryConditionTargetPart(const Condition* condition) const;
   NodeSet* findNodeSetById(int setId) const;
   vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(Part* part) const;

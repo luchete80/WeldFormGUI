@@ -41,8 +41,21 @@ class NodeSet
 :public Set<Node>{
 
 public:
+  using Entity::getId;
+  using Entity::getID;
   NodeSet() = default;
   explicit NodeSet(Mesh* mesh) : Set<Node>(mesh) {}
+
+  void add(Node* node){ Set<Node>::add(node); }
+  void clear(){ Set<Node>::clear(); }
+  int getItemCount() const { return Set<Node>::getItemCount(); }
+  Node* getItem(const int& i){ return Set<Node>::getItem(i); }
+  const Node* getItem(const int& i) const { return Set<Node>::getItem(i); }
+  const int& getId() const { return Entity::getId(); }
+  const int& getID() const { return Entity::getID(); }
+  void setLabel(const std::string& label){ Set<Node>::setLabel(label); }
+  const std::string& getLabel() const { return Set<Node>::getLabel(); }
+  void setEntityId(int id) { Set<Node>::setEntityId(id); }
   };
 
 #endif

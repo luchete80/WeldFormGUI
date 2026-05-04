@@ -4,6 +4,8 @@
 #include "Part.h"
 #include "Mesh.h"
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
 
 //#include "VtkViewer.h"
 
@@ -35,6 +37,7 @@ void App::initApp(){
   cout << "Initializing App"<<endl;
     if (App::_pcSingleton == nullptr){
       App::_pcSingleton = new App();
+      App::_pcSingleton->loadRecentFiles();
       cout << "App address "<<App::_pcSingleton<<endl;
   }
 }
@@ -348,4 +351,63 @@ vtkOCCTGeom* App::registerGeometry(Geom* geo) {
     vtkOCCTGeom* visual = new vtkOCCTGeom();
     registerGeometry(geo, visual);
     return visual;
+}
+
+std::filesystem::path App::recentFilesStoragePath() const
+{
+    return std::filesystem::current_path() / ".recent_wfmodels";
+}
+
+void App::loadRecentFiles()
+{
+    m_recentFiles.clear();
+
+    std::ifstream input(recentFilesStoragePath());
+    if (!input.is_open()) {
+        return;
+    }
+
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty()) {
+            m_recentFiles.push_back(line);
+        }
+    }
+}
+
+void App::saveRecentFiles() const
+{
+    std::ofstream output(recentFilesStoragePath());
+    if (!output.is_open()) {
+        std::cerr << "Failed to write recent files list." << std::endl;
+        return;
+    }
+
+    for (const std::string& path : m_recentFiles) {
+        output << path << '\n';
+    }
+}
+
+void App::addRecentFile(const std::string& path)
+{
+    if (path.empty()) {
+        return;
+    }
+
+    std::error_code ec;
+    const std::string normalized =
+        std::filesystem::absolute(path, ec).lexically_normal().string();
+    const std::string& entry = ec ? path : normalized;
+
+    m_recentFiles.erase(
+        std::remove(m_recentFiles.begin(), m_recentFiles.end(), entry),
+        m_recentFiles.end());
+    m_recentFiles.insert(m_recentFiles.begin(), entry);
+
+    static const std::size_t kMaxRecentFiles = 10;
+    if (m_recentFiles.size() > kMaxRecentFiles) {
+        m_recentFiles.resize(kMaxRecentFiles);
+    }
+
+    saveRecentFiles();
 }

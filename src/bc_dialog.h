@@ -33,8 +33,9 @@ public Dialog
   
   int m_applyTo;
   double3 m_vel;
+  bool m_dof_mask[3] = {true, true, true};
 
-  int bcType = 0;      // 0 = Velocity, 2 = Symmetry
+  int bcType = 0;      // 0 = Velocity, 1 = Displacement, 2 = Symmetry
   double3 m_normal = make_double3(0,0,1);
 
   //bool initialized = false;    

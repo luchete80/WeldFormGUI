@@ -204,6 +204,10 @@
          - Added CTRL+S to save (and console msg)
 20260504 - Fixed Scripting Things (changed python paths)
          - Added Writing output to console. 
-         - Adding Selector class
-         - Adding Node Set 
-         
+         - Adding Selector class by picking and box. 
+         - Adding Node Set
+         - Added Abaqus Exporter
+         - Added dof mask to BC dialog.
+         - Added File->Open Recent
+         - Added Script Browser.
+         - Added BC to abaqus exporter.

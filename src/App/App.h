@@ -7,6 +7,7 @@
 #include "geom/vtkOCCTGeom.h"
 #include "geom/Geom.h"
 #include <unordered_map>
+#include <filesystem>
 #include <vtkSmartPointer.h>
 //#define MY_DLL_API __declspec(dllexport)
 #include "Part.h"
@@ -96,6 +97,10 @@ public:
   void clearVisualsForModel(Model* model);
   std::vector<vtkSmartPointer<vtkProp>>& getPendingActorRemovals(){return m_pendingActorRemovals;}
   void clearPendingActorRemovals(){m_pendingActorRemovals.clear();}
+  void addRecentFile(const std::string& path);
+  const std::vector<std::string>& getRecentFiles() const { return m_recentFiles; }
+  void loadRecentFiles();
+  void saveRecentFiles() const;
     
   GraphicMesh* getGraphicMeshFromPart(Part *part);
     
@@ -111,6 +116,8 @@ private:
   //REDUNDANT
   std::unordered_map<Geom*, vtkOCCTGeom*> geomToVisual; //TO DELETE
   std::unordered_map<Part*, vtkOCCTGeom*> partToVisual; // ID de parte -> visual
+  std::vector<std::string> m_recentFiles;
+  std::filesystem::path recentFilesStoragePath() const;
 
 }; 
 

@@ -83,6 +83,7 @@
 
 using namespace std;
 //glm::mat4 trans_mat[1000]; //test
+namespace fs = std::filesystem;
 
 namespace {
 int curveNodeCountFromElementSize(int curveTag, double elementSize) {
@@ -259,6 +260,17 @@ std::string ensureWfmodelPath(const std::string& filePathName)
     return savePath.string();
 }
 
+fs::path preferredScriptsRoot()
+{
+    const fs::path sourceScriptsRoot =
+        fs::path(__FILE__).parent_path().parent_path() / "scripts";
+    if (fs::exists(sourceScriptsRoot) && fs::is_directory(sourceScriptsRoot)) {
+        return sourceScriptsRoot.lexically_normal();
+    }
+
+    return (fs::current_path() / "scripts").lexically_normal();
+}
+
 void appendToAppConsole(const std::string& text)
 {
     appendStreamTextToConsole(text.data(), text.size());
@@ -420,6 +432,7 @@ bool saveModelToPath(Model& model, const std::string& filePathName)
 
     ModelWriter writer(model);
     writer.writeToFile(normalizedPath);
+    getApp().addRecentFile(normalizedPath);
 
     appendToAppConsole("Saved Model: " + normalizedPath + "\n");
     cout << "Saved Model: " << normalizedPath << endl;
@@ -927,6 +940,7 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   m_model->setNoSaveAs();
   is_model = true;
   m_creating_model = false;
+  getApp().addRecentFile(filePathName);
 
   getApp().setActiveModel(m_model);
 #ifdef BUILD_PYTHON
@@ -1227,6 +1241,110 @@ bool Editor::hasBlockingDialogOpen() const
          m_show_mov_part ||
          m_jobdlg.m_show ||
          m_jobshowdlg.m_show;
+}
+
+void Editor::showScriptBrowser()
+{
+  refreshScriptBrowser();
+  m_show_script_browser = true;
+}
+
+void Editor::refreshScriptBrowser()
+{
+  m_script_browser_entries.clear();
+
+  const fs::path scriptsRoot = preferredScriptsRoot();
+  if (!fs::exists(scriptsRoot) || !fs::is_directory(scriptsRoot)) {
+    m_selected_script_browser_index = -1;
+    return;
+  }
+
+  for (const auto& entry : fs::recursive_directory_iterator(scriptsRoot)) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+
+    std::string ext = entry.path().extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+      return static_cast<char>(std::tolower(c));
+    });
+    if (ext == ".py") {
+      m_script_browser_entries.push_back(entry.path());
+    }
+  }
+
+  std::sort(m_script_browser_entries.begin(), m_script_browser_entries.end(),
+            [](const fs::path& a, const fs::path& b) {
+              return a.lexically_normal().string() < b.lexically_normal().string();
+            });
+
+  if (m_script_browser_entries.empty()) {
+    m_selected_script_browser_index = -1;
+  } else if (m_selected_script_browser_index < 0 ||
+             m_selected_script_browser_index >= static_cast<int>(m_script_browser_entries.size())) {
+    m_selected_script_browser_index = 0;
+  }
+}
+
+void Editor::drawScriptBrowserWindow()
+{
+  if (!m_show_script_browser) {
+    return;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(620.0f, 360.0f), ImGuiCond_FirstUseEver);
+  if (!ImGui::Begin("Script Browser", &m_show_script_browser)) {
+    ImGui::End();
+    return;
+  }
+
+  const fs::path scriptsRoot = preferredScriptsRoot();
+  ImGui::Text("Folder: %s", scriptsRoot.string().c_str());
+  if (ImGui::Button("Refresh")) {
+    refreshScriptBrowser();
+  }
+  ImGui::SameLine();
+
+  const bool hasSelection =
+      m_selected_script_browser_index >= 0 &&
+      m_selected_script_browser_index < static_cast<int>(m_script_browser_entries.size());
+  if (ImGui::Button("Run Selected") && hasSelection) {
+    openScriptFromPath(m_script_browser_entries[m_selected_script_browser_index].string());
+  }
+
+  ImGui::Separator();
+  ImGui::BeginChild("ScriptBrowserList", ImVec2(0, 0), true);
+
+  if (m_script_browser_entries.empty()) {
+    ImGui::TextDisabled("No Python scripts found in ./scripts");
+  } else {
+    for (int i = 0; i < static_cast<int>(m_script_browser_entries.size()); ++i) {
+      const bool isSelected = (m_selected_script_browser_index == i);
+      fs::path displayPath = m_script_browser_entries[i];
+      std::error_code ec;
+      if (displayPath.is_absolute()) {
+        displayPath = fs::relative(displayPath, scriptsRoot, ec);
+        if (ec) {
+          displayPath = m_script_browser_entries[i];
+        }
+      }
+
+      const std::string label = displayPath.string();
+      if (ImGui::Selectable(label.c_str(), isSelected)) {
+        m_selected_script_browser_index = i;
+      }
+      if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", m_script_browser_entries[i].string().c_str());
+      }
+      if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+        m_selected_script_browser_index = i;
+        openScriptFromPath(m_script_browser_entries[i].string());
+      }
+    }
+  }
+
+  ImGui::EndChild();
+  ImGui::End();
 }
 
 void Editor::applyPartTranslation(Part* part, double dx, double dy, double dz)
@@ -2144,7 +2262,7 @@ void getCurrentModelInfo(){
 
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
-void ShowExampleMenuFile(const Editor &editor)
+void ShowExampleMenuFile(Editor *editor)
 {
     //IMGUI_DEMO_MARKER("Examples/Menu");
     ImGui::MenuItem("(demo menu)", NULL, false, false);
@@ -2156,6 +2274,11 @@ void ShowExampleMenuFile(const Editor &editor)
     }
     if (ImGui::MenuItem("Open Script")) {
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenScript", "Choose Python Script", ".py", ".");
+    }
+    if (ImGui::MenuItem("Script Browser")) {
+      if (editor != nullptr) {
+        editor->showScriptBrowser();
+      }
     }
     if (ImGui::MenuItem("Import Geometry", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
@@ -2171,19 +2294,23 @@ void ShowExampleMenuFile(const Editor &editor)
     }
     if (ImGui::BeginMenu("Open Recent"))
     {
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
-        if (ImGui::BeginMenu("More.."))
-        {
-            ImGui::MenuItem("Hello");
-            ImGui::MenuItem("Sailor");
-            if (ImGui::BeginMenu("Recurse.."))
-            {
-                ShowExampleMenuFile(editor);
-                ImGui::EndMenu();
+        const std::vector<std::string>& recentFiles = getApp().getRecentFiles();
+        if (recentFiles.empty()) {
+            ImGui::MenuItem("No recent files", nullptr, false, false);
+        } else {
+            for (const std::string& recentPath : recentFiles) {
+                const std::string label = fs::path(recentPath).filename().string().empty()
+                    ? recentPath
+                    : fs::path(recentPath).filename().string();
+                if (ImGui::MenuItem(label.c_str())) {
+                    if (editor != nullptr) {
+                        editor->openModelFromPath(recentPath);
+                    }
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("%s", recentPath.c_str());
+                }
             }
-            ImGui::EndMenu();
         }
         ImGui::EndMenu();
     }
@@ -2311,7 +2438,7 @@ void ShowExampleMenuFile(const Editor &editor)
     {
         if (ImGui::BeginMenu("File"))
         {
-            ShowExampleMenuFile(*editor);
+            ShowExampleMenuFile(editor);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -2349,7 +2476,7 @@ void Editor::drawGui() {
       if (ImGui::BeginMenu("Menu"))
       {
           //IMGUI_DEMO_MARKER("Menu/File");
-          ShowExampleMenuFile(*this);
+          ShowExampleMenuFile(this);
           ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Examples"))
@@ -4040,6 +4167,7 @@ void Editor::drawGui() {
     g_app_console = nullptr;
   }            //ShowExampleAppConsole(&m_show_app_console);
 
+  drawScriptBrowserWindow();
   drawResultsLoadProgress();
   advanceResultsLoad();
   updatePartOverlay();

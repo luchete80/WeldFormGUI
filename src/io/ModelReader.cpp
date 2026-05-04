@@ -405,6 +405,17 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 val.z = jbc["value"][2];
             }
 
+            bool dofMask[3] = {true, true, true};
+            if ((bcType == VelocityBC || bcType == DisplacementBC) &&
+                jbc.contains("dofMask") &&
+                jbc["dofMask"].is_array() &&
+                jbc["dofMask"].size() == 3)
+            {
+                dofMask[0] = jbc["dofMask"][0].get<bool>();
+                dofMask[1] = jbc["dofMask"][1].get<bool>();
+                dofMask[2] = jbc["dofMask"][2].get<bool>();
+            }
+
             // --- Normal para SymmetryBC ---
             double3 normal = make_double3(0.0, 0.0, 1.0);
             if (bcType == SymmetryBC &&
@@ -425,6 +436,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 bc = new BoundaryCondition(bcType, applyTo, targetId, normal);
             } else {
                 bc = new BoundaryCondition(bcType, applyTo, targetId, val);
+                bc->setDofMask(dofMask[0], dofMask[1], dofMask[2]);
             }
 
             m_model->addBoundaryCondition(bc);

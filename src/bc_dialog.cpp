@@ -44,7 +44,12 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             m_targetId = bc->getTargetId();
             m_vel = bc->getValue();
             m_normal = bc->getNormal();
-            bcType = (bc->getType() == SymmetryBC ? 2 : 0);
+            m_dof_mask[0] = bc->getDofMaskX();
+            m_dof_mask[1] = bc->getDofMaskY();
+            m_dof_mask[2] = bc->getDofMaskZ();
+            if (bc->getType() == SymmetryBC) bcType = 2;
+            else if (bc->getType() == DisplacementBC) bcType = 1;
+            else bcType = 0;
 
         if (bcType == 2) {
             double3 n = bc->getNormal();
@@ -57,7 +62,10 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         
         } else {
           
-        m_applyTo = 0;  
+        m_applyTo = 0;
+        m_dof_mask[0] = true;
+        m_dof_mask[1] = true;
+        m_dof_mask[2] = true;
         }
         initialized = true;
     }
@@ -71,7 +79,9 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     ImGui::Text("Boundary Condition Type:");
     ImGui::RadioButton("Velocity", &bcType, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Temperature", &bcType, 1);
+    ImGui::RadioButton("Displacement", &bcType, 1);
+    if (isBoundary)
+      ImGui::SameLine();
     if (isBoundary)
       ImGui::RadioButton("Symmetry", &bcType, 2);
     
@@ -212,13 +222,20 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         }
     }
 
-    // --- VELOCITY INPUT (solo si bcType == 0)
-    if (bcType == 0) {
+    if (bcType == 0 || bcType == 1) {
         float v[3] = { m_vel.x, m_vel.y, m_vel.z };
-        ImGui::InputFloat3("Velocity", v, "%.3f");
+        const char* valueLabel = (bcType == 0) ? "Velocity" : "Displacement";
+        ImGui::InputFloat3(valueLabel, v, "%.3f");
         m_vel = make_double3(v[0], v[1], v[2]);
+
+        ImGui::Text("Apply DOFs:");
+        ImGui::Checkbox("X", &m_dof_mask[0]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Y", &m_dof_mask[1]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Z", &m_dof_mask[2]);
     } else {
-        ImGui::TextDisabled("Velocity is ignored for Symmetry BC.");
+        ImGui::TextDisabled("Value and DOF mask are ignored for Symmetry BC.");
     }
 
     // --- BOTÓN OK / CREATE ---
@@ -234,15 +251,26 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
           if (isBoundary){
             if (bcType == 0)
                 bc = new BoundaryCondition(VelocityBC, target, m_targetId, m_vel);
+            else if (bcType == 1)
+                bc = new BoundaryCondition(DisplacementBC, target, m_targetId, m_vel);
             else
                 bc = new BoundaryCondition(SymmetryBC, target, m_targetId, m_normal);
+
+            if (bc != nullptr && bcType != 2) {
+              bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
+            }
 
             model->addBoundaryCondition(bc);
           } else if (isInitial){
             ic = new InitialCondition(VelocityBC, target, m_targetId, m_vel);
+            if (ic != nullptr) {
+              ic->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
+            }
           
           }
-          model->addInitialCondition(ic);
+          if (ic != nullptr) {
+            model->addInitialCondition(ic);
+          }
         }
         else {
             Condition* bc = *sel_bc;      // ✔ puntero real
@@ -253,6 +281,11 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             if (bcType == 0) {
                 bc->setType(VelocityBC);
                 bc->setValue(m_vel);
+                bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
+            } else if (bcType == 1) {
+                bc->setType(DisplacementBC);
+                bc->setValue(m_vel);
+                bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
             } else {
                 bc->setType(SymmetryBC);
                 bc->setNormal(m_normal);
