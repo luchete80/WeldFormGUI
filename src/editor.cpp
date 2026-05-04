@@ -1247,7 +1247,6 @@ bool Editor::hasBlockingDialogOpen() const
          m_show_step_dlg_edit ||
          m_show_interaction_props_dlg ||
          m_show_msh_dlg ||
-         m_show_mov_part ||
          m_jobdlg.m_show ||
          m_jobshowdlg.m_show;
 }
@@ -4026,6 +4025,20 @@ void Editor::drawGui() {
   create_new_part = false;
 
   if (m_moving_mode) {
+    ImGuiIO& moveIo = ImGui::GetIO();
+    if (!moveIo.WantTextInput) {
+      if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
+        finishMoveMode(false);
+      } else if (ImGui::IsKeyPressed(ImGuiKey_Enter, false) ||
+                 ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false)) {
+        finishMoveMode(true);
+      }
+    }
+
+    if (!m_moving_mode) {
+      return;
+    }
+
     updateMovePartOffsetFromCurrentState();
     MoveCommand move = m_movprtdlg.Draw(m_move_part_step, m_move_part_offset, &m_show_mov_part);
     
