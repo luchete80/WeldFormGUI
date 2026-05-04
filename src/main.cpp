@@ -217,6 +217,30 @@ bool drawToolbarButton(const char* label, bool active = false)
     return pressed;
 }
 
+bool drawAxisButton(const char* label, const ImVec4& baseColor)
+{
+    const ImVec4 hoveredColor(
+        (std::min)(baseColor.x + 0.10f, 1.0f),
+        (std::min)(baseColor.y + 0.10f, 1.0f),
+        (std::min)(baseColor.z + 0.10f, 1.0f),
+        1.0f);
+    const ImVec4 activeColor(
+        (std::max)(baseColor.x - 0.08f, 0.0f),
+        (std::max)(baseColor.y - 0.08f, 0.0f),
+        (std::max)(baseColor.z - 0.08f, 0.0f),
+        1.0f);
+
+    ImGui::PushStyleColor(ImGuiCol_Button, baseColor);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    const bool pressed = ImGui::Button(label);
+
+    ImGui::PopStyleColor(4);
+    return pressed;
+}
+
 bool drawFitIconButton()
 {
     const ImVec2 size(28.0f, 28.0f);
@@ -300,15 +324,15 @@ void drawViewportOverlay(VtkViewer& viewer,
             viewer.resetCamera();
         }
         ImGui::SameLine();
-        if (drawToolbarButton("X")) {
+        if (drawAxisButton("X", ImVec4(0.70f, 0.24f, 0.24f, 1.0f))) {
             viewer.orientCameraToAxis(0);
         }
         ImGui::SameLine();
-        if (drawToolbarButton("Y")) {
+        if (drawAxisButton("Y", ImVec4(0.22f, 0.58f, 0.28f, 1.0f))) {
             viewer.orientCameraToAxis(1);
         }
         ImGui::SameLine();
-        if (drawToolbarButton("Z")) {
+        if (drawAxisButton("Z", ImVec4(0.24f, 0.40f, 0.76f, 1.0f))) {
             viewer.orientCameraToAxis(2);
         }
 
