@@ -16,6 +16,7 @@ endif()
  
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #FILESYSTEM ON RESULTS
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(APP_VERSION_MAJOR 1)
 set(APP_VERSION_MINOR 0)
@@ -412,4 +413,11 @@ target_link_libraries(${EXEC_NAME}
             gmsh
             ${LINK_LIBRARIES}
             ${PYTHON_LIBRARIES}
+)
+
+add_custom_command(TARGET ${EXEC_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:${EXEC_NAME}>
+        ${CMAKE_BINARY_DIR}/$<TARGET_FILE_NAME:${EXEC_NAME}>
+    COMMENT "Copying ${EXEC_NAME} to build root"
 )

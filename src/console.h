@@ -286,27 +286,24 @@ struct ExampleAppConsole
     PyObject* ioModule = PyImport_ImportModule("io");
     if (!ioModule) {
         std::cerr << "Failed to import io module!" << std::endl;
-        Py_Finalize();
         cout << "ERROR!!"<<endl;
-        //return 1;
+        return;
     } 
     PyObject* stringIOClass = PyObject_GetAttrString(ioModule, "StringIO");
     Py_DECREF(ioModule);
     if (!stringIOClass) {
         std::cerr << "Failed to get StringIO class!" << std::endl;
-        Py_Finalize();
-         cout << "ERROR!!"<<endl;
-        //return 1;
+        cout << "ERROR!!"<<endl;
+        return;
     }    
     
     // Create a StringIO object
     PyObject* stringIO = PyObject_CallObject(stringIOClass, nullptr);
     Py_DECREF(stringIOClass);
     if (!stringIO) {
-       cout << "ERROR!!"<<endl;
+        cout << "ERROR!!"<<endl;
         std::cerr << "Failed to create StringIO object!" << std::endl;
-        Py_Finalize();
-       // return 1;
+        return;
     }
 
     // Redirect sys.stdout and sys.stderr to the StringIO object
@@ -314,38 +311,61 @@ struct ExampleAppConsole
     if (!sysModule) {
         std::cerr << "Failed to import sys module!" << std::endl;
         Py_DECREF(stringIO);
-        Py_Finalize();
-         cout << "ERROR!!"<<endl;
-      //  return 1;
+        cout << "ERROR!!"<<endl;
+        return;
     }
     PyObject* originalStdout = PyObject_GetAttrString(sysModule, "stdout");
     PyObject* originalStderr = PyObject_GetAttrString(sysModule, "stderr");
+    if (!originalStdout || !originalStderr) {
+        std::cerr << "Failed to access sys.stdout/sys.stderr!" << std::endl;
+        Py_XDECREF(originalStdout);
+        Py_XDECREF(originalStderr);
+        Py_DECREF(sysModule);
+        Py_DECREF(stringIO);
+        cout << "ERROR!!"<<endl;
+        return;
+    }
     PyObject_SetAttrString(sysModule, "stdout", stringIO);
     PyObject_SetAttrString(sysModule, "stderr", stringIO);
     
     ////////////////////////
-        PyRun_SimpleString(command_line);
-      getApp().Update(); //
+    PyRun_SimpleString(command_line);
+    getApp().Update(); //
 ////////////////////////////////////////////////////////////////////////
  /// AFTER
 /////////////////////////////////////////////////
     PyObject* getValueMethod = PyObject_GetAttrString(stringIO, "getvalue");
-    PyObject* output = PyObject_CallObject(getValueMethod, nullptr);
-    Py_DECREF(getValueMethod);
+    PyObject* output = getValueMethod ? PyObject_CallObject(getValueMethod, nullptr) : nullptr;
+    Py_XDECREF(getValueMethod);
 
-    char* outputBuffer = nullptr;
+    if (PyObject_SetAttrString(sysModule, "stdout", originalStdout) != 0) {
+        std::cerr << "Failed to restore sys.stdout!" << std::endl;
+    }
+    if (PyObject_SetAttrString(sysModule, "stderr", originalStderr) != 0) {
+        std::cerr << "Failed to restore sys.stderr!" << std::endl;
+    }
+
+    std::string capturedOutput;
     if (output) {
-        // Convert Python string to a C-style string
         const char* outputCStr = PyUnicode_AsUTF8(output);
         if (outputCStr) {
-            // Allocate and copy the buffer
-            outputBuffer = strdup(outputCStr); // Dynamically allocate memory for char*
+            capturedOutput = outputCStr;
         }
         Py_DECREF(output);
     } else {
         std::cerr << "Failed to retrieve output from StringIO!" << std::endl;
     }
-    AddLog(outputBuffer);
+
+    Py_DECREF(originalStdout);
+    Py_DECREF(originalStderr);
+    Py_DECREF(sysModule);
+    Py_DECREF(stringIO);
+
+    if (!capturedOutput.empty()) {
+        AddLog("%s", capturedOutput.c_str());
+        std::cout << capturedOutput;
+        std::cout.flush();
+    }
  //////////////////////////////////
                        
         for (int i = History.Size - 1; i >= 0; i--)

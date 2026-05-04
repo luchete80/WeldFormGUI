@@ -141,6 +141,39 @@ static void glfw_error_callback(int error, const char* description)
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+#ifdef BUILD_PYTHON
+namespace {
+void addPythonSearchPath(const std::filesystem::path& path)
+{
+  if (path.empty()) {
+    return;
+  }
+
+  const std::string normalized = std::filesystem::absolute(path).lexically_normal().string();
+  if (normalized.empty()) {
+    return;
+  }
+
+  PyObject* sysPath = PySys_GetObject("path");
+  if (sysPath == nullptr || !PyList_Check(sysPath)) {
+    std::cerr << "Failed to access Python sys.path" << std::endl;
+    return;
+  }
+
+  PyObject* pyPath = PyUnicode_FromString(normalized.c_str());
+  if (pyPath == nullptr) {
+    PyErr_Clear();
+    std::cerr << "Failed to convert Python search path: " << normalized << std::endl;
+    return;
+  }
+
+  if (PySequence_Contains(sysPath, pyPath) == 0) {
+    PyList_Insert(sysPath, 0, pyPath);
+  }
+  Py_DECREF(pyPath);
+}
+}
+#endif
 
 
 int main(int argc, char* argv[])
@@ -307,7 +340,11 @@ int main(int argc, char* argv[])
 
   // Main loop
   #ifdef BUILD_PYTHON
-  Py_Initialize(); 
+  Py_Initialize();
+  addPythonSearchPath(std::filesystem::current_path());
+  if (argc > 0 && argv[0] != nullptr) {
+    addPythonSearchPath(std::filesystem::absolute(argv[0]).parent_path());
+  }
   #endif
   
   App::initApp(); //singleton

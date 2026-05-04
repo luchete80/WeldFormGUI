@@ -9,6 +9,7 @@ set(IO_SRCS         "ModelWriter.cpp"
 )
 
 ADD_LIBRARY(io ${IO_SRCS})
+set_target_properties(io PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # Set destination dir
 set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src)
 
