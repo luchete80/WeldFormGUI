@@ -262,13 +262,14 @@ std::string ensureWfmodelPath(const std::string& filePathName)
 
 fs::path preferredScriptsRoot()
 {
-    const fs::path sourceScriptsRoot =
-        fs::path(__FILE__).parent_path().parent_path() / "scripts";
-    if (fs::exists(sourceScriptsRoot) && fs::is_directory(sourceScriptsRoot)) {
-        return sourceScriptsRoot.lexically_normal();
+    const fs::path currentScriptsRoot = (fs::current_path() / "scripts").lexically_normal();
+    if (fs::exists(currentScriptsRoot) && fs::is_directory(currentScriptsRoot)) {
+        return currentScriptsRoot;
     }
 
-    return (fs::current_path() / "scripts").lexically_normal();
+    const fs::path sourceScriptsRoot =
+        fs::path(__FILE__).parent_path().parent_path() / "scripts";
+    return sourceScriptsRoot.lexically_normal();
 }
 
 void appendToAppConsole(const std::string& text)
