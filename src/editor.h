@@ -171,6 +171,8 @@ public:
   
 protected:
   void drawSelectionControls();
+  bool isSelectorInteractionEnabled() const;
+  bool shouldDrawSelectionOverlay() const;
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
   void selectNodesInBox(double x0, double y0, double x1, double y1);
@@ -364,6 +366,7 @@ protected:
   bool getPartVisualCenter(Part* part, double center[3]) const;
   void updateMovePartOffsetFromCurrentState();
   void resetCurrentPartTransform();
+  void finishMoveMode(bool acceptTransform);
   void refreshScriptBrowser();
   void drawScriptBrowserWindow();
   Part* findBoundaryConditionTargetPart(const Condition* condition) const;

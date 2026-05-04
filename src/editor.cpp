@@ -577,6 +577,16 @@ void Editor::drawSelectionControls()
   }
 }
 
+bool Editor::isSelectorInteractionEnabled() const
+{
+  return m_show_set_dlg;
+}
+
+bool Editor::shouldDrawSelectionOverlay() const
+{
+  return m_show_set_dlg || getSelectedNodeSet() != nullptr;
+}
+
 void Editor::selectNodeSet(Mesh* mesh, int setIndex)
 {
   if (mesh == nullptr || setIndex < 0 || setIndex >= mesh->getNodeSetCount()) {
@@ -728,6 +738,13 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
 
 void Editor::handleSelectionInteraction()
 {
+  if (!isSelectorInteractionEnabled() || m_moving_mode) {
+    if (m_selector.isBoxSelecting()) {
+      m_selector.finishBoxSelection();
+    }
+    return;
+  }
+
   if (viewer == nullptr || !m_selector.isNodeTarget()) {
     return;
   }
@@ -786,7 +803,7 @@ void Editor::handleSelectionInteraction()
 
 void Editor::drawSelectionOverlay() const
 {
-  if (viewer == nullptr) {
+  if (m_moving_mode || !shouldDrawSelectionOverlay() || viewer == nullptr) {
     return;
   }
 
@@ -1016,15 +1033,7 @@ void Editor::closeCurrentModel()
   clearPartOverlay();
 
   if (m_moving_mode) {
-    m_moving_mode = false;
-    m_show_mov_part = false;
-    if (viewer != nullptr) {
-      viewer->restoreDefaultInteractorStyle();
-      if (gizmo) {
-        gizmo->Hide();
-        gizmo->RemoveFromRenderer(viewer->getRenderer());
-      }
-    }
+    finishMoveMode(true);
   }
 
   Model* oldModel = m_model;
@@ -1448,6 +1457,24 @@ void Editor::resetCurrentPartTransform()
   m_move_part_offset[0] = 0.0;
   m_move_part_offset[1] = 0.0;
   m_move_part_offset[2] = 0.0;
+}
+
+void Editor::finishMoveMode(bool acceptTransform)
+{
+  if (m_moving_mode && !acceptTransform) {
+    resetCurrentPartTransform();
+  }
+
+  m_moving_mode = false;
+  m_show_mov_part = false;
+
+  if (viewer != nullptr) {
+    viewer->restoreDefaultInteractorStyle();
+    if (gizmo) {
+      gizmo->Hide();
+      gizmo->RemoveFromRenderer(viewer->getRenderer());
+    }
+  }
 }
 
 void Editor::clearBoundaryConditionOverlay()
@@ -2827,13 +2854,16 @@ void Editor::drawGui() {
                 //interactor->SetInteractorStyle(style);
                 viewer->getInteractor()->SetInteractorStyle(style);
                 
-                m_moving_mode = true;
-                m_show_mov_part = true;
-                m_move_part_offset[0] = 0.0;
-                m_move_part_offset[1] = 0.0;
-                m_move_part_offset[2] = 0.0;
+	                m_moving_mode = true;
+	                m_show_mov_part = true;
+	                m_move_part_offset[0] = 0.0;
+	                m_move_part_offset[1] = 0.0;
+	                m_move_part_offset[2] = 0.0;
+	                if (m_selector.isBoxSelecting()) {
+	                  m_selector.finishBoxSelection();
+	                }
 
-                GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+	                GLFWcursor* handCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 
                 // Aplicar cursor a la ventana
                 ImGuiIO& io = ImGui::GetIO();
@@ -4012,8 +4042,12 @@ void Editor::drawGui() {
         double move_vec[3] = {0.0, 0.0, 0.0};
         move_vec[move.axis] = move.delta;
         applyPartTranslation(selected_prt, move_vec[0], move_vec[1], move_vec[2]);
-        m_move_part_offset[move.axis] += move.delta;
+        updateMovePartOffsetFromCurrentState();
       }
+    }
+
+    if (!m_show_mov_part) {
+      finishMoveMode(true);
     }
   }// if move active
 
@@ -4179,6 +4213,7 @@ void Editor::drawGui() {
 
 
 static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mods) {   
+    ImGui_ImplGlfw_KeyCallback(pWindow, key, scancode, action, mods);
     editor->Key(key, scancode, action, mods);
 
     if (action == GLFW_PRESS) {
@@ -4196,13 +4231,28 @@ static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, 
 }
 
 void Editor::Key(int key, int scancode, int action, int mods) {   
-    //camera->OnKeyboard(key);
+    (void)scancode;
+    (void)mods;
+    if (action != GLFW_PRESS) {
+      return;
+    }
+
+    if (!m_moving_mode) {
+      return;
+    }
+
+    if (key == GLFW_KEY_ESCAPE) {
+      finishMoveMode(false);
+    } else if (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
+      finishMoveMode(true);
+    }
 }
 
 bool mouse_pressed;
 
 //TODO: WHY ALWAYS IS STATIC?
 static void CursorPosCallback(GLFWwindow* pWindow, double x, double y) {
+    ImGui_ImplGlfw_CursorPosCallback(pWindow, x, y);
 /*    
     // // //If callbacks are set AFTER, THEN THIS NEEDS TO BE CALLED
     // // //ImGui_ImplGlfw_CursorPosCallback(pWindow,x,y);//THIS IS IN ORDER 
@@ -4259,6 +4309,7 @@ void Editor:: CursorPos(double x, double y) {
 }
 
 static void MouseCallback(GLFWwindow* pWindow, int Button, int Action, int Mode){
+  ImGui_ImplGlfw_MouseButtonCallback(pWindow, Button, Action, Mode);
 /*  
   editor->Mouse(Button, Action, Mode);
   double x, y;
@@ -4453,6 +4504,7 @@ void Editor::MoveNode(){
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+  ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   editor->scroll(xoffset, yoffset);
 }
 
@@ -4839,21 +4891,6 @@ void Editor::processInput(GLFWwindow *window)
       m_pause = !m_pause;
     }
     
-     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-      //cout << "pause: "<<endl;
-      if (m_moving_mode){
-        m_moving_mode = false;
-        m_show_mov_part = false;
-        viewer->restoreDefaultInteractorStyle();
-        gizmo->Hide();
-        cout << "MOVE OFF. Reset interactor."<<endl;
-        gizmo->RemoveFromRenderer(viewer->getRenderer());
-        
-      }
-    }   
-
-
-
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
