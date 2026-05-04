@@ -262,8 +262,8 @@ public Plastic_{
       // Et = Elastic().E()*0.1; //ARBITRARY! TODO: CHECK MATHEMATICALLY
     // return Et;
   } //TODO: SEE IF INCLUDE	
-	inline double CalcYieldStress(const double &strain, const double &strain_rate, const double &temp);	
-	inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp);
+	inline double CalcYieldStress(const double &strain, const double &strain_rate, const double &temp){return 0.0;}	
+	inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp){return 0.0;}
   double &getRefStrainRate(){return eps_0;}//only for JC
   //~JohnsonCook(){}
 
