@@ -10,6 +10,7 @@
 #include <vtkPropCollection.h>
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
+#include <vtkAxesActor.h>
 #include <vtkCallbackCommand.h>
 #include <vtkCommand.h>
 #include <vtkGenericOpenGLRenderWindow.h>
@@ -41,6 +42,12 @@ public:
 };
 
 class VtkViewer {
+public:
+  enum class ProjectionMode {
+    Perspective,
+    Orthographic
+  };
+
 private:
 	static void isCurrentCallbackFn(vtkObject* caller, long unsigned int eventId, void* clientData, void* callData);
 	void processEvents();
@@ -57,6 +64,9 @@ private:
 	bool inputEnabled = true;
   ImVec2 viewportScreenMin = ImVec2(0, 0);
   ImVec2 viewportScreenMax = ImVec2(0, 0);
+  vtkSmartPointer<vtkAxesActor> axesActor;
+  ProjectionMode projectionMode = ProjectionMode::Perspective;
+  bool axesVisible = false;
   
   vtkSmartPointer<vtkActor> currentActor = nullptr;
 
@@ -81,6 +91,12 @@ public:
 	void setViewportSize(const ImVec2 newSize);
 	void setInputEnabled(bool enabled) { inputEnabled = enabled; }
 	bool isInputEnabled() const { return inputEnabled; }
+  void resetCamera();
+  void setProjectionMode(ProjectionMode mode);
+  ProjectionMode getProjectionMode() const { return projectionMode; }
+  void setAxesVisible(bool visible);
+  bool areAxesVisible() const { return axesVisible; }
+  void orientCameraToAxis(int axis);
 public:
 	static inline unsigned int NoScrollFlags(){
 		return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;

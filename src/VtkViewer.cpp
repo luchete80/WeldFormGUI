@@ -25,6 +25,7 @@
 #else
 #include <stdint.h>     // intptr_t
 #endif
+#include <cmath>
 
 // OpenGL Loader
 // This can be replaced with another loader, e.g. glad, but
@@ -33,6 +34,7 @@
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
+#include <vtkCamera.h>
 
 //#include <vtkArrowSource.h>
 
@@ -96,12 +98,18 @@ VtkViewer::VtkViewer(const VtkViewer& vtkViewer)
 	: viewportWidth(0), viewportHeight(0), renderWindow(vtkViewer.renderWindow), interactor(vtkViewer.interactor),
 	interactorStyle(vtkViewer.interactorStyle), renderer(vtkViewer.renderer), tex(vtkViewer.tex),
 	firstRender(vtkViewer.firstRender){
+  axesActor = vtkViewer.axesActor;
+  projectionMode = vtkViewer.projectionMode;
+  axesVisible = vtkViewer.axesVisible;
 }
 
 VtkViewer::VtkViewer(VtkViewer&& vtkViewer) noexcept 
 	: viewportWidth(0), viewportHeight(0), renderWindow(std::move(vtkViewer.renderWindow)),
 	interactor(std::move(vtkViewer.interactor)), interactorStyle(std::move(vtkViewer.interactorStyle)),
 	renderer(std::move(vtkViewer.renderer)), tex(vtkViewer.tex), firstRender(vtkViewer.firstRender){
+  axesActor = std::move(vtkViewer.axesActor);
+  projectionMode = vtkViewer.projectionMode;
+  axesVisible = vtkViewer.axesVisible;
 }
 
 VtkViewer::~VtkViewer(){
@@ -122,6 +130,9 @@ VtkViewer& VtkViewer::operator=(const VtkViewer& vtkViewer){
 	renderer = vtkViewer.renderer;
 	tex = vtkViewer.tex;
 	firstRender = vtkViewer.firstRender;
+  axesActor = vtkViewer.axesActor;
+  projectionMode = vtkViewer.projectionMode;
+  axesVisible = vtkViewer.axesVisible;
 	return *this;
 }
 
@@ -159,6 +170,12 @@ void VtkViewer::init(){
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetInteractor(interactor);
 
+  axesActor = vtkSmartPointer<vtkAxesActor>::New();
+  axesActor->SetTotalLength(0.25, 0.25, 0.25);
+  axesActor->SetPickable(0);
+  axesActor->SetVisibility(0);
+  renderer->AddActor(axesActor);
+
 	if (!renderer || !interactorStyle || !renderWindow || !interactor){
 		throw VtkViewerError("Couldn't initialize VtkViewer");
 	}
@@ -189,7 +206,7 @@ void VtkViewer::addActor(const vtkSmartPointer<vtkProp>& actor){
 	renderer->AddActor(actor);
 	cout <<"Done"<<endl;
   if (renderer !=nullptr){
-    renderer->ResetCamera();
+    resetCamera();
   }else
     cout << "ERROR: Null renderer."<<endl;
   cout << "Camera reset"<<endl;
@@ -201,7 +218,7 @@ void VtkViewer::addActors(const vtkSmartPointer<vtkPropCollection>& actors){
 	vtkCollectionSimpleIterator sit;
 	for (actors->InitTraversal(sit); (actor = actors->GetNextProp(sit));){
 		renderer->AddActor(actor);
-		renderer->ResetCamera();
+		resetCamera();
 	}
 }
 
@@ -257,6 +274,81 @@ void VtkViewer::setViewportSize(const ImVec2 newSize){
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	firstRender = false;
+}
+
+void VtkViewer::resetCamera(){
+  if (!renderer) {
+    return;
+  }
+
+  renderer->ResetCamera();
+  renderer->ResetCameraClippingRange();
+}
+
+void VtkViewer::setProjectionMode(ProjectionMode mode){
+  projectionMode = mode;
+  if (!renderer) {
+    return;
+  }
+
+  vtkCamera* camera = renderer->GetActiveCamera();
+  if (!camera) {
+    return;
+  }
+
+  camera->SetParallelProjection(mode == ProjectionMode::Orthographic ? 1 : 0);
+  renderer->ResetCameraClippingRange();
+}
+
+void VtkViewer::setAxesVisible(bool visible){
+  axesVisible = visible;
+  if (axesActor) {
+    axesActor->SetVisibility(visible ? 1 : 0);
+  }
+}
+
+void VtkViewer::orientCameraToAxis(int axis){
+  if (!renderer || axis < 0 || axis > 2) {
+    return;
+  }
+
+  vtkCamera* camera = renderer->GetActiveCamera();
+  if (!camera) {
+    return;
+  }
+
+  double focalPoint[3];
+  double position[3];
+  camera->GetFocalPoint(focalPoint);
+  camera->GetPosition(position);
+
+  double viewDirection[3] = {
+    position[0] - focalPoint[0],
+    position[1] - focalPoint[1],
+    position[2] - focalPoint[2]
+  };
+  double distance = std::sqrt(viewDirection[0] * viewDirection[0] +
+                              viewDirection[1] * viewDirection[1] +
+                              viewDirection[2] * viewDirection[2]);
+  if (distance <= 1e-9) {
+    distance = 1.0;
+  }
+
+  double axisDirection[3] = {0.0, 0.0, 0.0};
+  double viewUp[3] = {0.0, 1.0, 0.0};
+  axisDirection[axis] = 1.0;
+
+  if (axis == 0 || axis == 1) {
+    viewUp[0] = 0.0;
+    viewUp[1] = 0.0;
+    viewUp[2] = 1.0;
+  }
+
+  camera->SetPosition(focalPoint[0] + axisDirection[0] * distance,
+                      focalPoint[1] + axisDirection[1] * distance,
+                      focalPoint[2] + axisDirection[2] * distance);
+  camera->SetViewUp(viewUp);
+  renderer->ResetCameraClippingRange();
 }
 
 

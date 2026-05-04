@@ -36,6 +36,8 @@
 #include <vtkNamedColors.h>
 #include <vtkScalarBarActor.h>
 #include <vtkCamera.h>
+#include <vtkMapper.h>
+#include <vtkProperty.h>
 
 
 #include "graphics/axis.h" //test
@@ -116,6 +118,182 @@ bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_textu
     *out_height = image_height;
 
     return true;
+}
+
+namespace {
+enum class ModelDisplayMode {
+    ShadedWithEdges,
+    Wireframe
+};
+
+struct ModelViewportOverlayState {
+    ModelDisplayMode displayMode = ModelDisplayMode::ShadedWithEdges;
+    bool axesVisible = false;
+    bool orthographic = false;
+};
+
+void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool preserveScalarColors)
+{
+    if (actor == nullptr || actor->GetProperty() == nullptr) {
+        return;
+    }
+
+    vtkMapper* mapper = actor->GetMapper();
+    if (mapper != nullptr) {
+        if (preserveScalarColors) {
+            mapper->ScalarVisibilityOn();
+        } else {
+            mapper->ScalarVisibilityOff();
+        }
+    }
+
+    const bool hasScalarColors =
+        preserveScalarColors && mapper != nullptr && mapper->GetScalarVisibility();
+    vtkProperty* property = actor->GetProperty();
+    switch (mode) {
+    case ModelDisplayMode::ShadedWithEdges:
+        property->SetRepresentationToSurface();
+        property->EdgeVisibilityOn();
+        property->SetEdgeColor(0.0, 0.0, 0.0);
+        if (!hasScalarColors) {
+            property->SetColor(0.84, 0.84, 0.84);
+        }
+        break;
+    case ModelDisplayMode::Wireframe:
+        property->SetRepresentationToWireframe();
+        property->EdgeVisibilityOff();
+        property->SetColor(0.0, 0.0, 0.0);
+        break;
+    }
+}
+
+void applyDisplayModeToActiveModel(ModelDisplayMode mode)
+{
+    Model& model = getApp().getActiveModel();
+    for (int p = 0; p < model.getPartCount(); ++p) {
+        Part* part = model.getPart(p);
+        if (part == nullptr) {
+            continue;
+        }
+
+        if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+            applyDisplayModeToActor(graphicMesh->getActor(), mode, false);
+        }
+
+        if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+            applyDisplayModeToActor(visual->actor, mode, false);
+        }
+    }
+}
+
+void applyDisplayModeToResults(ModelDisplayMode mode, Editor* editor)
+{
+    if (editor == nullptr || editor->getResults() == nullptr) {
+        return;
+    }
+
+    for (auto& frame : editor->getResults()->frames) {
+        if (!frame || !frame->actor) {
+            continue;
+        }
+        applyDisplayModeToActor(frame->actor, mode, true);
+    }
+}
+
+bool drawToolbarButton(const char* label, bool active = false)
+{
+    if (active) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.24f, 0.48f, 0.86f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.92f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.40f, 0.78f, 1.0f));
+    }
+
+    const bool pressed = ImGui::Button(label);
+
+    if (active) {
+        ImGui::PopStyleColor(3);
+    }
+
+    return pressed;
+}
+
+void drawViewportOverlay(VtkViewer& viewer,
+                         ModelViewportOverlayState& state,
+                         const char* windowId,
+                         bool allowAxes)
+{
+    const ImVec2 viewportMin = viewer.getViewportScreenMin();
+    const ImVec2 viewportMax = viewer.getViewportScreenMax();
+    if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
+        return;
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(viewportMin.x + 12.0f, viewportMin.y + 12.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.10f, 0.14f, 0.85f));
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoNavFocus;
+
+    if (ImGui::Begin(windowId, nullptr, flags)) {
+        if (drawToolbarButton("Fit")) {
+            viewer.resetCamera();
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("X")) {
+            viewer.orientCameraToAxis(0);
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("Y")) {
+            viewer.orientCameraToAxis(1);
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("Z")) {
+            viewer.orientCameraToAxis(2);
+        }
+
+        if (drawToolbarButton("Ortho", state.orthographic)) {
+            state.orthographic = true;
+            viewer.setProjectionMode(VtkViewer::ProjectionMode::Orthographic);
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("Persp", !state.orthographic)) {
+            state.orthographic = false;
+            viewer.setProjectionMode(VtkViewer::ProjectionMode::Perspective);
+        }
+        if (allowAxes) {
+            ImGui::SameLine();
+            if (drawToolbarButton("Axes", state.axesVisible)) {
+                state.axesVisible = !state.axesVisible;
+                viewer.setAxesVisible(state.axesVisible);
+            }
+        }
+
+        if (drawToolbarButton("Shaded+Edges", state.displayMode == ModelDisplayMode::ShadedWithEdges)) {
+            state.displayMode = ModelDisplayMode::ShadedWithEdges;
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("Wireframe", state.displayMode == ModelDisplayMode::Wireframe)) {
+            state.displayMode = ModelDisplayMode::Wireframe;
+        }
+    }
+    ImGui::End();
+
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar(2);
+
+    viewer.setProjectionMode(state.orthographic
+        ? VtkViewer::ProjectionMode::Orthographic
+        : VtkViewer::ProjectionMode::Perspective);
+    if (allowAxes) {
+        viewer.setAxesVisible(state.axesVisible);
+    }
+}
 }
 
 // Open and read a file, then forward to LoadTextureFromMemory()
@@ -456,11 +634,12 @@ int main(int argc, char* argv[])
           }
 
           // ================= TAB: Modelo =================
-          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
+	          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
           {
               ImGui::PushFont(font_ubu);
 
 	              auto renderer = vtkViewer2.getRenderer();
+                static ModelViewportOverlayState modelOverlayState;
 
 	              if (ImGui::Button("Demo")) {
                   showDemoDialog = true;
@@ -476,8 +655,7 @@ int main(int argc, char* argv[])
 	              }
 	              ImGui::SameLine();
 	              if (ImGui::Button("Zoom all")) {
-	                renderer->ResetCamera();
-	                renderer->ResetCameraClippingRange();
+	                vtkViewer2.resetCamera();
 	              }
 
 	              // Botones de background específicos
@@ -496,6 +674,8 @@ int main(int argc, char* argv[])
 
               // Render del viewer
               vtkViewer2.render();
+              drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true);
+              applyDisplayModeToActiveModel(modelOverlayState.displayMode);
               editor->handleSelectionInteraction();
               editor->drawSelectionOverlay();
 
@@ -510,6 +690,7 @@ int main(int argc, char* argv[])
               ImGui::PushFont(font_ubu);
 
 	              auto renderer = vtkViewer_res.getRenderer();
+                static ModelViewportOverlayState resultsOverlayState;
 	              static int currentFrame = 0;
 	              static int lastFrame = -1;
 	              static double globalMin = 0.0;
@@ -832,6 +1013,8 @@ int main(int argc, char* argv[])
 
               // Render del viewer
               vtkViewer_res.render();
+              drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false);
+              applyDisplayModeToResults(resultsOverlayState.displayMode, editor);
 
               ImGui::PopFont();
               ImGui::EndTabItem();
