@@ -217,6 +217,61 @@ bool drawToolbarButton(const char* label, bool active = false)
     return pressed;
 }
 
+bool drawFitIconButton()
+{
+    const ImVec2 size(28.0f, 28.0f);
+    ImGui::PushID("fit_icon_button");
+    const bool pressed = ImGui::InvisibleButton("##fit", size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImU32 bgColor = IM_COL32(36, 44, 56, 220);
+    if (held) {
+        bgColor = IM_COL32(46, 74, 122, 240);
+    } else if (hovered) {
+        bgColor = IM_COL32(54, 64, 80, 235);
+    }
+
+    const ImU32 strokeColor = hovered || held
+        ? IM_COL32(255, 255, 255, 255)
+        : IM_COL32(220, 224, 230, 255);
+
+    drawList->AddRectFilled(min, max, bgColor, 7.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 30), 7.0f, 0, 1.0f);
+
+    const float pad = 6.5f;
+    const float arm = 5.0f;
+    const float thickness = 1.8f;
+
+    const float left = min.x + pad;
+    const float right = max.x - pad;
+    const float top = min.y + pad;
+    const float bottom = max.y - pad;
+
+    drawList->AddLine(ImVec2(left, top + arm), ImVec2(left, top), strokeColor, thickness);
+    drawList->AddLine(ImVec2(left, top), ImVec2(left + arm, top), strokeColor, thickness);
+
+    drawList->AddLine(ImVec2(right - arm, top), ImVec2(right, top), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right, top), ImVec2(right, top + arm), strokeColor, thickness);
+
+    drawList->AddLine(ImVec2(left, bottom - arm), ImVec2(left, bottom), strokeColor, thickness);
+    drawList->AddLine(ImVec2(left, bottom), ImVec2(left + arm, bottom), strokeColor, thickness);
+
+    drawList->AddLine(ImVec2(right - arm, bottom), ImVec2(right, bottom), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right, bottom - arm), ImVec2(right, bottom), strokeColor, thickness);
+
+    if (hovered) {
+        ImGui::SetTooltip("Fit");
+    }
+
+    ImGui::PopID();
+    return pressed;
+}
+
 void drawViewportOverlay(VtkViewer& viewer,
                          ModelViewportOverlayState& state,
                          const char* windowId,
@@ -241,7 +296,7 @@ void drawViewportOverlay(VtkViewer& viewer,
         ImGuiWindowFlags_NoNavFocus;
 
     if (ImGui::Begin(windowId, nullptr, flags)) {
-        if (drawToolbarButton("Fit")) {
+        if (drawFitIconButton()) {
             viewer.resetCamera();
         }
         ImGui::SameLine();
