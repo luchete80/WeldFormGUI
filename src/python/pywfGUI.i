@@ -17,6 +17,7 @@
 #include "Node.h"
 #include "Element.h"
 #include "Set.h"
+#include "Material.h"
 #include "Condition.h"
 #include "BoundaryCondition.h"
 #include "Mesh.h"
@@ -48,6 +49,7 @@ class TopoDS_Shape;
 %include "Element.h"
 %include "Set.h"
 %template(NodeEntitySet) Set<Node>;
+%include "Material.h"
 %include "Condition.h"
 %include "BoundaryCondition.h"
 %include "Mesh.h"
