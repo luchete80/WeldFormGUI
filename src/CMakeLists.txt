@@ -421,3 +421,12 @@ add_custom_command(TARGET ${EXEC_NAME} POST_BUILD
         ${CMAKE_BINARY_DIR}/$<TARGET_FILE_NAME:${EXEC_NAME}>
     COMMENT "Copying ${EXEC_NAME} to build root"
 )
+
+add_custom_command(TARGET ${EXEC_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_BINARY_DIR}/scripts
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/scripts
+        ${CMAKE_BINARY_DIR}/scripts
+    COMMENT "Copying scripts folder to build root"
+)
