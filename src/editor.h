@@ -30,7 +30,7 @@
 
 #include <iostream>
 
-//#include "selector.h"
+#include "selector.h"
 #include "SPHModel.h"
 //#include "action.h"
 
@@ -118,8 +118,11 @@ public:
   void processInput(GLFWwindow *window);
   void CursorPos(double x, double y);
   void drawGui();
+  void handleSelectionInteraction();
+  void drawSelectionOverlay() const;
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   bool openModelFromPath(const std::string& filePathName);
+  bool openScriptFromPath(const std::string& filePathName);
   bool importMeshPartFromPath(const std::string& filePathName);
   bool createJobFromActiveModel(bool runJob = false);
   bool openResultsFromPath(const std::string& filePathName);
@@ -166,6 +169,13 @@ public:
   
   
 protected:
+  void drawSelectionControls();
+  bool projectNodeToViewport(Node* node, double& x, double& y) const;
+  Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
+  void selectNodesInBox(double x0, double y0, double x1, double y1);
+  void selectNodeSet(Mesh* mesh, int setIndex);
+  NodeSet* getSelectedNodeSet();
+  const NodeSet* getSelectedNodeSet() const;
 
   GLFWwindow* window;
   unsigned int shaderProgram;
@@ -202,7 +212,7 @@ protected:
 
   bool rotatecam;
   
-  //Selector m_selector;
+  Selector m_selector;
   
   std::vector < int > m_sel_particles; //TODO: MOVE TO SELECTOR
   int m_sel_count;
@@ -287,6 +297,10 @@ protected:
   double m_move_part_offset[3] = {0.0, 0.0, 0.0};
   double m_move_part_initial_center[3] = {0.0, 0.0, 0.0};
   double m_move_part_step = 0.1;
+  Mesh* m_selected_node_set_mesh = nullptr;
+  int m_selected_node_set_index = -1;
+  bool m_show_rename_set_dlg = false;
+  char m_rename_set_name[128] = {0};
     
   //Action* m_currentaction;
   bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
@@ -347,7 +361,9 @@ protected:
   void updateMovePartOffsetFromCurrentState();
   void resetCurrentPartTransform();
   Part* findBoundaryConditionTargetPart(const Condition* condition) const;
+  NodeSet* findNodeSetById(int setId) const;
   vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(Part* part) const;
+  vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(const NodeSet* nodeSet) const;
   
   Material_Db m_mat_db;
     

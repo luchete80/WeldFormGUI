@@ -31,10 +31,13 @@
 #include<iostream>
 #include <thread>
 #include <cstdlib>
+#include <cstdio>
 #include <filesystem>
 #include <system_error>
 #include <chrono>
 #include <cmath>
+#include <limits>
+#include <unordered_set>
 
 #include <gmsh.h>
 
@@ -45,6 +48,7 @@
 
 
 #include "Part.h"
+#include "Node.h"
 #include "GraphicMesh.h"
 
 #include "console.h"
@@ -62,9 +66,11 @@
 
 #include <vtkArrowSource.h>
 #include <vtkBillboardTextActor3D.h>
+#include <vtkCellArray.h>
 #include <vtkCenterOfMass.h>
 #include <vtkMapper.h>
 #include <vtkMath.h>
+#include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
@@ -265,6 +271,139 @@ bool appendFileToAppConsole(const std::string& path)
     return g_app_console->AddLogFile(path);
 }
 
+#ifdef BUILD_PYTHON
+bool prependPythonPath(const std::filesystem::path& path)
+{
+    if (path.empty()) {
+        return true;
+    }
+
+    const std::string normalized = std::filesystem::absolute(path).lexically_normal().string();
+    PyObject* sysPath = PySys_GetObject("path");
+    if (sysPath == nullptr || !PyList_Check(sysPath)) {
+        std::cerr << "Failed to access Python sys.path" << std::endl;
+        return false;
+    }
+
+    PyObject* pyPath = PyUnicode_FromString(normalized.c_str());
+    if (pyPath == nullptr) {
+        PyErr_Clear();
+        std::cerr << "Failed to convert Python path " << normalized << std::endl;
+        return false;
+    }
+
+    if (PySequence_Contains(sysPath, pyPath) == 0) {
+        PyList_Insert(sysPath, 0, pyPath);
+    }
+    Py_DECREF(pyPath);
+    return true;
+}
+
+bool executePythonFileWithCapturedOutput(const std::string& filePathName, std::string& capturedOutput)
+{
+    capturedOutput.clear();
+
+    FILE* scriptFile = std::fopen(filePathName.c_str(), "r");
+    if (scriptFile == nullptr) {
+        std::cerr << "Failed to open Python script: " << filePathName << std::endl;
+        return false;
+    }
+
+    PyObject* ioModule = PyImport_ImportModule("io");
+    if (!ioModule) {
+        PyErr_Print();
+        std::fclose(scriptFile);
+        return false;
+    }
+
+    PyObject* stringIOClass = PyObject_GetAttrString(ioModule, "StringIO");
+    Py_DECREF(ioModule);
+    if (!stringIOClass) {
+        PyErr_Print();
+        std::fclose(scriptFile);
+        return false;
+    }
+
+    PyObject* stringIO = PyObject_CallObject(stringIOClass, nullptr);
+    Py_DECREF(stringIOClass);
+    if (!stringIO) {
+        PyErr_Print();
+        std::fclose(scriptFile);
+        return false;
+    }
+
+    PyObject* sysModule = PyImport_ImportModule("sys");
+    if (!sysModule) {
+        PyErr_Print();
+        Py_DECREF(stringIO);
+        std::fclose(scriptFile);
+        return false;
+    }
+
+    PyObject* originalStdout = PyObject_GetAttrString(sysModule, "stdout");
+    PyObject* originalStderr = PyObject_GetAttrString(sysModule, "stderr");
+    if (!originalStdout || !originalStderr) {
+        PyErr_Print();
+        Py_XDECREF(originalStdout);
+        Py_XDECREF(originalStderr);
+        Py_DECREF(sysModule);
+        Py_DECREF(stringIO);
+        std::fclose(scriptFile);
+        return false;
+    }
+
+    PyObject_SetAttrString(sysModule, "stdout", stringIO);
+    PyObject_SetAttrString(sysModule, "stderr", stringIO);
+
+    prependPythonPath(std::filesystem::path(filePathName).parent_path());
+
+    PyObject* mainModule = PyImport_AddModule("__main__");
+    PyObject* mainDict = mainModule ? PyModule_GetDict(mainModule) : nullptr;
+    if (mainDict != nullptr) {
+        PyObject* pyFilePath = PyUnicode_FromString(filePathName.c_str());
+        if (pyFilePath != nullptr) {
+            PyDict_SetItemString(mainDict, "__file__", pyFilePath);
+            Py_DECREF(pyFilePath);
+        } else {
+            PyErr_Clear();
+        }
+    }
+
+    int runStatus = PyRun_SimpleFileEx(scriptFile, filePathName.c_str(), 1);
+    scriptFile = nullptr;
+    getApp().Update();
+
+    PyObject* getValueMethod = PyObject_GetAttrString(stringIO, "getvalue");
+    PyObject* output = getValueMethod ? PyObject_CallObject(getValueMethod, nullptr) : nullptr;
+    Py_XDECREF(getValueMethod);
+
+    PyObject_SetAttrString(sysModule, "stdout", originalStdout);
+    PyObject_SetAttrString(sysModule, "stderr", originalStderr);
+
+    if (output != nullptr) {
+        const char* outputCStr = PyUnicode_AsUTF8(output);
+        if (outputCStr != nullptr) {
+            capturedOutput = outputCStr;
+        } else {
+            PyErr_Clear();
+        }
+        Py_DECREF(output);
+    }
+
+    Py_DECREF(originalStdout);
+    Py_DECREF(originalStderr);
+    Py_DECREF(sysModule);
+    Py_DECREF(stringIO);
+
+    if (runStatus != 0) {
+        PyErr_Print();
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 bool saveModelToPath(Model& model, const std::string& filePathName)
 {
     const std::string normalizedPath = ensureWfmodelPath(filePathName);
@@ -286,6 +425,70 @@ bool saveModelToPath(Model& model, const std::string& filePathName)
     cout << "Saved Model: " << normalizedPath << endl;
     return true;
 }
+
+Mesh* findOwningMeshForNode(Model* model, Node* targetNode)
+{
+    if (model == nullptr || targetNode == nullptr) {
+        return nullptr;
+    }
+
+    for (int p = 0; p < model->getPartCount(); ++p) {
+        Part* part = model->getPart(p);
+        if (part == nullptr || part->getMesh() == nullptr) {
+            continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        for (int n = 0; n < mesh->getNodeCount(); ++n) {
+            if (mesh->getNode(n) == targetNode) {
+                return mesh;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+Mesh* findCommonMeshForNodes(Model* model, const std::vector<Node*>& nodes)
+{
+    if (model == nullptr || nodes.empty()) {
+        return nullptr;
+    }
+
+    Mesh* commonMesh = findOwningMeshForNode(model, nodes.front());
+    if (commonMesh == nullptr) {
+        return nullptr;
+    }
+
+    for (std::size_t i = 1; i < nodes.size(); ++i) {
+        if (findOwningMeshForNode(model, nodes[i]) != commonMesh) {
+            return nullptr;
+        }
+    }
+
+    return commonMesh;
+}
+
+int findNextNodeSetId(Model* model)
+{
+    if (model == nullptr) {
+        return 0;
+    }
+
+    int maxId = -1;
+    for (int p = 0; p < model->getPartCount(); ++p) {
+        Part* part = model->getPart(p);
+        if (part == nullptr || part->getMesh() == nullptr) {
+            continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        for (int s = 0; s < mesh->getNodeSetCount(); ++s) {
+            maxId = std::max(maxId, mesh->getNodeSet(s).getId());
+        }
+    }
+    return maxId + 1;
+}
 }
 
 template <typename T>
@@ -304,6 +507,302 @@ std::string to_string_scientific(const T a_value, const int n = 3)
     out.precision(n);
     out << std::scientific << a_value;
     return out.str();
+}
+
+void Editor::drawSelectionControls()
+{
+  if (!ImGui::CollapsingHeader("Selection", ImGuiTreeNodeFlags_DefaultOpen)) {
+    return;
+  }
+
+  int target = static_cast<int>(m_selector.getTarget());
+  if (ImGui::RadioButton("Nodes", &target, static_cast<int>(SelectionTarget::Node))) {
+    m_selector.setTarget(SelectionTarget::Node);
+  }
+  ImGui::SameLine();
+  ImGui::BeginDisabled();
+  ImGui::RadioButton("Parts", &target, static_cast<int>(SelectionTarget::Part));
+  ImGui::SameLine();
+  ImGui::RadioButton("Geometry", &target, static_cast<int>(SelectionTarget::Geometry));
+  ImGui::EndDisabled();
+
+  int mode = static_cast<int>(m_selector.getMode());
+  if (ImGui::RadioButton("Pick", &mode, static_cast<int>(SelectionMode::Pick))) {
+    m_selector.setMode(SelectionMode::Pick);
+    box_select_mode = false;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Box", &mode, static_cast<int>(SelectionMode::Box))) {
+    m_selector.setMode(SelectionMode::Box);
+    box_select_mode = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Clear")) {
+    m_selector.clearSelection();
+    m_sel_node = -1;
+    m_is_node_sel = false;
+  }
+
+  if (m_selector.isPickMode()) {
+    ImGui::TextDisabled("Pick: Click = single select");
+    ImGui::TextDisabled("Pick: Ctrl+Click = add/remove node");
+  } else {
+    ImGui::TextDisabled("Box: drag on viewport to select nodes");
+  }
+
+  ImGui::Text("Selected nodes: %d", m_selector.getSelectedNodeCount());
+  const std::vector<Node*>& selectedNodes = m_selector.getSelectedNodes();
+  const int previewCount = std::min<int>(selectedNodes.size(), 8);
+  for (int i = 0; i < previewCount; ++i) {
+    if (selectedNodes[i] == nullptr) {
+      continue;
+    }
+    ImGui::Text("Node %d", selectedNodes[i]->getId());
+  }
+  if (selectedNodes.size() > static_cast<std::size_t>(previewCount)) {
+    ImGui::Text("...");
+  }
+}
+
+void Editor::selectNodeSet(Mesh* mesh, int setIndex)
+{
+  if (mesh == nullptr || setIndex < 0 || setIndex >= mesh->getNodeSetCount()) {
+    m_selected_node_set_mesh = nullptr;
+    m_selected_node_set_index = -1;
+    m_selector.clearSelection();
+    m_sel_node = -1;
+    m_is_node_sel = false;
+    return;
+  }
+
+  m_selected_node_set_mesh = mesh;
+  m_selected_node_set_index = setIndex;
+
+  NodeSet& nodeSet = mesh->getNodeSet(setIndex);
+  std::vector<Node*> nodes;
+  for (int i = 0; i < nodeSet.getItemCount(); ++i) {
+    Node* node = nodeSet.getItem(i);
+    if (node != nullptr) {
+      nodes.push_back(node);
+    }
+  }
+
+  m_selector.setSelectedNodes(nodes);
+  m_is_node_sel = !nodes.empty();
+  m_sel_node = nodes.empty() ? -1 : nodes.front()->getId();
+}
+
+NodeSet* Editor::getSelectedNodeSet()
+{
+  if (m_selected_node_set_mesh == nullptr ||
+      m_selected_node_set_index < 0 ||
+      m_selected_node_set_index >= m_selected_node_set_mesh->getNodeSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_node_set_mesh->getNodeSet(m_selected_node_set_index);
+}
+
+const NodeSet* Editor::getSelectedNodeSet() const
+{
+  if (m_selected_node_set_mesh == nullptr ||
+      m_selected_node_set_index < 0 ||
+      m_selected_node_set_index >= m_selected_node_set_mesh->getNodeSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_node_set_mesh->getNodeSet(m_selected_node_set_index);
+}
+
+bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
+{
+  if (node == nullptr || viewer == nullptr || viewer->getRenderer() == nullptr) {
+    return false;
+  }
+
+  auto renderer = viewer->getRenderer();
+  const Vector3f& pos = node->getPos();
+  renderer->SetWorldPoint(pos.x, pos.y, pos.z, 1.0);
+  renderer->WorldToDisplay();
+
+  double display[3] = {0.0, 0.0, 0.0};
+  renderer->GetDisplayPoint(display);
+  if (display[2] < 0.0 || display[2] > 1.0) {
+    return false;
+  }
+
+  x = display[0];
+  y = static_cast<double>(viewer->getViewportHeight()) - display[1];
+  return true;
+}
+
+Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) const
+{
+  if (m_model == nullptr) {
+    return nullptr;
+  }
+
+  Node* closest = nullptr;
+  double bestDist2 = maxDistancePixels * maxDistancePixels;
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int n = 0; n < mesh->getNodeCount(); ++n) {
+      Node* node = mesh->getNode(n);
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectNodeToViewport(node, sx, sy)) {
+        continue;
+      }
+
+      const double dx = sx - x;
+      const double dy = sy - y;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 <= bestDist2) {
+        bestDist2 = dist2;
+        closest = node;
+      }
+    }
+  }
+
+  return closest;
+}
+
+void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
+{
+  if (m_model == nullptr) {
+    m_selector.clearSelection();
+    return;
+  }
+
+  const double minX = std::min(x0, x1);
+  const double maxX = std::max(x0, x1);
+  const double minY = std::min(y0, y1);
+  const double maxY = std::max(y0, y1);
+
+  std::vector<Node*> selectedNodes;
+  std::unordered_set<Node*> seen;
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int n = 0; n < mesh->getNodeCount(); ++n) {
+      Node* node = mesh->getNode(n);
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectNodeToViewport(node, sx, sy)) {
+        continue;
+      }
+
+      if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY && seen.insert(node).second) {
+        selectedNodes.push_back(node);
+      }
+    }
+  }
+
+  m_selector.setSelectedNodes(selectedNodes);
+  m_is_node_sel = !selectedNodes.empty();
+  m_sel_node = selectedNodes.empty() ? -1 : selectedNodes.front()->getId();
+  cout << "Selected " << selectedNodes.size() << " nodes" << endl;
+}
+
+void Editor::handleSelectionInteraction()
+{
+  if (viewer == nullptr || !m_selector.isNodeTarget()) {
+    return;
+  }
+
+  const ImVec2 viewportMin = viewer->getViewportScreenMin();
+  const ImVec2 viewportMax = viewer->getViewportScreenMax();
+  if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
+    return;
+  }
+
+  ImGuiIO& io = ImGui::GetIO();
+  const bool hovered = ImGui::IsMouseHoveringRect(viewportMin, viewportMax, false);
+  const ImVec2 localMouse(io.MousePos.x - viewportMin.x, io.MousePos.y - viewportMin.y);
+
+  if (m_selector.isPickMode()) {
+    if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+      Node* node = pickClosestNodeAt(localMouse.x, localMouse.y);
+      if (io.KeyCtrl) {
+        m_selector.toggleNode(node);
+      } else {
+        m_selector.setSingleNode(node);
+      }
+      m_is_node_sel = (m_selector.getSelectedNodeCount() > 0);
+      m_sel_node = m_is_node_sel ? m_selector.getSelectedNodes().front()->getId() : -1;
+      if (node != nullptr) {
+        if (io.KeyCtrl) {
+          cout << "Toggled node " << node->getId()
+               << ", selected count=" << m_selector.getSelectedNodeCount() << endl;
+        } else {
+          cout << "Picked node " << node->getId() << endl;
+        }
+      }
+    }
+    return;
+  }
+
+  if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    m_selector.beginBoxSelection(localMouse);
+  }
+
+  if (m_selector.isBoxSelecting() && io.MouseDown[ImGuiMouseButton_Left]) {
+    m_selector.updateBoxSelection(localMouse);
+  }
+
+  if (m_selector.isBoxSelecting() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+    m_selector.updateBoxSelection(localMouse);
+    selectNodesInBox(
+      m_selector.getBoxStart().x,
+      m_selector.getBoxStart().y,
+      m_selector.getBoxEnd().x,
+      m_selector.getBoxEnd().y
+    );
+    m_selector.finishBoxSelection();
+  }
+}
+
+void Editor::drawSelectionOverlay() const
+{
+  if (viewer == nullptr) {
+    return;
+  }
+
+  const ImVec2 viewportMin = viewer->getViewportScreenMin();
+  const ImVec2 viewportMax = viewer->getViewportScreenMax();
+  if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
+    return;
+  }
+
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  if (m_selector.isBoxSelecting()) {
+    const ImVec2 start(viewportMin.x + m_selector.getBoxStart().x, viewportMin.y + m_selector.getBoxStart().y);
+    const ImVec2 end(viewportMin.x + m_selector.getBoxEnd().x, viewportMin.y + m_selector.getBoxEnd().y);
+    drawList->AddRectFilled(start, end, IM_COL32(70, 160, 255, 35));
+    drawList->AddRect(start, end, IM_COL32(70, 160, 255, 255), 0.0f, 0, 2.0f);
+  }
+
+  for (Node* node : m_selector.getSelectedNodes()) {
+    double x = 0.0;
+    double y = 0.0;
+    if (!projectNodeToViewport(node, x, y)) {
+      continue;
+    }
+    drawList->AddCircleFilled(
+      ImVec2(viewportMin.x + static_cast<float>(x), viewportMin.y + static_cast<float>(y)),
+      4.0f,
+      IM_COL32(255, 210, 0, 255)
+    );
+  }
 }
 
 bool Editor::openResultsFromPath(const std::string& filePathName)
@@ -438,6 +937,36 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   getApp().Update();
 
   return true;
+}
+
+bool Editor::openScriptFromPath(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
+#ifdef BUILD_PYTHON
+  std::cout << "Running Python script: " << filePathName << std::endl;
+
+  std::string capturedOutput;
+  const bool ok = executePythonFileWithCapturedOutput(filePathName, capturedOutput);
+
+  if (!capturedOutput.empty()) {
+    std::cout << capturedOutput;
+    std::cout.flush();
+  }
+
+  if (!ok) {
+    std::cerr << "Python script failed: " << filePathName << std::endl;
+    return false;
+  }
+
+  std::cout << "Finished Python script: " << filePathName << std::endl;
+  return true;
+#else
+  std::cerr << "Python support is not enabled in this build." << std::endl;
+  (void)filePathName;
+  return false;
+#endif
 }
 
 bool Editor::importMeshPartFromPath(const std::string& filePathName)
@@ -839,7 +1368,7 @@ void Editor::clearPartOverlay()
 
 Part* Editor::findBoundaryConditionTargetPart(const Condition* condition) const
 {
-  if (condition == nullptr || m_model == nullptr) {
+  if (condition == nullptr || m_model == nullptr || condition->getApplyTo() != ApplyToPart) {
     return nullptr;
   }
 
@@ -853,6 +1382,26 @@ Part* Editor::findBoundaryConditionTargetPart(const Condition* condition) const
 
   if (targetId >= 0 && targetId < m_model->getPartCount()) {
     return m_model->getPart(targetId);
+  }
+
+  return nullptr;
+}
+
+NodeSet* Editor::findNodeSetById(int setId) const
+{
+  if (m_model == nullptr) {
+    return nullptr;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    if (NodeSet* set = part->getMesh()->findNodeSetById(setId)) {
+      return set;
+    }
   }
 
   return nullptr;
@@ -878,6 +1427,36 @@ vtkSmartPointer<vtkPolyData> Editor::getBoundaryConditionTargetPolyData(Part* pa
   }
 
   return nullptr;
+}
+
+vtkSmartPointer<vtkPolyData> Editor::getBoundaryConditionTargetPolyData(const NodeSet* nodeSet) const
+{
+  if (nodeSet == nullptr || nodeSet->getItemCount() == 0) {
+    return nullptr;
+  }
+
+  vtkNew<vtkPoints> points;
+  vtkNew<vtkCellArray> verts;
+
+  for (int i = 0; i < nodeSet->getItemCount(); ++i) {
+    const Node* node = nodeSet->getItem(i);
+    if (node == nullptr) {
+      continue;
+    }
+    const Vector3f& pos = node->getPos();
+    vtkIdType pointId = points->InsertNextPoint(pos.x, pos.y, pos.z);
+    verts->InsertNextCell(1);
+    verts->InsertCellPoint(pointId);
+  }
+
+  if (points->GetNumberOfPoints() == 0) {
+    return nullptr;
+  }
+
+  vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+  polyData->SetPoints(points);
+  polyData->SetVerts(verts);
+  return polyData;
 }
 
 vtkSmartPointer<vtkActor> Editor::getPartVisualActor(Part* part) const
@@ -915,9 +1494,23 @@ void Editor::updateBoundaryConditionOverlay()
       continue;
     }
 
-    Part* targetPart = findBoundaryConditionTargetPart(condition);
-    vtkSmartPointer<vtkPolyData> targetPolyData = getBoundaryConditionTargetPolyData(targetPart);
-    if (targetPart == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+    Part* targetPart = nullptr;
+    const NodeSet* targetNodeSet = nullptr;
+    vtkSmartPointer<vtkPolyData> targetPolyData = nullptr;
+
+    if (condition->getApplyTo() == ApplyToPart) {
+      targetPart = findBoundaryConditionTargetPart(condition);
+      targetPolyData = getBoundaryConditionTargetPolyData(targetPart);
+      if (targetPart == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+        continue;
+      }
+    } else if (condition->getApplyTo() == ApplyToNodeSet) {
+      targetNodeSet = findNodeSetById(condition->getTargetId());
+      targetPolyData = getBoundaryConditionTargetPolyData(targetNodeSet);
+      if (targetNodeSet == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+        continue;
+      }
+    } else {
       continue;
     }
 
@@ -997,30 +1590,40 @@ void Editor::updateBoundaryConditionOverlay()
       surfaceActor->SetMapper(surfaceMapper);
       surfaceActor->PickableOff();
       surfaceActor->GetProperty()->SetColor(1.0, 0.95, 0.1);
-      surfaceActor->GetProperty()->SetOpacity(0.22);
+      surfaceActor->GetProperty()->SetOpacity(condition->getApplyTo() == ApplyToPart ? 0.22 : 1.0);
       surfaceActor->GetProperty()->LightingOff();
+      if (condition->getApplyTo() == ApplyToNodeSet) {
+        surfaceActor->GetProperty()->SetRepresentationToPoints();
+        surfaceActor->GetProperty()->SetPointSize(12.0);
+        surfaceActor->GetProperty()->RenderPointsAsSpheresOn();
+      }
       renderer->AddActor(surfaceActor);
       m_bc_overlay_actors.push_back(surfaceActor);
 
-      vtkNew<vtkPolyDataMapper> edgeMapper;
-      edgeMapper->SetInputData(targetPolyData);
+      if (condition->getApplyTo() == ApplyToPart) {
+        vtkNew<vtkPolyDataMapper> edgeMapper;
+        edgeMapper->SetInputData(targetPolyData);
 
-      vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
-      edgeActor->SetMapper(edgeMapper);
-      edgeActor->PickableOff();
-      edgeActor->GetProperty()->SetColor(1.0, 0.95, 0.1);
-      edgeActor->GetProperty()->SetOpacity(1.0);
-      edgeActor->GetProperty()->SetLineWidth(5.0);
-      edgeActor->GetProperty()->SetRepresentationToWireframe();
-      edgeActor->GetProperty()->LightingOff();
-      edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
-      edgeActor->GetProperty()->RenderPointsAsSpheresOn();
-      edgeActor->GetProperty()->SetPointSize(9.0);
-      renderer->AddActor(edgeActor);
-      m_bc_overlay_actors.push_back(edgeActor);
+        vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
+        edgeActor->SetMapper(edgeMapper);
+        edgeActor->PickableOff();
+        edgeActor->GetProperty()->SetColor(1.0, 0.95, 0.1);
+        edgeActor->GetProperty()->SetOpacity(1.0);
+        edgeActor->GetProperty()->SetLineWidth(5.0);
+        edgeActor->GetProperty()->SetRepresentationToWireframe();
+        edgeActor->GetProperty()->LightingOff();
+        edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
+        edgeActor->GetProperty()->RenderPointsAsSpheresOn();
+        edgeActor->GetProperty()->SetPointSize(9.0);
+        renderer->AddActor(edgeActor);
+        m_bc_overlay_actors.push_back(edgeActor);
+      }
 
       if (selected_bc == condition) {
         std::ostringstream label;
+        if (condition->getApplyTo() == ApplyToNodeSet && targetNodeSet != nullptr) {
+          label << targetNodeSet->getLabel() << " ";
+        }
         label << "v = ("
               << to_string_scientific(velocity.x, 3) << ", "
               << to_string_scientific(velocity.y, 3) << ", "
@@ -1551,6 +2154,9 @@ void ShowExampleMenuFile(const Editor &editor)
   // if (ImGui::Button("Open File Dialog"))
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".wfmodel", ".");
     }
+    if (ImGui::MenuItem("Open Script")) {
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenScript", "Choose Python Script", ".py", ".");
+    }
     if (ImGui::MenuItem("Import Geometry", "Ctrl+I")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
     }
@@ -1874,6 +2480,7 @@ void Editor::drawGui() {
     }
     
     
+    drawSelectionControls();
 
     //if (ImGui::CollapsingHeader("New Domain")){
     // //IMGUI_DEMO_MARKER("Widgets/Trees");
@@ -2278,13 +2885,54 @@ void Editor::drawGui() {
           if (ImGui::BeginPopupContextItem())
           {
             if (ImGui::MenuItem("New", "CTRL+Z")) {
-              
+              m_setdlg.reset();
+              m_setdlg.set_type = NODE_SET;
               m_show_set_dlg = true;
             }
             ImGui::EndPopup();
           }
           if (open_) //Expand
           {
+             bool anySetShown = false;
+             for (int i = 0; i < m_model->getPartCount(); ++i) {
+               Part* part = m_model->getPart(i);
+               if (part == nullptr || part->getMesh() == nullptr) {
+                 continue;
+               }
+
+               Mesh* mesh = part->getMesh();
+               for (int s = 0; s < mesh->getNodeSetCount(); ++s) {
+                 const NodeSet& nodeSet = mesh->getNodeSet(s);
+                 const std::string label = nodeSet.getLabel().empty()
+                   ? "Node Set"
+                   : nodeSet.getLabel();
+                 const bool isSelected =
+                   (m_selected_node_set_mesh == mesh && m_selected_node_set_index == s);
+                 const std::string displayLabel = label + " [id " + std::to_string(nodeSet.getId()) + "]";
+                 if (ImGui::Selectable((displayLabel + "##nodeset_" + std::to_string(i) + "_" + std::to_string(s)).c_str(),
+                                       isSelected)) {
+                   selectNodeSet(mesh, s);
+                 }
+                 if (ImGui::IsItemHovered()) {
+                   ImGui::SetTooltip("%d nodes", nodeSet.getItemCount());
+                 }
+                 if (ImGui::BeginPopupContextItem()) {
+                   if (ImGui::MenuItem("Rename")) {
+                     m_selected_node_set_mesh = mesh;
+                     m_selected_node_set_index = s;
+                     std::snprintf(m_rename_set_name, sizeof(m_rename_set_name), "%s", label.c_str());
+                     m_show_rename_set_dlg = true;
+                   }
+                   ImGui::EndPopup();
+                 }
+                 ImGui::SameLine();
+                 ImGui::TextDisabled("(%d nodes)", nodeSet.getItemCount());
+                 anySetShown = true;
+               }
+             }
+             if (!anySetShown) {
+               ImGui::TextDisabled("No sets created.");
+             }
              ImGui::TreePop();
           }
 
@@ -3108,6 +3756,16 @@ void Editor::drawGui() {
     }
     ImGuiFileDialog::Instance()->Close();
   }
+
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenScript"))
+  {
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      openScriptFromPath(filePathName);
+    }
+    ImGuiFileDialog::Instance()->Close();
+  }
   
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenRes")) 
@@ -3294,21 +3952,56 @@ void Editor::drawGui() {
     }
   }
   else if (m_show_set_dlg) {
-  
-  /*   
-    if(is_fem_mesh)
-      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_model);
-    else
-      CreateSetTypeDialog create("test", &create_new_set, &m_setdlg.set_type, m_domain);
-    if(is_fem_mesh){
-
-      //mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_setdlg, &create_new_set);
-    } else if (is_sph_mesh){
-     
-    } //IF IS GEOMETRY??
-*/ 
-    //cout << "SET TYPE"<<m_setdlg.set_type<<endl;
+    m_setdlg.Draw("Create Set", &m_show_set_dlg, m_selector.getSelectedNodeCount());
+    if (!m_show_set_dlg) {
+      if (m_setdlg.m_saved) {
+        if (m_setdlg.set_type == NODE_SET) {
+          Mesh* targetMesh = findCommonMeshForNodes(m_model, m_selector.getSelectedNodes());
+          if (targetMesh == nullptr) {
+            cout << "Cannot create node set: selected nodes must belong to the same mesh" << endl;
+          } else {
+            NodeSet nodeSet(targetMesh);
+            nodeSet.setEntityId(findNextNodeSetId(m_model));
+            nodeSet.setLabel(m_setdlg.m_name);
+            for (Node* node : m_selector.getSelectedNodes()) {
+              nodeSet.add(node);
+            }
+            targetMesh->addNodeSet(nodeSet);
+            selectNodeSet(targetMesh, targetMesh->getNodeSetCount() - 1);
+            cout << "Created node set: name=" << m_setdlg.m_name
+                 << ", id=" << nodeSet.getId()
+                 << ", nodes=" << nodeSet.getItemCount() << endl;
+          }
+        } else {
+          cout << "Create set requested: name=" << m_setdlg.m_name
+               << ", type=" << m_setdlg.set_type << endl;
+        }
+      } else if (m_setdlg.m_cancelled) {
+        cout << "Create set cancelled" << endl;
+      }
+      m_setdlg.reset();
+    }
   }//show_set_mat
+  else if (m_show_rename_set_dlg) {
+    if (ImGui::Begin("Rename Set", &m_show_rename_set_dlg)) {
+      NodeSet* selectedSet = getSelectedNodeSet();
+      if (selectedSet == nullptr) {
+        ImGui::TextDisabled("No set selected.");
+      } else {
+        ImGui::InputText("Name", m_rename_set_name, IM_ARRAYSIZE(m_rename_set_name));
+        if (ImGui::Button("Save")) {
+          selectedSet->setLabel(m_rename_set_name);
+          cout << "Renamed set to " << m_rename_set_name << endl;
+          m_show_rename_set_dlg = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+          m_show_rename_set_dlg = false;
+        }
+      }
+    }
+    ImGui::End();
+  }
   
   if (create_new_mat) {
     m_show_mat_dlg=false;
@@ -3669,6 +4362,7 @@ Editor::Editor(){
   */
   
   m_show_msh_dlg = false;
+  m_show_set_dlg = false;
   
   m_show_app_console = true;
   m_model = new Model();

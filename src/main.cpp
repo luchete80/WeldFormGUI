@@ -496,6 +496,8 @@ int main(int argc, char* argv[])
 
               // Render del viewer
               vtkViewer2.render();
+              editor->handleSelectionInteraction();
+              editor->drawSelectionOverlay();
 
               ImGui::PopFont();
               ImGui::EndTabItem();

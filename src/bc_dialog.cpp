@@ -4,6 +4,7 @@
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
 #include "Part.h"
+#include "Mesh.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -80,7 +81,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     ImGui::Text("Apply to:");
     ImGui::RadioButton("Part", &m_applyTo, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Nodes", &m_applyTo, 1);
+    ImGui::RadioButton("Set", &m_applyTo, 1);
 
     // --- Selección de Part ---
     if (m_applyTo == 0) {
@@ -156,7 +157,59 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         }
     }
     else {
-        ImGui::InputInt("Target Node Set ID", &m_targetId);
+        std::vector<std::pair<NodeSet*, std::string>> nodeSets;
+        for (int i = 0; i < model->getPartCount(); ++i) {
+            Part* part = model->getPart(i);
+            if (part == nullptr || part->getMesh() == nullptr) {
+                continue;
+            }
+
+            Mesh* mesh = part->getMesh();
+            for (int s = 0; s < mesh->getNodeSetCount(); ++s) {
+                NodeSet& nodeSet = mesh->getNodeSet(s);
+                std::string label = nodeSet.getLabel().empty()
+                  ? ("Node Set " + std::to_string(nodeSet.getId()))
+                  : nodeSet.getLabel();
+                label += " [id " + std::to_string(nodeSet.getId()) + "]";
+                nodeSets.push_back({&nodeSet, label});
+            }
+        }
+
+        int selectedSetIndex = -1;
+        for (int i = 0; i < static_cast<int>(nodeSets.size()); ++i) {
+            if (nodeSets[i].first != nullptr && nodeSets[i].first->getId() == m_targetId) {
+                selectedSetIndex = i;
+                break;
+            }
+        }
+
+        if (create && selectedSetIndex == -1 && !nodeSets.empty()) {
+            selectedSetIndex = 0;
+            m_targetId = nodeSets[0].first->getId();
+        }
+
+        const char* preview =
+            (selectedSetIndex >= 0 && selectedSetIndex < static_cast<int>(nodeSets.size()))
+            ? nodeSets[selectedSetIndex].second.c_str()
+            : "Select Node Set";
+
+        if (ImGui::BeginCombo("Select Set##BCDialogSetCombo", preview)) {
+            for (int i = 0; i < static_cast<int>(nodeSets.size()); ++i) {
+                bool is_selected = (selectedSetIndex == i);
+                if (ImGui::Selectable(nodeSets[i].second.c_str(), is_selected)) {
+                    selectedSetIndex = i;
+                    m_targetId = nodeSets[i].first->getId();
+                }
+                if (is_selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        if (nodeSets.empty()) {
+            ImGui::TextDisabled("No node sets available.");
+        } else if (selectedSetIndex >= 0) {
+            ImGui::Text("Selected Set ID: %d", m_targetId);
+        }
     }
 
     // --- VELOCITY INPUT (solo si bcType == 0)
@@ -173,7 +226,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     if (ImGui::Button(butleg.c_str())) {
 
 
-        BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodes;
+        BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodeSet;
         BoundaryCondition *bc = nullptr;
         InitialCondition  *ic = nullptr;
 

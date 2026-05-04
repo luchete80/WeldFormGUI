@@ -7,7 +7,7 @@ enum class ConditionKind { Boundary, Initial };
 
 enum BCApplyTo {
     ApplyToPart,
-    ApplyToNodes
+    ApplyToNodeSet
 };
 
 //~ enum BCType {

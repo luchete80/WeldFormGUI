@@ -65,8 +65,13 @@ void Part::deleteMesh(){
 void Part::setMesh(Mesh* m){
   if (m!=nullptr){
     m_msh = (Mesh*) m;
+    m_ismeshed = true;
+    m_mesh_source_file.clear();
       cout << "Set Mesh "<<m_msh->getNodeCount()<< " nodes "<<endl;
   }
-  else
-  cout << "ERROR. null msh address"<<endl;
+  else {
+    m_msh = nullptr;
+    m_ismeshed = false;
+    cout << "ERROR. null msh address"<<endl;
+  }
   }

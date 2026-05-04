@@ -33,10 +33,9 @@ protected:
 class CreateSetDialog:
 public Dialog { 
 public:
-  CreateSetDialog(){set_type=1; }
-template <typename T>
-void  Draw(const char* title, bool* p_open, Set<T> *mat);
-void Draw(){}
+  CreateSetDialog();
+  void Draw(const char* title, bool* p_open, int selected_count);
+  void reset();
 
 void ShowSetTypeDialog();
 
@@ -44,6 +43,9 @@ void ShowSetTypeDialog();
   bool create_set;
   bool cancel_action;
   int set_type;
+  bool m_saved;
+  bool m_cancelled;
+  char m_name[128];
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  
 };

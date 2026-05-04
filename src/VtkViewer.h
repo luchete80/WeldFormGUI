@@ -152,6 +152,14 @@ public:
 	inline unsigned int getTexture() const {
 		return tex;
 	}
+
+  const ImVec2& getViewportScreenMin() const {
+    return viewportScreenMin;
+  }
+
+  const ImVec2& getViewportScreenMax() const {
+    return viewportScreenMax;
+  }
   
   
   void setActor(vtkSmartPointer<vtkActor> actor) {

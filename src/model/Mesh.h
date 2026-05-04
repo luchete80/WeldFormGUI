@@ -51,6 +51,22 @@ public:
   Node*     getNode(const int &i){return m_node[i];} 
   Element*  getElem(const int &i){return m_elem[i];}
   Part& getPart(){return *m_part;}
+  int getNodeSetCount() const { return static_cast<int>(m_node_sets.size()); }
+  NodeSet& getNodeSet(const int& i){ return m_node_sets[i]; }
+  const NodeSet& getNodeSet(const int& i) const { return m_node_sets[i]; }
+  void addNodeSet(const NodeSet& set){ m_node_sets.push_back(set); }
+  NodeSet* findNodeSetById(int id) {
+    for (std::size_t i = 0; i < m_node_sets.size(); ++i) {
+      if (m_node_sets[i].getId() == id) return &m_node_sets[i];
+    }
+    return nullptr;
+  }
+  const NodeSet* findNodeSetById(int id) const {
+    for (std::size_t i = 0; i < m_node_sets.size(); ++i) {
+      if (m_node_sets[i].getId() == id) return &m_node_sets[i];
+    }
+    return nullptr;
+  }
   
   const int & getDim() const {return m_dim;}
 
@@ -76,6 +92,7 @@ protected:
   std::vector <int>      elnod_h;
   
   std::vector < Set<Element> >  m_set_elem;
+  std::vector <NodeSet>   m_node_sets;
   std::vector <Node*>     m_set_node;
   int                     m_gmsh_id; //GMSH entity ID 
   Part*                   m_part;

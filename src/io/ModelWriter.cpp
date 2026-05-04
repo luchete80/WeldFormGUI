@@ -9,6 +9,7 @@
 #include <system_error>
 #include "Material.h"
 #include "Geom.h"
+#include "Node.h"
 
 #include <nlohmann/json.hpp>
 #include "json_io.h"
@@ -171,7 +172,7 @@ void ModelWriter::writeToFile(std::string fname){
       //~ for (auto& node : part->getNodes()) {
           //~ jpart["mesh"]["nodes"].push_back({node.x, node.y, node.z});
       //~ }
-      if (part->isMeshed()){
+      if (part->getMesh() != nullptr){
       //~ jpart["mesh"]["elements"] = json::array();
       //~ for (auto& elem : part->getElements()) {
           //~ json jelem;
@@ -212,7 +213,7 @@ void ModelWriter::writeToFile(std::string fname){
           //~ };
 
       } 
-      if (part->isMeshed()) {
+      if (part->getMesh() != nullptr) {
         cout << "Part "<<i << " is meshed."<<endl;
         const bool use_bdf_mesh = true;
         const std::string meshname =
@@ -221,13 +222,13 @@ void ModelWriter::writeToFile(std::string fname){
         jpart["mesh"]["source"] = fs::relative(mesh_path, json_dir).string();
 
         cout << "Exporting current mesh to Nastran..."<<endl;
-        m_model.getPart(i)->getMesh()->exportToNASTRAN(mesh_path.string());
-        m_model.getPart(i)->setMeshSourceFile(mesh_path.string());
+        part->getMesh()->exportToNASTRAN(mesh_path.string());
+        part->setMeshSourceFile(mesh_path.string());
 
         if (m_model.getPrevName()!=m_model.getName()){
          std::string kname = m_model.getName()+"_part_" + std::to_string(i) + ".k";
             cout << "Exporting to LSDyna..."<<endl;
-            m_model.getPart(i)->getMesh()->exportToLSDYNA(kname);
+            part->getMesh()->exportToLSDYNA(kname);
         
         }// IF NAME CHANGED
       } else {
@@ -239,6 +240,39 @@ void ModelWriter::writeToFile(std::string fname){
       i++;
     
   }//PART
+
+  int totalNodeSets = 0;
+  for (int partIndex = 0; partIndex < m_model.getPartCount(); ++partIndex) {
+    Part* part = m_model.getPart(partIndex);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int setIndex = 0; setIndex < mesh->getNodeSetCount(); ++setIndex) {
+      const NodeSet& nodeSet = mesh->getNodeSet(setIndex);
+
+      json jset;
+      jset["id"] = nodeSet.getId();
+      jset["label"] = nodeSet.getLabel();
+      jset["partId"] = part->getId();
+      jset["nodeIds"] = json::array();
+
+      for (int nodeIndex = 0; nodeIndex < nodeSet.getItemCount(); ++nodeIndex) {
+        const Node* node = nodeSet.getItem(nodeIndex);
+        if (node != nullptr) {
+          jset["nodeIds"].push_back(node->getId());
+        }
+      }
+
+      m_json["NodeSets"].push_back(jset);
+      totalNodeSets++;
+    }
+  }
+
+  if (totalNodeSets > 0) {
+    std::cout << "Done writing " << totalNodeSets << " node sets." << std::endl;
+  }
 
 
   if (m_model.getMaterialCount()>0){
@@ -352,7 +386,7 @@ void ModelWriter::writeToFile(std::string fname){
           jbc["type"] = typeStr;
 
           // ApplyTo
-          std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "Nodes";
+          std::string applyToStr = (bc->getApplyTo() == ApplyToPart) ? "Part" : "NodeSet";
           jbc["applyTo"] = applyToStr;
 
           // ID objetivo

@@ -3,6 +3,7 @@
 #include "Part.h"
 #include "Material.h"
 #include "Geom.h"
+#include "Node.h"
 #include "json_io.h"
 #include "gmsh.h"
 #include "BoundaryCondition.h"
@@ -247,6 +248,67 @@ bool ModelReader::readFromFile(const std::string& fname) {
     }//parts
 
     // =============================================================
+    // Node Sets
+    // =============================================================
+    if (j.contains("NodeSets") && j["NodeSets"].is_array()) {
+        cout << "[ModelReader] Reading " << j["NodeSets"].size() << " node set(s)" << endl;
+
+        for (const auto& jset : j["NodeSets"]) {
+            const int partId = jset.value("partId", -1);
+            const int setId = jset.value("id", -1);
+            const std::string label = jset.value("label", "");
+
+            Part* targetPart = nullptr;
+            for (int i = 0; i < m_model->getPartCount(); ++i) {
+                Part* part = m_model->getPart(i);
+                if (part != nullptr && part->getId() == partId) {
+                    targetPart = part;
+                    break;
+                }
+            }
+
+            if (targetPart == nullptr || targetPart->getMesh() == nullptr) {
+                cerr << "  [Warning] NodeSet " << setId
+                     << " references missing partId=" << partId << endl;
+                continue;
+            }
+
+            Mesh* mesh = targetPart->getMesh();
+            NodeSet nodeSet(mesh);
+            nodeSet.setEntityId(setId);
+            nodeSet.setLabel(label);
+
+            if (jset.contains("nodeIds") && jset["nodeIds"].is_array()) {
+                for (const auto& jnodeId : jset["nodeIds"]) {
+                    const int nodeId = jnodeId.get<int>();
+                    Node* targetNode = nullptr;
+
+                    for (int n = 0; n < mesh->getNodeCount(); ++n) {
+                        Node* node = mesh->getNode(n);
+                        if (node != nullptr && node->getId() == nodeId) {
+                            targetNode = node;
+                            break;
+                        }
+                    }
+
+                    if (targetNode != nullptr) {
+                        nodeSet.add(targetNode);
+                    } else {
+                        cerr << "  [Warning] NodeSet " << setId
+                             << " references missing nodeId=" << nodeId << endl;
+                    }
+                }
+            }
+
+            mesh->addNodeSet(nodeSet);
+            cout << "  -> NodeSet id=" << setId
+                 << " label=\"" << label << "\""
+                 << " nodes=" << nodeSet.getItemCount()
+                 << " partId=" << partId << endl;
+        }
+    }
+
+    // =============================================================
     // Boundary Conditions
     // =============================================================
     if (j.contains("Steps") && j["Steps"].is_array()) {
@@ -320,7 +382,9 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
             // --- ApplyTo ---
             std::string applyToStr = jbc.value("applyTo", "Part");
-            BCApplyTo applyTo = (applyToStr == "Nodes") ? ApplyToNodes : ApplyToPart;
+            BCApplyTo applyTo = (applyToStr == "NodeSet" || applyToStr == "Nodes")
+              ? ApplyToNodeSet
+              : ApplyToPart;
 
             // --- Target ID ---
             int targetId = jbc.value("targetId", -1);

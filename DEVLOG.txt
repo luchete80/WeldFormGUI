@@ -202,4 +202,8 @@
          - Fixed mesh orgiin position at input writing.
          - Fixed Part ID assigment
          - Added CTRL+S to save (and console msg)
-         - 
+20260504 - Fixed Scripting Things (changed python paths)
+         - Added Writing output to console. 
+         - Adding Selector class
+         - Adding Node Set 
+         
