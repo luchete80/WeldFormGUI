@@ -125,6 +125,109 @@ ImVec2 vpos, vmin, vmax;
 
 namespace {
 ExampleAppConsole* g_app_console = nullptr;
+std::string g_pending_console_output;
+
+void flushPendingConsoleOutput()
+{
+    if (g_app_console == nullptr || g_pending_console_output.empty()) {
+        return;
+    }
+    g_app_console->AddLogString(g_pending_console_output);
+    g_pending_console_output.clear();
+}
+
+void appendStreamTextToConsole(const char* text, std::size_t size)
+{
+    if (text == nullptr || size == 0) {
+        return;
+    }
+
+    if (g_app_console != nullptr) {
+        g_app_console->AddLogString(std::string(text, size));
+        return;
+    }
+
+    g_pending_console_output.append(text, size);
+}
+
+class ConsoleTeeBuffer : public std::streambuf {
+public:
+    explicit ConsoleTeeBuffer(std::streambuf* target)
+        : m_target(target) {}
+
+protected:
+    int overflow(int ch) override
+    {
+        if (ch == traits_type::eof()) {
+            return sync() == 0 ? traits_type::not_eof(ch) : traits_type::eof();
+        }
+
+        const char c = traits_type::to_char_type(ch);
+        if (m_target != nullptr && traits_type::eq_int_type(m_target->sputc(c), traits_type::eof())) {
+            return traits_type::eof();
+        }
+
+        m_buffer.push_back(c);
+        flushCompletedLines();
+        return ch;
+    }
+
+    std::streamsize xsputn(const char* s, std::streamsize count) override
+    {
+        const std::streamsize written = m_target != nullptr ? m_target->sputn(s, count) : count;
+        if (written > 0) {
+            m_buffer.append(s, static_cast<std::size_t>(written));
+            flushCompletedLines();
+        }
+        return written;
+    }
+
+    int sync() override
+    {
+        if (m_target != nullptr) {
+            m_target->pubsync();
+        }
+        flushAll();
+        return 0;
+    }
+
+private:
+    void flushCompletedLines()
+    {
+        std::size_t pos = 0;
+        while ((pos = m_buffer.find('\n')) != std::string::npos) {
+            appendStreamTextToConsole(m_buffer.data(), pos + 1);
+            m_buffer.erase(0, pos + 1);
+        }
+    }
+
+    void flushAll()
+    {
+        if (m_buffer.empty()) {
+            return;
+        }
+        appendStreamTextToConsole(m_buffer.data(), m_buffer.size());
+        m_buffer.clear();
+    }
+
+    std::streambuf* m_target;
+    std::string m_buffer;
+};
+
+void initializeConsoleStreamMirroring()
+{
+    static ConsoleTeeBuffer coutBuffer(std::cout.rdbuf());
+    static ConsoleTeeBuffer cerrBuffer(std::cerr.rdbuf());
+    static bool initialized = false;
+
+    if (initialized) {
+        return;
+    }
+
+    std::cout.rdbuf(&coutBuffer);
+    std::cerr.rdbuf(&cerrBuffer);
+    initialized = true;
+}
 
 std::string activeModelStem(Model &model)
 {
@@ -152,9 +255,7 @@ std::string ensureWfmodelPath(const std::string& filePathName)
 
 void appendToAppConsole(const std::string& text)
 {
-    if (g_app_console != nullptr) {
-        g_app_console->AddLogString(text);
-    }
+    appendStreamTextToConsole(text.data(), text.size());
 }
 
 bool appendFileToAppConsole(const std::string& path)
@@ -3240,6 +3341,7 @@ void Editor::drawGui() {
   if (m_show_app_console) {
     static ExampleAppConsole console;
     g_app_console = &console;
+    flushPendingConsoleOutput();
     console.Draw("Example: Console", &m_show_app_console);    
   } else {
     g_app_console = nullptr;
@@ -3541,6 +3643,7 @@ void Editor::scroll(double xoffset, double yoffset)
 
 
 Editor::Editor(){
+  initializeConsoleStreamMirroring();
   m_jobdlg.m_open_results = [this](Job* job) { return openResultsForJob(job); };
   m_jobshowdlg.m_open_results = [this](Job* job) { return openResultsForJob(job); };
   /*
