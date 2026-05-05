@@ -843,7 +843,11 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
   std::string ext = fs::path(filePathName).extension().string();
 
   if (ext == ".json" || ext == ".wfresult") {
-      return beginResultsLoadFromJson(filePathName);
+      const bool opened = beginResultsLoadFromJson(filePathName);
+      if (opened) {
+        getApp().addRecentFile(filePathName);
+      }
+      return opened;
   } else if (ext == ".vtk") {
     ResultFrame *frame = new ResultFrame(filePathName);
     frame->printAvailableFields();
@@ -867,6 +871,7 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
     frame->actor->GetMapper()->Update();
 
     res_viewer->addActor(frame->actor);
+    getApp().addRecentFile(filePathName);
   } else {
     return false;
   }
@@ -885,16 +890,33 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
   return true;
 }
 
-bool Editor::beginResultsLoadFromJson(const std::string& jsonFile)
+bool Editor::beginResultsLoadFromJson(const std::string& jsonFile,
+                                      bool replaceExistingResults,
+                                      int preferredFrameIndex)
 {
   PendingResultsLoad pending;
   pending.entries = CollectResultFrameEntriesFromJson(jsonFile, &pending.sourceDirectory, &pending.sourceJsonFile);
   pending.results.sourceDirectory = pending.sourceDirectory;
   pending.results.sourceJsonFile = pending.sourceJsonFile;
+  pending.replaceExistingResults = replaceExistingResults;
+  pending.preferredFrameIndex = preferredFrameIndex;
+  pending.reloadStartIndex = 0;
+  pending.keepPrefixFrameCount = 0;
 
   if (pending.sourceJsonFile.empty() || !fs::exists(pending.sourceJsonFile)) {
     cout << "Could not prepare results load for JSON: " << jsonFile << endl;
     return false;
+  }
+
+  if (replaceExistingResults && m_results != nullptr && preferredFrameIndex > 0) {
+    const std::size_t maxKeep = std::min(
+      pending.entries.size(),
+      m_results->frames.size());
+    pending.keepPrefixFrameCount = std::min(
+      static_cast<std::size_t>(preferredFrameIndex),
+      maxKeep);
+    pending.reloadStartIndex = pending.keepPrefixFrameCount;
+    pending.nextIndex = pending.reloadStartIndex;
   }
 
   m_pending_results_load = std::move(pending);
@@ -1078,6 +1100,8 @@ void Editor::closeCurrentResults()
   if (m_pending_results_load.active) {
     m_pending_results_load = PendingResultsLoad{};
   }
+
+  m_pending_results_frame_index = -1;
 }
 
 bool Editor::createJobFromActiveModel(bool runJob)
@@ -1203,7 +1227,7 @@ bool Editor::openResultsForJob(Job* job)
   return false;
 }
 
-bool Editor::refreshOpenResults()
+bool Editor::refreshOpenResults(int preferredFrameIndex)
 {
   if (m_results == nullptr) {
     cout << "No results loaded; refresh skipped" << endl;
@@ -1215,26 +1239,7 @@ bool Editor::refreshOpenResults()
     return false;
   }
 
-  MultiResult refreshed = LoadResultsFromJson(m_results->sourceJsonFile.string());
-  if (refreshed.sourceJsonFile.empty()) {
-    cout << "Refresh failed; keeping current results" << endl;
-    return false;
-  }
-
-  if (!fs::exists(refreshed.sourceJsonFile)) {
-    cout << "Refresh source JSON no longer exists; keeping current results" << endl;
-    return false;
-  }
-
-  if (refreshed.frames.empty() && !m_results->frames.empty()) {
-    cout << "Refresh produced no frames; keeping current results" << endl;
-    return false;
-  }
-
-  m_results = new MultiResult(std::move(refreshed));
-  m_activate_results_viewer = true;
-  getApp().Update();
-  return true;
+  return beginResultsLoadFromJson(m_results->sourceJsonFile.string(), true, preferredFrameIndex);
 }
 
 bool Editor::hasBlockingDialogOpen() const
@@ -1919,7 +1924,37 @@ void Editor::finishResultsLoad()
   if (!m_pending_results_load.active)
     return;
 
-  m_results = new MultiResult(std::move(m_pending_results_load.results));
+  MultiResult mergedResults;
+  mergedResults.sourceDirectory = m_pending_results_load.results.sourceDirectory;
+  mergedResults.sourceJsonFile = m_pending_results_load.results.sourceJsonFile;
+
+  if (m_pending_results_load.replaceExistingResults && m_results != nullptr) {
+    const std::size_t keepCount = std::min(
+      m_pending_results_load.keepPrefixFrameCount,
+      m_results->frames.size());
+    for (std::size_t i = 0; i < keepCount; ++i) {
+      mergedResults.frames.push_back(std::move(m_results->frames[i]));
+    }
+    for (auto& frame : m_pending_results_load.results.frames) {
+      mergedResults.frames.push_back(std::move(frame));
+    }
+    if (res_viewer != nullptr) {
+      res_viewer->setActor(nullptr);
+    }
+    delete m_results;
+    m_results = nullptr;
+    m_results = new MultiResult(std::move(mergedResults));
+  } else {
+    m_results = new MultiResult(std::move(m_pending_results_load.results));
+  }
+  if (m_results != nullptr && !m_results->frames.empty()) {
+    m_pending_results_frame_index = std::max(
+      0,
+      std::min(m_pending_results_load.preferredFrameIndex,
+               static_cast<int>(m_results->frames.size()) - 1));
+  } else {
+    m_pending_results_frame_index = 0;
+  }
   m_activate_results_viewer = true;
   getApp().Update();
 
@@ -1932,6 +1967,13 @@ void Editor::finishResultsLoad()
   m_pending_results_load = PendingResultsLoad{};
 }
 
+int Editor::consumePendingResultsFrameIndex()
+{
+  const int value = m_pending_results_frame_index;
+  m_pending_results_frame_index = -1;
+  return value;
+}
+
 void Editor::drawResultsLoadProgress()
 {
   if (!m_pending_results_load.active)
@@ -1940,9 +1982,12 @@ void Editor::drawResultsLoadProgress()
   ImGui::OpenPopup("Loading Results");
 
   const std::size_t total = m_pending_results_load.entries.size();
+  const std::size_t start = m_pending_results_load.reloadStartIndex;
   const std::size_t processed = m_pending_results_load.nextIndex;
-  const float progress = total > 0
-    ? static_cast<float>(processed) / static_cast<float>(total)
+  const std::size_t displayTotal = total > start ? total - start : 0;
+  const std::size_t displayProcessed = processed > start ? processed - start : 0;
+  const float progress = displayTotal > 0
+    ? static_cast<float>(displayProcessed) / static_cast<float>(displayTotal)
     : 1.0f;
 
   static std::size_t lastLoggedProcessed = static_cast<std::size_t>(-1);
@@ -1966,7 +2011,7 @@ void Editor::drawResultsLoadProgress()
                            ImGuiWindowFlags_NoResize |
                            ImGuiWindowFlags_NoSavedSettings;
   if (ImGui::BeginPopupModal("Loading Results", nullptr, flags)) {
-    ImGui::Text("Opening %zu / %zu frames", processed, total);
+    ImGui::Text("Opening %zu / %zu frames", displayProcessed, displayTotal);
     ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
 
     if (!m_pending_results_load.currentFile.empty())
@@ -2331,7 +2376,12 @@ void ShowExampleMenuFile(Editor *editor)
                     : fs::path(recentPath).filename().string();
                 if (ImGui::MenuItem(label.c_str())) {
                     if (editor != nullptr) {
-                        editor->openModelFromPath(recentPath);
+                        const std::string ext = fs::path(recentPath).extension().string();
+                        if (ext == ".wfmodel") {
+                            editor->openModelFromPath(recentPath);
+                        } else if (ext == ".wfresult" || ext == ".vtk" || ext == ".json") {
+                            editor->openResultsFromPath(recentPath);
+                        }
                     }
                 }
                 if (ImGui::IsItemHovered()) {

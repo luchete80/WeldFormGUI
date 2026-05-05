@@ -215,3 +215,5 @@
          - Fixed overlay to work also on results (and remove button)
          - Fixed overlay format
          - Added Movement below Tree after creating a new model.
+         - Changed "Refresh results" to check from current frame on . 
+         - Added recent file to results (not only models).

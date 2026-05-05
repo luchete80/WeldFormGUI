@@ -129,7 +129,8 @@ public:
   bool openResultsFromPath(const std::string& filePathName);
   bool openResultsForModel();
   bool openResultsForJob(Job* job);
-  bool refreshOpenResults();
+  bool refreshOpenResults(int preferredFrameIndex = -1);
+  int consumePendingResultsFrameIndex();
   bool scalePartGeometry(Part* part, double factor);
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
@@ -340,6 +341,7 @@ protected:
   struct PendingResultsLoad {
     bool active = false;
     bool justStarted = false;
+    bool replaceExistingResults = false;
     fs::path sourceDirectory;
     fs::path sourceJsonFile;
     MultiResult results;
@@ -347,13 +349,19 @@ protected:
     std::size_t nextIndex = 0;
     std::size_t loadedFrames = 0;
     std::size_t skippedFrames = 0;
+    std::size_t reloadStartIndex = 0;
+    std::size_t keepPrefixFrameCount = 0;
+    int preferredFrameIndex = -1;
     std::string currentFile;
     std::string errorMessage;
   };
 
   PendingResultsLoad m_pending_results_load;
+  int m_pending_results_frame_index = -1;
 
-  bool beginResultsLoadFromJson(const std::string& jsonFile);
+  bool beginResultsLoadFromJson(const std::string& jsonFile,
+                                bool replaceExistingResults = false,
+                                int preferredFrameIndex = -1);
   void advanceResultsLoad();
   void finishResultsLoad();
   void drawResultsLoadProgress();

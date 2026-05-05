@@ -1170,19 +1170,12 @@ int main(int argc, char* argv[])
 	              //~ ImGui::SameLine();
 	              //~ if (ImGui::Button("Blue BG"))         { renderer->SetBackground(0.2,0.2,0.4); renderer->SetBackground2(0.8,0.8,0.8); }
 	              //~ ImGui::SameLine();
-	              if (ImGui::Button("Refresh Results")) {
-	                  int previousFrame = currentFrame;
-	                  if (editor->refreshOpenResults()) {
-	                      if (editor->getResults() && !editor->getResults()->frames.empty()) {
-	                          currentFrame = std::min(previousFrame, (int)editor->getResults()->frames.size() - 1);
-	                          recomputeActiveFieldScale();
-	                          applyActiveFieldSelectionToAllFrames();
-	                      } else {
-	                          currentFrame = 0;
-	                      }
-	                      lastFrame = -1;
-	                  }
-	              }
+		              if (ImGui::Button("Refresh Results")) {
+		                  int previousFrame = currentFrame;
+		                  if (editor->refreshOpenResults(previousFrame)) {
+		                      lastFrame = -1;
+		                  }
+		              }
 	              ImGui::SameLine();
 	              if (ImGui::Button("load plot")) {
 	                  std::filesystem::path csv_path;
@@ -1196,8 +1189,19 @@ int main(int argc, char* argv[])
 	                  loadPlotDialog.SetCsvPath(csv_path.string());
 	                  showLoadPlotDialog = true;
 	              }
-		              if (editor->getResults()){
-	              if (!editor->getResults()->frames.empty()) {
+			              if (editor->getResults()){
+                      const int restoredFrame = editor->consumePendingResultsFrameIndex();
+                      if (restoredFrame >= 0) {
+                          if (!editor->getResults()->frames.empty()) {
+                              currentFrame = std::min(restoredFrame, (int)editor->getResults()->frames.size() - 1);
+                              recomputeActiveFieldScale();
+                              applyActiveFieldSelectionToAllFrames();
+                          } else {
+                              currentFrame = 0;
+                          }
+                          lastFrame = -1;
+                      }
+		              if (!editor->getResults()->frames.empty()) {
 	                  if (currentFrame >= (int)editor->getResults()->frames.size())
 	                      currentFrame = 0;
 	                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
