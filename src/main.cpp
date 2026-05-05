@@ -121,18 +121,24 @@ bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_textu
 }
 
 namespace {
+enum class UIFontChoice {
+    ImGuiDefault,
+    Ubuntu
+};
+
 enum class ModelDisplayMode {
-    ShadedWithEdges,
+    Surface,
     Wireframe
 };
 
 struct ModelViewportOverlayState {
-    ModelDisplayMode displayMode = ModelDisplayMode::ShadedWithEdges;
+    ModelDisplayMode displayMode = ModelDisplayMode::Surface;
+    bool showEdges = false;
     bool axesVisible = false;
     bool orthographic = false;
 };
 
-void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool preserveScalarColors)
+void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool showEdges, bool preserveScalarColors)
 {
     if (actor == nullptr || actor->GetProperty() == nullptr) {
         return;
@@ -151,10 +157,14 @@ void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool preser
         preserveScalarColors && mapper != nullptr && mapper->GetScalarVisibility();
     vtkProperty* property = actor->GetProperty();
     switch (mode) {
-    case ModelDisplayMode::ShadedWithEdges:
+    case ModelDisplayMode::Surface:
         property->SetRepresentationToSurface();
-        property->EdgeVisibilityOn();
-        property->SetEdgeColor(0.0, 0.0, 0.0);
+        if (showEdges) {
+            property->EdgeVisibilityOn();
+            property->SetEdgeColor(0.0, 0.0, 0.0);
+        } else {
+            property->EdgeVisibilityOff();
+        }
         if (!hasScalarColors) {
             property->SetColor(0.84, 0.84, 0.84);
         }
@@ -167,7 +177,7 @@ void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool preser
     }
 }
 
-void applyDisplayModeToActiveModel(ModelDisplayMode mode)
+void applyDisplayModeToActiveModel(ModelDisplayMode mode, bool showEdges)
 {
     Model& model = getApp().getActiveModel();
     for (int p = 0; p < model.getPartCount(); ++p) {
@@ -177,16 +187,16 @@ void applyDisplayModeToActiveModel(ModelDisplayMode mode)
         }
 
         if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
-            applyDisplayModeToActor(graphicMesh->getActor(), mode, false);
+            applyDisplayModeToActor(graphicMesh->getActor(), mode, showEdges, false);
         }
 
         if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
-            applyDisplayModeToActor(visual->actor, mode, false);
+            applyDisplayModeToActor(visual->actor, mode, showEdges, false);
         }
     }
 }
 
-void applyDisplayModeToResults(ModelDisplayMode mode, Editor* editor)
+void applyDisplayModeToResults(ModelDisplayMode mode, bool showEdges, Editor* editor)
 {
     if (editor == nullptr || editor->getResults() == nullptr) {
         return;
@@ -196,29 +206,36 @@ void applyDisplayModeToResults(ModelDisplayMode mode, Editor* editor)
         if (!frame || !frame->actor) {
             continue;
         }
-        applyDisplayModeToActor(frame->actor, mode, true);
+        applyDisplayModeToActor(frame->actor, mode, showEdges, true);
     }
 }
 
-bool drawToolbarButton(const char* label, bool active = false)
+bool drawToolbarButton(const char* label, bool active = false, const char* tooltip = nullptr)
 {
+    const ImVec2 buttonSize(0.0f, 24.0f);
     if (active) {
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.24f, 0.48f, 0.86f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.92f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.24f, 0.48f, 0.86f, 0.92f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.92f, 0.98f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.40f, 0.78f, 1.0f));
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.11f, 0.14f, 0.18f, 0.42f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.16f, 0.20f, 0.26f, 0.70f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.20f, 0.25f, 0.32f, 0.82f));
     }
 
-    const bool pressed = ImGui::Button(label);
-
-    if (active) {
-        ImGui::PopStyleColor(3);
+    const bool pressed = ImGui::Button(label, buttonSize);
+    if (tooltip != nullptr && ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", tooltip);
     }
+
+    ImGui::PopStyleColor(3);
 
     return pressed;
 }
 
 bool drawAxisButton(const char* label, const ImVec4& baseColor)
 {
+    const ImVec2 buttonSize(24.0f, 24.0f);
     const ImVec4 hoveredColor(
         (std::min)(baseColor.x + 0.10f, 1.0f),
         (std::min)(baseColor.y + 0.10f, 1.0f),
@@ -233,17 +250,84 @@ bool drawAxisButton(const char* label, const ImVec4& baseColor)
     ImGui::PushStyleColor(ImGuiCol_Button, baseColor);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.949f, 0.957f, 0.965f, 1.0f));
 
-    const bool pressed = ImGui::Button(label);
+    const bool pressed = ImGui::Button(label, buttonSize);
 
     ImGui::PopStyleColor(4);
     return pressed;
 }
 
+void drawOverlaySeparator()
+{
+    ImGui::SameLine(0.0f, 8.0f);
+    const ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddLine(ImVec2(pos.x, pos.y + 3.0f), ImVec2(pos.x, pos.y + 21.0f),
+                       IM_COL32(255, 255, 255, 28), 1.0f);
+    ImGui::Dummy(ImVec2(1.0f, 24.0f));
+    ImGui::SameLine(0.0f, 8.0f);
+}
+
+bool drawProjectionButton(const char* id, bool orthographic, bool active, const char* tooltip)
+{
+    const ImVec2 size(24.0f, 24.0f);
+    ImGui::PushID(id);
+    const bool pressed = ImGui::InvisibleButton("##projection", size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImU32 bgColor = active ? IM_COL32(61, 122, 219, 235) : IM_COL32(28, 34, 44, 110);
+    if (held) {
+        bgColor = active ? IM_COL32(53, 106, 191, 255) : IM_COL32(46, 74, 122, 220);
+    } else if (hovered) {
+        bgColor = active ? IM_COL32(70, 132, 232, 245) : IM_COL32(54, 64, 80, 180);
+    }
+
+    const ImU32 strokeColor = IM_COL32(236, 240, 245, 255);
+    drawList->AddRectFilled(min, max, bgColor, 6.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 18), 6.0f, 0, 1.0f);
+
+    const float left = min.x + 5.0f;
+    const float right = max.x - 5.0f;
+    const float top = min.y + 6.0f;
+    const float bottom = max.y - 5.0f;
+    const float thickness = 1.4f;
+
+    if (orthographic) {
+        const float x1 = left + 1.0f;
+        const float x2 = (left + right) * 0.5f;
+        const float x3 = right - 1.0f;
+        drawList->AddLine(ImVec2(x1, top), ImVec2(x1, bottom), strokeColor, thickness);
+        drawList->AddLine(ImVec2(x2, top), ImVec2(x2, bottom), strokeColor, thickness);
+        drawList->AddLine(ImVec2(x3, top), ImVec2(x3, bottom), strokeColor, thickness);
+        drawList->AddLine(ImVec2(x1 - 1.0f, top), ImVec2(x3 + 1.0f, top), strokeColor, thickness);
+        drawList->AddLine(ImVec2(x1 - 1.0f, bottom), ImVec2(x3 + 1.0f, bottom), strokeColor, thickness);
+    } else {
+        const float offset = 3.0f;
+        drawList->AddLine(ImVec2(left + offset, top), ImVec2(right, top + 1.0f), strokeColor, thickness);
+        drawList->AddLine(ImVec2(left, bottom - 1.0f), ImVec2(right - offset, bottom), strokeColor, thickness);
+        drawList->AddLine(ImVec2(left + offset, top), ImVec2(left, bottom - 1.0f), strokeColor, thickness);
+        drawList->AddLine(ImVec2((left + right) * 0.5f + 1.0f, top + 1.0f),
+                          ImVec2((left + right) * 0.5f - 2.0f, bottom), strokeColor, thickness);
+        drawList->AddLine(ImVec2(right, top + 1.0f), ImVec2(right - offset, bottom), strokeColor, thickness);
+    }
+
+    if (tooltip != nullptr && hovered) {
+        ImGui::SetTooltip("%s", tooltip);
+    }
+
+    ImGui::PopID();
+    return pressed;
+}
+
 bool drawFitIconButton()
 {
-    const ImVec2 size(28.0f, 28.0f);
+    const ImVec2 size(24.0f, 24.0f);
     ImGui::PushID("fit_icon_button");
     const bool pressed = ImGui::InvisibleButton("##fit", size);
     const bool hovered = ImGui::IsItemHovered();
@@ -253,23 +337,23 @@ bool drawFitIconButton()
     const ImVec2 max = ImGui::GetItemRectMax();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    ImU32 bgColor = IM_COL32(36, 44, 56, 220);
+    ImU32 bgColor = IM_COL32(28, 34, 44, 110);
     if (held) {
-        bgColor = IM_COL32(46, 74, 122, 240);
+        bgColor = IM_COL32(46, 74, 122, 220);
     } else if (hovered) {
-        bgColor = IM_COL32(54, 64, 80, 235);
+        bgColor = IM_COL32(54, 64, 80, 180);
     }
 
     const ImU32 strokeColor = hovered || held
         ? IM_COL32(255, 255, 255, 255)
         : IM_COL32(220, 224, 230, 255);
 
-    drawList->AddRectFilled(min, max, bgColor, 7.0f);
-    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 30), 7.0f, 0, 1.0f);
+    drawList->AddRectFilled(min, max, bgColor, 6.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 18), 6.0f, 0, 1.0f);
 
-    const float pad = 6.5f;
-    const float arm = 5.0f;
-    const float thickness = 1.8f;
+    const float pad = 5.5f;
+    const float arm = 4.0f;
+    const float thickness = 1.6f;
 
     const float left = min.x + pad;
     const float right = max.x - pad;
@@ -308,16 +392,20 @@ void drawViewportOverlay(VtkViewer& viewer,
     }
 
     ImGui::SetNextWindowPos(ImVec2(viewportMin.x + 12.0f, viewportMin.y + 12.0f), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.55f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f));
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.10f, 0.14f, 0.85f));
+    ImGui::SetNextWindowBgAlpha(0.18f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 7.0f);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.04f, 0.05f, 0.07f, 0.18f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 1.0f, 1.0f, 0.06f));
 
     const ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoSavedSettings |
         ImGuiWindowFlags_AlwaysAutoResize |
-        ImGuiWindowFlags_NoNavFocus;
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_NoMove;
 
     if (ImGui::Begin(windowId, nullptr, flags)) {
         if (drawFitIconButton()) {
@@ -336,35 +424,41 @@ void drawViewportOverlay(VtkViewer& viewer,
             viewer.orientCameraToAxis(2);
         }
 
-        if (drawToolbarButton("Ortho", state.orthographic)) {
+        drawOverlaySeparator();
+        if (drawProjectionButton("ortho", true, state.orthographic, "Orthographic")) {
             state.orthographic = true;
             viewer.setProjectionMode(VtkViewer::ProjectionMode::Orthographic);
         }
         ImGui::SameLine();
-        if (drawToolbarButton("Persp", !state.orthographic)) {
+        if (drawProjectionButton("persp", false, !state.orthographic, "Perspective")) {
             state.orthographic = false;
             viewer.setProjectionMode(VtkViewer::ProjectionMode::Perspective);
         }
         if (allowAxes) {
             ImGui::SameLine();
-            if (drawToolbarButton("Axes", state.axesVisible)) {
+            if (drawToolbarButton("Ax", state.axesVisible, "Axes")) {
                 state.axesVisible = !state.axesVisible;
                 viewer.setAxesVisible(state.axesVisible);
             }
         }
 
-        if (drawToolbarButton("Shaded+Edges", state.displayMode == ModelDisplayMode::ShadedWithEdges)) {
-            state.displayMode = ModelDisplayMode::ShadedWithEdges;
+        drawOverlaySeparator();
+        if (drawToolbarButton("Ed", state.showEdges, "Element edges")) {
+            state.showEdges = !state.showEdges;
         }
         ImGui::SameLine();
-        if (drawToolbarButton("Wireframe", state.displayMode == ModelDisplayMode::Wireframe)) {
+        if (drawToolbarButton("Wi", state.displayMode == ModelDisplayMode::Wireframe, "Wireframe")) {
             state.displayMode = ModelDisplayMode::Wireframe;
+        }
+        ImGui::SameLine();
+        if (drawToolbarButton("Sf", state.displayMode == ModelDisplayMode::Surface, "Surface")) {
+            state.displayMode = ModelDisplayMode::Surface;
         }
     }
     ImGui::End();
 
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar(4);
 
     viewer.setProjectionMode(state.orthographic
         ? VtkViewer::ProjectionMode::Orthographic
@@ -372,6 +466,32 @@ void drawViewportOverlay(VtkViewer& viewer,
     if (allowAxes) {
         viewer.setAxesVisible(state.axesVisible);
     }
+}
+
+std::filesystem::path ResolveExistingFontPath(const std::filesystem::path& executable_path,
+                                              const std::vector<std::filesystem::path>& relative_candidates)
+{
+    std::vector<std::filesystem::path> search_roots;
+    if (!executable_path.empty()) {
+        search_roots.push_back(std::filesystem::absolute(executable_path).parent_path());
+    }
+    search_roots.push_back(std::filesystem::current_path());
+    search_roots.push_back(std::filesystem::current_path() / "resources");
+    search_roots.push_back(std::filesystem::current_path() / "data");
+    search_roots.push_back(std::filesystem::current_path().parent_path() / "WeldFormGUI");
+    search_roots.push_back(std::filesystem::current_path().parent_path() / "WeldFormGUI" / "resources");
+    search_roots.push_back(std::filesystem::current_path().parent_path() / "WeldFormGUI" / "data");
+
+    for (const auto& root : search_roots) {
+        for (const auto& candidate : relative_candidates) {
+            const std::filesystem::path full_path = root / candidate;
+            if (std::filesystem::exists(full_path)) {
+                return full_path;
+            }
+        }
+    }
+
+    return {};
 }
 }
 
@@ -387,9 +507,15 @@ bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_wi
         return false;
     fseek(f, 0, SEEK_SET);
     void* file_data = IM_ALLOC(file_size);
-    fread(file_data, 1, file_size, f);
+    const size_t bytes_read = fread(file_data, 1, file_size, f);
+    if (bytes_read != file_size) {
+        IM_FREE(file_data);
+        fclose(f);
+        return false;
+    }
     bool ret = LoadTextureFromMemory(file_data, file_size, out_texture, out_width, out_height);
     IM_FREE(file_data);
+    fclose(f);
     return ret;
 }
 
@@ -491,30 +617,94 @@ int main(int argc, char* argv[])
   ImGui::CreateContext();
   ImPlot::CreateContext();
   ImGuiIO& io = ImGui::GetIO(); (void)io;
-  ImFont* font1 = io.Fonts->AddFontDefault();
-
-
-  ImFont* font_ubu = io.Fonts->AddFontFromFileTTF("Ubuntu-L.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault()); 
-  //ImFont* font_satoshi = io.Fonts->AddFontFromFileTTF("Satoshi.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesDefault());
-  //IM_ASSERT(font_satoshi != NULL);
-  if (!font_ubu->IsLoaded()){
-    fprintf(stderr,"ERRROR. Cannot load font.\n");
+  ImFont* font1 = nullptr;
+  ImFont* font_ubu = nullptr;
+  bool ubuntu_font_available = false;
+  float ui_font_size = 16.0f;
+  float pending_ui_font_size = ui_font_size;
+  bool font_rebuild_requested = false;
+  const std::filesystem::path ubuntu_font_path = ResolveExistingFontPath(
+      argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path(),
+      {
+          "Ubuntu-Regular.ttf",
+          "Ubuntu-L.ttf",
+          std::filesystem::path("resources") / "Ubuntu-Regular.ttf",
+          std::filesystem::path("resources") / "Ubuntu-L.ttf",
+          std::filesystem::path("data") / "Ubuntu-Regular.ttf",
+          std::filesystem::path("data") / "Ubuntu-L.ttf"
+      });
+  if (!ubuntu_font_path.empty()) {
+    std::fprintf(stderr, "INFO: Ubuntu font candidate found at: %s\n", ubuntu_font_path.string().c_str());
+  } else {
+    std::fprintf(stderr, "INFO: Ubuntu font candidate not found. cwd=%s\n",
+                 std::filesystem::current_path().string().c_str());
+    if (argc > 0 && argv[0] != nullptr) {
+      std::fprintf(stderr, "INFO: Executable path argument: %s\n", argv[0]);
     }
-  
-  //ImGui::PushFont(font1);
+  }
+  UIFontChoice current_font_choice = UIFontChoice::Ubuntu;
+  ImFont* current_ui_font = nullptr;
+
+  auto rebuildUiFonts = [&]() {
+    io.Fonts->Clear();
+    font1 = io.Fonts->AddFontDefault();
+    font_ubu = nullptr;
+    if (!ubuntu_font_path.empty()) {
+      font_ubu = io.Fonts->AddFontFromFileTTF(ubuntu_font_path.string().c_str(), ui_font_size, NULL, io.Fonts->GetGlyphRangesDefault());
+    }
+    ubuntu_font_available = font_ubu != nullptr;
+    if (!ubuntu_font_available) {
+      fprintf(stderr,"WARNING. Cannot load Ubuntu font, using Dear ImGui default.\n");
+      current_font_choice = UIFontChoice::ImGuiDefault;
+    } else {
+      std::fprintf(stderr, "INFO: Ubuntu font added successfully at %.1f px.\n", ui_font_size);
+    }
+
+    current_ui_font = (current_font_choice == UIFontChoice::Ubuntu && ubuntu_font_available) ? font_ubu : font1;
+    io.FontDefault = current_ui_font;
+    io.Fonts->Build();
+  };
+
+  rebuildUiFonts();
     
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows'
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
+  ImGui::GetStyle().ScaleAllSizes(1.1f);
+  ImGuiStyle& style = ImGui::GetStyle();
+  style.Colors[ImGuiCol_Text]               = ImVec4(0.949f, 0.957f, 0.965f, 1.0f); // #f2f4f6
+  style.Colors[ImGuiCol_TextDisabled]       = ImVec4(0.620f, 0.671f, 0.733f, 1.0f);
+  style.Colors[ImGuiCol_WindowBg]           = ImVec4(0.067f, 0.094f, 0.153f, 0.96f); // #111827
+  style.Colors[ImGuiCol_ChildBg]            = ImVec4(0.067f, 0.094f, 0.153f, 0.92f);
+  style.Colors[ImGuiCol_PopupBg]            = ImVec4(0.090f, 0.117f, 0.176f, 0.98f);
+  style.Colors[ImGuiCol_FrameBg]            = ImVec4(0.118f, 0.145f, 0.204f, 0.88f);
+  style.Colors[ImGuiCol_FrameBgHovered]     = ImVec4(0.157f, 0.188f, 0.255f, 0.95f);
+  style.Colors[ImGuiCol_FrameBgActive]      = ImVec4(0.184f, 0.220f, 0.294f, 1.0f);
+  style.Colors[ImGuiCol_TitleBg]            = ImVec4(0.067f, 0.094f, 0.153f, 1.0f);
+  style.Colors[ImGuiCol_TitleBgActive]      = ImVec4(0.090f, 0.117f, 0.176f, 1.0f);
+  style.Colors[ImGuiCol_MenuBarBg]          = ImVec4(0.090f, 0.117f, 0.176f, 0.98f);
+  style.Colors[ImGuiCol_Header]             = ImVec4(0.149f, 0.184f, 0.255f, 0.85f);
+  style.Colors[ImGuiCol_HeaderHovered]      = ImVec4(0.188f, 0.227f, 0.310f, 0.95f);
+  style.Colors[ImGuiCol_HeaderActive]       = ImVec4(0.220f, 0.259f, 0.353f, 1.0f);
+  style.Colors[ImGuiCol_Button]             = ImVec4(0.149f, 0.184f, 0.255f, 0.80f);
+  style.Colors[ImGuiCol_ButtonHovered]      = ImVec4(0.188f, 0.227f, 0.310f, 0.92f);
+  style.Colors[ImGuiCol_ButtonActive]       = ImVec4(0.220f, 0.259f, 0.353f, 1.0f);
+  style.Colors[ImGuiCol_Tab]                = ImVec4(0.118f, 0.145f, 0.204f, 0.94f);
+  style.Colors[ImGuiCol_TabHovered]         = ImVec4(0.157f, 0.188f, 0.255f, 0.98f);
+  style.Colors[ImGuiCol_TabActive]          = ImVec4(0.184f, 0.220f, 0.294f, 1.0f);
+  style.Colors[ImGuiCol_TabUnfocused]       = ImVec4(0.090f, 0.117f, 0.176f, 0.92f);
+  style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.149f, 0.184f, 0.255f, 0.96f);
+  style.Colors[ImGuiCol_Separator]          = ImVec4(0.220f, 0.259f, 0.353f, 0.65f);
+  style.Colors[ImGuiCol_Border]             = ImVec4(0.220f, 0.259f, 0.353f, 0.40f);
+  style.Colors[ImGuiCol_CheckMark]          = ImVec4(0.949f, 0.957f, 0.965f, 1.0f);
+  style.Colors[ImGuiCol_SliderGrab]         = ImVec4(0.482f, 0.580f, 0.741f, 0.90f);
+  style.Colors[ImGuiCol_SliderGrabActive]   = ImVec4(0.561f, 0.659f, 0.820f, 1.0f);
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
-
-
-  //ImGui::PushFont(font1);
 
 
   // Initialize VtkViewer objects
@@ -551,7 +741,7 @@ int main(int argc, char* argv[])
   bool show_another_window = false;
   bool vtk_2_open = true;
   bool vtk_res_open = true;
-  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  ImVec4 clear_color = ImVec4(0.067f, 0.094f, 0.153f, 1.00f);
   
 
   cout << "Done. "<<endl;
@@ -636,12 +826,47 @@ int main(int argc, char* argv[])
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
     glfwPollEvents();
 
+    if (font_rebuild_requested) {
+      ui_font_size = pending_ui_font_size;
+      rebuildUiFonts();
+      ImGui_ImplOpenGL3_DestroyFontsTexture();
+      ImGui_ImplOpenGL3_CreateFontsTexture();
+      font_rebuild_requested = false;
+    }
+
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("View")) {
+        if (ImGui::BeginMenu("Font")) {
+          const bool use_ubuntu = current_font_choice == UIFontChoice::Ubuntu;
+          if (ImGui::MenuItem("Ubuntu", nullptr, use_ubuntu, ubuntu_font_available)) {
+            current_font_choice = UIFontChoice::Ubuntu;
+            current_ui_font = font_ubu;
+            io.FontDefault = current_ui_font;
+          }
+          if (ImGui::MenuItem("ImGui Default", nullptr, current_font_choice == UIFontChoice::ImGuiDefault)) {
+            current_font_choice = UIFontChoice::ImGuiDefault;
+            current_ui_font = font1;
+            io.FontDefault = current_ui_font;
+          }
+          ImGui::Separator();
+          float new_font_size = pending_ui_font_size;
+          if (ImGui::SliderFloat("Size", &new_font_size, 16.0f, 20.0f, "%.1f px")) {
+            pending_ui_font_size = new_font_size;
+            font_rebuild_requested = true;
+          }
+          ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+      }
+      ImGui::EndMainMenuBar();
+    }
     
     editor->drawGui();
     
@@ -715,7 +940,7 @@ int main(int argc, char* argv[])
           // ================= TAB: Modelo =================
 	          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
           {
-              ImGui::PushFont(font_ubu);
+	              ImGui::PushFont(current_ui_font);
 
 	              auto renderer = vtkViewer2.getRenderer();
                 static ModelViewportOverlayState modelOverlayState;
@@ -751,10 +976,10 @@ int main(int argc, char* argv[])
               ImGui::SliderFloat("BG Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
               renderer->SetBackgroundAlpha(vtk2BkgAlpha);
 
+              applyDisplayModeToActiveModel(modelOverlayState.displayMode, modelOverlayState.showEdges);
               // Render del viewer
               vtkViewer2.render();
               drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true);
-              applyDisplayModeToActiveModel(modelOverlayState.displayMode);
               editor->handleSelectionInteraction();
               editor->drawSelectionOverlay();
 
@@ -766,7 +991,7 @@ int main(int argc, char* argv[])
           ImGuiTabItemFlags results_tab_flags = activate_results_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
           if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
-              ImGui::PushFont(font_ubu);
+	              ImGui::PushFont(current_ui_font);
 
 	              auto renderer = vtkViewer_res.getRenderer();
                 static ModelViewportOverlayState resultsOverlayState;
@@ -906,20 +1131,6 @@ int main(int argc, char* argv[])
 	                  loadPlotDialog.SetCsvPath(csv_path.string());
 	                  showLoadPlotDialog = true;
 	              }
-	              ImGui::SameLine();
-	              static bool resultsShowEdges = false;
-	              if (ImGui::Checkbox("Surface with edges", &resultsShowEdges)) {
-	                  if (editor->getResults()) {
-	                      editor->getResults()->setShowEdges(resultsShowEdges);
-	                      if (!editor->getResults()->frames.empty() &&
-	                          currentFrame >= 0 &&
-	                          currentFrame < (int)editor->getResults()->frames.size()) {
-	                          editor->getResults()->frames[currentFrame]->setShowEdges(resultsShowEdges);
-	                          vtkViewer_res.setActor(editor->getResults()->frames[currentFrame]->actor);
-	                      }
-	                  }
-	              }
-	              
 		              if (editor->getResults()){
 	              if (!editor->getResults()->frames.empty()) {
 	                  if (currentFrame >= (int)editor->getResults()->frames.size())
@@ -969,6 +1180,8 @@ int main(int argc, char* argv[])
 	                      if (!activeFieldName.empty()) {
 	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
 	                      }
+                        applyDisplayModeToActor(editor->getResults()->frames[currentFrame]->actor,
+                                                resultsOverlayState.displayMode, resultsOverlayState.showEdges, true);
 	                      
 	                      lastFrame = currentFrame;                // Actualizamos el frame anterior
                       //vtkViewer_res.render();
@@ -1012,6 +1225,7 @@ int main(int argc, char* argv[])
 	                            recomputeActiveFieldScale();
                             cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
 	                            applyActiveFieldSelectionToAllFrames();
+                              applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
 
 	                            vtkViewer_res.render();
 	                        }
@@ -1090,10 +1304,10 @@ int main(int argc, char* argv[])
               ImGui::SliderFloat("BG Alpha", &vtkResBkgAlpha, 0.0f, 1.0f);
               renderer->SetBackgroundAlpha(vtkResBkgAlpha);
 
+              applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
               // Render del viewer
               vtkViewer_res.render();
               drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false);
-              applyDisplayModeToResults(resultsOverlayState.displayMode, editor);
 
               ImGui::PopFont();
               ImGui::EndTabItem();

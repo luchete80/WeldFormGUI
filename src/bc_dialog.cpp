@@ -160,7 +160,11 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             else if (symPreset == 1) m_normal = make_double3(1,0,0);
             else if (symPreset == 2) m_normal = make_double3(0,1,0);
             else {
-                float n[3] = { m_normal.x, m_normal.y, m_normal.z };
+                float n[3] = {
+                    static_cast<float>(m_normal.x),
+                    static_cast<float>(m_normal.y),
+                    static_cast<float>(m_normal.z)
+                };
                 ImGui::InputFloat3("Normal", n, "%.3f");
                 m_normal = make_double3(n[0], n[1], n[2]);
             }
@@ -223,7 +227,11 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     }
 
     if (bcType == 0 || bcType == 1) {
-        float v[3] = { m_vel.x, m_vel.y, m_vel.z };
+        float v[3] = {
+            static_cast<float>(m_vel.x),
+            static_cast<float>(m_vel.y),
+            static_cast<float>(m_vel.z)
+        };
         const char* valueLabel = (bcType == 0) ? "Velocity" : "Displacement";
         ImGui::InputFloat3(valueLabel, v, "%.3f");
         m_vel = make_double3(v[0], v[1], v[2]);

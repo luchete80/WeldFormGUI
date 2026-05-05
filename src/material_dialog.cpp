@@ -1,13 +1,176 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "implot.h"
 
 #include "material_dialog.h"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <vector>
 
 
 using namespace std;
+
+namespace {
+
+constexpr int kMaterialCurveSamples = 256;
+
+double ClampNonNegative(double value) {
+    return value < 0.0 ? 0.0 : value;
+}
+
+bool BuildHollomonCurve(const MaterialDialog& dialog,
+                        std::vector<double>& strain_values,
+                        std::vector<double>& stress_values,
+                        double& eps0,
+                        double& eps1,
+                        double& eps_max,
+                        double& sigma_max) {
+    strain_values.clear();
+    stress_values.clear();
+
+    const double elastic_modulus = dialog.m_elastic_const;
+    const double yield_stress0 = dialog.m_yield_stress0;
+    const double K = dialog.hollomon_K;
+    const double m = dialog.hollomon_n;
+
+    eps0 = 0.0;
+    eps1 = 0.0;
+    eps_max = std::max(dialog.m_strain_range_min, dialog.m_strain_range_max);
+    sigma_max = 0.0;
+
+    if (elastic_modulus <= 0.0 || yield_stress0 <= 0.0 || K <= 0.0 || m <= 0.0) {
+        return false;
+    }
+
+    Material_ preview_material;
+    preview_material.strRange = {
+        ClampNonNegative(std::min(dialog.m_strain_range_min, dialog.m_strain_range_max)),
+        std::max(dialog.m_strain_range_min, dialog.m_strain_range_max)
+    };
+    preview_material.InitHollomon(Elastic_(elastic_modulus, dialog.m_poisson_const), yield_stress0, K, m);
+
+    eps0 = preview_material.eps0;
+    eps1 = preview_material.eps1;
+    eps_max = std::max(preview_material.e_max, eps0);
+    eps_max = std::max(eps_max, eps1);
+
+    sigma_max = K * std::pow(eps_max, m);
+    if (sigma_max < yield_stress0) {
+        sigma_max = yield_stress0;
+    }
+
+    strain_values.reserve(kMaterialCurveSamples + 1);
+    stress_values.reserve(kMaterialCurveSamples + 1);
+
+    const double strain_start = ClampNonNegative(std::min(dialog.m_strain_range_min, dialog.m_strain_range_max));
+    const double strain_end = std::max(eps_max, strain_start + 1.0e-9);
+    const double delta = (strain_end - strain_start) / static_cast<double>(kMaterialCurveSamples);
+
+    for (int i = 0; i <= kMaterialCurveSamples; ++i) {
+        const double strain = strain_start + delta * static_cast<double>(i);
+        double stress = 0.0;
+
+        if (strain <= eps0) {
+            stress = elastic_modulus * strain;
+        } else if (strain <= eps1) {
+            stress = yield_stress0;
+        } else if (strain <= eps_max) {
+            stress = K * std::pow(strain, m);
+        } else {
+            stress = sigma_max;
+        }
+
+        if (strain > eps_max) {
+            stress = sigma_max;
+        }
+
+        strain_values.push_back(strain);
+        stress_values.push_back(stress);
+    }
+
+    if (strain_values.back() < eps_max) {
+        strain_values.push_back(eps_max);
+        stress_values.push_back(sigma_max);
+    }
+
+    if (strain_values.back() <= eps_max) {
+        const double plateau_extension = std::max(0.01, 0.05 * std::max(1.0, eps_max));
+        strain_values.push_back(eps_max + plateau_extension);
+        stress_values.push_back(sigma_max);
+    }
+
+    return true;
+}
+
+void DrawHollomonPlot(const MaterialDialog& dialog) {
+    static bool fit_next = true;
+
+    std::vector<double> strain_values;
+    std::vector<double> stress_values;
+    double eps0 = 0.0;
+    double eps1 = 0.0;
+    double eps_max = 0.0;
+    double sigma_max = 0.0;
+
+    if (!BuildHollomonCurve(dialog, strain_values, stress_values, eps0, eps1, eps_max, sigma_max)) {
+        ImGui::TextDisabled("Defina E, sigma_y0, K y n con valores positivos para graficar.");
+        return;
+    }
+
+    ImGui::Text("eps0 = %.4e   eps1 = %.4e   eps_max = %.4e", eps0, eps1, eps_max);
+    if (eps0 > eps1) {
+        ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f),
+                           "Advertencia: eps0 > eps1. Revise sigma_y0, E, K o n.");
+    }
+
+    if (ImGui::Button("Reset Zoom")) {
+        fit_next = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Auto Fit")) {
+        fit_next = true;
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Rueda: zoom | Arrastrar: pan");
+
+    if (fit_next) {
+        ImPlot::SetNextAxesToFit();
+    }
+
+    if (ImPlot::BeginPlot("##HollomonCurve", ImVec2(-1.0f, 260.0f))) {
+        ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_Outside);
+        ImPlot::SetupAxes("Strain", "Stress");
+        ImPlot::SetupAxisLimits(ImAxis_X1, strain_values.front(), strain_values.back(), ImGuiCond_Once);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, sigma_max * 1.05, ImGuiCond_Once);
+        ImPlot::PlotLine("Hollomon", strain_values.data(), stress_values.data(), static_cast<int>(strain_values.size()));
+
+        const double markers_x[] = {eps0, eps1, eps_max};
+        const double markers_y[] = {
+            dialog.m_yield_stress0,
+            dialog.m_yield_stress0,
+            sigma_max
+        };
+        ImPlot::PlotScatter("Key points", markers_x, markers_y, 3,
+                            ImPlotSpec(ImPlotProp_Marker, ImPlotMarker_Circle,
+                                       ImPlotProp_MarkerSize, 4.0f));
+
+        if (ImPlot::IsPlotHovered()) {
+            const ImPlotPoint mouse_pos = ImPlot::GetPlotMousePos();
+            ImGui::BeginTooltip();
+            ImGui::Text("Strain: %.6e", mouse_pos.x);
+            ImGui::Text("Stress: %.6e", mouse_pos.y);
+            ImGui::EndTooltip();
+        }
+
+        fit_next = false;
+        ImPlot::EndPlot();
+    }
+}
+
+}  // namespace
 
 void MaterialDialog::InitFromMaterial(Material_* mat) {
 
@@ -69,8 +232,13 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
 
             case HOLLOMON:
                 cout << "Material is Hollomon"<<endl;
-                hollomon_K = m_pl_const[0];
-                hollomon_n = m_pl_const[1];
+                if (m_pl_const.size() >= 2) {
+                    hollomon_K = m_pl_const[0];
+                    hollomon_n = m_pl_const[1];
+                } else {
+                    hollomon_K = mat->K;
+                    hollomon_n = mat->m;
+                }
                 break;
 
             case _GMT_:
@@ -96,22 +264,12 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
 void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Material_Db *mat_db){
 
   static int item_current = 0;
-  static bool open_plastic = false;
-  
-  ImGuiTreeNodeFlags flags = 0;
     
   create_material = false; 
   cancel_action = false;
   if (!m_initiated){
     InitFromMaterial(mat);
     item_current = m_selected_model;
-    if (mat != nullptr)
-    if (mat->isPlastic()){
-      open_plastic = true;
-      flags |= ImGuiTreeNodeFlags_DefaultOpen;
-      ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-      cout << "DetaultOpen"<<endl;
-    }
     m_initiated = true;
   }
   if (!ImGui::Begin(title, p_open))
@@ -138,7 +296,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
 
 
-  if (ImGui::CollapsingHeader("Plastic"/*, flags*/)){
+  ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+  if (ImGui::CollapsingHeader("Plastic")){
     
     {
   //MUST BE SAVED CURRENT STATE
@@ -161,6 +320,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
       //ImGui::InputDouble("K ", &mat->, 0.00f, 1.0f, "%.4f");  
       ImGui::InputDouble("K ", &hollomon_K, 0.00f, 1.0f, "%.4f");   
       ImGui::InputDouble("n ", &hollomon_n, 0.00f, 1.0f, "%.4f");   
+      ImGui::Spacing();
+      DrawHollomonPlot(*this);
             
     }
     if (item_current == 3) { // Johnson Cook
@@ -225,6 +386,8 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
         mat->k_T = m_k_T;
         mat->yieldStress0 = m_yield_stress0;
         mat->strRange = {m_strain_range_min, m_strain_range_max};
+        mat->e_min = m_strain_range_min;
+        mat->e_max = m_strain_range_max;
 
         if (m_selected_model != 0) {
             // Liberar el modelo previo
@@ -239,6 +402,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 
           case HOLLOMON:
             m_pl = new Hollomon(hollomon_K,hollomon_n);
+            mat->InitHollomon(mat->Elastic(), m_yield_stress0, hollomon_K, hollomon_n);
             cout << "Hollomon"<<endl;
             break;
             
@@ -292,7 +456,7 @@ void  MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mate
 Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *create, Material_Db *mat_db){
   
   Material_ ret;
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(760, 720), ImGuiCond_FirstUseEver);
   // ImGui::Begin("test", p_open);
   // ImGui::End();
   
@@ -322,7 +486,7 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
 }
 
 bool ShowEditMaterialDialog(bool* p_open, MaterialDialog *matdlg, Material_ *mat){
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(760, 720), ImGuiCond_FirstUseEver);
   matdlg->Draw("MaterialDlg", p_open, mat);
 
     
