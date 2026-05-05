@@ -66,12 +66,12 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
   float min_size = 0.01f;
   float max_size = 10.0f;
   
-  ImGui::SliderFloat("Element Size", &m_element_size, min_size, max_size, "%.3f", ImGuiSliderFlags_Logarithmic);
+  ImGui::SliderFloat("Element Size", &m_element_size, min_size, max_size, "%.2e", ImGuiSliderFlags_Logarithmic);
   ImGui::SameLine();
   //HelpMarker("Smaller values = finer mesh, larger values = coarser mesh");
   
   // Input numérico para mayor precisión
-  ImGui::InputFloat("##ElementSizeInput", &m_element_size, 0.1f, 1.0f, "%.3f");
+  ImGui::InputFloat("##ElementSizeInput", &m_element_size, 1.0e-3f, 1.0e-2f, "%.2e");
   ImGui::SameLine();
   if (ImGui::Button("Default##Size")) {
       m_element_size = 1.0f; // Valor por defecto

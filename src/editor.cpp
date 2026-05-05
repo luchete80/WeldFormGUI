@@ -2079,7 +2079,7 @@ void Editor::meshPart(Part* part){
                                                      activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf");
     fs::path remesh_log_path = activeModelOutputPath(*m_model,
                                                      activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp");
-    std::string remesh_cmd = "mesh-adapt_std \"" + step_path.string() + "\" " +
+    std::string remesh_cmd = "mesh-adapt \"" + step_path.string() + "\" " +
                              std::to_string(element_size) + " > \"" +
                              remesh_log_path.string() + "\" 2>&1";
     cout << "Running 2D remesher: " << remesh_cmd << endl;

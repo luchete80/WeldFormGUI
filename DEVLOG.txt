@@ -217,3 +217,5 @@
          - Added Movement below Tree after creating a new model.
          - Changed "Refresh results" to check from current frame on . 
          - Added recent file to results (not only models).
+         - Fixed mesher to full version
+         - Changed "MESH POINTER" log from part which was printing. 
