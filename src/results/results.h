@@ -75,9 +75,8 @@ public:
     // Constructor moderno y seguro
     explicit ResultFrame(const std::string& name_) : name(name_) {
         showEdges = false;
+        useContour = false;
         loadVTKFile(name_);
-        setupRenderingPipeline();
-        setupScalarBar();
     }
 
     std::vector<std::string> getAvailableFieldNames() const {
@@ -116,7 +115,47 @@ public:
         return names;
     }
 private:
-    /////// THIS WOIRKS BADSLY
+    void ensureScalarBar() {
+        if (scalarBar) {
+            return;
+        }
+
+        scalarBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarBar->SetLookupTable(mapper ? mapper->GetLookupTable() : nullptr);
+        scalarBar->SetNumberOfLabels(5);
+        scalarBar->SetUnconstrainedFontSize(true);
+        scalarBar->SetMaximumWidthInPixels(80);
+        scalarBar->SetMaximumHeightInPixels(300);
+        scalarBar->SetPosition(0.88, 0.1);
+        scalarBar->SetWidth(0.1);
+        scalarBar->SetHeight(0.8);
+        scalarBar->SetVisibility(false);
+
+        scalarBar->GetTitleTextProperty()->SetColor(1.0, 1.0, 1.0);
+        scalarBar->GetTitleTextProperty()->BoldOff();
+        scalarBar->GetTitleTextProperty()->ItalicOff();
+        scalarBar->GetTitleTextProperty()->ShadowOff();
+        scalarBar->GetLabelTextProperty()->SetColor(1.0, 1.0, 1.0);
+        scalarBar->GetLabelTextProperty()->BoldOff();
+        scalarBar->GetLabelTextProperty()->ItalicOff();
+        scalarBar->GetLabelTextProperty()->ShadowOff();
+    }
+
+    void applyStoredVisualState() {
+        if (!actor || useContour) {
+            return;
+        }
+
+        actor->GetProperty()->SetRepresentationToSurface();
+        actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
+        if (showEdges) {
+            actor->GetProperty()->EdgeVisibilityOn();
+        } else {
+            actor->GetProperty()->EdgeVisibilityOff();
+        }
+    }
+
+	    /////// THIS WOIRKS BADSLY
     //~ void loadVTKFile(const std::string& filename) {
         //~ auto reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();
         //~ reader->SetFileName(filename.c_str());
@@ -169,10 +208,13 @@ void loadVTKFile(const std::string& filename) {
     //           << mesh->GetNumberOfCells() << " cells" << std::endl;
 }
 
-    void setupRenderingPipeline() {
-        // Verificar que el mesh no sea null
-        if (!mesh) {
-            throw std::runtime_error("Mesh is null");
+	    void setupRenderingPipeline() {
+        if (actor && mapper) {
+            return;
+        }
+	        // Verificar que el mesh no sea null
+	        if (!mesh) {
+	            throw std::runtime_error("Mesh is null");
         }
         
         // PIPELINE SIMPLE Y SEGURO
@@ -202,36 +244,15 @@ void loadVTKFile(const std::string& filename) {
         if (!hasScalars) {
             actor->GetProperty()->SetColor(0.8, 0.8, 0.9);
         }
-        actor->GetProperty()->SetOpacity(1.0);
-        actor->GetProperty()->SetRepresentationToSurface();
-        actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
-        actor->GetProperty()->EdgeVisibilityOff();
-        
-        useContour = false;
-        // std::cout << "Created basic pipeline" << std::endl;
-    }
-
-    void setupScalarBar() {
-        scalarBar = vtkSmartPointer<vtkScalarBarActor>::New();
-        scalarBar->SetLookupTable(mapper ? mapper->GetLookupTable() : nullptr);
-        scalarBar->SetNumberOfLabels(5);
-        scalarBar->SetUnconstrainedFontSize(true);
-        scalarBar->SetMaximumWidthInPixels(80);
-        scalarBar->SetMaximumHeightInPixels(300);
-        scalarBar->SetPosition(0.88, 0.1);
-        scalarBar->SetWidth(0.1);
-        scalarBar->SetHeight(0.8);
-        scalarBar->SetVisibility(false);
-
-        scalarBar->GetTitleTextProperty()->SetColor(1.0, 1.0, 1.0);
-        scalarBar->GetTitleTextProperty()->BoldOff();
-        scalarBar->GetTitleTextProperty()->ItalicOff();
-        scalarBar->GetTitleTextProperty()->ShadowOff();
-        scalarBar->GetLabelTextProperty()->SetColor(1.0, 1.0, 1.0);
-        scalarBar->GetLabelTextProperty()->BoldOff();
-        scalarBar->GetLabelTextProperty()->ItalicOff();
-        scalarBar->GetLabelTextProperty()->ShadowOff();
-    }
+	        actor->GetProperty()->SetOpacity(1.0);
+	        actor->GetProperty()->SetRepresentationToSurface();
+	        actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
+	        actor->GetProperty()->EdgeVisibilityOff();
+          applyStoredVisualState();
+	        
+	        useContour = false;
+	        // std::cout << "Created basic pipeline" << std::endl;
+	    }
     
     void setupContourPipeline() {
         // Crear contour filter
@@ -285,6 +306,13 @@ void loadVTKFile(const std::string& filename) {
     }
 
 public:
+    void ensureRenderingResources() {
+        if (!actor || !mapper) {
+            setupRenderingPipeline();
+        }
+        ensureScalarBar();
+    }
+
     // Método para seleccionar qué campo mostrar
     //~ void setActiveScalarField(const std::string& fieldName) {
         //~ if (!mesh || !mesh->GetPointData()) {
@@ -361,43 +389,42 @@ public:
               isCellField = true;
           }
 
-          if (!field) {
+	          if (!field) {
               std::cerr << "WARNING: Field '" << fieldName << "' not found in point or cell data." << std::endl;
               printAvailableFields();
               return;
-          }
+	          }
 
-          // --- Configurar mapper según tipo de campo ---
-          if (mapper) {
-              if (isCellField) {
-                  mapper->SetScalarModeToUseCellFieldData();
-                  cellData->SetActiveScalars(fieldName.c_str());
-              } else {
-                  mapper->SetScalarModeToUsePointFieldData();
-                  pointData->SetActiveScalars(fieldName.c_str());
-              }
+            if (!mapper || !actor) {
+                return;
+            }
 
-              mapper->SelectColorArray(fieldName.c_str());
-              mapper->ScalarVisibilityOn();
+	          // --- Configurar mapper según tipo de campo ---
+	          if (isCellField) {
+	              mapper->SetScalarModeToUseCellFieldData();
+	              cellData->SetActiveScalars(fieldName.c_str());
+	          } else {
+	              mapper->SetScalarModeToUsePointFieldData();
+	              pointData->SetActiveScalars(fieldName.c_str());
+	          }
 
-              // --- Rango dinámico ---
-              double range[2];
-              if (field->GetNumberOfComponents() == 3)
-                  field->GetRange(range, -1); // magnitud
-              else
-                  field->GetRange(range);
+	          mapper->SelectColorArray(fieldName.c_str());
+	          mapper->ScalarVisibilityOn();
 
-              mapper->SetScalarRange(range);
-              // std::cout << "Set field '" << fieldName << "' ("
-              //           << (isCellField ? "CellData" : "PointData") << ") range: ["
-              //           << range[0] << ", " << range[1] << "]" << std::endl;
-          }
+	          // --- Rango dinámico ---
+	          double range[2];
+	          if (field->GetNumberOfComponents() == 3)
+	              field->GetRange(range, -1); // magnitud
+	          else
+	              field->GetRange(range);
 
-          // --- Forzar actualización ---
-          mesh->Modified();
-          if (mapper) mapper->Modified();
-          if (actor) actor->Modified();
-      }
+	          mapper->SetScalarRange(range);
+
+	          // --- Forzar actualización ---
+	          mesh->Modified();
+	          mapper->Modified();
+	          actor->Modified();
+	      }
     
     // Helper para ver campos disponibles
     void printAvailableFields() const {
@@ -420,8 +447,8 @@ public:
     }
     
     // Para mostrar componente específica de un vector
-    void setVectorComponent(const std::string& fieldName, int component) {
-        if (!mesh || !mesh->GetPointData()) return;
+	    void setVectorComponent(const std::string& fieldName, int component) {
+	        if (!mesh || !mesh->GetPointData()) return;
         
         vtkDataArray* field = mesh->GetPointData()->GetArray(fieldName.c_str());
         if (!field || component >= field->GetNumberOfComponents()) {
@@ -429,20 +456,16 @@ public:
             return;
         }
         
-        if (mapper) {
-            mapper->SetScalarModeToUsePointFieldData();
-            mapper->SelectColorArray(fieldName.c_str());
-            mapper->SetArrayComponent(component); // 0=X, 1=Y, 2=Z
-            mapper->ScalarVisibilityOn();
-            
-            double* range = field->GetRange(component);
-            mapper->SetScalarRange(range[0], range[1]);
-            
-            std::string compName[] = {"X", "Y", "Z"};
-            // std::cout << "Set " << fieldName << " component " << compName[component] 
-            //          << " range: [" << range[0] << ", " << range[1] << "]" << std::endl;
-        }
-    }
+          if (!mapper || !actor) return;
+
+	        mapper->SetScalarModeToUsePointFieldData();
+	        mapper->SelectColorArray(fieldName.c_str());
+	        mapper->SetArrayComponent(component); // 0=X, 1=Y, 2=Z
+	        mapper->ScalarVisibilityOn();
+	        
+	        double* range = field->GetRange(component);
+	        mapper->SetScalarRange(range[0], range[1]);
+	    }
     void setContourLevels(int numLevels) {
         if (useContour && contourFilter) {
             double* range = mesh->GetScalarRange();
@@ -517,8 +540,10 @@ public:
         return true;
     }
 
-    void updateScalarBar(const std::string& fieldName, double minValue, double maxValue) {
-        if (!scalarBar || !mapper) return;
+	    void updateScalarBar(const std::string& fieldName, double minValue, double maxValue) {
+	        if (!mapper) return;
+          ensureScalarBar();
+	        if (!scalarBar) return;
 
         auto newLut = vtkSmartPointer<vtkLookupTable>::New();
         newLut->SetRange(minValue, maxValue);
@@ -538,7 +563,7 @@ public:
         if (scalarBar) scalarBar->SetVisibility(false);
     }
 
-    vtkSmartPointer<vtkScalarBarActor> getScalarBarActor() const { return scalarBar; }
+	    vtkSmartPointer<vtkScalarBarActor> getScalarBarActor() const { return scalarBar; }
     
     // Información del mesh
     void printInfo() const {

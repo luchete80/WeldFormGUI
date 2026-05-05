@@ -850,6 +850,7 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
       return opened;
   } else if (ext == ".vtk") {
     ResultFrame *frame = new ResultFrame(filePathName);
+    frame->ensureRenderingResources();
     frame->printAvailableFields();
 
     std::string fieldName;

@@ -1204,9 +1204,10 @@ int main(int argc, char* argv[])
 		              if (!editor->getResults()->frames.empty()) {
 	                  if (currentFrame >= (int)editor->getResults()->frames.size())
 	                      currentFrame = 0;
-	                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
-	                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
-	                  if (frame.getScalarBarActor() && currentScalarBar != frame.getScalarBarActor()) {
+		                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
+		                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
+                      frame.ensureRenderingResources();
+		                  if (frame.getScalarBarActor() && currentScalarBar != frame.getScalarBarActor()) {
 	                      if (currentScalarBar)
 	                          renderer->RemoveActor2D(currentScalarBar);
 	                      currentScalarBar = frame.getScalarBarActor();
@@ -1246,9 +1247,9 @@ int main(int argc, char* argv[])
 	                      } else {
 	                          renderer->ResetCamera();
 	                      }
-	                      if (!activeFieldName.empty()) {
-	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
-	                      }
+		                      if (!activeFieldName.empty()) {
+		                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
+		                      }
                         applyDisplayModeToActor(editor->getResults()->frames[currentFrame]->actor,
                                                 resultsOverlayState.displayMode, resultsOverlayState.showEdges, true);
 	                      
