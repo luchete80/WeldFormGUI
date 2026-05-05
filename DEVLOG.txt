@@ -211,3 +211,7 @@
          - Added File->Open Recent
          - Added Script Browser.
          - Added BC to abaqus exporter.
+20260505 - Added Stress-Strain Plot to Material Dialog!
+         - Fixed overlay to work also on results (and remove button)
+         - Fixed overlay format
+         - Added Movement below Tree after creating a new model.

@@ -842,6 +842,14 @@ int main(int argc, char* argv[])
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("File")) {
+        ImGui::MenuItem("Project actions are available in the left panel", nullptr, false, false);
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Edit")) {
+        ImGui::MenuItem("Editing tools are available in the left panel", nullptr, false, false);
+        ImGui::EndMenu();
+      }
       if (ImGui::BeginMenu("View")) {
         if (ImGui::BeginMenu("Font")) {
           const bool use_ubuntu = current_font_choice == UIFontChoice::Ubuntu;
