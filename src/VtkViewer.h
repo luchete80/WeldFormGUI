@@ -9,11 +9,11 @@
 #include <vtkProp.h>
 #include <vtkPropCollection.h>
 #include <vtkSmartPointer.h>
-#include <vtkActor.h>
-#include <vtkAxesActor.h>
-#include <vtkCallbackCommand.h>
-#include <vtkCommand.h>
-#include <vtkGenericOpenGLRenderWindow.h>
+	#include <vtkActor.h>
+	#include <vtkAxesActor.h>
+	#include <vtkCallbackCommand.h>
+	#include <vtkCommand.h>
+	#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkOpenGLFramebufferObject.h>
 #include <vtkGenericRenderWindowInteractor.h>
 #include <vtkInteractorStyleTrackballCamera.h>
@@ -91,13 +91,14 @@ public:
 	void setViewportSize(const ImVec2 newSize);
 	void setInputEnabled(bool enabled) { inputEnabled = enabled; }
 	bool isInputEnabled() const { return inputEnabled; }
-  void resetCamera();
-  void setProjectionMode(ProjectionMode mode);
-  ProjectionMode getProjectionMode() const { return projectionMode; }
-  void setAxesVisible(bool visible);
-  bool areAxesVisible() const { return axesVisible; }
-  void orientCameraToAxis(int axis);
-public:
+	  void resetCamera();
+	  void setProjectionMode(ProjectionMode mode);
+	  ProjectionMode getProjectionMode() const { return projectionMode; }
+	  void setAxesVisible(bool visible);
+	  bool areAxesVisible() const { return axesVisible; }
+	  void orientCameraToAxis(int axis);
+	  bool saveScreenshot() const;
+	public:
 	static inline unsigned int NoScrollFlags(){
 		return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 	}

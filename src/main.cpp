@@ -380,6 +380,58 @@ bool drawFitIconButton()
     return pressed;
 }
 
+bool drawScreenshotIconButton()
+{
+    const ImVec2 size(24.0f, 24.0f);
+    ImGui::PushID("screenshot_icon_button");
+    const bool pressed = ImGui::InvisibleButton("##screenshot", size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImU32 bgColor = IM_COL32(28, 34, 44, 110);
+    if (held) {
+        bgColor = IM_COL32(46, 74, 122, 220);
+    } else if (hovered) {
+        bgColor = IM_COL32(54, 64, 80, 180);
+    }
+
+    const ImU32 strokeColor = hovered || held
+        ? IM_COL32(255, 255, 255, 255)
+        : IM_COL32(220, 224, 230, 255);
+
+    drawList->AddRectFilled(min, max, bgColor, 6.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 18), 6.0f, 0, 1.0f);
+
+    const float left = min.x + 5.0f;
+    const float right = max.x - 5.0f;
+    const float top = min.y + 6.0f;
+    const float bottom = max.y - 5.0f;
+    const float thickness = 1.5f;
+
+    drawList->AddLine(ImVec2(left, top + 4.0f), ImVec2(left, top), strokeColor, thickness);
+    drawList->AddLine(ImVec2(left, top), ImVec2(left + 4.0f, top), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right - 4.0f, top), ImVec2(right, top), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right, top), ImVec2(right, top + 4.0f), strokeColor, thickness);
+    drawList->AddLine(ImVec2(left, bottom - 4.0f), ImVec2(left, bottom), strokeColor, thickness);
+    drawList->AddLine(ImVec2(left, bottom), ImVec2(left + 4.0f, bottom), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right - 4.0f, bottom), ImVec2(right, bottom), strokeColor, thickness);
+    drawList->AddLine(ImVec2(right, bottom - 4.0f), ImVec2(right, bottom), strokeColor, thickness);
+
+    const ImVec2 center((left + right) * 0.5f, (top + bottom) * 0.5f);
+    drawList->AddCircle(center, 4.0f, strokeColor, 0, thickness);
+
+    if (hovered) {
+        ImGui::SetTooltip("Screenshot");
+    }
+
+    ImGui::PopID();
+    return pressed;
+}
+
 void drawViewportOverlay(VtkViewer& viewer,
                          ModelViewportOverlayState& state,
                          const char* windowId,
@@ -453,6 +505,11 @@ void drawViewportOverlay(VtkViewer& viewer,
         ImGui::SameLine();
         if (drawToolbarButton("Sf", state.displayMode == ModelDisplayMode::Surface, "Surface")) {
             state.displayMode = ModelDisplayMode::Surface;
+        }
+
+        drawOverlaySeparator();
+        if (drawScreenshotIconButton()) {
+            viewer.saveScreenshot();
         }
     }
     ImGui::End();

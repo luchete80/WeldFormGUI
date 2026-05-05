@@ -20,6 +20,10 @@
 #endif
 
 #include <stdio.h>
+#include <ctime>
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
 #include <stddef.h>     // intptr_t
 #else
@@ -35,8 +39,12 @@
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 #include <vtkCamera.h>
+#include <vtkPNGWriter.h>
+#include <vtkWindowToImageFilter.h>
 
 //#include <vtkArrowSource.h>
+
+namespace fs = std::filesystem;
 
 void VtkViewer::isCurrentCallbackFn(vtkObject* caller, long unsigned int eventId, void* clientData, void* callData){
 	bool* isCurrent = static_cast<bool*>(callData);
@@ -336,7 +344,7 @@ void VtkViewer::orientCameraToAxis(int axis){
 
   double axisDirection[3] = {0.0, 0.0, 0.0};
   double viewUp[3] = {0.0, 1.0, 0.0};
-  axisDirection[axis] = 1.0;
+	  axisDirection[axis] = 1.0;
 
   if (axis == 0 || axis == 1) {
     viewUp[0] = 0.0;
@@ -349,6 +357,49 @@ void VtkViewer::orientCameraToAxis(int axis){
                       focalPoint[2] + axisDirection[2] * distance);
   camera->SetViewUp(viewUp);
   renderer->ResetCameraClippingRange();
+}
+
+bool VtkViewer::saveScreenshot() const{
+	if (!renderWindow) {
+		return false;
+	}
+
+	std::time_t now = std::time(nullptr);
+	std::tm local_tm = {};
+#ifdef _WIN32
+	localtime_s(&local_tm, &now);
+#else
+	localtime_r(&now, &local_tm);
+#endif
+
+	std::ostringstream base_name;
+	base_name << "screenshot_" << std::put_time(&local_tm, "%y%m%d");
+
+	fs::path output_path = fs::current_path() / (base_name.str() + ".png");
+	for (int suffix = 1; fs::exists(output_path); ++suffix) {
+		output_path = fs::current_path() /
+			(base_name.str() + "_" + (suffix < 10 ? "0" : "") + std::to_string(suffix) + ".png");
+	}
+
+	vtkSmartPointer<vtkWindowToImageFilter> window_to_image =
+		vtkSmartPointer<vtkWindowToImageFilter>::New();
+	window_to_image->SetInput(renderWindow);
+	window_to_image->SetInputBufferTypeToRGBA();
+	window_to_image->ReadFrontBufferOff();
+	window_to_image->Update();
+
+	vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+	writer->SetFileName(output_path.string().c_str());
+	writer->SetInputConnection(window_to_image->GetOutputPort());
+	writer->Write();
+
+	const bool written = fs::exists(output_path);
+	if (written) {
+		std::cout << "Saved screenshot to " << output_path.string() << std::endl;
+	} else {
+		std::cout << "Failed to save screenshot to " << output_path.string() << std::endl;
+	}
+	return written;
 }
 
 
@@ -379,3 +430,6 @@ void VtkViewer::arrowtest(){
   renderWindowInteractor->SetRenderWindow(renderWindow);
   */
 }
+#include <vtkImageData.h>
+
+namespace fs = std::filesystem;
