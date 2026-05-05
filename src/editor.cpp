@@ -2938,7 +2938,6 @@ void Editor::drawGui() {
       } else {
         ImGui::TextUnformatted("No models loaded.");
       }
-      ImGui::TreePop();
     }
         if (has_loaded_model) {
           bool open_ = false;
@@ -3230,6 +3229,7 @@ void Editor::drawGui() {
             ImGui::TreePop();
           }
         }
+      ImGui::TreePop();
 
     } //MODEL TREE
     
