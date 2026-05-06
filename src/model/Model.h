@@ -82,6 +82,10 @@ public:
 
   int getBCCount(){return m_bc.size();}
   BoundaryCondition* getBC(const int &i){return m_bc[i];}
+  void delBC(const int &i){
+    delete m_bc[i];
+    m_bc.erase(m_bc.begin() + i);
+  }
 
   int getICCount(){return m_ic.size();}
   InitialCondition* getIC(const int &i){return m_ic[i];}

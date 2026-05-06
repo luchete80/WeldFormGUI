@@ -184,6 +184,7 @@ protected:
   const NodeSet* getSelectedNodeSet() const;
   void clearStateForDeletedMesh(Mesh* mesh);
   void clearStateForDeletedPart(Part* part);
+  void clearStateForDeletedCondition(Condition* condition);
 
   GLFWwindow* window;
   unsigned int shaderProgram;

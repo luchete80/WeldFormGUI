@@ -772,6 +772,21 @@ void Editor::clearStateForDeletedPart(Part* part)
   }
 }
 
+void Editor::clearStateForDeletedCondition(Condition* condition)
+{
+  if (condition == nullptr) {
+    return;
+  }
+
+  if (selected_bc == condition) {
+    selected_bc = nullptr;
+  }
+
+  if (hovered_bc == condition) {
+    hovered_bc = nullptr;
+  }
+}
+
 bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
 {
   if (node == nullptr || viewer == nullptr || viewer->getRenderer() == nullptr) {
@@ -3364,6 +3379,7 @@ void Editor::drawGui() {
                 ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
               Condition* bc = m_model->getBC(i);
+              bool deletedBoundaryConditionFromTree = false;
               bool bc_branch_hovered = false;
               ImGuiTreeNodeFlags bc_flags = ImGuiTreeNodeFlags_OpenOnArrow |
                                             ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -3371,16 +3387,45 @@ void Editor::drawGui() {
                 bc_flags |= ImGuiTreeNodeFlags_Selected;
               }
 
-	              if (ImGui::TreeNodeEx((void*)(intptr_t)i, bc_flags, "Boundary Condition %d", i))
-	              {
-	                model_tree_item_clicked = model_tree_item_clicked || ImGui::IsItemClicked();
-	                if (ImGui::IsItemClicked()) {
-	                  selected_bc = bc;
-	                }
-                if (ImGui::IsItemHovered()) {
-                  bc_branch_hovered = true;
-                  hovered_bc = bc;
+              const bool bc_tree_open =
+                  ImGui::TreeNodeEx((void*)(intptr_t)i, bc_flags, "Boundary Condition %d", i);
+              const bool bc_tree_clicked = ImGui::IsItemClicked();
+              const bool bc_tree_hovered = ImGui::IsItemHovered();
+              const std::string bc_popup_id = "bc_context_" + std::to_string(i);
+
+              model_tree_item_clicked = model_tree_item_clicked || bc_tree_clicked;
+              if (bc_tree_clicked) {
+                selected_bc = bc;
+              }
+              if (bc_tree_hovered) {
+                bc_branch_hovered = true;
+                hovered_bc = bc;
+              }
+
+              if (ImGui::BeginPopupContextItem(bc_popup_id.c_str()))
+              {
+                selected_bc = bc;
+                if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                  m_show_bc_dlg_edit = true;
+                  m_create_bc = 0;
                 }
+                else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
+                  clearStateForDeletedCondition(bc);
+                  m_model->delBC(i);
+                  deletedBoundaryConditionFromTree = true;
+                }
+                ImGui::EndPopup();
+              }
+
+              if (deletedBoundaryConditionFromTree) {
+                if (bc_tree_open) {
+                  ImGui::TreePop();
+                }
+                break;
+              }
+
+	              if (bc_tree_open)
+	              {
                 if (bc != nullptr) {
                   if (bc->getType() == SymmetryBC) {
                     double3 normal = bc->getNormal();
@@ -3408,29 +3453,11 @@ void Editor::drawGui() {
                   bc_branch_hovered = true;
                   hovered_bc = bc;
                 }
-                if (ImGui::BeginPopupContextItem())
-                {
-                  if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-                    m_show_bc_dlg_edit = true;
-                    selected_bc = bc;
-                    m_create_bc = 0;
-                  }
-                  ImGui::EndPopup();
-                }                    
-                  ImGui::SameLine();
-                  if (ImGui::SmallButton("button")) {}
-                  if (ImGui::IsItemHovered()) {
-                    bc_branch_hovered = true;
-                    hovered_bc = bc;
-                  }
-                  if (bc_branch_hovered) {
-                    hovered_bc = bc;
-                  }
-                  ImGui::TreePop();
-	              } else if (ImGui::IsItemClicked()) {
-	                model_tree_item_clicked = true;
-	                selected_bc = bc;
-	              } else if (ImGui::IsItemHovered()) {
+                if (bc_branch_hovered) {
+                  hovered_bc = bc;
+                }
+                ImGui::TreePop();
+	              } else if (bc_tree_hovered) {
 	                hovered_bc = bc;
 	              }
             }

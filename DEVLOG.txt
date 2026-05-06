@@ -224,4 +224,4 @@
          - Improved set selection menu, with button and edit. 
          - Fixed delete vtkOCCgeom when deleted part
          - Fixed crash at mesh deletion and then clicking.
-         
+         - Added Run with BCs 

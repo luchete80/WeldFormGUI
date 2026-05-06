@@ -1,12 +1,32 @@
 {
     "BoundaryConditions": [
         {
-            "applyTo": "Part",
-            "targetId": 2,
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 1,
             "type": "VelocityBC",
             "value": [
                 0.0,
-                -0.0012,
+                -1.0,
+                0.0
+            ]
+        },
+        {
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 0,
+            "type": "VelocityBC",
+            "value": [
+                0.0,
+                0.0,
                 0.0
             ]
         }
@@ -36,11 +56,55 @@
             387000000.0,
             0.154
         ],
-        "density0": 7850.0,
+        "density0": 785000.0,
         "poissonsRatio": 0.3,
         "type": "Hollomon",
         "youngsModulus": 210000000000.0
     },
+    "NodeSets": [
+        {
+            "id": 0,
+            "label": "bottom",
+            "nodeIds": [
+                348,
+                349,
+                350,
+                351,
+                352,
+                353,
+                354,
+                355,
+                356,
+                357,
+                358,
+                359,
+                360,
+                361
+            ],
+            "partId": 0
+        },
+        {
+            "id": 1,
+            "label": "top",
+            "nodeIds": [
+                391,
+                392,
+                393,
+                394,
+                395,
+                396,
+                397,
+                398,
+                399,
+                400,
+                401,
+                402,
+                403,
+                404
+            ],
+            "partId": 0
+        }
+    ],
     "Steps": [
         {
             "artifViscAlpha": 1.0,
@@ -74,8 +138,8 @@
             },
             "name": "Step-1",
             "nproc": 1,
-            "outTime": 1.0,
-            "simTime": 20.0,
+            "outTime": 0.0001,
+            "simTime": 0.01,
             "type": "Implicit"
         }
     ],
@@ -94,38 +158,6 @@
                 "isRigid": false,
                 "mesh": {
                     "source": "demo_part_0.bdf"
-                },
-                "name": ""
-            },
-            {
-                "geometry": {
-                    "origin": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "source": "demo_part_1.step"
-                },
-                "id": 1,
-                "isRigid": true,
-                "mesh": {
-                    "source": "demo_part_1.bdf"
-                },
-                "name": ""
-            },
-            {
-                "geometry": {
-                    "origin": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "source": "demo_part_2.step"
-                },
-                "id": 2,
-                "isRigid": true,
-                "mesh": {
-                    "source": "demo_part_2.bdf"
                 },
                 "name": ""
             }
