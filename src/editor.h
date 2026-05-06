@@ -182,6 +182,8 @@ protected:
   void selectNodeSet(Mesh* mesh, int setIndex);
   NodeSet* getSelectedNodeSet();
   const NodeSet* getSelectedNodeSet() const;
+  void clearStateForDeletedMesh(Mesh* mesh);
+  void clearStateForDeletedPart(Part* part);
 
   GLFWwindow* window;
   unsigned int shaderProgram;

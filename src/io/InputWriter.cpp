@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Geom.h"
 #include "BoundaryCondition.h"
+#include "Node.h"
 #include "Step.h"
 
 #include <cmath>
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 #include "json_io.h"
@@ -80,44 +82,63 @@ json makeImplicitSolverJson(const Step *step) {
   return implicit;
 }
 
-Part *findPartById(Model *model, int part_id) {
+int exportedDimensionCount(Model *model) {
   if (model == nullptr)
-    return nullptr;
+    return 3;
 
-  for (int i = 0; i < model->getPartCount(); ++i) {
-    Part *part = model->getPart(i);
-    if (part != nullptr && part->getId() == part_id)
-      return part;
+  switch (model->getAnalysisType()) {
+    case PlaneStress2D:
+    case PlaneStrain2D:
+    case Axisymmetric2D:
+      return 2;
+    case Solid3D:
+    default:
+      return 3;
   }
-
-  return nullptr;
 }
 
-bool appendRigidBoundaryCondition(json &bc_array, Model *model, BoundaryCondition *bc) {
-  if (bc == nullptr)
-    return false;
+void appendNodeSets(json &root, Model *model) {
+  if (model == nullptr)
+    return;
 
-  if (bc->getApplyTo() != ApplyToPart) {
-    std::cerr << "ERROR: BoundaryCondition export only supports ApplyToPart. TargetId="
-              << bc->getTargetId() << std::endl;
-    return false;
-  }
+  root["Sets"] = json::array();
 
-  Part *part = findPartById(model, bc->getTargetId());
-  if (part == nullptr) {
-    std::cerr << "ERROR: BoundaryCondition target part not found. TargetId="
-              << bc->getTargetId() << std::endl;
-    return false;
-  }
+  for (int part_index = 0; part_index < model->getPartCount(); ++part_index) {
+    Part *part = model->getPart(part_index);
+    if (part == nullptr || part->getMesh() == nullptr)
+      continue;
 
-  if (part->getType() != Rigid) {
-    std::cerr << "ERROR: BoundaryCondition on deformable part is not allowed in exported input. PartId="
-              << part->getId() << std::endl;
-    return false;
+    Mesh *mesh = part->getMesh();
+    for (int set_index = 0; set_index < mesh->getNodeSetCount(); ++set_index) {
+      const NodeSet &node_set = mesh->getNodeSet(set_index);
+
+      json jset;
+      jset["id"] = node_set.getId();
+      jset["nodes"] = json::array();
+
+      for (int node_index = 0; node_index < node_set.getItemCount(); ++node_index) {
+        const Node *node = node_set.getItem(node_index);
+        if (node != nullptr)
+          jset["nodes"].push_back(node->getId());
+      }
+
+      root["Sets"].push_back(jset);
+    }
   }
+}
+
+void appendDirectionalBoundaryCondition(json &bc_array, Model *model, BoundaryCondition *bc, int export_id) {
+  if (bc == nullptr || bc->getType() == SymmetryBC)
+    return;
 
   json jbc;
-  jbc["zoneId"] = part->getId();
+  jbc["id"] = export_id;
+
+  if (bc->getApplyTo() == ApplyToNodeSet) {
+    jbc["setId"] = bc->getTargetId();
+  } else {
+    jbc["zoneId"] = bc->getTargetId();
+  }
 
   if (bc->getType() == DisplacementBC) {
     jbc["valueType"] = 1;
@@ -127,10 +148,30 @@ bool appendRigidBoundaryCondition(json &bc_array, Model *model, BoundaryConditio
     jbc["valueType"] = 0;
   }
 
-  double3 v = bc->getValue();
-  jbc["value"] = {v.x, v.y, v.z};
+  const double3 value = bc->getValue();
+  jbc["value"] = {value.x, value.y, value.z};
+
+  const int dim_count = exportedDimensionCount(model);
+  std::vector<int> directions;
+  if (bc->getDofMaskX())
+    directions.push_back(0);
+  if (bc->getDofMaskY())
+    directions.push_back(1);
+  if (dim_count == 3 && bc->getDofMaskZ())
+    directions.push_back(2);
+
+  const bool all_default_directions =
+    (dim_count == 2 && directions.size() == 2) ||
+    (dim_count == 3 && directions.size() == 3);
+
+  if (!all_default_directions) {
+    if (directions.size() == 1)
+      jbc["direction"] = directions.front();
+    else
+      jbc["direction"] = directions;
+  }
+
   bc_array.push_back(jbc);
-  return true;
 }
 }
 
@@ -183,6 +224,7 @@ void InputWriter::writeToFile(std::string fname) {
   cont["useGapPenalty"] = contact.useGapPenalty;
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back(cont);
+  appendNodeSets(m_json, m_model);
 
   if (m_model->getMaterialCount() > 0) {
     m_json["Materials"] = json::array();
@@ -225,6 +267,7 @@ void InputWriter::writeToFile(std::string fname) {
   }
 
   bool is_elastic = false;
+  m_json["BoundaryConditions"] = json::array();
   for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
     Part* part = *it;
     if (part == nullptr || !part->isMeshed())
@@ -253,19 +296,13 @@ void InputWriter::writeToFile(std::string fname) {
       rigidBody["orientNormals"] = true;
       rigidBody["fileName"] = fs::relative(mesh_path, json_dir).string();
       m_json["RigidBodies"].push_back(rigidBody);
-
-      json bc;
-      bc["zoneId"] = part->getId();
-      bc["valueType"] = 0;
-      bc["value"] = {part->getVel().x, part->getVel().y, part->getVel().z};
-      m_json["BoundaryConditions"].push_back(bc);
     }
   }
 
   bool xSymm = false;
   bool ySymm = false;
   bool zSymm = false;
-  m_json["BoundaryConditions"] = json::array();
+  int bc_export_id = 1;
   if (m_model->getBCCount() > 0) {
     for (int i = 0; i < m_model->getBCCount(); ++i) {
       BoundaryCondition* bc = m_model->getBC(i);
@@ -282,8 +319,23 @@ void InputWriter::writeToFile(std::string fname) {
         m_json["Configuration"]["ySymm"] = ySymm;
         m_json["Configuration"]["zSymm"] = zSymm;
       } else {
-        appendRigidBoundaryCondition(m_json["BoundaryConditions"], m_model, bc);
+        appendDirectionalBoundaryCondition(m_json["BoundaryConditions"], m_model, bc, bc_export_id++);
       }
+    }
+  }
+
+  if (m_json["BoundaryConditions"].empty()) {
+    for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
+      Part* part = *it;
+      if (part == nullptr || part->getType() != Rigid)
+        continue;
+
+      m_json["BoundaryConditions"].push_back({
+        {"id", bc_export_id++},
+        {"zoneId", part->getId()},
+        {"valueType", 0},
+        {"value", {part->getVel().x, part->getVel().y, part->getVel().z}}
+      });
     }
   }
 
@@ -346,6 +398,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     {"penaltyFactor", contact.penaltyFactor},
     {"useGapPenalty", contact.useGapPenalty}
   });
+  appendNodeSets(m_json, m_model);
 
   m_json["Amplitudes"] = json::array();
   m_json["BoundaryConditions"] = json::array();
@@ -428,6 +481,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     }
   }
 
+  int bc_export_id = 1;
   for (int i = 0; i < m_model->getBCCount(); ++i) {
     BoundaryCondition* bc = m_model->getBC(i);
     if (!bc)
@@ -435,7 +489,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     if (bc->getType() == SymmetryBC)
       continue;
 
-    appendRigidBoundaryCondition(m_json["BoundaryConditions"], m_model, bc);
+    appendDirectionalBoundaryCondition(m_json["BoundaryConditions"], m_model, bc, bc_export_id++);
   }
 
   if (m_json["BoundaryConditions"].empty()) {
@@ -445,6 +499,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
         continue;
 
       m_json["BoundaryConditions"].push_back({
+        {"id", bc_export_id++},
         {"zoneId", part->getId()},
         {"valueType", 0},
         {"value", {part->getVel().x, part->getVel().y, part->getVel().z}}

@@ -732,6 +732,46 @@ const NodeSet* Editor::getSelectedNodeSet() const
   return &m_selected_node_set_mesh->getNodeSet(m_selected_node_set_index);
 }
 
+void Editor::clearStateForDeletedMesh(Mesh* mesh)
+{
+  if (mesh == nullptr) {
+    return;
+  }
+
+  if (selected_prt != nullptr && selected_prt->getMesh() == mesh && m_moving_mode) {
+    finishMoveMode(true);
+  }
+
+  if (m_selected_node_set_mesh == mesh) {
+    m_selected_node_set_mesh = nullptr;
+    m_selected_node_set_index = -1;
+  }
+}
+
+void Editor::clearStateForDeletedPart(Part* part)
+{
+  if (part == nullptr) {
+    return;
+  }
+
+  clearStateForDeletedMesh(part->getMesh());
+
+  if (selected_prt == part) {
+    if (m_moving_mode) {
+      finishMoveMode(true);
+    }
+    selected_prt = nullptr;
+  }
+
+  if (highlighted_prt == part) {
+    highlighted_prt = nullptr;
+  }
+
+  if (hovered_prt == part) {
+    hovered_prt = nullptr;
+  }
+}
+
 bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
 {
   if (node == nullptr || viewer == nullptr || viewer->getRenderer() == nullptr) {
@@ -1259,6 +1299,7 @@ bool Editor::scalePartGeometry(Part* part, double factor)
   }
 
   if (part->isMeshed()) {
+    clearStateForDeletedMesh(part->getMesh());
     getApp().removeGraphicMeshForPart(part);
     part->deleteMesh();
     cout << "Deleted mesh after scaling geometry because it became outdated." << endl;
@@ -2809,6 +2850,7 @@ void Editor::drawGui() {
 	          std::string des;
 	          if (treePart->getType() == Elastic) des = "Deformable";
 	          else                                des = "Rigid";
+            bool deletedPartFromTree = false;
 	          const bool part_tree_open =
 	            ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", treePart->getId(), treePart->getName(), des.c_str());
             const bool part_tree_hovered = ImGui::IsItemHovered();
@@ -2837,8 +2879,12 @@ void Editor::drawGui() {
 	                selected_prt = treePart;
               }
               else if (ImGui::MenuItem("Delete", "CTRL+Z")) {
+                clearStateForDeletedPart(treePart);
+                getApp().removeGraphicMeshForPart(treePart);
+                getApp().removeVisualForPart(treePart);
                 m_model->delPart(i);
-                getApp().Update(); //CRASHES
+                getApp().Update();
+                deletedPartFromTree = true;
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
 	                selected_prt = treePart;
                 m_show_msh_dlg = true;
@@ -2942,6 +2988,13 @@ void Editor::drawGui() {
               ImGui::EndPopup();
             }//PART CONTEXT MENU
 
+            if (deletedPartFromTree) {
+              if (part_tree_open) {
+                ImGui::TreePop();
+              }
+              break;
+            }
+
             ImGui::SameLine();
             const std::string visibilityButtonId =
               "part_visibility_" + std::to_string(treePart->getId()) + "_" + std::to_string(i);
@@ -2994,6 +3047,7 @@ void Editor::drawGui() {
                   if (ImGui::BeginPopupContextItem())
                   {
 	                      if (ImGui::MenuItem("Delete")) {
+                          clearStateForDeletedMesh(treePart->getMesh());
 	                        getApp().removeGraphicMeshForPart(treePart);
 	                        treePart->deleteMesh();
 	                        meshDeleted = true;

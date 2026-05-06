@@ -1,0 +1,134 @@
+{
+    "BoundaryConditions": [
+        {
+            "applyTo": "Part",
+            "targetId": 2,
+            "type": "VelocityBC",
+            "value": [
+                0.0,
+                -0.0012,
+                0.0
+            ]
+        }
+    ],
+    "Configuration": {
+        "SPH": {
+            "hFactor": 1.2
+        },
+        "analysisType": "Axisymmetric2D",
+        "modelType": "SPH",
+        "solver": "WeldForm"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.2,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 30.0,
+            "useGapPenalty": true
+        }
+    ],
+    "Materials": {
+        "const": [
+            387000000.0,
+            0.154
+        ],
+        "density0": 7850.0,
+        "poissonsRatio": 0.3,
+        "type": "Hollomon",
+        "youngsModulus": 210000000000.0
+    },
+    "Steps": [
+        {
+            "artifViscAlpha": 1.0,
+            "artifViscBeta": 0.0,
+            "autoTS": [
+                false,
+                false,
+                false
+            ],
+            "axiSymmVol": false,
+            "cflFactor": 0.3,
+            "elemLengthFraction": 0.2,
+            "fixedTS": false,
+            "id": 0,
+            "implicit": {
+                "divTol": 1.0,
+                "forceTol": 10.0,
+                "maxIter": 200,
+                "omegaP": 0.1,
+                "omegaV": 0.4,
+                "pressTol": 10.0,
+                "timeStepGrowthFactor": 1.2,
+                "type": "Picard",
+                "velTol": 0.005
+            },
+            "kernelGradCorr": false,
+            "meshing": {
+                "debug": true,
+                "maxElemAngle": 150.0,
+                "minElemAngle": 30.0
+            },
+            "name": "Step-1",
+            "nproc": 1,
+            "outTime": 1.0,
+            "simTime": 20.0,
+            "type": "Implicit"
+        }
+    ],
+    "model": {
+        "parts": [
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_0.step"
+                },
+                "id": 0,
+                "isRigid": false,
+                "mesh": {
+                    "source": "demo_part_0.bdf"
+                },
+                "name": ""
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_1.step"
+                },
+                "id": 1,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_1.bdf"
+                },
+                "name": ""
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_2.step"
+                },
+                "id": 2,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_2.bdf"
+                },
+                "name": ""
+            }
+        ]
+    }
+}

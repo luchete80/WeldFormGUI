@@ -246,6 +246,48 @@ void App::removeGraphicMeshForPart(Part* part) {
     _updateNeeded = true;
 }
 
+void App::removeVisualForPart(Part* part) {
+    if (!part) return;
+
+    vtkOCCTGeom* visual = getVisualForPart(part);
+    Geom* geom = part->getGeom();
+    vtkOCCTGeom* geomVisual = nullptr;
+    auto geomVisualIt = geomToVisual.find(geom);
+    if (geom != nullptr && geomVisualIt != geomToVisual.end()) {
+        geomVisual = geomVisualIt->second;
+    }
+
+    if (visual != nullptr && visual->actor != nullptr) {
+        m_pendingActorRemovals.push_back(visual->actor);
+    }
+
+    if (geomVisual != nullptr && geomVisual != visual && geomVisual->actor != nullptr) {
+        m_pendingActorRemovals.push_back(geomVisual->actor);
+    }
+
+    partToVisual.erase(part);
+
+    if (geom != nullptr && geomVisualIt != geomToVisual.end()) {
+        geomToVisual.erase(geomVisualIt);
+    }
+
+    if (geom != nullptr) {
+        m_orphangeoms.erase(
+            std::remove(m_orphangeoms.begin(), m_orphangeoms.end(), geom),
+            m_orphangeoms.end());
+    }
+
+    if (geomVisual != nullptr && geomVisual != visual) {
+        delete geomVisual;
+    }
+
+    if (visual != nullptr) {
+        delete visual;
+    }
+
+    _updateNeeded = true;
+}
+
 void App::clearVisualsForModel(Model* model) {
     if (!model) return;
 

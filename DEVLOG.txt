@@ -222,3 +222,6 @@
 20260506 - Added Show/Hide part with icon
          - Fixed Plot results (crahed after pipeline)
          - Improved set selection menu, with button and edit. 
+         - Fixed delete vtkOCCgeom when deleted part
+         - Fixed crash at mesh deletion and then clicking.
+         
