@@ -219,3 +219,6 @@
          - Added recent file to results (not only models).
          - Fixed mesher to full version
          - Changed "MESH POINTER" log from part which was printing. 
+20260506 - Added Show/Hide part with icon
+         - Fixed Plot results (crahed after pipeline)
+         - Improved set selection menu, with button and edit. 

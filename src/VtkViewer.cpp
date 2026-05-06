@@ -55,7 +55,7 @@ void VtkViewer::processEvents(){
 	if (!inputEnabled)
 		return;
 
-	const bool viewportHovered = ImGui::IsMouseHoveringRect(viewportScreenMin, viewportScreenMax, false);
+	const bool viewportHovered = viewportItemHovered;
 	if (!ImGui::IsWindowFocused() && !viewportHovered){
 		return;
 	}
@@ -204,6 +204,7 @@ void VtkViewer::render(const ImVec2 size){
 	ImGui::Image(reinterpret_cast<void*>(tex), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
 	viewportScreenMin = ImGui::GetItemRectMin();
 	viewportScreenMax = ImGui::GetItemRectMax();
+  viewportItemHovered = ImGui::IsItemHovered();
 	processEvents();
 	ImGui::EndChild();
 	ImGui::PopStyleVar();

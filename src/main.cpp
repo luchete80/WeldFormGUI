@@ -1206,7 +1206,6 @@ int main(int argc, char* argv[])
 	                      currentFrame = 0;
 		                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
 		                  auto& frame = *editor->getResults()->frames[currentFrame];  // referencia al frame actual
-                      frame.ensureRenderingResources();
 		                  if (frame.getScalarBarActor() && currentScalarBar != frame.getScalarBarActor()) {
 	                      if (currentScalarBar)
 	                          renderer->RemoveActor2D(currentScalarBar);
@@ -1431,7 +1430,8 @@ int main(int argc, char* argv[])
     }
 
     const bool blockViewerInteraction =
-        editor->hasBlockingDialogOpen() ||
+        (editor->hasBlockingDialogOpen() && !editor->isSetDialogOpen()) ||
+        editor->isSetSelectionActive() ||
         showLoadPlotDialog ||
         showDemoDialog ||
         ImGui::IsPopupOpen("Demo Loaded");

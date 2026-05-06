@@ -117,6 +117,102 @@ void applyMeshSizeToCurrentGmshModel(double elementSize) {
         entity.second, curveNodeCountFromElementSize(entity.second, elementSize));
   }
 }
+
+bool isPartVisible(Part* part)
+{
+  if (part == nullptr) {
+    return false;
+  }
+
+  if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+    if (vtkActor* actor = graphicMesh->getActor()) {
+      return actor->GetVisibility() != 0;
+    }
+  }
+
+  if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+    if (visual->actor != nullptr) {
+      return visual->actor->GetVisibility() != 0;
+    }
+  }
+
+  return true;
+}
+
+void setPartVisible(Part* part, bool visible)
+{
+  if (part == nullptr) {
+    return;
+  }
+
+  if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+    if (vtkActor* actor = graphicMesh->getActor()) {
+      actor->SetVisibility(visible ? 1 : 0);
+    }
+  }
+
+  if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+    if (visual->actor != nullptr) {
+      visual->actor->SetVisibility(visible ? 1 : 0);
+    }
+  }
+}
+
+bool drawPartVisibilityButton(const char* id, bool visible)
+{
+  const ImVec2 size(24.0f, 20.0f);
+  ImGui::PushID(id);
+  const bool pressed = ImGui::InvisibleButton("##part_visibility", size);
+  const bool hovered = ImGui::IsItemHovered();
+  const bool held = ImGui::IsItemActive();
+
+  const ImVec2 min = ImGui::GetItemRectMin();
+  const ImVec2 max = ImGui::GetItemRectMax();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+  ImU32 bgColor = visible ? IM_COL32(212, 176, 64, 90) : IM_COL32(60, 65, 74, 70);
+  if (held) {
+    bgColor = visible ? IM_COL32(212, 176, 64, 135) : IM_COL32(86, 94, 106, 110);
+  } else if (hovered) {
+    bgColor = visible ? IM_COL32(232, 194, 72, 118) : IM_COL32(78, 86, 98, 95);
+  }
+
+  const ImU32 strokeColor = visible
+    ? IM_COL32(255, 236, 156, 255)
+    : IM_COL32(165, 172, 182, 230);
+
+  drawList->AddRectFilled(min, max, bgColor, 5.0f);
+  drawList->AddRect(min, max, IM_COL32(255, 255, 255, 16), 5.0f, 0, 1.0f);
+
+  const ImVec2 center((min.x + max.x) * 0.5f, min.y + 7.9f);
+  const float radius = 5.4f;
+  const float thickness = 1.4f;
+
+  constexpr float kPi = 3.14159265358979323846f;
+  constexpr float kArcStart = 0.78f * kPi;
+  constexpr float kArcEnd = 2.22f * kPi;
+  constexpr float kStemHalfSpacing = 2.6f;
+  drawList->PathArcTo(center, radius, kArcStart, kArcEnd, 24);
+  drawList->PathStroke(strokeColor, false, thickness);
+
+  const float baseTop = center.y + std::sin(kArcStart) * radius + 0.8f;
+  const float baseBottom = max.y - 4.0f;
+  const ImVec2 baseMin(center.x - kStemHalfSpacing, baseTop);
+  const ImVec2 baseMax(center.x + kStemHalfSpacing, baseBottom);
+  drawList->AddRect(baseMin, baseMax, strokeColor, 0.0f, 0, thickness);
+
+  if (!visible) {
+    drawList->AddLine(ImVec2(min.x + 6.0f, max.y - 4.0f), ImVec2(max.x - 6.0f, min.y + 4.0f),
+                      IM_COL32(220, 110, 110, 220), 1.6f);
+  }
+
+  if (hovered) {
+    ImGui::SetTooltip("%s", visible ? "Hide part" : "Show part");
+  }
+
+  ImGui::PopID();
+  return pressed;
+}
 }
 
 
@@ -580,7 +676,7 @@ void Editor::drawSelectionControls()
 
 bool Editor::isSelectorInteractionEnabled() const
 {
-  return m_show_set_dlg;
+  return isSetSelectionActive();
 }
 
 bool Editor::shouldDrawSelectionOverlay() const
@@ -757,7 +853,7 @@ void Editor::handleSelectionInteraction()
   }
 
   ImGuiIO& io = ImGui::GetIO();
-  const bool hovered = ImGui::IsMouseHoveringRect(viewportMin, viewportMax, false);
+  const bool hovered = viewer->isViewportHovered();
   const ImVec2 localMouse(io.MousePos.x - viewportMin.x, io.MousePos.y - viewportMin.y);
 
   if (m_selector.isPickMode()) {
@@ -850,7 +946,6 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
       return opened;
   } else if (ext == ".vtk") {
     ResultFrame *frame = new ResultFrame(filePathName);
-    frame->ensureRenderingResources();
     frame->printAvailableFields();
 
     std::string fieldName;
@@ -981,6 +1076,7 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   m_model->setNoSaveAs();
   is_model = true;
   m_creating_model = false;
+  m_expand_model_tree_once = true;
   getApp().addRecentFile(filePathName);
 
   getApp().setActiveModel(m_model);
@@ -2598,6 +2694,7 @@ void Editor::drawGui() {
     const ImGuiTabItemFlags results_tab_flags = m_activate_results_viewer ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
     if (ImGui::BeginTabItem("Model")) { 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    const bool expand_model_tree_once = m_expand_model_tree_once;
 
     std::string des = "3D";
     if (m_model->getAnalysisType() == PlaneStress2D) des = "2D PS";
@@ -2618,6 +2715,9 @@ void Editor::drawGui() {
        m_model->getBCCount() > 0 ||
        m_model->getICCount() > 0);
 
+      if (expand_model_tree_once) {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+      }
 	    if (ImGui::TreeNode("Models"))
 	    {
 	      if (ImGui::IsItemClicked()) {
@@ -2635,6 +2735,9 @@ void Editor::drawGui() {
 
       if (has_loaded_model) {
 	        std::string modelTreeLabel = "Model (" + des + ")";
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
 	        bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
 	        if (ImGui::IsItemClicked()) {
 	          model_tree_item_clicked = true;
@@ -2660,6 +2763,9 @@ void Editor::drawGui() {
         if (model_tree_open)
         {
         
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
 	        bool open_ = ImGui::TreeNode("Parts");
 	        if (ImGui::IsItemClicked()) {
 	          model_tree_item_clicked = true;
@@ -2697,44 +2803,35 @@ void Editor::drawGui() {
             bool part_branch_hovered = false;
 	          // Use SetNextItemOpen() so set the default state of a node to be open. We could
 	          // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-	          if (i == 0)
-	            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	          if (expand_model_tree_once || i == 0)
+	            ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
 	          std::string des;
 	          if (treePart->getType() == Elastic) des = "Deformable";
 	          else                                des = "Rigid";
-	          if (ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", treePart->getId(), treePart->getName(), des.c_str()))
-	          {
-	            if (ImGui::IsItemHovered()) {
-                part_branch_hovered = true;
-	              hovered_prt = treePart;
-	            }
-	            if (ImGui::IsItemClicked()) {
-	              model_tree_item_clicked = true;
-	              model_tree_part_clicked = true;
-	              highlighted_prt = treePart;
-	            }
-	            //cout << "Model part count "<<m_model->getPartCount()<<endl;
-	            if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-              m_show_mat_dlg_edit = true;
-              //selected_mat = m_mats[i];
-              selected_mat = m_model->getMaterial(i);
-              m_matdlg.InitFromMaterial(selected_mat); //In order to create a temp to plastic
+	          const bool part_tree_open =
+	            ImGui::TreeNode((void*)(intptr_t)i, "Part %d, %s, %s", treePart->getId(), treePart->getName(), des.c_str());
+            const bool part_tree_hovered = ImGui::IsItemHovered();
+            const bool part_tree_clicked = ImGui::IsItemClicked();
+            const bool part_tree_double_clicked = ImGui::IsMouseDoubleClicked(0) && part_tree_hovered;
+
+            if (part_tree_hovered) {
+              part_branch_hovered = true;
+              hovered_prt = treePart;
+            }
+            if (part_tree_clicked) {
+              model_tree_item_clicked = true;
+              model_tree_part_clicked = true;
+              highlighted_prt = treePart;
             }
 
-
-            
             if (ImGui::BeginPopupContextItem()) {
-
-
               if (ImGui::MenuItem("Rename")) {
                   show_rename_popup = true;
                   rename_part_index = i;  // recordamos qué parte queremos renombrar
 	                  strcpy(new_name, treePart->getName());
               }
-              
 
-          
               if (ImGui::MenuItem("Edit", "CTRL+Z")) {
                 m_show_prt_dlg_edit = true;
 	                selected_prt = treePart;
@@ -2843,9 +2940,33 @@ void Editor::drawGui() {
               }
                
               ImGui::EndPopup();
-            }//PART CONTEXT MENU 
-                   
-                               
+            }//PART CONTEXT MENU
+
+            ImGui::SameLine();
+            const std::string visibilityButtonId =
+              "part_visibility_" + std::to_string(treePart->getId()) + "_" + std::to_string(i);
+            const bool partVisible = isPartVisible(treePart);
+            if (drawPartVisibilityButton(visibilityButtonId.c_str(), partVisible)) {
+              setPartVisible(treePart, !partVisible);
+              if (viewer != nullptr && viewer->getRenderWindow() != nullptr) {
+                viewer->getRenderWindow()->Render();
+              }
+            }
+            if (ImGui::IsItemHovered()) {
+              part_branch_hovered = true;
+              hovered_prt = treePart;
+            }
+
+	          if (part_tree_open)
+	          {
+	            //cout << "Model part count "<<m_model->getPartCount()<<endl;
+	            if (part_tree_double_clicked){                
+              m_show_mat_dlg_edit = true;
+              //selected_mat = m_mats[i];
+              selected_mat = m_model->getMaterial(i);
+              m_matdlg.InitFromMaterial(selected_mat); //In order to create a temp to plastic
+            }
+
 	              ImGui::SameLine();
 	              if (ImGui::SmallButton("edit")) {
 	                m_show_prt_dlg_edit = true;
@@ -2856,8 +2977,10 @@ void Editor::drawGui() {
                   hovered_prt = treePart;
                 }
 
-
 	            if (treePart->isMeshed()){
+                  if (expand_model_tree_once) {
+                    ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+                  }
 	              if (ImGui::TreeNode("Mesh"))
 	              {
                     if (ImGui::IsItemHovered()) {
@@ -2885,6 +3008,9 @@ void Editor::drawGui() {
                   }
 
                   // Subramas internas
+                      if (expand_model_tree_once) {
+                        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+                      }
 	                  if (ImGui::TreeNode("Nodes"))
 	                  {
                         if (ImGui::IsItemHovered()) {
@@ -2915,9 +3041,9 @@ void Editor::drawGui() {
               }
 
               ImGui::TreePop();
-	          } else if (ImGui::IsItemHovered()) {
+	          } else if (part_tree_hovered) {
 	            hovered_prt = treePart;
-	          } else if (ImGui::IsItemClicked()) {
+	          } else if (part_tree_clicked) {
 	            model_tree_item_clicked = true;
 	            model_tree_part_clicked = true;
 	            highlighted_prt = treePart;
@@ -2993,12 +3119,17 @@ void Editor::drawGui() {
         if (has_loaded_model) {
           bool open_ = false;
           //-----------------------
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
           open_ = ImGui::TreeNode("Sets");
           if (ImGui::BeginPopupContextItem())
           {
-            if (ImGui::MenuItem("New", "CTRL+Z")) {
+          if (ImGui::MenuItem("New", "CTRL+Z")) {
               m_setdlg.reset();
               m_setdlg.set_type = NODE_SET;
+              const std::string defaultSetName = "set_" + std::to_string(findNextNodeSetId(m_model));
+              m_setdlg.setDefaultName(defaultSetName.c_str());
               m_show_set_dlg = true;
             }
             ImGui::EndPopup();
@@ -3025,18 +3156,20 @@ void Editor::drawGui() {
                                        isSelected)) {
                    selectNodeSet(mesh, s);
                  }
-                 if (ImGui::IsItemHovered()) {
-                   ImGui::SetTooltip("%d nodes", nodeSet.getItemCount());
-                 }
-                 if (ImGui::BeginPopupContextItem()) {
-                   if (ImGui::MenuItem("Rename")) {
-                     m_selected_node_set_mesh = mesh;
-                     m_selected_node_set_index = s;
-                     std::snprintf(m_rename_set_name, sizeof(m_rename_set_name), "%s", label.c_str());
-                     m_show_rename_set_dlg = true;
-                   }
-                   ImGui::EndPopup();
-                 }
+                if (ImGui::IsItemHovered()) {
+                  ImGui::SetTooltip("%d nodes", nodeSet.getItemCount());
+                }
+                if (ImGui::BeginPopupContextItem()) {
+                  if (ImGui::MenuItem("Edit")) {
+                    selectNodeSet(mesh, s);
+                    m_setdlg.reset();
+                    m_setdlg.set_type = NODE_SET;
+                    m_setdlg.m_edit_mode = true;
+                    m_setdlg.setDefaultName(label.c_str());
+                    m_show_set_dlg = true;
+                  }
+                  ImGui::EndPopup();
+                }
                  ImGui::SameLine();
                  ImGui::TextDisabled("(%d nodes)", nodeSet.getItemCount());
                  anySetShown = true;
@@ -3048,6 +3181,9 @@ void Editor::drawGui() {
              ImGui::TreePop();
           }
 
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
           open_ = ImGui::TreeNode("Materials");
           if (ImGui::BeginPopupContextItem())
           {
@@ -3060,8 +3196,8 @@ void Editor::drawGui() {
           if (open_){
           for (int i = 0; i < m_model->getMaterialCount(); i++)
           {
-            if (i == 0)
-              ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if (expand_model_tree_once || i == 0)
+              ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
             if (ImGui::TreeNode((void*)(intptr_t)i, "Material %d", i))
             {
@@ -3085,6 +3221,9 @@ void Editor::drawGui() {
              ImGui::TreePop();
           }
           //-----------------------------------------------------
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
           open_ = ImGui::TreeNode("InteractionProps");
           if (ImGui::BeginPopupContextItem())
           {
@@ -3108,6 +3247,9 @@ void Editor::drawGui() {
           }
 
           //-----------------------------------------------------
+            if (expand_model_tree_once) {
+              ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+            }
 	          open_ = ImGui::TreeNode("Initial Conditions");
 	          if (ImGui::IsItemClicked()) {
 	            model_tree_item_clicked = true;
@@ -3123,8 +3265,8 @@ void Editor::drawGui() {
           {
             for (int i = 0; i < m_model->getICCount(); i++)
             {
-              if (i == 0)
-                ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+              if (expand_model_tree_once || i == 0)
+                ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
 	              if (ImGui::TreeNode((void*)(intptr_t)i, "Initial Condition %d", i))
 	              {
@@ -3146,6 +3288,9 @@ void Editor::drawGui() {
           }
 
           //-----------------------------------------------------
+            if (expand_model_tree_once) {
+              ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+            }
 	          open_ = ImGui::TreeNode("Boundary Conditions");
 	          if (ImGui::IsItemClicked()) {
 	            model_tree_item_clicked = true;
@@ -3161,8 +3306,8 @@ void Editor::drawGui() {
           {
             for (int i = 0; i < m_model->getBCCount(); i++)
             {
-              if (i == 0)
-                ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+              if (expand_model_tree_once || i == 0)
+                ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
               Condition* bc = m_model->getBC(i);
               bool bc_branch_hovered = false;
@@ -3239,6 +3384,9 @@ void Editor::drawGui() {
           }
 
           //-----------------------------------------------------
+            if (expand_model_tree_once) {
+              ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+            }
 	          open_ = ImGui::TreeNode("Steps");
 	          if (ImGui::IsItemClicked()) {
 	            model_tree_item_clicked = true;
@@ -3256,15 +3404,18 @@ void Editor::drawGui() {
           }
           if (open_)
           {
-            for (int i = 0; i < m_model->getStepCount(); i++)
-            {
-              Step *step = m_model->getStep(i);
-              if (step == nullptr)
-                continue;
+	            for (int i = 0; i < m_model->getStepCount(); i++)
+	            {
+	              Step *step = m_model->getStep(i);
+	              if (step == nullptr)
+	                continue;
 
-              const char *step_type = step->isImplicit() ? "Implicit" : "Explicit";
-              if (ImGui::TreeNode((void*)(intptr_t)i, "Step %d, %s, %s", step->getId(), step->getName(), step_type))
-              {
+	              const char *step_type = step->isImplicit() ? "Implicit" : "Explicit";
+                if (expand_model_tree_once) {
+                  ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+                }
+	              if (ImGui::TreeNode((void*)(intptr_t)i, "Step %d, %s, %s", step->getId(), step->getName(), step_type))
+	              {
                 if (ImGui::BeginPopupContextItem())
                 {
                   if (ImGui::MenuItem("Edit", "CTRL+Z")) {
@@ -3286,6 +3437,9 @@ void Editor::drawGui() {
     
 
 
+    if (expand_model_tree_once) {
+      ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+    }
     bool open_ = ImGui::TreeNode("Jobs");
     if (ImGui::BeginPopupContextItem())
     {
@@ -3302,8 +3456,8 @@ void Editor::drawGui() {
     for (int i = 0; i < m_jobs.size(); i++)
     {
       
-      if (i == 0)
-        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	      if (expand_model_tree_once || i == 0)
+	        ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
       if (ImGui::TreeNode((void*)(intptr_t)i, "Job %d", i))
       {
@@ -3356,11 +3510,15 @@ void Editor::drawGui() {
        ImGui::TreePop();
     }
         
-    if (close_model_requested) {
-      closeCurrentModel();
-    }
+	    if (close_model_requested) {
+	      closeCurrentModel();
+	    }
 
-    ImGui::EndTabItem(); 
+      if (m_expand_model_tree_once) {
+        m_expand_model_tree_once = false;
+      }
+
+	    ImGui::EndTabItem(); 
     
   } //END MODEL TAB
     
@@ -4083,31 +4241,51 @@ void Editor::drawGui() {
     }
   }
   else if (m_show_set_dlg) {
-    m_setdlg.Draw("Create Set", &m_show_set_dlg, m_selector.getSelectedNodeCount());
-    if (!m_show_set_dlg) {
-      if (m_setdlg.m_saved) {
-        if (m_setdlg.set_type == NODE_SET) {
-          Mesh* targetMesh = findCommonMeshForNodes(m_model, m_selector.getSelectedNodes());
-          if (targetMesh == nullptr) {
-            cout << "Cannot create node set: selected nodes must belong to the same mesh" << endl;
+    const std::vector<Node*> selectedNodesForSet = m_selector.getSelectedNodes();
+    m_setdlg.Draw(m_setdlg.m_edit_mode ? "Edit Set" : "Create Set",
+                  &m_show_set_dlg,
+                  static_cast<int>(selectedNodesForSet.size()));
+    if (m_setdlg.create_set) {
+      if (m_setdlg.set_type == NODE_SET) {
+        Mesh* targetMesh = findCommonMeshForNodes(m_model, selectedNodesForSet);
+        if (targetMesh == nullptr) {
+          cout << "Cannot create node set: selected nodes must belong to the same mesh" << endl;
+        } else if (m_setdlg.m_edit_mode) {
+          NodeSet* selectedSet = getSelectedNodeSet();
+          if (selectedSet == nullptr || targetMesh != m_selected_node_set_mesh) {
+            cout << "Cannot edit node set: selected nodes must belong to the same mesh as the set" << endl;
           } else {
-            NodeSet nodeSet(targetMesh);
-            nodeSet.setEntityId(findNextNodeSetId(m_model));
-            nodeSet.setLabel(m_setdlg.m_name);
-            for (Node* node : m_selector.getSelectedNodes()) {
-              nodeSet.add(node);
+            selectedSet->clear();
+            selectedSet->setLabel(m_setdlg.m_name);
+            for (Node* node : selectedNodesForSet) {
+              selectedSet->add(node);
             }
-            targetMesh->addNodeSet(nodeSet);
-            selectNodeSet(targetMesh, targetMesh->getNodeSetCount() - 1);
-            cout << "Created node set: name=" << m_setdlg.m_name
-                 << ", id=" << nodeSet.getId()
-                 << ", nodes=" << nodeSet.getItemCount() << endl;
+            selectNodeSet(targetMesh, m_selected_node_set_index);
+            cout << "Updated node set: name=" << m_setdlg.m_name
+                 << ", id=" << selectedSet->getId()
+                 << ", nodes=" << selectedSet->getItemCount() << endl;
           }
         } else {
-          cout << "Create set requested: name=" << m_setdlg.m_name
-               << ", type=" << m_setdlg.set_type << endl;
+          NodeSet nodeSet(targetMesh);
+          nodeSet.setEntityId(findNextNodeSetId(m_model));
+          nodeSet.setLabel(m_setdlg.m_name);
+          for (Node* node : selectedNodesForSet) {
+            nodeSet.add(node);
+          }
+          targetMesh->addNodeSet(nodeSet);
+          selectNodeSet(targetMesh, targetMesh->getNodeSetCount() - 1);
+          cout << "Created node set: name=" << m_setdlg.m_name
+               << ", id=" << nodeSet.getId()
+               << ", nodes=" << nodeSet.getItemCount() << endl;
         }
-      } else if (m_setdlg.m_cancelled) {
+      } else {
+        cout << "Create set requested: name=" << m_setdlg.m_name
+             << ", type=" << m_setdlg.set_type << endl;
+      }
+      m_show_set_dlg = false;
+      m_setdlg.reset();
+    } else if (!m_show_set_dlg) {
+      if (m_setdlg.m_cancelled) {
         cout << "Create set cancelled" << endl;
       }
       m_setdlg.reset();

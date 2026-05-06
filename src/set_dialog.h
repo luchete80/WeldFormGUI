@@ -36,6 +36,7 @@ public:
   CreateSetDialog();
   void Draw(const char* title, bool* p_open, int selected_count);
   void reset();
+  void setDefaultName(const char* name);
 
 void ShowSetTypeDialog();
 
@@ -45,6 +46,8 @@ void ShowSetTypeDialog();
   int set_type;
   bool m_saved;
   bool m_cancelled;
+  bool m_selecting;
+  bool m_edit_mode;
   char m_name[128];
   // const bool & isMaterialCreated()const{return create_material;}
   // void   Draw(const char* title, bool* p_open = NULL, Material_* mat = NULL);  

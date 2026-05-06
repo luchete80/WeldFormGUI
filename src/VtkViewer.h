@@ -64,6 +64,7 @@ private:
 	bool inputEnabled = true;
   ImVec2 viewportScreenMin = ImVec2(0, 0);
   ImVec2 viewportScreenMax = ImVec2(0, 0);
+  bool viewportItemHovered = false;
   vtkSmartPointer<vtkAxesActor> axesActor;
   ProjectionMode projectionMode = ProjectionMode::Perspective;
   bool axesVisible = false;
@@ -169,6 +170,8 @@ public:
 	inline unsigned int getTexture() const {
 		return tex;
 	}
+
+  bool isViewportHovered() const { return viewportItemHovered; }
 
   const ImVec2& getViewportScreenMin() const {
     return viewportScreenMin;

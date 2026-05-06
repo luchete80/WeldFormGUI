@@ -90,6 +90,39 @@ It is better treated as old or auxiliary viewport code until we decide to clean 
 - `src/main.cpp`
   Result viewport rendering and visual overlay application.
 
+## Dialog blocking and set creation
+
+- `src/main.cpp`
+  Controls when the VTK viewers are globally frozen through `setInputEnabled(...)`.
+- Current behavior:
+  - most blocking dialogs disable viewer interaction
+  - `Create Set` is explicitly excluded so the user can still orbit, pan, zoom, and pick nodes while the dialog is open
+
+- `src/editor.cpp`
+  Contains the node selection flow and the final node set creation flow.
+- Relevant pieces:
+  - `Editor::handleSelectionInteraction()`
+    Handles node picking and box selection in the model viewport.
+  - `Editor::isSelectorInteractionEnabled()`
+    Keeps node selection enabled specifically while the set dialog is open.
+  - the `m_show_set_dlg` block inside `Editor::drawGui()`
+    Finalizes node set creation after the dialog is closed.
+  - `findCommonMeshForNodes(...)`
+    Ensures all selected nodes belong to the same mesh before creating the set.
+
+- `src/set_dialog.cpp`
+  Owns the `Create Set` dialog UI.
+- Current behavior:
+  - the dialog shows set name, set type, and selected node count
+  - `Create` is enabled only when there is at least one selected item and the name is not empty
+  - clicking inside the dialog should not clear the node selection used to build the set
+
+Summary:
+- viewer camera interaction and node picking are intentionally separated for `Create Set`
+- the viewer stays interactive during set creation
+- node selection is preserved while typing in the set name field
+- the actual `NodeSet` object is built in `src/editor.cpp`, not in `src/set_dialog.cpp`
+
 ## Good next sections to document
 
 The next useful areas to document would be:

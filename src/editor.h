@@ -135,6 +135,8 @@ public:
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
   bool hasBlockingDialogOpen() const;
+  bool isSetDialogOpen() const { return m_show_set_dlg; }
+  bool isSetSelectionActive() const { return m_show_set_dlg && m_setdlg.m_selecting; }
   void closeCurrentModel();
   void closeCurrentResults();
   
@@ -358,6 +360,7 @@ protected:
 
   PendingResultsLoad m_pending_results_load;
   int m_pending_results_frame_index = -1;
+  bool m_expand_model_tree_once = false;
 
   bool beginResultsLoadFromJson(const std::string& jsonFile,
                                 bool replaceExistingResults = false,
