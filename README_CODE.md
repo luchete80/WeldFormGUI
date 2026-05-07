@@ -130,3 +130,40 @@ The next useful areas to document would be:
 - results loading flow
 - where `Surface / Edges / Wire` are applied
 - where node and set selection logic lives
+
+## Solver edition runtime selection
+
+- `src/Job.cpp`
+  Runtime solver selection for jobs lives here.
+
+Current solver selection layers:
+- `Step` still decides `explicit` vs `implicit` through the exported input file.
+- `Job` decides solver edition `Auto / Std / Full`.
+- if the job is set to `Auto`, environment variables and local solver binaries decide which executable is launched.
+
+Environment variables:
+- `WELDFORM_SOLVER_EDITION`
+  Accepted values: `auto`, `std`, `student`, `full`
+  Used only when the job override is `Auto`.
+- `WELDFORM_STD_NODE_LIMIT`
+  Default: `500`
+  Maximum allowed node count when the resolved solver edition is student/std.
+- `WELDFORM_STD_ALLOW_THERMAL`
+  Default: `false`
+  Accepted truthy values include `1`, `true`, `yes`, `on`.
+  Controls whether thermal coupling is allowed when the resolved solver edition is student/std.
+
+Resolution order:
+1. Job dialog override `Auto / Student / Full`
+2. `WELDFORM_SOLVER_EDITION` when the job is `Auto`
+3. automatic binary detection in `solvers/`
+   If `weldform_exp` or `weldform_imp` exists, full is used.
+   Otherwise the code falls back to `weldform_exp_std` or `weldform_imp_std`.
+
+Practical examples:
+- Development machine with full solvers installed:
+  `export WELDFORM_SOLVER_EDITION=full`
+- Student/release install:
+  `export WELDFORM_SOLVER_EDITION=std`
+  `export WELDFORM_STD_NODE_LIMIT=500`
+  `export WELDFORM_STD_ALLOW_THERMAL=0`

@@ -525,6 +525,46 @@ void drawViewportOverlay(VtkViewer& viewer,
     }
 }
 
+void drawResultsPlaybackOverlay(VtkViewer& viewer,
+                                int currentFrame,
+                                int totalFrames,
+                                double currentTime,
+                                bool& isPlaying)
+{
+    const ImVec2 viewportMin = viewer.getViewportScreenMin();
+    const ImVec2 viewportMax = viewer.getViewportScreenMax();
+    if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
+        return;
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(viewportMax.x - 190.0f, viewportMin.y + 12.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.22f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 6.0f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.04f, 0.05f, 0.07f, 0.22f));
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("##ResultsPlaybackOverlay", nullptr, flags)) {
+        if (ImGui::Button(isPlaying ? "Pause" : "Play")) {
+            isPlaying = !isPlaying;
+        }
+        ImGui::SameLine();
+        ImGui::Text("Frame %d / %d", currentFrame + 1, totalFrames);
+        ImGui::Text("Time: %.6g", currentTime);
+    }
+    ImGui::End();
+
+    ImGui::PopStyleColor(1);
+    ImGui::PopStyleVar(3);
+}
+
 std::filesystem::path ResolveExistingFontPath(const std::filesystem::path& executable_path,
                                               const std::vector<std::filesystem::path>& relative_candidates)
 {
@@ -1071,6 +1111,8 @@ int main(int argc, char* argv[])
 	              static double manualMax = 1.0;
 	              
 	              static bool isCellField = false;
+                static bool isPlaying = false;
+                static double lastPlaybackAdvanceTime = 0.0;
 	                            
 	              static std::string activeFieldName = "";
 	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
@@ -1191,7 +1233,7 @@ int main(int argc, char* argv[])
 	                  loadPlotDialog.SetCsvPath(csv_path.string());
 	                  showLoadPlotDialog = true;
 	              }
-			              if (editor->getResults()){
+		              if (editor->getResults()){
                       const int restoredFrame = editor->consumePendingResultsFrameIndex();
                       if (restoredFrame >= 0) {
                           if (!editor->getResults()->frames.empty()) {
@@ -1204,6 +1246,14 @@ int main(int argc, char* argv[])
                           lastFrame = -1;
                       }
 		              if (!editor->getResults()->frames.empty()) {
+                    const double now = ImGui::GetTime();
+                    if (lastPlaybackAdvanceTime <= 0.0) {
+                        lastPlaybackAdvanceTime = now;
+                    }
+                    if (isPlaying && (now - lastPlaybackAdvanceTime) >= 0.12) {
+                        currentFrame = (currentFrame + 1) % (int)editor->getResults()->frames.size();
+                        lastPlaybackAdvanceTime = now;
+                    }
 	                  if (currentFrame >= (int)editor->getResults()->frames.size())
 	                      currentFrame = 0;
 		                  ImGui::SliderInt("Frame", &currentFrame, 0, (int)editor->getResults()->frames.size() - 1);
@@ -1379,6 +1429,14 @@ int main(int argc, char* argv[])
               // Render del viewer
               vtkViewer_res.render();
               drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false);
+              if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
+                  const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
+                  drawResultsPlaybackOverlay(vtkViewer_res,
+                                             safeFrame,
+                                             (int)editor->getResults()->frames.size(),
+                                             editor->getResults()->frames[safeFrame]->time,
+                                             isPlaying);
+              }
 
               ImGui::PopFont();
               ImGui::EndTabItem();

@@ -28,6 +28,7 @@ public ObjDialog{
   }
   
   std::string m_filename;
+  int m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
   
   //void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
   void Draw();

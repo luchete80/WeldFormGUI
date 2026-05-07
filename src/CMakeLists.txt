@@ -65,6 +65,7 @@ endif()
 add_executable(${EXEC_NAME} main.cpp 
                             editor.cpp
                             bc_dialog.cpp
+                            ini_dialog.cpp
                             load_plot_dialog.cpp
                             demo_dialog.cpp
                             material_dialog.cpp

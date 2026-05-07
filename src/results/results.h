@@ -64,6 +64,7 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile);
 class ResultFrame {
 public:
     std::string name;
+    double time = 0.0;
     vtkSmartPointer<vtkUnstructuredGrid> mesh;
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<vtkDataSetMapper> mapper;

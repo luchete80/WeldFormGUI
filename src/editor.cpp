@@ -57,6 +57,7 @@
 
 #include "Condition.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 
 #include "graphics/TransformGizmo.h"
 #include "tools/MeasurementTool.h"
@@ -2087,6 +2088,7 @@ void Editor::advanceResultsLoad()
     } else {
       try {
         auto frame = std::make_unique<ResultFrame>(entry.vtkPath.string());
+        frame->time = entry.time;
         m_pending_results_load.results.frames.push_back(std::move(frame));
         ++m_pending_results_load.loadedFrames;
       } catch (const std::exception& e) {
@@ -3366,15 +3368,18 @@ void Editor::drawGui() {
 	          }
           if (ImGui::BeginPopupContextItem())
           {
-            if (ImGui::MenuItem("New", "CTRL+Z")) {}
-              ImGui::EndPopup();
+            if (ImGui::MenuItem("New", "CTRL+Z")) {
               m_create_bc = 2;
               m_show_bc_dlg_edit = true;
+              selected_ic = nullptr;
+            }
+            ImGui::EndPopup();
           }
           if (open_)
           {
             for (int i = 0; i < m_model->getICCount(); i++)
             {
+              bool deletedInitialConditionFromTree = false;
               if (expand_model_tree_once || i == 0)
                 ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
 
@@ -3386,9 +3391,23 @@ void Editor::drawGui() {
                 if (ImGui::BeginPopupContextItem())
                 {
                   if (ImGui::MenuItem("Edit", "CTRL+Z")) {
+                    selected_ic = m_model->getIC(i);
+                    m_create_bc = 2;
+                    m_show_bc_dlg_edit = true;
+                  }
+                  if (ImGui::MenuItem("Delete", "CTRL+Z")) {
+                    if (selected_ic == m_model->getIC(i)) {
+                      selected_ic = nullptr;
+                    }
+                    m_model->delIC(i);
+                    deletedInitialConditionFromTree = true;
                   }
                   ImGui::EndPopup();
-                }                    
+                }
+                if (deletedInitialConditionFromTree) {
+                  ImGui::TreePop();
+                  break;
+                }
                   ImGui::SameLine();
                   if (ImGui::SmallButton("button")) {}
                   ImGui::TreePop();
@@ -3569,6 +3588,7 @@ void Editor::drawGui() {
         m_jobdlg.m_edit_mode = false;
         m_jobdlg.m_job = nullptr;
         m_jobdlg.m_filename.clear();
+        m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
         m_jobdlg.m_show=true;
       }
                        
@@ -3577,6 +3597,7 @@ void Editor::drawGui() {
 
     for (int i = 0; i < m_jobs.size(); i++)
     {
+      bool deletedJobFromTree = false;
       
 	      if (expand_model_tree_once || i == 0)
 	        ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
@@ -3594,6 +3615,7 @@ void Editor::drawGui() {
             m_jobdlg.m_edit_mode = true;
             m_jobdlg.m_job = m_jobs[i];
             m_jobdlg.m_filename = m_jobs[i]->getPathFile();
+            m_jobdlg.m_solver_edition = static_cast<int>(m_jobs[i]->getSolverEditionOverride());
           }
           if (ImGui::MenuItem("Show Progress", "")) {
             m_jobshowdlg.m_job = m_jobs[i];
@@ -3612,8 +3634,29 @@ void Editor::drawGui() {
           if (ImGui::MenuItem("Load Results", "")) {
             openResultsForJob(m_jobs[i]);
           }
+          if (ImGui::MenuItem("Delete", "")) {
+            Job* jobToDelete = m_jobs[i];
+            if (m_jobdlg.m_job == jobToDelete) {
+              m_jobdlg.m_job = nullptr;
+              m_jobdlg.m_edit_mode = false;
+              m_jobdlg.m_show = false;
+            }
+            if (m_jobshowdlg.m_job == jobToDelete) {
+              m_jobshowdlg.m_job = nullptr;
+              m_jobshowdlg.m_last_job = nullptr;
+              m_jobshowdlg.m_last_refresh_time = -1.0;
+              m_jobshowdlg.m_show = false;
+            }
+            delete jobToDelete;
+            m_jobs.erase(m_jobs.begin() + i);
+            deletedJobFromTree = true;
+          }
           ImGui::EndPopup();
-        }                    
+        }
+        if (deletedJobFromTree) {
+          ImGui::TreePop();
+          break;
+        }
         ImGui::SameLine();
         if (ImGui::SmallButton("button")) {}
         ImGui::TreePop();
@@ -4313,7 +4356,7 @@ void Editor::drawGui() {
     else if (m_create_bc == 1)
       m_bcdlg.Draw("New Boundary Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewBoundary);
     if (m_create_bc == 2) 
-      m_bcdlg.Draw("New Initial Conditions",&m_show_bc_dlg_edit,m_model, &selected_bc, DialogMode::NewInitial);    
+      m_inidlg.Draw("Initial Conditions",&m_show_bc_dlg_edit,m_model, &selected_ic);
   }
   
   if (m_show_msh_dlg) {  
@@ -4457,7 +4500,9 @@ void Editor::drawGui() {
   
   if (m_jobdlg.create_entity){
     cout << "Creating Job "<<m_jobdlg.m_filename<<endl;
-    m_jobs.push_back(new Job(m_jobdlg.m_filename)); 
+    Job* newJob = new Job(m_jobdlg.m_filename);
+    newJob->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_jobdlg.m_solver_edition));
+    m_jobs.push_back(newJob); 
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }

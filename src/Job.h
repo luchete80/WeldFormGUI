@@ -3,12 +3,20 @@
 
 #include <string>
 #include <filesystem>
+#include <optional>
+#include <nlohmann/json.hpp>
 
 #include "Dialog.h"
 
 class Job:
 public Dialog{
 public: 
+  enum class SolverEdition {
+    Auto,
+    Std,
+    Full
+  };
+
   Job(){}
   Job(std::string );
   virtual void Draw();
@@ -20,15 +28,31 @@ public:
   void setPathFile(const std::string &path){m_path_file = path;}
   bool isImplicit() const;
   int getPid() const;
+  void setSolverEditionOverride(SolverEdition edition) { m_solver_edition_override = edition; }
+  SolverEdition getSolverEditionOverride() const { return m_solver_edition_override; }
 protected:
+  struct SolverInputInfo {
+    bool implicit = false;
+    bool thermal = false;
+    int nodeCount = -1;
+  };
+
   std::filesystem::path getJobDirectory() const;
   std::filesystem::path getLogFilePath() const;
   std::filesystem::path getTempLogPath() const;
   std::filesystem::path getPidFilePath() const;
+  std::optional<nlohmann::json> loadInputJson() const;
+  SolverInputInfo inspectSolverInput() const;
+  SolverEdition getRequestedSolverEdition() const;
+  std::string getSolverBinaryName(const SolverInputInfo& info) const;
+  bool validateSolverSelection(const SolverInputInfo& info,
+                               SolverEdition edition,
+                               const std::string& solverName) const;
   std::string m_path_file;
   int m_pid = -1;
   std::string m_filename;
   std::string m_log;
+  SolverEdition m_solver_edition_override = SolverEdition::Auto;
   
 };
 

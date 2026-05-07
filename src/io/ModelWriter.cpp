@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 #include "json_io.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 #include "Step.h"
 
 using json = nlohmann::json;
@@ -403,6 +404,32 @@ void ModelWriter::writeToFile(std::string fname){
 
       std::cout << "Done writing " << m_model.getBCCount() << " BCs." << std::endl;
   }  
+
+  if (m_model.getICCount() > 0) {
+      m_json["InitialConditions"] = json::array();
+
+      for (int i = 0; i < m_model.getICCount(); ++i) {
+          InitialCondition* ic = m_model.getIC(i);
+          if (ic == nullptr)
+              continue;
+
+          json jic;
+          std::string typeStr;
+          switch (ic->getType()) {
+              case VelocityIC: typeStr = "VelocityIC"; break;
+              case TempIC:     typeStr = "TempIC"; break;
+              default:         typeStr = "Unknown"; break;
+          }
+
+          jic["type"] = typeStr;
+          jic["applyTo"] = (ic->getApplyTo() == ApplyToPart) ? "Part" : "NodeSet";
+          jic["targetId"] = ic->getTargetId();
+          const double3 v = ic->getValue();
+          jic["value"] = {v.x, v.y, v.z};
+          jic["dofMask"] = {ic->getDofMaskX(), ic->getDofMaskY(), ic->getDofMaskZ()};
+          m_json["InitialConditions"].push_back(jic);
+      }
+  }
   
   
   

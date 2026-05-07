@@ -48,6 +48,7 @@
 #include "interaction_props_dialog.h"
 #include "step_dialog.h"
 #include "bc_dialog.h"
+#include "ini_dialog.h"
 #include "mesh_dialog.h"
 
 
@@ -73,6 +74,7 @@ class VtkViewer;
 class GraphicMesh;
 class Material_Db;
 class vtkPolyData;
+class InitialCondition;
 
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -266,6 +268,7 @@ protected:
   CreateSetDialog m_setdlg;
   
   BCDialog        m_bcdlg;
+  IniDialog       m_inidlg;
   
   bool m_show_mat_dlg; //REMOVE, CGHANGE TO 
 
@@ -303,6 +306,7 @@ protected:
   Step      *selected_step = nullptr;
   Condition *selected_bc = nullptr;
   Condition *hovered_bc = nullptr;
+  InitialCondition *selected_ic = nullptr;
   int       m_create_bc;  //boundary or initial condition
   bool      m_creating_step = false;
   

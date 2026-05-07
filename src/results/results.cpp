@@ -74,6 +74,7 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
 
         try {
             auto frame = std::make_unique<ResultFrame>(entry.vtkPath.string());
+            frame->time = entry.time;
             results.frames.push_back(std::move(frame));
 
             // std::cout << "Loaded frame at time " << entry.time << " from " << entry.vtkPath.string() << std::endl;

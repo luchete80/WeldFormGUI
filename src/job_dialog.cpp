@@ -115,6 +115,10 @@ void  JobDialog::Draw(){
   //Vec3_t size;
   ImGui::Text("Path: %s", m_filename.empty() ? "<empty>" : m_filename.c_str());
 
+  const char* solverEditionLabels[] = {"Auto", "Student", "Full"};
+  ImGui::Combo("Solver edition", &m_solver_edition, solverEditionLabels, IM_ARRAYSIZE(solverEditionLabels));
+  ImGui::TextDisabled("Auto uses environment/default binary selection");
+
   if (!m_edit_mode && ImGui::Button("From Model")){
     Model &model = getApp().getActiveModel();
     if (model.getHasName()) {
@@ -163,8 +167,10 @@ void  JobDialog::Draw(){
     m_show = false;
   }
   if (m_edit_mode && ImGui::Button("Save")) {
-    if (m_job != nullptr)
+    if (m_job != nullptr) {
       m_job->setPathFile(m_filename);
+      m_job->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_solver_edition));
+    }
     m_edit_mode = false;
     m_job = nullptr;
     m_show = false;

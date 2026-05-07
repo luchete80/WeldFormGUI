@@ -89,6 +89,10 @@ public:
 
   int getICCount(){return m_ic.size();}
   InitialCondition* getIC(const int &i){return m_ic[i];}
+  void delIC(const int &i){
+    delete m_ic[i];
+    m_ic.erase(m_ic.begin() + i);
+  }
   int getStepCount(){return m_steps.size();}
   Step* getStep(const int &i){return m_steps[i];}
   void addStep(Step *step){m_steps.push_back(step);}

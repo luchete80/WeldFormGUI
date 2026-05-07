@@ -64,6 +64,42 @@ inside a unified workflow focused on nonlinear large deformation problems.
 - Live job logs
 - Progress bars for runs and result loading
 
+## Solver Selection
+
+- Explicit vs implicit is decided by the active `Step` and exported into the job input file.
+- Solver edition is resolved at runtime as `Auto`, `Student`, or `Full`.
+- Each job can override solver edition from the Job dialog.
+- If a job is left in `Auto`, the application falls back to environment variables and available binaries in `solvers/`.
+
+Environment variables:
+
+```bash
+export WELDFORM_SOLVER_EDITION=full   # auto | std | student | full
+export WELDFORM_STD_NODE_LIMIT=500
+export WELDFORM_STD_ALLOW_THERMAL=0
+```
+
+Helper files:
+
+```bash
+source scripts/use_solver_full.sh
+source scripts/use_solver_std.sh
+```
+
+Base template:
+- `.env.example`
+
+Resolution order:
+- job override from the GUI
+- `WELDFORM_SOLVER_EDITION` when the job is `Auto`
+- automatic detection of `solvers/weldform_exp`, `solvers/weldform_imp`, or their `_std` variants
+
+Typical setups:
+- Development machine with full solvers installed:
+  `WELDFORM_SOLVER_EDITION=full`
+- Student/release install:
+  `WELDFORM_SOLVER_EDITION=std`
+
 ## Postprocessing
 - Animated results visualization
 - Scalar field visualization

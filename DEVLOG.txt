@@ -226,3 +226,7 @@
          - Fixed crash at mesh deletion and then clicking.
          - Added Run with BCs 
 20260507 - Added Measurement tool
+         - Added Student / Full version of solvers in Job selection.
+         - Added Time, Frame & Play Options as overlay in viewport.
+         - Added Delete Job
+         

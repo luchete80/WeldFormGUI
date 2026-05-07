@@ -2,17 +2,74 @@
 #include <cstdlib>
 
 #include <iostream>
-#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <filesystem>
 #include <deque>
 #include <cstdio>
-#include <nlohmann/json.hpp>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
 
 using namespace std;
 using json = nlohmann::json;
 namespace fs = std::filesystem;
+
+namespace {
+std::string toLowerCopy(std::string value)
+{
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+  return value;
+}
+
+bool envVarEnabled(const char* name, bool defaultValue = false)
+{
+  const char* value = std::getenv(name);
+  if (value == nullptr) {
+    return defaultValue;
+  }
+
+  const std::string normalized = toLowerCopy(value);
+  return normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on";
+}
+
+int envVarInt(const char* name, int defaultValue)
+{
+  const char* value = std::getenv(name);
+  if (value == nullptr) {
+    return defaultValue;
+  }
+
+  try {
+    return std::stoi(value);
+  } catch (...) {
+    return defaultValue;
+  }
+}
+
+int countBdfNodes(const fs::path& path)
+{
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    return -1;
+  }
+
+  int count = 0;
+  std::string line;
+  while (std::getline(file, line)) {
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+
+    if (line.rfind("GRID", 0) == 0 || line.rfind("GRID*", 0) == 0) {
+      ++count;
+    }
+  }
+
+  return count;
+}
+}
 
 
 Job::Job(std::string str){
@@ -63,21 +120,14 @@ int Job::getPid() const{
 }
 
 bool Job::isImplicit() const{
-  ifstream file(m_path_file);
-  if (!file.is_open())
+  std::optional<json> input = loadInputJson();
+  if (!input.has_value())
     return false;
 
-  json j;
-  try {
-    file >> j;
-  } catch (...) {
-    return false;
-  }
-
-  if (!j.contains("Configuration"))
+  if (!input->contains("Configuration"))
     return false;
 
-  const auto &conf = j["Configuration"];
+  const auto &conf = (*input)["Configuration"];
   if (!conf.contains("solver"))
     return false;
 
@@ -87,13 +137,226 @@ bool Job::isImplicit() const{
   return false;
 }
 
+std::optional<json> Job::loadInputJson() const
+{
+  std::ifstream file(m_path_file);
+  if (!file.is_open()) {
+    return std::nullopt;
+  }
+
+  try {
+    json j;
+    file >> j;
+    return j;
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+Job::SolverInputInfo Job::inspectSolverInput() const
+{
+  SolverInputInfo info;
+
+  std::optional<json> input = loadInputJson();
+  if (!input.has_value()) {
+    return info;
+  }
+
+  if (input->contains("Configuration")) {
+    const auto& conf = (*input)["Configuration"];
+    info.thermal = conf.value("thermal", false);
+    if (conf.contains("solver") &&
+        conf["solver"].is_object() &&
+        conf["solver"].contains("implicit")) {
+      info.implicit = true;
+    }
+  }
+
+  int totalNodes = 0;
+  bool countedAny = false;
+  const fs::path inputDir = getJobDirectory();
+
+  auto accumulateNodesFromBlocks = [&](const char* key) {
+    if (!input->contains(key) || !(*input)[key].is_array()) {
+      return;
+    }
+
+    for (const auto& block : (*input)[key]) {
+      if (!block.is_object() || !block.contains("fileName") || !block["fileName"].is_string()) {
+        continue;
+      }
+
+      const fs::path meshPath = inputDir / block["fileName"].get<std::string>();
+      const int blockNodes = countBdfNodes(meshPath);
+      if (blockNodes >= 0) {
+        totalNodes += blockNodes;
+        countedAny = true;
+      }
+    }
+  };
+
+  accumulateNodesFromBlocks("DomainBlocks");
+  accumulateNodesFromBlocks("RigidBodies");
+
+  if (countedAny) {
+    info.nodeCount = totalNodes;
+  }
+
+  return info;
+}
+
+Job::SolverEdition Job::getRequestedSolverEdition() const
+{
+  if (m_solver_edition_override != SolverEdition::Auto) {
+    return m_solver_edition_override;
+  }
+
+  const char* editionEnv = std::getenv("WELDFORM_SOLVER_EDITION");
+  if (editionEnv == nullptr) {
+    return SolverEdition::Auto;
+  }
+
+  const std::string edition = toLowerCopy(editionEnv);
+  if (edition == "full") {
+    return SolverEdition::Full;
+  }
+  if (edition == "std" || edition == "student") {
+    return SolverEdition::Std;
+  }
+  return SolverEdition::Auto;
+}
+
+std::string Job::getSolverBinaryName(const SolverInputInfo& info) const
+{
+  const std::string baseName = info.implicit ? "weldform_imp" : "weldform_exp";
+  const SolverEdition requestedEdition = getRequestedSolverEdition();
+  const fs::path solversDir = fs::current_path() / "solvers";
+
+  const auto existsForCurrentPlatform = [&](const std::string& binaryName) {
+#ifdef _WIN32
+    return fs::exists(solversDir / (binaryName + ".exe")) || fs::exists(solversDir / binaryName);
+#else
+    return fs::exists(solversDir / binaryName);
+#endif
+  };
+
+  if (requestedEdition == SolverEdition::Full) {
+    return baseName;
+  }
+
+  if (requestedEdition == SolverEdition::Std) {
+    return baseName + "_std";
+  }
+
+  if (existsForCurrentPlatform(baseName)) {
+    return baseName;
+  }
+
+  return baseName + "_std";
+}
+
+bool Job::validateSolverSelection(const SolverInputInfo& info,
+                                  SolverEdition edition,
+                                  const std::string& solverName) const
+{
+  const fs::path solversDir = fs::current_path() / "solvers";
+#ifdef _WIN32
+  const bool solverExists =
+      fs::exists(solversDir / (solverName + ".exe")) || fs::exists(solversDir / solverName);
+#else
+  const bool solverExists = fs::exists(solversDir / solverName);
+#endif
+
+  const auto persistLogMessage = [&](const std::vector<std::string>& lines) {
+    const fs::path logPath = getLogFilePath();
+    std::error_code ec;
+    const fs::path parent = logPath.parent_path();
+    if (!parent.empty()) {
+      fs::create_directories(parent, ec);
+    }
+
+    std::ofstream logFile(logPath, std::ios::out | std::ios::trunc);
+    if (!logFile.is_open()) {
+      return;
+    }
+
+    for (const std::string& line : lines) {
+      logFile << line << '\n';
+    }
+    logFile.flush();
+  };
+
+  if (!solverExists) {
+    const std::string line1 = "[Job::Run] Solver binary not found: " + solverName;
+    const std::string line2 =
+        "[Job::Run] Expected location: " + (solversDir / solverName).string();
+    std::cout << line1 << std::endl;
+    std::cout << line2 << std::endl;
+    persistLogMessage({line1, line2});
+    return false;
+  }
+
+  const bool isStdEdition =
+      edition == SolverEdition::Std ||
+      (edition == SolverEdition::Auto && solverName.size() >= 4 &&
+       solverName.substr(solverName.size() - 4) == "_std");
+
+  if (!isStdEdition) {
+    return true;
+  }
+
+  const bool allowThermalInStd = envVarEnabled("WELDFORM_STD_ALLOW_THERMAL", false);
+  const int stdNodeLimit = envVarInt("WELDFORM_STD_NODE_LIMIT", 500);
+
+  if (info.thermal && !allowThermalInStd) {
+    const std::string line1 =
+        "[Job::Run] Thermal coupling is disabled for student solver edition.";
+    const std::string line2 =
+        "[Job::Run] Set WELDFORM_STD_ALLOW_THERMAL=1 to enable it.";
+    std::cout << line1 << std::endl;
+    std::cout << line2 << std::endl;
+    persistLogMessage({line1, line2});
+    return false;
+  }
+
+  if (info.nodeCount > stdNodeLimit) {
+    const std::string line1 =
+        "[Job::Run] Student solver node limit exceeded. Nodes=" +
+        std::to_string(info.nodeCount) + ", limit=" + std::to_string(stdNodeLimit);
+    const std::string line2 =
+        "[Job::Run] Set WELDFORM_SOLVER_EDITION=full or increase "
+        "WELDFORM_STD_NODE_LIMIT if appropriate.";
+    std::cout << line1 << std::endl;
+    std::cout << line2 << std::endl;
+    persistLogMessage({line1, line2});
+    return false;
+  }
+
+  return true;
+}
+
 int Job::Run(){
   // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
   std::string str;
   int returnCode ;
-  const std::string solver_name = isImplicit() ? "weldform_imp_std" : "weldform_exp_std";
+  const SolverInputInfo inputInfo = inspectSolverInput();
+  const SolverEdition requestedEdition = getRequestedSolverEdition();
+  const std::string solver_name = getSolverBinaryName(inputInfo);
   const std::string log_path = getLogFilePath().string();
   const std::string pid_path = getPidFilePath().string();
+
+  if (!validateSolverSelection(inputInfo, requestedEdition, solver_name)) {
+    return -1;
+  }
+
+  std::cout << "[Job::Run] Solver selection: "
+            << (inputInfo.implicit ? "implicit" : "explicit")
+            << ", edition=" << (solver_name.find("_std") != std::string::npos ? "std" : "full")
+            << ", thermal=" << (inputInfo.thermal ? "on" : "off");
+  if (inputInfo.nodeCount >= 0) {
+    std::cout << ", nodes=" << inputInfo.nodeCount;
+  }
+  std::cout << std::endl;
 
   //int returnCode = system(str.c_str());
   //CATCH ID

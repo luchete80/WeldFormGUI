@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Geom.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 #include "Node.h"
 #include "Step.h"
 
@@ -173,6 +174,30 @@ void appendDirectionalBoundaryCondition(json &bc_array, Model *model, BoundaryCo
 
   bc_array.push_back(jbc);
 }
+
+void appendInitialCondition(json &ic_array, InitialCondition *ic, int export_id) {
+  if (ic == nullptr)
+    return;
+
+  json jic;
+  jic["id"] = export_id;
+  if (ic->getApplyTo() == ApplyToNodeSet)
+    jic["setId"] = ic->getTargetId();
+  else
+    jic["zoneId"] = ic->getTargetId();
+
+  const double3 value = ic->getValue();
+  if (ic->getType() == TempIC) {
+    jic["type"] = "Temperature";
+    jic["value"] = value.x;
+  } else {
+    jic["type"] = "Velocity";
+    jic["value"] = {value.x, value.y, value.z};
+    jic["dofMask"] = {ic->getDofMaskX(), ic->getDofMaskY(), ic->getDofMaskZ()};
+  }
+
+  ic_array.push_back(jic);
+}
 }
 
 InputWriter::InputWriter(Model*m) : m_model(m) {}
@@ -268,6 +293,7 @@ void InputWriter::writeToFile(std::string fname) {
 
   bool is_elastic = false;
   m_json["BoundaryConditions"] = json::array();
+  m_json["InitialConditions"] = json::array();
   for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
     Part* part = *it;
     if (part == nullptr || !part->isMeshed())
@@ -339,6 +365,11 @@ void InputWriter::writeToFile(std::string fname) {
     }
   }
 
+  int ic_export_id = 1;
+  for (int i = 0; i < m_model->getICCount(); ++i) {
+    appendInitialCondition(m_json["InitialConditions"], m_model->getIC(i), ic_export_id++);
+  }
+
   o << std::setw(4) << m_json << std::endl;
 }
 
@@ -380,6 +411,8 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
   m_json["Configuration"]["AxiSymmVol"] = step ? step->m_axiSymmVol : false;
   m_json["Configuration"]["elemLentghFraction"] = step ? step->m_elemLengthFraction : 0.2;
+  if (m_model->m_thermal_coupling)
+    m_json["Configuration"]["thermal"] = true;
   m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
 
   m_json["Meshing"]["debug"] = step ? step->m_meshingDebug : true;
@@ -402,6 +435,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
 
   m_json["Amplitudes"] = json::array();
   m_json["BoundaryConditions"] = json::array();
+  m_json["InitialConditions"] = json::array();
   m_json["Materials"] = json::array();
   m_json["DomainBlocks"] = json::array();
   m_json["RigidBodies"] = json::array();
@@ -505,6 +539,11 @@ void InputWriter::writeImplicitToFile(std::string fname) {
         {"value", {part->getVel().x, part->getVel().y, part->getVel().z}}
       });
     }
+  }
+
+  int ic_export_id = 1;
+  for (int i = 0; i < m_model->getICCount(); ++i) {
+    appendInitialCondition(m_json["InitialConditions"], m_model->getIC(i), ic_export_id++);
   }
 
   o << std::setw(4) << m_json << std::endl;

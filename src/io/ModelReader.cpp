@@ -7,6 +7,7 @@
 #include "json_io.h"
 #include "gmsh.h"
 #include "BoundaryCondition.h"
+#include "InitialCondition.h"
 #include "Step.h"
 
 #include <iostream>
@@ -455,6 +456,46 @@ bool ModelReader::readFromFile(const std::string& fname) {
         }
 
         cout << "[ModelReader] Done reading Boundary Conditions." << endl;
+    }
+
+    if (j.contains("InitialConditions") && j["InitialConditions"].is_array()) {
+        const auto& icArray = j["InitialConditions"];
+        cout << "[ModelReader] Reading " << icArray.size() << " Initial Condition(s)" << endl;
+
+        for (const auto& jic : icArray) {
+            std::string typeStr = jic.value("type", "VelocityIC");
+            BCType icType = VelocityIC;
+            if (typeStr == "TempIC")
+                icType = TempIC;
+
+            std::string applyToStr = jic.value("applyTo", "Part");
+            BCApplyTo applyTo = (applyToStr == "NodeSet" || applyToStr == "Nodes")
+              ? ApplyToNodeSet
+              : ApplyToPart;
+
+            int targetId = jic.value("targetId", -1);
+            if (targetId < 0) {
+                cerr << "  [Warning] InitialCondition missing targetId, skipping." << endl;
+                continue;
+            }
+
+            double3 val = make_double3(0.0, 0.0, 0.0);
+            if (jic.contains("value") && jic["value"].is_array() && jic["value"].size() == 3) {
+                val.x = jic["value"][0];
+                val.y = jic["value"][1];
+                val.z = jic["value"][2];
+            }
+
+            InitialCondition* ic = new InitialCondition(icType, applyTo, targetId, val);
+            if (jic.contains("dofMask") && jic["dofMask"].is_array() && jic["dofMask"].size() == 3) {
+                ic->setDofMask(jic["dofMask"][0].get<bool>(),
+                               jic["dofMask"][1].get<bool>(),
+                               jic["dofMask"][2].get<bool>());
+            }
+            m_model->addInitialCondition(ic);
+        }
+
+        cout << "[ModelReader] Done reading Initial Conditions." << endl;
     }
 
 
