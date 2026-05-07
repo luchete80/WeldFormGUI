@@ -2,20 +2,8 @@
 #ifndef _INTITAL_CONDITION_H_
 #define _INTITAL_CONDITION_H_
 
-#include "Entity.h"
-
-
-// class BoundaryCondition:
-// public Entity{
-  
-  
-// };
-
-
-
-
+#include "Condition.h"
 #include <string>
-//#include "double3.h"
 
 class InitialCondition:public Condition {
 public:

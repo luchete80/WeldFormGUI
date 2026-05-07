@@ -91,9 +91,10 @@ void IniDialog::Draw(const char* title, bool* p_open, Model* model, InitialCondi
                     continue;
                 }
                 const bool isSelected = (part->getID() == m_targetId);
-                std::string label = part->getName().empty()
+                const char* rawName = part->getName();
+                std::string label = (rawName == nullptr || rawName[0] == '\0')
                   ? ("Part " + std::to_string(part->getID()))
-                  : part->getName();
+                  : std::string(rawName);
                 if (ImGui::Selectable(label.c_str(), isSelected)) {
                     m_targetId = part->getID();
                 }
