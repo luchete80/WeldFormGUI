@@ -225,3 +225,4 @@
          - Fixed delete vtkOCCgeom when deleted part
          - Fixed crash at mesh deletion and then clicking.
          - Added Run with BCs 
+20260507 - Added Measurement tool

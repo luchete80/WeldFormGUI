@@ -61,8 +61,10 @@
 
 
 #include "results.h"
+#include <memory>
 
 class TransformGizmo;
+class MeasurementTool;
 
 
 class SceneView;
@@ -97,7 +99,7 @@ class Editor
 public:  
   friend ViewportWindow;
   Editor();
-  virtual ~Editor(){}
+  virtual ~Editor();
   int Init();
   void Run();
   int Terminate();
@@ -121,6 +123,8 @@ public:
   void drawGui();
   void handleSelectionInteraction();
   void drawSelectionOverlay() const;
+  void handleMeasurementInteraction();
+  void drawMeasurementOverlay() const;
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   bool openModelFromPath(const std::string& filePathName);
   bool openScriptFromPath(const std::string& filePathName);
@@ -339,6 +343,7 @@ protected:
   vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
   
   MultiResult *m_results = nullptr;
+  std::unique_ptr<MeasurementTool> m_measurement_tool;
   bool m_activate_results_viewer = false;
   std::vector<vtkSmartPointer<vtkProp>> m_bc_overlay_actors;
   std::vector<vtkSmartPointer<vtkProp>> m_part_overlay_actors;

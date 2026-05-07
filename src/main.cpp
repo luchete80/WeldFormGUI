@@ -1045,7 +1045,9 @@ int main(int argc, char* argv[])
               // Render del viewer
               vtkViewer2.render();
               drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true);
+              editor->handleMeasurementInteraction();
               editor->handleSelectionInteraction();
+              editor->drawMeasurementOverlay();
               editor->drawSelectionOverlay();
 
               ImGui::PopFont();

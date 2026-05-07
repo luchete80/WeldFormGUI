@@ -80,6 +80,7 @@ add_executable(${EXEC_NAME} main.cpp
                             part_dialog.cpp
                             log.cpp
                             global.cpp
+                            tools/MeasurementTool.cpp
                             ${CMAKE_SOURCE_DIR}/src/LSDynaWriter.cpp
                             geom/vtkOCCTGeom.cpp
                             geom/ShapeToPolyData.cpp

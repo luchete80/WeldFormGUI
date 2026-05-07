@@ -59,6 +59,7 @@
 #include "BoundaryCondition.h"
 
 #include "graphics/TransformGizmo.h"
+#include "tools/MeasurementTool.h"
 
 #include "Material_Db.h"
 
@@ -672,6 +673,20 @@ void Editor::drawSelectionControls()
   if (selectedNodes.size() > static_cast<std::size_t>(previewCount)) {
     ImGui::Text("...");
   }
+
+  ImGui::Separator();
+  bool measureMode = (m_measurement_tool != nullptr) ? m_measurement_tool->isEnabled() : false;
+  if (ImGui::Checkbox("Measure distance", &measureMode) && m_measurement_tool != nullptr) {
+    m_measurement_tool->setEnabled(measureMode);
+    if (measureMode && m_selector.isBoxSelecting()) {
+      m_selector.finishBoxSelection();
+    }
+  }
+
+  if (measureMode) {
+    ImGui::TextDisabled("Measure: Click point A, then point B");
+    ImGui::TextDisabled("Measure: Esc clears current measurement");
+  }
 }
 
 bool Editor::isSelectorInteractionEnabled() const
@@ -890,6 +905,13 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
 
 void Editor::handleSelectionInteraction()
 {
+  if (m_measurement_tool != nullptr && m_measurement_tool->isEnabled()) {
+    if (m_selector.isBoxSelecting()) {
+      m_selector.finishBoxSelection();
+    }
+    return;
+  }
+
   if (!isSelectorInteractionEnabled() || m_moving_mode) {
     if (m_selector.isBoxSelecting()) {
       m_selector.finishBoxSelection();
@@ -985,6 +1007,25 @@ void Editor::drawSelectionOverlay() const
       IM_COL32(255, 210, 0, 255)
     );
   }
+}
+
+void Editor::handleMeasurementInteraction()
+{
+  if (m_measurement_tool == nullptr) {
+    return;
+  }
+
+  m_measurement_tool->setContext(viewer, m_model);
+  m_measurement_tool->handleInteraction();
+}
+
+void Editor::drawMeasurementOverlay() const
+{
+  if (m_measurement_tool == nullptr) {
+    return;
+  }
+
+  m_measurement_tool->drawOverlay();
 }
 
 bool Editor::openResultsFromPath(const std::string& filePathName)
@@ -4466,6 +4507,10 @@ void Editor::Key(int key, int scancode, int action, int mods) {
       return;
     }
 
+    if (key == GLFW_KEY_ESCAPE && m_measurement_tool != nullptr && m_measurement_tool->isEnabled()) {
+      m_measurement_tool->clear();
+    }
+
     if (!m_moving_mode) {
       return;
     }
@@ -4776,8 +4821,11 @@ Editor::Editor(){
   m_show_app_console = true;
   m_model = new Model();
   getApp().setActiveModel(m_model);
+  m_measurement_tool = std::make_unique<MeasurementTool>();
   Init();
 }
+
+Editor::~Editor() = default;
 
 int Editor::Init(){
   /*
