@@ -119,7 +119,18 @@ bool ModelReader::readFromFile(const std::string& fname) {
     // Materials
     // =============================================================
     if (j.contains("Materials")) {
-        const auto& mat = j["Materials"];
+        const auto* mat_ptr = &j["Materials"];
+        if (j["Materials"].is_array()) {
+            if (j["Materials"].empty()) {
+                mat_ptr = nullptr;
+            } else {
+                mat_ptr = &j["Materials"][0];
+            }
+        }
+        if (mat_ptr == nullptr) {
+            return false;
+        }
+        const auto& mat = *mat_ptr;
 
         double rho = mat.value("density0", 0.0);
         double E   = mat.value("youngsModulus", 0.0);
@@ -133,6 +144,16 @@ bool ModelReader::readFromFile(const std::string& fname) {
         material->yieldStress0 = mat.value("yieldStress0", material->yieldStress0);
         if (mat.contains("strRange") && mat["strRange"].is_array() && mat["strRange"].size() >= 2) {
             material->strRange = {mat["strRange"][0].get<double>(), mat["strRange"][1].get<double>()};
+            material->e_min = material->strRange[0];
+            material->e_max = material->strRange[1];
+        }
+        if (mat.contains("strdotRange") && mat["strdotRange"].is_array() && mat["strdotRange"].size() >= 2) {
+            material->er_min = mat["strdotRange"][0].get<double>();
+            material->er_max = mat["strdotRange"][1].get<double>();
+        }
+        if (mat.contains("tempRange") && mat["tempRange"].is_array() && mat["tempRange"].size() >= 2) {
+            material->T_min = mat["tempRange"][0].get<double>();
+            material->T_max = mat["tempRange"][1].get<double>();
         }
 
         // Plastic rule (if applicable)
@@ -142,22 +163,64 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 cout << "  → Nonlinear material: " << type << endl;
                 Plastic_* plRule = nullptr;
 
+                if (type == "Bilinear" && mat.contains("const") && mat["const"].is_array() && mat["const"].size() >= 2) {
+                    double sy0 = mat["const"][0];
+                    double Et = mat["const"][1];
+                    plRule = new Bilinear(sy0, Et);
+                    cout << "    Bilinear(sy0=" << sy0 << ", Et=" << Et << ")" << endl;
+                }
+
                 if (type == "Hollomon" && mat.contains("const") && mat["const"].is_array()) {
                     double K = mat["const"][0];
                     double n = mat["const"][1];
                     plRule = new Hollomon(K, n);
+                    material->InitHollomon(elastic, material->yieldStress0, K, n);
                     cout << "    Hollomon(K=" << K << ", n=" << n << ")" << endl;
+                }
+
+                if (type == "JohnsonCook" && mat.contains("const") && mat["const"].is_array() && mat["const"].size() >= 7) {
+                    double B = mat["const"][0];
+                    double n = mat["const"][1];
+                    double C = mat["const"][2];
+                    double eps0 = mat["const"][3];
+                    double m = mat["const"][4];
+                    double Tm = mat["const"][5];
+                    double Tt = mat["const"][6];
+                    plRule = new JohnsonCook(B, n, C, eps0, m, Tm, Tt, material->yieldStress0);
+                    material->Init_JohnsonCook(elastic, material->yieldStress0, B, n, C, eps0, m, Tm, Tt);
+                    cout << "    JohnsonCook(B=" << B << ", n=" << n << ", C=" << C << ")" << endl;
+                }
+
+                if (type == "GMT" && mat.contains("const") && mat["const"].is_array() && mat["const"].size() >= 8) {
+                    double n1 = mat["const"][0];
+                    double n2 = mat["const"][1];
+                    double C1 = mat["const"][2];
+                    double C2 = mat["const"][3];
+                    double m1 = mat["const"][4];
+                    double m2 = mat["const"][5];
+                    double I1 = mat["const"][6];
+                    double I2 = mat["const"][7];
+                    plRule = new GMT(n1, n2, C1, C2, m1, m2, I1, I2,
+                                     material->e_min, material->e_max,
+                                     material->er_min, material->er_max,
+                                     material->T_min, material->T_max);
+                    material->Init_GMT(elastic, n1, n2, C1, C2, m1, m2, I1, I2,
+                                       material->e_min, material->e_max,
+                                       material->er_min, material->er_max,
+                                       material->T_min, material->T_max);
+                    cout << "    GMT(n1=" << n1 << ", n2=" << n2 << ", C1=" << C1 << ", C2=" << C2 << ")" << endl;
                 }
 
                 if (plRule) {
                     material->m_plastic = plRule->clone();
                     material->m_isplastic = true;
+                    delete plRule;
                 }
             }
         
             if (m_model->m_thermal_coupling){
-              material->k_T = mat["thermalCond"];  
-              material->cp_T = mat["thermalHeatCap"];        
+              material->k_T = mat.value("thermalCond", 0.0);  
+              material->cp_T = mat.value("thermalHeatCap", 0.0);        
             }
             
                     

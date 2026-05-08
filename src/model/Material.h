@@ -162,6 +162,8 @@ class Material_{
                         const double &T_m_, const double &T_t_) {
     elastic_m = el;
     Material_model = JOHNSON_COOK;
+    sy0 = a;
+    yieldStress0 = a;
     A = a;
     B = b;
     C = c;
@@ -170,6 +172,31 @@ class Material_{
     eps_0 = eps_0_;
     T_m = T_m_;
     T_t = T_t_;
+  }
+
+  void Init_GMT(const Elastic_ &el, const double &n1_, const double &n2_,
+                const double &C1_, const double &C2_, const double &m1_,
+                const double &m2_, const double &I1_, const double &I2_,
+                const double &e_min_, const double &e_max_,
+                const double &er_min_, const double &er_max_,
+                const double &T_min_, const double &T_max_) {
+    elastic_m = el;
+    Material_model = _GMT_;
+    n1 = n1_;
+    n2 = n2_;
+    C1 = C1_;
+    C2 = C2_;
+    m1 = m1_;
+    m2 = m2_;
+    I1 = I1_;
+    I2 = I2_;
+    e_min = e_min_;
+    e_max = e_max_;
+    er_min = er_min_;
+    er_max = er_max_;
+    T_min = T_min_;
+    T_max = T_max_;
+    strRange = {e_min_, e_max_};
   }
   
 	
@@ -350,7 +377,21 @@ public Plastic_{
 	public:
 	JohnsonCook(){
     Material_model = JOHNSON_COOK;
-    }
+  }
+	JohnsonCook(const double &_B, const double &_n, const double &_C,
+              const double &_eps_0, const double &_m,
+              const double &_T_m, const double &_T_t,
+              const double &_A = 0.0) {
+    A = _A;
+    B = _B;
+    C = _C;
+    n = _n;
+    m = _m;
+    eps_0 = _eps_0;
+    T_m = _T_m;
+    T_t = _T_t;
+    Material_model = JOHNSON_COOK;
+  }
 	//You provide the values of A, B, n, m, 
 	//θmelt, and  θ_transition
 	//as part of the metal plasticity material definition.
@@ -374,6 +415,17 @@ public Plastic_{
 	//~ inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp);
 
     Plastic_* clone() const override { return new JohnsonCook(*this); }
+    virtual std::vector<double> getPlasticConstants() {
+      std::vector<double> ret;
+      ret.push_back(B);
+      ret.push_back(n);
+      ret.push_back(C);
+      ret.push_back(eps_0);
+      ret.push_back(m);
+      ret.push_back(T_m);
+      ret.push_back(T_t);
+      return ret;
+    }
     
 };
 
@@ -472,6 +524,18 @@ public Plastic_{
   //~JohnsonCook(){}
 
   Plastic_* clone() const override { return new GMT(*this); }
+  virtual std::vector<double> getPlasticConstants() {
+    std::vector<double> ret;
+    ret.push_back(n1);
+    ret.push_back(n2);
+    ret.push_back(C1);
+    ret.push_back(C2);
+    ret.push_back(m1);
+    ret.push_back(m2);
+    ret.push_back(I1);
+    ret.push_back(I2);
+    return ret;
+  }
 
 
 };

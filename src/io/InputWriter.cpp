@@ -198,6 +198,91 @@ void appendInitialCondition(json &ic_array, InitialCondition *ic, int export_id)
 
   ic_array.push_back(jic);
 }
+
+std::vector<double> defaultStrainRange(const Material_ *mat) {
+  if (mat != nullptr && mat->strRange.size() >= 2)
+    return {mat->strRange[0], mat->strRange[1]};
+  return {0.0, 0.65};
+}
+
+std::vector<double> defaultStrainRateRange(const Material_ *mat) {
+  if (mat == nullptr)
+    return {0.0, 1.0e10};
+  return {mat->er_min, mat->er_max > mat->er_min ? mat->er_max : 1.0e10};
+}
+
+std::vector<double> defaultTemperatureRange(const Material_ *mat) {
+  if (mat == nullptr)
+    return {0.0, 1.0e10};
+  return {mat->T_min, mat->T_max > mat->T_min ? mat->T_max : 1.0e10};
+}
+
+std::vector<double> buildEnginePlasticConstants(const Material_ *mat) {
+  if (mat == nullptr || !mat->isPlastic() || mat->m_plastic == nullptr)
+    return {};
+
+  switch (mat->m_plastic->Material_model) {
+    case BILINEAR:
+      return {mat->m_plastic->Et};
+    case HOLLOMON:
+      return {mat->K, mat->m};
+    case JOHNSON_COOK:
+      return {mat->B, mat->n, mat->C, mat->eps_0, mat->m, mat->T_m, mat->T_t};
+    case _GMT_:
+      return {mat->n1, mat->n2, mat->C1, mat->C2, mat->m1, mat->m2, mat->I1, mat->I2};
+    case NORTON_HOFF:
+      return {mat->K_nh, mat->m_nh};
+    default:
+      return mat->m_plastic->getPlasticConstants();
+  }
+}
+
+std::string buildEngineMaterialType(const Material_ *mat) {
+  if (mat == nullptr || !mat->isPlastic() || mat->m_plastic == nullptr)
+    return "Elastic";
+
+  switch (mat->m_plastic->Material_model) {
+    case BILINEAR:
+      return "Bilinear";
+    case HOLLOMON:
+      return "Hollomon";
+    case JOHNSON_COOK:
+      return "JohnsonCook";
+    case _GMT_:
+      return "GMT";
+    case NORTON_HOFF:
+      return "NortonHoff";
+    default:
+      return "UnknownPlastic";
+  }
+}
+
+json buildEngineMaterialJson(const Material_ *mat, int index) {
+  json mat_json;
+  mat_json["id"] = materialIdFromIndex(index);
+  if (mat == nullptr)
+    return mat_json;
+
+  mat_json["density0"] = mat->getDensityConstant();
+  mat_json["youngsModulus"] = mat->Elastic().E();
+  mat_json["poissonsRatio"] = mat->Elastic().nu();
+  mat_json["yieldStress0"] = mat->yieldStress0;
+  mat_json["thermalHeatCap"] = mat->cp_T;
+  mat_json["thermalCond"] = mat->k_T;
+  mat_json["thermalExp"] = mat->exp_T;
+  mat_json["strRange"] = defaultStrainRange(mat);
+  mat_json["strdotRange"] = defaultStrainRateRange(mat);
+  mat_json["tempRange"] = defaultTemperatureRange(mat);
+  mat_json["type"] = buildEngineMaterialType(mat);
+
+  if (mat->isPlastic() && mat->m_plastic != nullptr) {
+    std::vector<double> plastic_const = buildEnginePlasticConstants(mat);
+    if (!plastic_const.empty())
+      mat_json["const"] = plastic_const;
+  }
+
+  return mat_json;
+}
 }
 
 InputWriter::InputWriter(Model*m) : m_model(m) {}
@@ -258,36 +343,7 @@ void InputWriter::writeToFile(std::string fname) {
       auto *mat = m_model->getMaterial(i);
       if (mat == nullptr)
         continue;
-
-      json mat_json;
-      mat_json["id"] = materialIdFromIndex(i);
-      mat_json["density0"] = mat->getDensityConstant();
-      mat_json["poissonsRatio"] = mat->Elastic().nu();
-      mat_json["youngsModulus"] = mat->Elastic().E();
-      mat_json["thermalHeatCap"] = mat->cp_T;
-      mat_json["thermalCond"] = mat->k_T;
-
-      if (!mat->isPlastic()) {
-        mat_json["type"] = "Elastic";
-      } else {
-        switch (mat->m_plastic->Material_model) {
-          case _GMT_:
-            mat_json["type"] = "GMT";
-            break;
-          case HOLLOMON:
-            mat_json["type"] = "Hollomon";
-            break;
-          default:
-            mat_json["type"] = "UnknownPlastic";
-            break;
-        }
-
-        std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
-        if (!plasticConst.empty())
-          mat_json["const"] = plasticConst;
-      }
-
-      m_json["Materials"].push_back(mat_json);
+      m_json["Materials"].push_back(buildEngineMaterialJson(mat, i));
     }
   }
 
@@ -445,44 +501,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
       auto *mat = m_model->getMaterial(i);
       if (mat == nullptr)
         continue;
-
-      json mat_json;
-      mat_json["id"] = materialIdFromIndex(i);
-      mat_json["density0"] = mat->getDensityConstant();
-      mat_json["thermalHeatCap"] = mat->cp_T;
-      mat_json["thermalCond"] = mat->k_T;
-      mat_json["youngsModulus"] = mat->Elastic().E();
-      mat_json["poissonsRatio"] = mat->Elastic().nu();
-      mat_json["yieldStress0"] = mat->yieldStress0;
-      if (mat->strRange.size() >= 2)
-        mat_json["strRange"] = {mat->strRange[0], mat->strRange[1]};
-      else
-        mat_json["strRange"] = {0.0, 0.65};
-
-      if (!mat->isPlastic()) {
-        mat_json["type"] = "Elastic";
-      } else {
-        switch (mat->m_plastic->Material_model) {
-          case HOLLOMON:
-            mat_json["type"] = "Hollomon";
-            break;
-          case _GMT_:
-            mat_json["type"] = "GMT";
-            break;
-          case BILINEAR:
-            mat_json["type"] = "Bilinear";
-            break;
-          default:
-            mat_json["type"] = "UnknownPlastic";
-            break;
-        }
-
-        std::vector<double> plasticConst = mat->m_plastic->getPlasticConstants();
-        if (!plasticConst.empty())
-          mat_json["const"] = plasticConst;
-      }
-
-      m_json["Materials"].push_back(mat_json);
+      m_json["Materials"].push_back(buildEngineMaterialJson(mat, i));
     }
   }
 

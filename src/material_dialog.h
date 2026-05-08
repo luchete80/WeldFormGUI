@@ -32,10 +32,19 @@ public Dialog{
   double hollomon_K;
   double hollomon_n;
   double m_k_T, m_cp_T;
+  bool m_thermal_coupling = false;
   double m_yield_stress0;
   double m_strain_range_min;
   double m_strain_range_max;
+  double m_strain_rate_range_min;
+  double m_strain_rate_range_max;
+  double m_temperature_range_min;
+  double m_temperature_range_max;
+  double m_plot_temperature;
+  double m_plot_strain;
 
+  double jc_B, jc_n, jc_C, jc_eps0, jc_m, jc_Tm, jc_Tt;
+  double gmt_C1, gmt_C2;
   double gmt_n1, gmt_n2, gmt_m1, gmt_m2, gmt_I1, gmt_I2;
 
   std::vector<double> m_pl_const;

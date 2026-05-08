@@ -4346,6 +4346,7 @@ void Editor::drawGui() {
 
   Material_ mat;
   Job job;
+  m_matdlg.m_thermal_coupling = (m_model != nullptr) ? m_model->m_thermal_coupling : false;
   if (m_show_mat_dlg) {mat = ShowCreateMaterialDialog(&m_show_mat_dlg, &m_matdlg, &create_new_mat,&m_mat_db);}
   
   if (m_show_bc_dlg_edit){
