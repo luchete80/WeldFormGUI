@@ -529,7 +529,18 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                                 int currentFrame,
                                 int totalFrames,
                                 double currentTime,
-                                bool& isPlaying)
+                                bool& isPlaying,
+                                const std::vector<std::string>& fieldNames,
+                                int& selectedField,
+                                bool& fieldSelectionChanged,
+                                bool& manualColorScale,
+                                bool& colorScaleModeChanged,
+                                int activeFieldComponents,
+                                int& selectedFieldComponent,
+                                bool& componentChanged,
+                                double& manualMin,
+                                double& manualMax,
+                                bool& manualRangeChanged)
 {
     const ImVec2 viewportMin = viewer.getViewportScreenMin();
     const ImVec2 viewportMax = viewer.getViewportScreenMax();
@@ -537,7 +548,9 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
         return;
     }
 
-    ImGui::SetNextWindowPos(ImVec2(viewportMax.x - 190.0f, viewportMin.y + 12.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(viewportMax.x - 12.0f, viewportMin.y + 12.0f),
+                            ImGuiCond_Always,
+                            ImVec2(1.0f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.22f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
@@ -558,6 +571,70 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
         ImGui::SameLine();
         ImGui::Text("Frame %d / %d", currentFrame + 1, totalFrames);
         ImGui::Text("Time: %.6g", currentTime);
+        if (!fieldNames.empty()) {
+            std::vector<const char*> fieldCStrs;
+            fieldCStrs.reserve(fieldNames.size());
+            for (const auto& fieldName : fieldNames) {
+                fieldCStrs.push_back(fieldName.c_str());
+            }
+
+            if (selectedField < 0 || selectedField >= static_cast<int>(fieldCStrs.size())) {
+                selectedField = 0;
+            }
+
+            ImGui::SetNextItemWidth(168.0f);
+            fieldSelectionChanged = ImGui::Combo("Active Field", &selectedField,
+                                                 fieldCStrs.data(),
+                                                 static_cast<int>(fieldCStrs.size()));
+
+            if (activeFieldComponents > 1) {
+                ImGui::Text("Component");
+                int buttonCount = activeFieldComponents;
+                const bool vectorMagnitudeButton = (activeFieldComponents == 3);
+                if (vectorMagnitudeButton)
+                    buttonCount = 4;
+
+                for (int comp = 0; comp < buttonCount; ++comp) {
+                    std::string label = std::to_string(comp);
+                    const bool isSelected = (selectedFieldComponent == comp);
+                    if (isSelected)
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+
+                    if (ImGui::Button(label.c_str())) {
+                        selectedFieldComponent = comp;
+                        componentChanged = true;
+                    }
+
+                    if (isSelected)
+                        ImGui::PopStyleColor();
+
+                    if (comp + 1 < buttonCount)
+                        ImGui::SameLine();
+                }
+            }
+
+            const bool autoScale = !manualColorScale;
+            if (ImGui::RadioButton("Auto", autoScale)) {
+                manualColorScale = false;
+                colorScaleModeChanged = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Manual", manualColorScale)) {
+                manualColorScale = true;
+                colorScaleModeChanged = true;
+            }
+
+            if (manualColorScale) {
+                ImGui::SetNextItemWidth(168.0f);
+                manualRangeChanged |= ImGui::InputDouble("Min", &manualMin, 0.0, 0.0, "%.6g");
+                ImGui::SetNextItemWidth(168.0f);
+                manualRangeChanged |= ImGui::InputDouble("Max", &manualMax, 0.0, 0.0, "%.6g");
+                if (manualMax < manualMin)
+                    manualMax = manualMin;
+            }
+        } else {
+            ImGui::TextDisabled("No fields available");
+        }
     }
     ImGui::End();
 
@@ -1117,6 +1194,7 @@ int main(int argc, char* argv[])
 	              static std::string activeFieldName = "";
 	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
 	              static int activeFieldComponents = 1;
+                static int selectedField = 0;
 	              static int selectedFieldComponent = -2;
 	              auto getActiveArray = [&](ResultFrame& resultFrame) -> vtkDataArray* {
 	                  if (activeFieldName.empty() || !resultFrame.mesh)
@@ -1310,7 +1388,6 @@ int main(int argc, char* argv[])
 
 	                  auto fieldNames = frame.getAvailableFieldNames();
 
-                  static int selectedField = 0;
                   //~ if (!fieldNames.empty()) {
                       //~ // Crear array de const char* para ImGui
                       //~ std::vector<const char*> fieldCStrs;
@@ -1327,115 +1404,80 @@ int main(int argc, char* argv[])
                       //~ ImGui::Text("No fields available");
                   //~ }
 
-
-	                    if (!fieldNames.empty()) {
-	                        std::vector<const char*> fieldCStrs;
-	                        for (auto& s : fieldNames) fieldCStrs.push_back(s.c_str());
-
-                        ImGui::Text("Active Field:");
-                        if (ImGui::Combo("##FieldSelector", &selectedField, fieldCStrs.data(), fieldCStrs.size())) {
-
-                            std::string selected = fieldNames[selectedField];
-                            isCellField = (selected.rfind("[C]", 0) == 0);
-                            activeFieldName = selected.substr(4); // remueve "[C] " o "[P] "
-                            vtkDataArray* selectedArray = getActiveArray(frame);
-                            activeFieldComponents = selectedArray ? selectedArray->GetNumberOfComponents() : 1;
-	                            selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
-	                                                     (activeFieldComponents > 1 ? 0 : -1);
-
-	                            recomputeActiveFieldScale();
-                            cout << "Setting range in "<<globalMin <<", "<<globalMax<<endl;
-	                            applyActiveFieldSelectionToAllFrames();
-                              applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
-
-	                            vtkViewer_res.render();
-	                        }
-	                    } else {
-	                        ImGui::Text("No fields available");
-	                    }
-
-	                        vtkDataArray* activeArray = getActiveArray(frame);
-	                        if (activeArray)
-	                            activeFieldComponents = activeArray->GetNumberOfComponents();
-	                    if (!activeFieldName.empty() && activeFieldComponents > 1) {
-	                        ImGui::Separator();
-	                        ImGui::Text("Component");
-	                        int buttonCount = activeFieldComponents;
-	                        bool vectorMagnitudeButton = (activeFieldComponents == 3);
-	                        if (vectorMagnitudeButton)
-	                            buttonCount = 4;
-
-	                        for (int comp = 0; comp < buttonCount; ++comp) {
-	                            std::string label = std::to_string(comp);
-	                            bool isSelected = (selectedFieldComponent == comp);
-	                            if (isSelected)
-	                                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-
-	                            if (ImGui::Button(label.c_str())) {
-	                                selectedFieldComponent = comp;
-	                                recomputeActiveFieldScale();
-	                                applyActiveFieldSelectionToAllFrames();
-	                                vtkViewer_res.render();
-	                            }
-
-	                            if (isSelected)
-	                                ImGui::PopStyleColor();
-
-	                            if (comp + 1 < buttonCount)
-	                                ImGui::SameLine();
-	                        }
-	                    }
-
-	                    if (!activeFieldName.empty()) {
-	                        ImGui::Separator();
-	                        ImGui::Text("Color Bar");
-	                        bool autoScale = !manualColorScale;
-	                        if (ImGui::RadioButton("Auto", autoScale)) {
-	                            manualColorScale = false;
-	                            recomputeActiveFieldScale();
-	                            applyActiveFieldSelectionToAllFrames();
-	                        }
-	                        ImGui::SameLine();
-	                        if (ImGui::RadioButton("Manual", manualColorScale)) {
-	                            manualColorScale = true;
-	                            manualMin = globalMin;
-	                            manualMax = globalMax;
-	                        }
-	                        if (manualColorScale) {
-	                            bool changed = false;
-	                            changed |= ImGui::InputDouble("Min##ManualColorScale", &manualMin, 0.0, 0.0, "%.6g");
-	                            changed |= ImGui::InputDouble("Max##ManualColorScale", &manualMax, 0.0, 0.0, "%.6g");
-	                            if (manualMax < manualMin)
-	                                manualMax = manualMin;
-	                            if (changed) {
-	                                recomputeActiveFieldScale();
-	                                applyActiveFieldSelectionToAllFrames();
-	                            }
-	                        }
-	                        ImGui::Text("Variable: %s", activeFieldName.c_str());
-	                        ImGui::Text("Min: %.6g", globalMin);
-	                        ImGui::Text("Max: %.6g", globalMax);
-	                    }
-	                                  
 	              }
 	            }
               
-              // Slider de alpha del background
-              static float vtkResBkgAlpha = 0.2f;
-              ImGui::SliderFloat("BG Alpha", &vtkResBkgAlpha, 0.0f, 1.0f);
-              renderer->SetBackgroundAlpha(vtkResBkgAlpha);
-
               applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
               // Render del viewer
               vtkViewer_res.render();
               drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false);
               if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
                   const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
+                  auto& overlayFrame = *editor->getResults()->frames[safeFrame];
+                  const auto overlayFieldNames = overlayFrame.getAvailableFieldNames();
+                  bool fieldSelectionChanged = false;
+                  bool colorScaleModeChanged = false;
+                  bool componentChanged = false;
+                  bool manualRangeChanged = false;
+                  vtkDataArray* overlayActiveArray = getActiveArray(overlayFrame);
+                  if (overlayActiveArray)
+                      activeFieldComponents = overlayActiveArray->GetNumberOfComponents();
                   drawResultsPlaybackOverlay(vtkViewer_res,
                                              safeFrame,
                                              (int)editor->getResults()->frames.size(),
                                              editor->getResults()->frames[safeFrame]->time,
-                                             isPlaying);
+                                             isPlaying,
+                                             overlayFieldNames,
+                                             selectedField,
+                                             fieldSelectionChanged,
+                                             manualColorScale,
+                                             colorScaleModeChanged,
+                                             activeFieldComponents,
+                                             selectedFieldComponent,
+                                             componentChanged,
+                                             manualMin,
+                                             manualMax,
+                                             manualRangeChanged);
+
+                  if (fieldSelectionChanged &&
+                      selectedField >= 0 &&
+                      selectedField < static_cast<int>(overlayFieldNames.size())) {
+                      std::string selected = overlayFieldNames[selectedField];
+                      isCellField = (selected.rfind("[C]", 0) == 0);
+                      activeFieldName = selected.substr(4);
+                      vtkDataArray* selectedArray = getActiveArray(overlayFrame);
+                      activeFieldComponents = selectedArray ? selectedArray->GetNumberOfComponents() : 1;
+                      selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
+                                               (activeFieldComponents > 1 ? 0 : -1);
+
+                      recomputeActiveFieldScale();
+                      applyActiveFieldSelectionToAllFrames();
+                      applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
+                      vtkViewer_res.render();
+                  }
+
+                  if (colorScaleModeChanged) {
+                      if (manualColorScale) {
+                          manualMin = globalMin;
+                          manualMax = globalMax;
+                      } else {
+                          recomputeActiveFieldScale();
+                          applyActiveFieldSelectionToAllFrames();
+                      }
+                      vtkViewer_res.render();
+                  }
+
+                  if (componentChanged) {
+                      recomputeActiveFieldScale();
+                      applyActiveFieldSelectionToAllFrames();
+                      vtkViewer_res.render();
+                  }
+
+                  if (manualRangeChanged) {
+                      recomputeActiveFieldScale();
+                      applyActiveFieldSelectionToAllFrames();
+                      vtkViewer_res.render();
+                  }
               }
 
               ImGui::PopFont();
