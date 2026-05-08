@@ -1,6 +1,7 @@
 // Standard Library
 #include <iostream>
 #include <filesystem>
+#include <limits>
 
 
 /////https://github.com/trlsmax/imgui-vtk/tree/master
@@ -36,6 +37,8 @@
 #include <vtkNamedColors.h>
 #include <vtkScalarBarActor.h>
 #include <vtkCamera.h>
+#include <vtkCell.h>
+#include <vtkCellPicker.h>
 #include <vtkMapper.h>
 #include <vtkProperty.h>
 
@@ -639,6 +642,173 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
     ImGui::End();
 
     ImGui::PopStyleColor(1);
+    ImGui::PopStyleVar(3);
+}
+
+struct ResultProbeInfo {
+    bool valid = false;
+    bool isCellField = false;
+    vtkIdType pointId = -1;
+    vtkIdType cellId = -1;
+    std::string valueText;
+    ImVec2 screenPos = ImVec2(0.0f, 0.0f);
+};
+
+std::string formatProbeValue(vtkDataArray* array, vtkIdType tupleId, int selectedComponent) {
+    if (array == nullptr || tupleId < 0 || tupleId >= array->GetNumberOfTuples()) {
+        return "";
+    }
+
+    char buffer[128];
+    if (selectedComponent >= 0 && selectedComponent < array->GetNumberOfComponents()) {
+        std::snprintf(buffer, sizeof(buffer), "%.6g", array->GetComponent(tupleId, selectedComponent));
+        return std::string(buffer);
+    }
+
+    if (array->GetNumberOfComponents() == 3 && selectedComponent == 3) {
+        const double x = array->GetComponent(tupleId, 0);
+        const double y = array->GetComponent(tupleId, 1);
+        const double z = array->GetComponent(tupleId, 2);
+        std::snprintf(buffer, sizeof(buffer), "%.6g", std::sqrt(x * x + y * y + z * z));
+        return std::string(buffer);
+    }
+
+    if (array->GetNumberOfComponents() == 1) {
+        std::snprintf(buffer, sizeof(buffer), "%.6g", array->GetComponent(tupleId, 0));
+        return std::string(buffer);
+    }
+
+    std::string text = "(";
+    for (int comp = 0; comp < array->GetNumberOfComponents(); ++comp) {
+        if (comp > 0) {
+            text += ", ";
+        }
+        std::snprintf(buffer, sizeof(buffer), "%.6g", array->GetComponent(tupleId, comp));
+        text += buffer;
+    }
+    text += ")";
+    return text;
+}
+
+ResultProbeInfo buildResultProbeInfo(VtkViewer& viewer,
+                                     ResultFrame& frame,
+                                     const std::string& activeFieldName,
+                                     bool isCellField,
+                                     int selectedFieldComponent) {
+    ResultProbeInfo probe;
+    if (!viewer.isViewportHovered() || activeFieldName.empty() || frame.mesh == nullptr || frame.actor == nullptr) {
+        return probe;
+    }
+
+    const ImVec2 viewportMin = viewer.getViewportScreenMin();
+    const ImVec2 viewportMax = viewer.getViewportScreenMax();
+    const ImVec2 mousePos = ImGui::GetMousePos();
+    if (mousePos.x < viewportMin.x || mousePos.x > viewportMax.x ||
+        mousePos.y < viewportMin.y || mousePos.y > viewportMax.y) {
+        return probe;
+    }
+
+    vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
+    picker->SetTolerance(0.0005);
+
+    const double localX = mousePos.x - viewportMin.x;
+    const double localY = mousePos.y - viewportMin.y;
+    const double pickY = static_cast<double>(viewer.getViewportHeight()) - localY;
+    if (!picker->Pick(localX, pickY, 0.0, viewer.getRenderer())) {
+        return probe;
+    }
+
+    if (picker->GetActor() != frame.actor) {
+        return probe;
+    }
+
+    const vtkIdType cellId = picker->GetCellId();
+    if (cellId < 0 || cellId >= frame.mesh->GetNumberOfCells()) {
+        return probe;
+    }
+
+    probe.valid = true;
+    probe.isCellField = isCellField;
+    probe.cellId = cellId;
+    probe.screenPos = mousePos;
+
+    vtkDataArray* field = isCellField
+        ? frame.mesh->GetCellData()->GetArray(activeFieldName.c_str())
+        : frame.mesh->GetPointData()->GetArray(activeFieldName.c_str());
+    if (field == nullptr) {
+        probe.valid = false;
+        return probe;
+    }
+
+    if (isCellField) {
+        probe.valueText = formatProbeValue(field, cellId, selectedFieldComponent);
+        return probe;
+    }
+
+    vtkCell* cell = frame.mesh->GetCell(cellId);
+    if (cell == nullptr || cell->GetNumberOfPoints() == 0) {
+        probe.valid = false;
+        return probe;
+    }
+
+    double pickPos[3];
+    picker->GetPickPosition(pickPos);
+
+    vtkIdType closestPointId = -1;
+    double closestDistance2 = std::numeric_limits<double>::max();
+    for (vtkIdType i = 0; i < cell->GetNumberOfPoints(); ++i) {
+        const vtkIdType pointId = cell->GetPointId(i);
+        double point[3];
+        frame.mesh->GetPoint(pointId, point);
+        const double dx = point[0] - pickPos[0];
+        const double dy = point[1] - pickPos[1];
+        const double dz = point[2] - pickPos[2];
+        const double distance2 = dx * dx + dy * dy + dz * dz;
+        if (distance2 < closestDistance2) {
+            closestDistance2 = distance2;
+            closestPointId = pointId;
+        }
+    }
+
+    if (closestPointId < 0) {
+        probe.valid = false;
+        return probe;
+    }
+
+    probe.pointId = closestPointId;
+    probe.valueText = formatProbeValue(field, closestPointId, selectedFieldComponent);
+    return probe;
+}
+
+void drawResultProbeOverlay(const ResultProbeInfo& probe, const std::string& activeFieldName) {
+    if (!probe.valid) {
+        return;
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(probe.screenPos.x + 14.0f, probe.screenPos.y + 18.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.82f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 4.0f));
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("##ResultProbeOverlay", nullptr, flags)) {
+        if (probe.isCellField) {
+            ImGui::Text("Element %lld", static_cast<long long>(probe.cellId));
+        } else {
+            ImGui::Text("Node %lld", static_cast<long long>(probe.pointId));
+        }
+        ImGui::Separator();
+        ImGui::Text("%s = %s", activeFieldName.c_str(), probe.valueText.c_str());
+    }
+    ImGui::End();
+
     ImGui::PopStyleVar(3);
 }
 
@@ -1477,6 +1647,15 @@ int main(int argc, char* argv[])
                       recomputeActiveFieldScale();
                       applyActiveFieldSelectionToAllFrames();
                       vtkViewer_res.render();
+                  }
+
+                  if (!activeFieldName.empty()) {
+                      const ResultProbeInfo probe = buildResultProbeInfo(vtkViewer_res,
+                                                                         overlayFrame,
+                                                                         activeFieldName,
+                                                                         isCellField,
+                                                                         selectedFieldComponent);
+                      drawResultProbeOverlay(probe, activeFieldName);
                   }
               }
 
