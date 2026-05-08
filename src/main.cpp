@@ -39,8 +39,10 @@
 #include <vtkCamera.h>
 #include <vtkCell.h>
 #include <vtkCellPicker.h>
+#include <vtkExtractCells.h>
 #include <vtkMapper.h>
 #include <vtkProperty.h>
+#include <vtkSphereSource.h>
 
 
 #include "graphics/axis.h" //test
@@ -812,6 +814,82 @@ void drawResultProbeOverlay(const ResultProbeInfo& probe, const std::string& act
     ImGui::PopStyleVar(3);
 }
 
+double computeProbeMarkerRadius(vtkUnstructuredGrid* mesh) {
+    if (mesh == nullptr) {
+        return 1.0;
+    }
+
+    double bounds[6];
+    mesh->GetBounds(bounds);
+    const double dx = bounds[1] - bounds[0];
+    const double dy = bounds[3] - bounds[2];
+    const double dz = bounds[5] - bounds[4];
+    const double diag = std::sqrt(dx * dx + dy * dy + dz * dz);
+    if (diag <= 1.0e-12) {
+        return 1.0;
+    }
+    return diag * 0.008;
+}
+
+vtkSmartPointer<vtkActor> buildProbeHighlightActor(ResultFrame& frame, const ResultProbeInfo& probe) {
+    if (!probe.valid || frame.mesh == nullptr) {
+        return nullptr;
+    }
+
+    if (!probe.isCellField && probe.pointId >= 0) {
+        double point[3];
+        frame.mesh->GetPoint(probe.pointId, point);
+
+        vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
+        sphere->SetCenter(point);
+        sphere->SetRadius(computeProbeMarkerRadius(frame.mesh));
+        sphere->SetThetaResolution(18);
+        sphere->SetPhiResolution(18);
+
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(sphere->GetOutputPort());
+
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        actor->GetProperty()->SetColor(1.0, 0.9, 0.1);
+        actor->GetProperty()->SetAmbient(1.0);
+        actor->GetProperty()->SetDiffuse(0.0);
+        actor->GetProperty()->SetSpecular(0.0);
+        actor->PickableOff();
+        return actor;
+    }
+
+    if (probe.cellId >= 0) {
+        vtkSmartPointer<vtkIdList> cellIds = vtkSmartPointer<vtkIdList>::New();
+        cellIds->InsertNextId(probe.cellId);
+
+        vtkSmartPointer<vtkExtractCells> extractCells = vtkSmartPointer<vtkExtractCells>::New();
+        extractCells->SetInputData(frame.mesh);
+        extractCells->SetCellList(cellIds);
+        extractCells->Update();
+
+        vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+        mapper->SetInputConnection(extractCells->GetOutputPort());
+        mapper->ScalarVisibilityOff();
+
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        actor->GetProperty()->SetRepresentationToWireframe();
+        actor->GetProperty()->SetColor(1.0, 0.9, 0.1);
+        actor->GetProperty()->SetOpacity(1.0);
+        actor->GetProperty()->LightingOff();
+        actor->GetProperty()->SetAmbient(1.0);
+        actor->GetProperty()->SetDiffuse(0.0);
+        actor->GetProperty()->SetSpecular(0.0);
+        actor->GetProperty()->SetLineWidth(4.0);
+        actor->GetProperty()->SetRenderLinesAsTubes(1);
+        actor->PickableOff();
+        return actor;
+    }
+
+    return nullptr;
+}
+
 std::filesystem::path ResolveExistingFontPath(const std::filesystem::path& executable_path,
                                               const std::vector<std::filesystem::path>& relative_candidates)
 {
@@ -1363,6 +1441,7 @@ int main(int argc, char* argv[])
 	                            
 	              static std::string activeFieldName = "";
 	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
+                static vtkSmartPointer<vtkActor> currentProbeHighlightActor = nullptr;
 	              static int activeFieldComponents = 1;
                 static int selectedField = 0;
 	              static int selectedFieldComponent = -2;
@@ -1656,6 +1735,21 @@ int main(int argc, char* argv[])
                                                                          isCellField,
                                                                          selectedFieldComponent);
                       drawResultProbeOverlay(probe, activeFieldName);
+
+                      if (vtkViewer_res.isViewportHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                          if (currentProbeHighlightActor != nullptr) {
+                              renderer->RemoveActor(currentProbeHighlightActor);
+                              currentProbeHighlightActor = nullptr;
+                          }
+
+                          if (probe.valid) {
+                              currentProbeHighlightActor = buildProbeHighlightActor(overlayFrame, probe);
+                              if (currentProbeHighlightActor != nullptr) {
+                                  renderer->AddActor(currentProbeHighlightActor);
+                                  vtkViewer_res.render();
+                              }
+                          }
+                      }
                   }
               }
 
