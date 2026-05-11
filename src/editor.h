@@ -32,8 +32,6 @@
 
 #include "selector.h"
 #include "SPHModel.h"
-//#include "action.h"
-
 #include "log.h"
 #include "entity_dialog.h"
 #include "material_dialog.h"
@@ -66,6 +64,7 @@
 
 class TransformGizmo;
 class MeasurementTool;
+class Action;
 
 
 class SceneView;
@@ -146,6 +145,13 @@ public:
   int getSelectedNodeCount() const { return m_selector.getSelectedNodeCount(); }
   bool getShowSelectedNodeLabels() const { return m_show_selected_node_labels; }
   void setShowSelectedNodeLabels(bool value) { m_show_selected_node_labels = value; }
+  bool canUndo() const;
+  bool canRedo() const;
+  bool undoLastAction();
+  bool redoLastAction();
+  void pushAction(std::unique_ptr<Action> action);
+  bool selectNodeSetById(int setId);
+  void clearSelectedNodeSet();
   void closeCurrentModel();
   void closeCurrentResults();
   
@@ -322,8 +328,8 @@ protected:
   bool m_show_rename_set_dlg = false;
   char m_rename_set_name[128] = {0};
     
-  //Action* m_currentaction;
-  bool    is_action_active; //SHOULD BE THE SAME OF if (m_currentaction!=NULL)
+  std::vector<std::unique_ptr<Action>> m_undo_stack;
+  std::vector<std::unique_ptr<Action>> m_redo_stack;
   
   bool m_show_app_main_menu_bar;
   bool m_show_app_console;

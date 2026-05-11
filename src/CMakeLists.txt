@@ -63,6 +63,7 @@ endif()
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
 add_executable(${EXEC_NAME} main.cpp 
+                            action.cpp
                             editor.cpp
                             bc_dialog.cpp
                             ini_dialog.cpp

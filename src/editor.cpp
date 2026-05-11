@@ -22,6 +22,7 @@
 #include "io/ModelReader.h"
 #include "io/InputWriter.h"
 #include "LSDynaWriter.h"
+#include "action.h"
 
 //#include "SceneView.h"
 
@@ -1161,6 +1162,9 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   if (filePathName.empty())
     return false;
 
+  m_undo_stack.clear();
+  m_redo_stack.clear();
+
   ModelReader mr(m_model);
   mr.readFromFile(filePathName);
 
@@ -1282,6 +1286,8 @@ void Editor::closeCurrentModel()
 {
   clearBoundaryConditionOverlay();
   clearPartOverlay();
+  m_undo_stack.clear();
+  m_redo_stack.clear();
 
   if (m_moving_mode) {
     finishMoveMode(true);
@@ -1785,6 +1791,89 @@ NodeSet* Editor::findNodeSetById(int setId) const
   }
 
   return nullptr;
+}
+
+bool Editor::selectNodeSetById(int setId)
+{
+  if (m_model == nullptr) {
+    return false;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int s = 0; s < mesh->getNodeSetCount(); ++s) {
+      if (mesh->getNodeSet(s).getId() == setId) {
+        selectNodeSet(mesh, s);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void Editor::clearSelectedNodeSet()
+{
+  selectNodeSet(nullptr, -1);
+}
+
+bool Editor::canUndo() const
+{
+  return !m_undo_stack.empty();
+}
+
+bool Editor::canRedo() const
+{
+  return !m_redo_stack.empty();
+}
+
+void Editor::pushAction(std::unique_ptr<Action> action)
+{
+  if (!action) {
+    return;
+  }
+
+  m_undo_stack.push_back(std::move(action));
+  m_redo_stack.clear();
+}
+
+bool Editor::undoLastAction()
+{
+  if (m_undo_stack.empty()) {
+    return false;
+  }
+
+  std::unique_ptr<Action> action = std::move(m_undo_stack.back());
+  m_undo_stack.pop_back();
+  if (!action->undo()) {
+    return false;
+  }
+
+  cout << "Undo: " << action->getDescription() << endl;
+  m_redo_stack.push_back(std::move(action));
+  return true;
+}
+
+bool Editor::redoLastAction()
+{
+  if (m_redo_stack.empty()) {
+    return false;
+  }
+
+  std::unique_ptr<Action> action = std::move(m_redo_stack.back());
+  m_redo_stack.pop_back();
+  if (!action->redo()) {
+    return false;
+  }
+
+  cout << "Redo: " << action->getDescription() << endl;
+  m_undo_stack.push_back(std::move(action));
+  return true;
 }
 
 vtkSmartPointer<vtkPolyData> Editor::getBoundaryConditionTargetPolyData(Part* part) const
@@ -2763,8 +2852,12 @@ void ShowExampleMenuFile(Editor *editor)
         }
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+            if (ImGui::MenuItem("Undo", "CTRL+Z", false, editor != nullptr && editor->canUndo())) {
+              editor->undoLastAction();
+            }
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false, editor != nullptr && editor->canRedo())) {
+              editor->redoLastAction();
+            }
             ImGui::Separator();
             if (ImGui::MenuItem("Cut", "CTRL+X")) {}
             if (ImGui::MenuItem("Copy", "CTRL+C")) {}
@@ -2788,6 +2881,18 @@ void Editor::drawGui() {
   hovered_prt = nullptr;
   bool model_tree_item_clicked = false;
   bool model_tree_part_clicked = false;
+
+  ImGuiIO& io = ImGui::GetIO();
+  const bool allowUndoRedoShortcut = !io.WantTextInput;
+  if (allowUndoRedoShortcut && io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
+    if (io.KeyShift) {
+      redoLastAction();
+    } else {
+      undoLastAction();
+    }
+  } else if (allowUndoRedoShortcut && io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
+    redoLastAction();
+  }
 
   ImGui::Begin("Hello, world!"); 
   // Menu Bar
@@ -4498,6 +4603,7 @@ void Editor::drawGui() {
           }
           targetMesh->addNodeSet(nodeSet);
           selectNodeSet(targetMesh, targetMesh->getNodeSetCount() - 1);
+          pushAction(std::unique_ptr<Action>(new CreateNodeSetAction(this, targetMesh, nodeSet)));
           cout << "Created node set: name=" << m_setdlg.m_name
                << ", id=" << nodeSet.getId()
                << ", nodes=" << nodeSet.getItemCount() << endl;
@@ -4608,8 +4714,17 @@ static void KeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, 
 
 void Editor::Key(int key, int scancode, int action, int mods) {   
     (void)scancode;
-    (void)mods;
     if (action != GLFW_PRESS) {
+      return;
+    }
+
+    const bool ctrlPressed = (mods & GLFW_MOD_CONTROL) != 0;
+    if (ctrlPressed && key == GLFW_KEY_Z) {
+      undoLastAction();
+      return;
+    }
+    if (ctrlPressed && key == GLFW_KEY_Y) {
+      redoLastAction();
       return;
     }
 
@@ -4909,7 +5024,6 @@ Editor::Editor(){
   
   box_select_mode = false;
   
-  m_currentaction = NULL;
   m_show_mat_dlg = false;
   m_show_set_dlg = false;
   m_show_job_dlg = false;

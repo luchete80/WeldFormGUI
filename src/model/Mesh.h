@@ -55,6 +55,15 @@ public:
   NodeSet& getNodeSet(const int& i){ return m_node_sets[i]; }
   const NodeSet& getNodeSet(const int& i) const { return m_node_sets[i]; }
   void addNodeSet(const NodeSet& set){ m_node_sets.push_back(set); }
+  bool removeNodeSetById(int id) {
+    for (std::vector<NodeSet>::iterator it = m_node_sets.begin(); it != m_node_sets.end(); ++it) {
+      if (it->getId() == id) {
+        m_node_sets.erase(it);
+        return true;
+      }
+    }
+    return false;
+  }
   NodeSet* findNodeSetById(int id) {
     for (std::size_t i = 0; i < m_node_sets.size(); ++i) {
       if (m_node_sets[i].getId() == id) return &m_node_sets[i];
