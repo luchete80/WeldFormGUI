@@ -231,5 +231,9 @@
          - Added Delete Job
 20260508 - Added Johnson Cook and GMT Material curves end exporters 
          - Passed to overlay almost all result viewer
-         - Added Result picker probe with highlight at zone results.        
- 
+         - Added Result picker probe with highlight at zone results.
+20260511 - Removed solver output to console 
+         - Fixed Not working Results tab clicking after opnening a model.
+         - Added Select Toggle on Selection below tree
+         - Added selected nodes in overlay
+         - Added show node number 

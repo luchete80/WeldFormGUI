@@ -437,10 +437,41 @@ bool drawScreenshotIconButton()
     return pressed;
 }
 
+void drawSelectionCountBadge(int selectedNodeCount)
+{
+    if (selectedNodeCount <= 0) {
+        return;
+    }
+
+    const std::string label = "N: " + std::to_string(selectedNodeCount);
+    const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+    const ImVec2 size(textSize.x + 18.0f, 24.0f);
+
+    ImGui::PushID("selection_count_badge");
+    ImGui::InvisibleButton("##selection_count", size);
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    drawList->AddRectFilled(min, max, IM_COL32(212, 176, 64, 120), 10.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 244, 196, 70), 10.0f, 0, 1.0f);
+    drawList->AddText(ImVec2(min.x + 9.0f, min.y + 4.0f),
+                      IM_COL32(255, 248, 220, 255),
+                      label.c_str());
+
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%d selected nodes", selectedNodeCount);
+    }
+
+    ImGui::PopID();
+}
+
 void drawViewportOverlay(VtkViewer& viewer,
                          ModelViewportOverlayState& state,
                          const char* windowId,
-                         bool allowAxes)
+                         bool allowAxes,
+                         Editor* editor = nullptr)
 {
     const ImVec2 viewportMin = viewer.getViewportScreenMin();
     const ImVec2 viewportMax = viewer.getViewportScreenMax();
@@ -515,6 +546,14 @@ void drawViewportOverlay(VtkViewer& viewer,
         drawOverlaySeparator();
         if (drawScreenshotIconButton()) {
             viewer.saveScreenshot();
+        }
+        if (editor != nullptr && editor->getSelectedNodeCount() > 0) {
+            ImGui::SameLine();
+            drawSelectionCountBadge(editor->getSelectedNodeCount());
+            ImGui::SameLine();
+            if (drawToolbarButton("Id", editor->getShowSelectedNodeLabels(), "Show selected node ids")) {
+                editor->setShowSelectedNodeLabels(!editor->getShowSelectedNodeLabels());
+            }
         }
     }
     ImGui::End();
@@ -1409,7 +1448,7 @@ int main(int argc, char* argv[])
               applyDisplayModeToActiveModel(modelOverlayState.displayMode, modelOverlayState.showEdges);
               // Render del viewer
               vtkViewer2.render();
-              drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true);
+              drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true, editor);
               editor->handleMeasurementInteraction();
               editor->handleSelectionInteraction();
               editor->drawMeasurementOverlay();
@@ -1659,7 +1698,7 @@ int main(int argc, char* argv[])
               applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
               // Render del viewer
               vtkViewer_res.render();
-              drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false);
+              drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false, editor);
               if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
                   const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
                   auto& overlayFrame = *editor->getResults()->frames[safeFrame];

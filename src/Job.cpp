@@ -10,6 +10,11 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace std;
 using json = nlohmann::json;
@@ -336,13 +341,10 @@ bool Job::validateSolverSelection(const SolverInputInfo& info,
 }
 
 int Job::Run(){
-  // IF NOT REDIRECTING OUTPUT IS GARBAGE AT PROMPT
-  std::string str;
-  int returnCode ;
+  int returnCode = -1;
   const SolverInputInfo inputInfo = inspectSolverInput();
   const SolverEdition requestedEdition = getRequestedSolverEdition();
   const std::string solver_name = getSolverBinaryName(inputInfo);
-  const std::string log_path = getLogFilePath().string();
   const std::string pid_path = getPidFilePath().string();
 
   if (!validateSolverSelection(inputInfo, requestedEdition, solver_name)) {
@@ -358,36 +360,87 @@ int Job::Run(){
   }
   std::cout << std::endl;
 
-  //int returnCode = system(str.c_str());
-  //CATCH ID
-  //REMOVE LOG FIRST
-  #ifdef _WIN32
-  str =  "del \"" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out\"";  
-  //str = "START /B solvers\\WeldForm " + m_path_file;
-  #elif linux
-  //str = "echo $! > pid.txt";
-  //str = "ps -e --sort=start_time | grep \"WeldForm \" ";
-  //echo $!
-  str =  "rm -f \"" + m_path_file.substr(0, m_path_file.find_last_of(".")+1) + "out\"";  
-  #endif
-  returnCode = system(str.c_str());  
+  const fs::path out_path =
+      fs::path(m_path_file.substr(0, m_path_file.find_last_of(".") + 1) + "out");
+  std::error_code remove_ec;
+  fs::remove(out_path, remove_ec);
 
   std::remove(pid_path.c_str());
   m_pid = -1;
 
   #ifdef _WIN32
-  //str = "START /B solvers\\" + solver_name + " \"" + m_path_file + "\" > \"" + log_path + "\"";
-  str = "START /B solvers\\" + solver_name + " \"" + m_path_file+ "\"";
-  cout << "RUNNING "<<str<<endl;
+  const fs::path solver_path = fs::current_path() / "solvers" / (solver_name + ".exe");
+  const fs::path solver_path_fallback = fs::current_path() / "solvers" / solver_name;
+  const fs::path solver_executable = fs::exists(solver_path) ? solver_path : solver_path_fallback;
+  const fs::path null_path = "NUL";
+
+  SECURITY_ATTRIBUTES sa{};
+  sa.nLength = sizeof(sa);
+  sa.bInheritHandle = TRUE;
+
+  HANDLE null_handle = CreateFileA(
+      null_path.string().c_str(),
+      GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE,
+      &sa,
+      OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL,
+      nullptr);
+  if (null_handle == INVALID_HANDLE_VALUE) {
+    cout << "[Job::Run] Could not open NUL redirection handle." << endl;
+    return -1;
+  }
+
+  STARTUPINFOA si{};
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = null_handle;
+  si.hStdError = null_handle;
+
+  PROCESS_INFORMATION pi{};
+  std::string command_line =
+      "\"" + solver_executable.string() + "\" \"" + m_path_file + "\"";
+  std::vector<char> command_buffer(command_line.begin(), command_line.end());
+  command_buffer.push_back('\0');
+
+  std::string working_dir = getJobDirectory().string();
+  const BOOL created = CreateProcessA(
+      nullptr,
+      command_buffer.data(),
+      nullptr,
+      nullptr,
+      TRUE,
+      CREATE_NO_WINDOW,
+      nullptr,
+      working_dir.empty() ? nullptr : working_dir.c_str(),
+      &si,
+      &pi);
+
+  CloseHandle(null_handle);
+
+  if (!created) {
+    cout << "[Job::Run] CreateProcess failed for " << solver_executable.string() << endl;
+    return -1;
+  }
+
+  m_pid = static_cast<int>(pi.dwProcessId);
+  std::ofstream pid_file(pid_path, std::ios::out | std::ios::trunc);
+  if (pid_file.is_open()) {
+    pid_file << m_pid;
+  }
+
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+  returnCode = 0;
   #elif linux
-  str = "sh -c 'nohup solvers/" + solver_name + " \"" + m_path_file +
-        "\" > \"" + log_path + "\" 2>&1 & echo $! > \"" + pid_path + "\"'";
+  std::string str =
+      "sh -c 'nohup solvers/" + solver_name + " \"" + m_path_file +
+      "\" >/dev/null 2>&1 & echo $! > \"" + pid_path + "\"'";
+  returnCode = system(str.c_str());
   #endif
 
-  returnCode = system(str.c_str());    
-
   m_pid = getPid();
-  cout << "Process ID "<< m_pid <<endl;
   return returnCode; 
   
 }
@@ -426,20 +479,17 @@ void Job::UpdateOutput(int max_lines){
   const fs::path temp_path = getTempLogPath();
 
   if (!fs::exists(log_path)) {
-    cout << "[E] Log file could not be found: " << log_path.string() << endl;
     return;
   }
 
   try {
     fs::copy_file(log_path, temp_path, fs::copy_options::overwrite_existing);
   } catch (const std::exception& e) {
-    cout << "[E] Could not snapshot log file " << log_path.string() << ": " << e.what() << endl;
     return;
   }
 
   ifstream file(temp_path);
   if (!file.is_open()) {
-    cout << "[E] Snapshot file could not be opened: " << temp_path.string() << endl;
     return;
   }
 
@@ -464,8 +514,6 @@ void Job::UpdateOutput(int max_lines){
       m_log += buffered_line + "\n";
   }
 
-  cout << "File size " << l << endl;
-  cout << m_log << endl;
 }
 
 void Job::Draw(){

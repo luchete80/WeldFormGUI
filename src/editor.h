@@ -142,7 +142,10 @@ public:
   bool isLoadingResults() const;
   bool hasBlockingDialogOpen() const;
   bool isSetDialogOpen() const { return m_show_set_dlg; }
-  bool isSetSelectionActive() const { return m_show_set_dlg && m_setdlg.m_selecting; }
+  bool isSetSelectionActive() const { return m_selection_enabled; }
+  int getSelectedNodeCount() const { return m_selector.getSelectedNodeCount(); }
+  bool getShowSelectedNodeLabels() const { return m_show_selected_node_labels; }
+  void setShowSelectedNodeLabels(bool value) { m_show_selected_node_labels = value; }
   void closeCurrentModel();
   void closeCurrentResults();
   
@@ -349,6 +352,13 @@ protected:
   MultiResult *m_results = nullptr;
   std::unique_ptr<MeasurementTool> m_measurement_tool;
   bool m_activate_results_viewer = false;
+  bool m_selection_enabled = false;
+  bool m_show_selected_node_labels = false;
+  enum class SidebarTab {
+    Model,
+    Results
+  };
+  SidebarTab m_sidebar_tab = SidebarTab::Model;
   std::vector<vtkSmartPointer<vtkProp>> m_bc_overlay_actors;
   std::vector<vtkSmartPointer<vtkProp>> m_part_overlay_actors;
 
@@ -372,6 +382,7 @@ protected:
 
   PendingResultsLoad m_pending_results_load;
   int m_pending_results_frame_index = -1;
+  bool m_close_results_load_popup = false;
   bool m_expand_model_tree_once = false;
 
   bool beginResultsLoadFromJson(const std::string& jsonFile,

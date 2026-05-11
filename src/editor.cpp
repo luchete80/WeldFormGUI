@@ -649,10 +649,27 @@ void Editor::drawSelectionControls()
     box_select_mode = true;
   }
   ImGui::SameLine();
+  if (ImGui::Button(m_selection_enabled ? "Stop Select" : "Select")) {
+    m_selection_enabled = !m_selection_enabled;
+    if (!m_selection_enabled && m_selector.isBoxSelecting()) {
+      m_selector.finishBoxSelection();
+    }
+  }
+  ImGui::SameLine();
   if (ImGui::Button("Clear")) {
     m_selector.clearSelection();
     m_sel_node = -1;
     m_is_node_sel = false;
+  }
+
+  ImGui::SameLine();
+  if (ImGui::Button("Create Set")) {
+    m_setdlg.reset();
+    m_setdlg.set_type = NODE_SET;
+    const std::string defaultSetName = "set_" + std::to_string(findNextNodeSetId(m_model));
+    m_setdlg.setDefaultName(defaultSetName.c_str());
+    m_setdlg.m_selecting = m_selection_enabled;
+    m_show_set_dlg = true;
   }
 
   if (m_selector.isPickMode()) {
@@ -661,6 +678,8 @@ void Editor::drawSelectionControls()
   } else {
     ImGui::TextDisabled("Box: drag on viewport to select nodes");
   }
+
+  ImGui::Text("Selection mode: %s", m_selection_enabled ? "Active" : "Idle");
 
   ImGui::Text("Selected nodes: %d", m_selector.getSelectedNodeCount());
   const std::vector<Node*>& selectedNodes = m_selector.getSelectedNodes();
@@ -692,12 +711,14 @@ void Editor::drawSelectionControls()
 
 bool Editor::isSelectorInteractionEnabled() const
 {
-  return isSetSelectionActive();
+  return m_selection_enabled;
 }
 
 bool Editor::shouldDrawSelectionOverlay() const
 {
-  return m_show_set_dlg || getSelectedNodeSet() != nullptr;
+  return m_selection_enabled ||
+         m_selector.getSelectedNodeCount() > 0 ||
+         getSelectedNodeSet() != nullptr;
 }
 
 void Editor::selectNodeSet(Mesh* mesh, int setIndex)
@@ -1007,6 +1028,19 @@ void Editor::drawSelectionOverlay() const
       4.0f,
       IM_COL32(255, 210, 0, 255)
     );
+
+    if (m_show_selected_node_labels && node != nullptr) {
+      const std::string label = std::to_string(node->getId());
+      const ImVec2 textPos(
+        viewportMin.x + static_cast<float>(x) + 8.0f,
+        viewportMin.y + static_cast<float>(y) - 10.0f);
+      const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+      const ImVec2 bgMin(textPos.x - 4.0f, textPos.y - 2.0f);
+      const ImVec2 bgMax(textPos.x + textSize.x + 4.0f, textPos.y + textSize.y + 2.0f);
+      drawList->AddRectFilled(bgMin, bgMax, IM_COL32(18, 22, 28, 180), 4.0f);
+      drawList->AddRect(bgMin, bgMax, IM_COL32(255, 244, 196, 70), 4.0f, 0, 1.0f);
+      drawList->AddText(textPos, IM_COL32(255, 248, 220, 255), label.c_str());
+    }
   }
 }
 
@@ -1293,6 +1327,7 @@ void Editor::closeCurrentResults()
 
   if (m_pending_results_load.active) {
     m_pending_results_load = PendingResultsLoad{};
+    m_close_results_load_popup = true;
   }
 
   m_pending_results_frame_index = -1;
@@ -2161,6 +2196,7 @@ void Editor::finishResultsLoad()
   cout << endl;
 
   m_pending_results_load = PendingResultsLoad{};
+  m_close_results_load_popup = true;
 }
 
 int Editor::consumePendingResultsFrameIndex()
@@ -2172,10 +2208,11 @@ int Editor::consumePendingResultsFrameIndex()
 
 void Editor::drawResultsLoadProgress()
 {
-  if (!m_pending_results_load.active)
+  if (!m_pending_results_load.active && !m_close_results_load_popup)
     return;
 
-  ImGui::OpenPopup("Loading Results");
+  if (m_pending_results_load.active)
+    ImGui::OpenPopup("Loading Results");
 
   const std::size_t total = m_pending_results_load.entries.size();
   const std::size_t start = m_pending_results_load.reloadStartIndex;
@@ -2207,25 +2244,35 @@ void Editor::drawResultsLoadProgress()
                            ImGuiWindowFlags_NoResize |
                            ImGuiWindowFlags_NoSavedSettings;
   if (ImGui::BeginPopupModal("Loading Results", nullptr, flags)) {
-    ImGui::Text("Opening %zu / %zu frames", displayProcessed, displayTotal);
-    ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
+    if (m_pending_results_load.active) {
+      ImGui::Text("Opening %zu / %zu frames", displayProcessed, displayTotal);
+      ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
 
-    if (!m_pending_results_load.currentFile.empty())
-      ImGui::Text("Current: %s", m_pending_results_load.currentFile.c_str());
-    else
-      ImGui::TextUnformatted("Current: preparing frame list...");
+      if (!m_pending_results_load.currentFile.empty())
+        ImGui::Text("Current: %s", m_pending_results_load.currentFile.c_str());
+      else
+        ImGui::TextUnformatted("Current: preparing frame list...");
 
-    ImGui::Text("Loaded: %zu", m_pending_results_load.loadedFrames);
-    if (m_pending_results_load.skippedFrames > 0)
-      ImGui::Text("Skipped: %zu", m_pending_results_load.skippedFrames);
+      ImGui::Text("Loaded: %zu", m_pending_results_load.loadedFrames);
+      if (m_pending_results_load.skippedFrames > 0)
+        ImGui::Text("Skipped: %zu", m_pending_results_load.skippedFrames);
 
-    if (!m_pending_results_load.errorMessage.empty())
-      ImGui::TextWrapped("Last error: %s", m_pending_results_load.errorMessage.c_str());
+      if (!m_pending_results_load.errorMessage.empty())
+        ImGui::TextWrapped("Last error: %s", m_pending_results_load.errorMessage.c_str());
+    }
+
+    if (m_close_results_load_popup) {
+      ImGui::CloseCurrentPopup();
+      m_close_results_load_popup = false;
+    }
 
     // cout << "[results-progress] modal visible processed=" << processed
     //      << "/" << total << endl;
+    ImGui::EndPopup();
   }
-  ImGui::EndPopup();
+
+  if (m_close_results_load_popup && !ImGui::IsPopupOpen("Loading Results"))
+    m_close_results_load_popup = false;
 }
 
 void Editor::meshPart(Part* part){
@@ -2790,8 +2837,13 @@ void Editor::drawGui() {
     // //IMGUI_DEMO_MARKER("Widgets/Trees");
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("TABS", tab_bar_flags)){
-    const ImGuiTabItemFlags results_tab_flags = m_activate_results_viewer ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-    if (ImGui::BeginTabItem("Model")) { 
+    const ImGuiTabItemFlags model_tab_flags =
+      (m_sidebar_tab == SidebarTab::Model) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+    const bool model_tab_open = ImGui::BeginTabItem("Model", nullptr, model_tab_flags);
+    if (ImGui::IsItemClicked()) {
+      m_sidebar_tab = SidebarTab::Model;
+    }
+    if (model_tab_open) { 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     const bool expand_model_tree_once = m_expand_model_tree_once;
 
@@ -3665,10 +3717,6 @@ void Editor::drawGui() {
       
     }//Jobs
 
-    m_jobdlg.ShowIfEnabled();
-
-    m_jobshowdlg.ShowIfEnabled();
-
     if (open_)
     {
        // your tree code stuff
@@ -3688,8 +3736,13 @@ void Editor::drawGui() {
   } //END MODEL TAB
     
     
-    if (ImGui::BeginTabItem("Results", nullptr, results_tab_flags)) { 
-      m_activate_results_viewer = false;
+    const ImGuiTabItemFlags results_tab_flags =
+      (m_sidebar_tab == SidebarTab::Results) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+    const bool results_tab_open = ImGui::BeginTabItem("Results", nullptr, results_tab_flags);
+    if (ImGui::IsItemClicked()) {
+      m_sidebar_tab = SidebarTab::Results;
+    }
+    if (results_tab_open) { 
       bool close_results_requested = false;
       bool open_ = ImGui::TreeNode("History");      
       if (ImGui::BeginPopupContextItem())
@@ -3759,6 +3812,9 @@ void Editor::drawGui() {
     
       ImGui::EndTabBar();
     }
+
+    m_jobdlg.ShowIfEnabled();
+    m_jobshowdlg.ShowIfEnabled();
     ////////////////////// END TAB BAR ///////////////////////////////////
 
     ImGui::Separator();
@@ -4408,9 +4464,11 @@ void Editor::drawGui() {
   }
   else if (m_show_set_dlg) {
     const std::vector<Node*> selectedNodesForSet = m_selector.getSelectedNodes();
+    m_setdlg.m_selecting = m_selection_enabled;
     m_setdlg.Draw(m_setdlg.m_edit_mode ? "Edit Set" : "Create Set",
                   &m_show_set_dlg,
                   static_cast<int>(selectedNodesForSet.size()));
+    m_selection_enabled = m_setdlg.m_selecting;
     if (m_setdlg.create_set) {
       if (m_setdlg.set_type == NODE_SET) {
         Mesh* targetMesh = findCommonMeshForNodes(m_model, selectedNodesForSet);
@@ -4449,11 +4507,13 @@ void Editor::drawGui() {
              << ", type=" << m_setdlg.set_type << endl;
       }
       m_show_set_dlg = false;
+      m_selection_enabled = false;
       m_setdlg.reset();
     } else if (!m_show_set_dlg) {
       if (m_setdlg.m_cancelled) {
         cout << "Create set cancelled" << endl;
       }
+      m_selection_enabled = false;
       m_setdlg.reset();
     }
   }//show_set_mat
