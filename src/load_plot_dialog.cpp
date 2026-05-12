@@ -71,12 +71,37 @@ bool IsLoadSeriesColumn(const std::string& token) {
     return false;
   }
 
-  for (std::size_t i = 1; i < trimmed.size(); ++i) {
-    if (!std::isdigit(static_cast<unsigned char>(trimmed[i]))) {
-      return false;
-    }
+  std::size_t i = 1;
+  while (i < trimmed.size() &&
+         std::isdigit(static_cast<unsigned char>(trimmed[i]))) {
+    ++i;
   }
 
+  if (i == 1) {
+    return false;
+  }
+
+  if (i == trimmed.size()) {
+    return true;
+  }
+
+  if (trimmed[i] != '_') {
+    return false;
+  }
+
+  ++i;
+  if (i >= trimmed.size()) {
+    return false;
+  }
+
+  for (; i < trimmed.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(trimmed[i]))) {
+      const char c = static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[i])));
+      if (c != '_' && (c < 'a' || c > 'z')) {
+        return false;
+      }
+    }
+  }
   return true;
 }
 
@@ -94,8 +119,10 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
   m_error_message.clear();
   m_x_label = "Time";
   m_series_names.clear();
+  m_series_visible.clear();
   m_time_values.clear();
   m_series_values.clear();
+  m_auto_fit_pending = true;
 
   if (csv_path.empty()) {
     m_error_message = "CSV path is empty.";
@@ -201,6 +228,8 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     return false;
   }
 
+  m_series_visible.assign(m_series_names.size(), true);
+
   return true;
 }
 
@@ -228,6 +257,10 @@ void LoadPlotDialog::Draw(const char* title, bool* p_open) {
   if (ImGui::Button("Reload")) {
     LoadCsv(m_csv_path);
   }
+  ImGui::SameLine();
+  if (ImGui::Button("Auto Scale")) {
+    m_auto_fit_pending = true;
+  }
 
   if (!m_error_message.empty()) {
     ImGui::Spacing();
@@ -240,12 +273,75 @@ void LoadPlotDialog::Draw(const char* title, bool* p_open) {
   }
 
   ImGui::Spacing();
+  int visible_series_count = 0;
+  for (std::size_t i = 0; i < m_series_visible.size(); ++i) {
+    if (m_series_visible[i]) {
+      ++visible_series_count;
+    }
+  }
+
+  std::string combo_label;
+  if (visible_series_count == 0) {
+    combo_label = "No series";
+  } else if (visible_series_count == static_cast<int>(m_series_names.size())) {
+    combo_label = "All series";
+  } else if (visible_series_count == 1) {
+    for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+      if (m_series_visible[i]) {
+        combo_label = m_series_names[i];
+        break;
+      }
+    }
+  } else {
+    combo_label = std::to_string(visible_series_count) + " series";
+  }
+
+  ImGui::SetNextItemWidth(260.0f);
+  if (ImGui::BeginCombo("Visible Series", combo_label.c_str())) {
+    if (ImGui::Selectable("Show All")) {
+      std::fill(m_series_visible.begin(), m_series_visible.end(), true);
+      m_auto_fit_pending = true;
+    }
+    if (ImGui::Selectable("Hide All")) {
+      std::fill(m_series_visible.begin(), m_series_visible.end(), false);
+      m_auto_fit_pending = true;
+    }
+    ImGui::Separator();
+
+    for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+      bool visible = (i < m_series_visible.size()) ? m_series_visible[i] : true;
+      if (ImGui::Checkbox(m_series_names[i].c_str(), &visible)) {
+        if (i >= m_series_visible.size()) {
+          m_series_visible.resize(m_series_names.size(), true);
+        }
+        m_series_visible[i] = visible;
+        m_auto_fit_pending = true;
+      }
+    }
+    ImGui::EndCombo();
+  }
+
+  if (visible_series_count == 0) {
+    ImGui::Spacing();
+    ImGui::TextDisabled("Select at least one series to plot.");
+    ImGui::End();
+    return;
+  }
+
+  if (m_auto_fit_pending) {
+    ImPlot::SetNextAxesToFit();
+    m_auto_fit_pending = false;
+  }
+
   if (ImPlot::BeginPlot("##ContactForcesPlot", ImVec2(-1.0f, -1.0f))) {
     ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_Outside);
-    ImPlot::SetupAxes(m_x_label.c_str(), "Load");
+    ImPlot::SetupAxes(m_x_label.c_str(), "Force");
     ImPlot::SetupAxisLimits(ImAxis_X1, m_time_values.front(), m_time_values.back(), ImGuiCond_Once);
 
     for (std::size_t i = 0; i < m_series_values.size(); ++i) {
+      if (i < m_series_visible.size() && !m_series_visible[i]) {
+        continue;
+      }
       const char* label = m_series_names[i].c_str();
       ImPlot::PlotLine(label, m_time_values.data(), m_series_values[i].data(), static_cast<int>(m_time_values.size()));
     }
