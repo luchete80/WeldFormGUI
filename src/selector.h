@@ -7,6 +7,7 @@
 #include <vector>
 
 class Node;
+class Element;
 
 enum class SelectionMode {
   Pick = 0,
@@ -15,8 +16,9 @@ enum class SelectionMode {
 
 enum class SelectionTarget {
   Node = 0,
-  Part = 1,
-  Geometry = 2
+  Element = 1,
+  Part = 2,
+  Geometry = 3
 };
 
 class Selector {
@@ -29,6 +31,7 @@ public:
   void setTarget(SelectionTarget target) { m_target = target; }
   SelectionTarget getTarget() const { return m_target; }
   bool isNodeTarget() const { return m_target == SelectionTarget::Node; }
+  bool isElementTarget() const { return m_target == SelectionTarget::Element; }
 
   void beginBoxSelection(const ImVec2& start) {
     m_boxSelecting = true;
@@ -48,7 +51,10 @@ public:
   const ImVec2& getBoxStart() const { return m_boxStart; }
   const ImVec2& getBoxEnd() const { return m_boxEnd; }
 
-  void clearSelection() { m_selectedNodes.clear(); }
+  void clearSelection() {
+    m_selectedNodes.clear();
+    m_selectedElements.clear();
+  }
   void setSingleNode(Node* node) {
     m_selectedNodes.clear();
     if (node != nullptr) {
@@ -82,6 +88,39 @@ public:
   std::vector<Node*>& getSelectedNodes() { return m_selectedNodes; }
   int getSelectedNodeCount() const { return static_cast<int>(m_selectedNodes.size()); }
 
+  void setSingleElement(Element* element) {
+    m_selectedElements.clear();
+    if (element != nullptr) {
+      m_selectedElements.push_back(element);
+    }
+  }
+  bool containsElement(Element* element) const {
+    return std::find(m_selectedElements.begin(), m_selectedElements.end(), element) != m_selectedElements.end();
+  }
+  void addElement(Element* element) {
+    if (element != nullptr && !containsElement(element)) {
+      m_selectedElements.push_back(element);
+    }
+  }
+  void removeElement(Element* element) {
+    m_selectedElements.erase(std::remove(m_selectedElements.begin(), m_selectedElements.end(), element),
+                             m_selectedElements.end());
+  }
+  void toggleElement(Element* element) {
+    if (element == nullptr) {
+      return;
+    }
+    if (containsElement(element)) {
+      removeElement(element);
+    } else {
+      addElement(element);
+    }
+  }
+  void setSelectedElements(const std::vector<Element*>& elements) { m_selectedElements = elements; }
+  const std::vector<Element*>& getSelectedElements() const { return m_selectedElements; }
+  std::vector<Element*>& getSelectedElements() { return m_selectedElements; }
+  int getSelectedElementCount() const { return static_cast<int>(m_selectedElements.size()); }
+
 private:
   SelectionMode m_mode = SelectionMode::Pick;
   SelectionTarget m_target = SelectionTarget::Node;
@@ -89,6 +128,7 @@ private:
   ImVec2 m_boxStart = ImVec2(0.0f, 0.0f);
   ImVec2 m_boxEnd = ImVec2(0.0f, 0.0f);
   std::vector<Node*> m_selectedNodes;
+  std::vector<Element*> m_selectedElements;
 };
 
 #endif

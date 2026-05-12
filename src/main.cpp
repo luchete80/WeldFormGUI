@@ -437,13 +437,22 @@ bool drawScreenshotIconButton()
     return pressed;
 }
 
-void drawSelectionCountBadge(int selectedNodeCount)
+void drawSelectionCountBadge(int selectedNodeCount, int selectedElementCount)
 {
-    if (selectedNodeCount <= 0) {
+    if (selectedNodeCount <= 0 && selectedElementCount <= 0) {
         return;
     }
 
-    const std::string label = "N: " + std::to_string(selectedNodeCount);
+    std::string label;
+    if (selectedNodeCount > 0) {
+        label += "N: " + std::to_string(selectedNodeCount);
+    }
+    if (selectedElementCount > 0) {
+        if (!label.empty()) {
+            label += "  ";
+        }
+        label += "E: " + std::to_string(selectedElementCount);
+    }
     const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
     const ImVec2 size(textSize.x + 18.0f, 24.0f);
 
@@ -461,7 +470,15 @@ void drawSelectionCountBadge(int selectedNodeCount)
                       label.c_str());
 
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("%d selected nodes", selectedNodeCount);
+        if (selectedNodeCount > 0 && selectedElementCount > 0) {
+            ImGui::SetTooltip("%d selected nodes, %d selected elements",
+                              selectedNodeCount,
+                              selectedElementCount);
+        } else if (selectedNodeCount > 0) {
+            ImGui::SetTooltip("%d selected nodes", selectedNodeCount);
+        } else {
+            ImGui::SetTooltip("%d selected elements", selectedElementCount);
+        }
     }
 
     ImGui::PopID();
@@ -547,11 +564,13 @@ void drawViewportOverlay(VtkViewer& viewer,
         if (drawScreenshotIconButton()) {
             viewer.saveScreenshot();
         }
-        if (editor != nullptr && editor->getSelectedNodeCount() > 0) {
+        if (editor != nullptr &&
+            (editor->getSelectedNodeCount() > 0 || editor->getSelectedElementCount() > 0)) {
             ImGui::SameLine();
-            drawSelectionCountBadge(editor->getSelectedNodeCount());
+            drawSelectionCountBadge(editor->getSelectedNodeCount(),
+                                    editor->getSelectedElementCount());
             ImGui::SameLine();
-            if (drawToolbarButton("Id", editor->getShowSelectedNodeLabels(), "Show selected node ids")) {
+            if (drawToolbarButton("Id", editor->getShowSelectedNodeLabels(), "Show selected node/element ids")) {
                 editor->setShowSelectedNodeLabels(!editor->getShowSelectedNodeLabels());
             }
         }

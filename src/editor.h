@@ -143,6 +143,7 @@ public:
   bool isSetDialogOpen() const { return m_show_set_dlg; }
   bool isSetSelectionActive() const { return m_selection_enabled; }
   int getSelectedNodeCount() const { return m_selector.getSelectedNodeCount(); }
+  int getSelectedElementCount() const { return m_selector.getSelectedElementCount(); }
   bool getShowSelectedNodeLabels() const { return m_show_selected_node_labels; }
   void setShowSelectedNodeLabels(bool value) { m_show_selected_node_labels = value; }
   bool canUndo() const;
@@ -151,7 +152,11 @@ public:
   bool redoLastAction();
   void pushAction(std::unique_ptr<Action> action);
   bool selectNodeSetById(int setId);
+  bool selectElementSetById(int setId);
+  bool selectFaceSetById(int setId);
   void clearSelectedNodeSet();
+  void clearSelectedElementSet();
+  void clearSelectedFaceSet();
   void closeCurrentModel();
   void closeCurrentResults();
   
@@ -192,14 +197,24 @@ protected:
   bool isSelectorInteractionEnabled() const;
   bool shouldDrawSelectionOverlay() const;
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
+  bool projectElementCentroidToViewport(Element* element, double& x, double& y) const;
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
+  Element* pickClosestElementAt(double x, double y, double maxDistancePixels = 16.0) const;
   void selectNodesInBox(double x0, double y0, double x1, double y1);
+  void selectElementsInBox(double x0, double y0, double x1, double y1);
   void selectNodeSet(Mesh* mesh, int setIndex);
+  void selectElementSet(Mesh* mesh, int setIndex);
+  void selectFaceSet(Mesh* mesh, int setIndex);
   NodeSet* getSelectedNodeSet();
   const NodeSet* getSelectedNodeSet() const;
+  ElementSet* getSelectedElementSet();
+  const ElementSet* getSelectedElementSet() const;
+  FaceSet* getSelectedFaceSet();
+  const FaceSet* getSelectedFaceSet() const;
   void clearStateForDeletedMesh(Mesh* mesh);
   void clearStateForDeletedPart(Part* part);
   void clearStateForDeletedCondition(Condition* condition);
+  void clearSelectionForHiddenPart(Part* part);
 
   GLFWwindow* window;
   unsigned int shaderProgram;
@@ -325,6 +340,10 @@ protected:
   double m_move_part_step = 0.1;
   Mesh* m_selected_node_set_mesh = nullptr;
   int m_selected_node_set_index = -1;
+  Mesh* m_selected_element_set_mesh = nullptr;
+  int m_selected_element_set_index = -1;
+  Mesh* m_selected_face_set_mesh = nullptr;
+  int m_selected_face_set_index = -1;
   bool m_show_rename_set_dlg = false;
   char m_rename_set_name[128] = {0};
     
@@ -411,6 +430,8 @@ protected:
   void drawScriptBrowserWindow();
   Part* findBoundaryConditionTargetPart(const Condition* condition) const;
   NodeSet* findNodeSetById(int setId) const;
+  ElementSet* findElementSetById(int setId) const;
+  FaceSet* findFaceSetById(int setId) const;
   vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(Part* part) const;
   vtkSmartPointer<vtkPolyData> getBoundaryConditionTargetPolyData(const NodeSet* nodeSet) const;
   

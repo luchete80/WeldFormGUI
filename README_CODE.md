@@ -123,6 +123,126 @@ Summary:
 - node selection is preserved while typing in the set name field
 - the actual `NodeSet` object is built in `src/editor.cpp`, not in `src/set_dialog.cpp`
 
+## Current set architecture
+
+- `src/model/Set.h`
+  Defines the generic template `Set<T>` and the current concrete `NodeSet`, `ElementSet`, and `FaceSet`.
+- Current facts:
+  - `NodeSet`, `ElementSet`, and `FaceSet` exist as concrete mesh-backed set types
+  - `NodeSet` and `ElementSet` both have interactive selection workflows in the GUI
+  - `Set<T>` already gives the common storage pattern:
+    - owning mesh pointer
+    - item pointer list
+    - label
+    - entity id
+  - `FaceSet` is value-based and stores explicit boundary sides as `Face` records with:
+    - node ids
+    - owner element id
+    - local face index
+
+- `src/model/Mesh.h`
+  Stores node sets in `m_node_sets`, element sets in `m_element_sets`, and face sets in `m_face_sets`.
+- Current facts:
+  - `Mesh` exposes `getNodeSetCount()`, `getNodeSet(...)`, `addNodeSet(...)`, `removeNodeSetById(...)`, and `findNodeSetById(...)`
+  - `Mesh` also exposes `getElementSetCount()`, `getElementSet(...)`, `addElementSet(...)`, `removeElementSetById(...)`, and `findElementSetById(...)`
+  - `Mesh` also exposes `getFaceSetCount()`, `getFaceSet(...)`, `addFaceSet(...)`, `removeFaceSetById(...)`, and `findFaceSetById(...)`
+
+- `src/editor.cpp`
+  Owns the real set workflow.
+- Current facts:
+  - the `Sets` tree currently lists `NodeSet`
+  - context menu supports creating a new set
+  - per-set context menu supports editing
+  - rename has a dedicated dialog path
+  - `Element Sets` has its own tree and selection state
+  - `Face Sets` has its own tree
+  - `ElementSet` can derive a boundary `FaceSet`
+  - contact-oriented surface work should build on `FaceSet`, not directly on `NodeSet`
+
+- `src/set_dialog.cpp`
+  The dialog can display a type label such as `Node Set` or `Element Set`, but the editor-side commit path currently only executes real logic for `NODE_SET`
+
+- `src/action.h`
+- `src/action.cpp`
+  Current undo/redo support for sets is minimal.
+- Current facts:
+  - `CreateNodeSetAction`, `CreateElementSetAction`, and `CreateFaceSetAction` exist
+  - there is no equivalent action yet for:
+    - rename set
+    - edit set membership
+    - delete set
+
+## Selection limitations relevant to sets
+
+- `src/selector.h`
+  The selector currently stores:
+  - `std::vector<Node*>`
+  - `std::vector<Element*>`
+- Consequences:
+  - the set dialog consumes the active selection target and can now build `NodeSet` or `ElementSet`
+  - there is still no dedicated face-selection target in the interactive selector
+  - `sets from geometry` is still a later layer because the current internal selection abstraction is mesh-centric, not CAD-topology-centric
+
+## Recommended set roadmap
+
+- First stabilize mesh-based sets before geometry-driven sets:
+  - `NodeSet from selected nodes`
+  - `ElementSet from selected elements`
+  - `NodeSet from selected elements`
+  - `FaceSet from selected element faces`
+  - `ElementSet -> boundary FaceSet`
+  - rename / delete / show-hide / color for sets
+  - undo/redo for create, edit, rename, and delete
+
+- Reasoning:
+  - geometry-driven sets should end by materializing robust mesh-backed sets
+  - contact should prefer `FaceSet` / surface-style data rather than raw node groups
+  - exporters and boundary-condition assignment become much easier once set identity and membership rules are stable
+  - implementing geometry-driven sets before the mesh set model is generalized would force duplicate logic
+
+## Script Browser and Python scripts
+
+- `src/editor.cpp`
+  The `Script Browser` already exists.
+- Current behavior:
+  - scans `./scripts`
+  - lists Python files recursively
+  - runs the selected script
+  - captures script output into the app console
+
+- `scripts/Radioss.py`
+  There is already a Radioss-oriented Python script, but it is still basic.
+- Current facts:
+  - it writes nodes
+  - it writes shell connectivity / part blocks
+  - it is not yet a complete exporter architecture for robust set-driven workflows
+
+## Python wrapper constraints
+
+- `src/python/pywfGUI.i`
+  Current SWIG interface mixes core model headers with GUI / geometry-heavy headers.
+- Important constraint for future work:
+  - the Python wrapper should stay focused on model and I/O APIs
+  - do not include `VTK` types in the SWIG wrapper
+  - do not include `OpenCascade` types in the SWIG wrapper
+  - if needed, expose plain model classes such as:
+    - `Model`
+    - `Mesh`
+    - `Node`
+    - `Element`
+    - `NodeSet`
+    - `ElementSet`
+    - exporters / readers that depend only on model-side data
+
+- Practical guideline:
+  - keep the scripting layer split from the interactive viewer layer
+  - if a feature needs VTK or OpenCascade for picking or display, keep that in C++ GUI code and expose only the resulting model-side data structures to Python
+  - for example, `Set` creation results should be scriptable, but VTK pick actors and OCC shapes should not be part of the SWIG surface
+
+- Warning:
+  - `src/python/pywfGUI.i` should stay lean and model-only
+  - avoid reintroducing `geom/vtkOCCTGeom.h`, `App.h`, or other viewer / OpenCascade dependencies into the SWIG surface
+
 ## Good next sections to document
 
 The next useful areas to document would be:

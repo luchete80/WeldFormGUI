@@ -35,4 +35,30 @@ private:
   NodeSet m_node_set;
 };
 
+class CreateElementSetAction : public Action {
+public:
+  CreateElementSetAction(Editor* editor, Mesh* mesh, const ElementSet& elementSet);
+
+  bool undo() override;
+  bool redo() override;
+
+private:
+  Editor* m_editor = nullptr;
+  Mesh* m_mesh = nullptr;
+  ElementSet m_element_set;
+};
+
+class CreateFaceSetAction : public Action {
+public:
+  CreateFaceSetAction(Editor* editor, Mesh* mesh, const FaceSet& faceSet);
+
+  bool undo() override;
+  bool redo() override;
+
+private:
+  Editor* m_editor = nullptr;
+  Mesh* m_mesh = nullptr;
+  FaceSet m_face_set;
+};
+
 #endif

@@ -7,6 +7,9 @@
 #include <string>
 #include <filesystem>
 
+#include "BoundaryCondition.h"
+#include "InitialCondition.h"
+
 using namespace std;
 
 class Element;
@@ -16,8 +19,6 @@ class Part;
 class Mesh;
 class Particle;
 class Geom;
-class BoundaryCondition;
-class InitialCondition;
 class Vec3_t;
 class Editor;
 class LSDynaWriter;

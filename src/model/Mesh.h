@@ -76,6 +76,56 @@ public:
     }
     return nullptr;
   }
+  int getElementSetCount() const { return static_cast<int>(m_element_sets.size()); }
+  ElementSet& getElementSet(const int& i){ return m_element_sets[i]; }
+  const ElementSet& getElementSet(const int& i) const { return m_element_sets[i]; }
+  void addElementSet(const ElementSet& set){ m_element_sets.push_back(set); }
+  bool removeElementSetById(int id) {
+    for (std::vector<ElementSet>::iterator it = m_element_sets.begin(); it != m_element_sets.end(); ++it) {
+      if (it->getId() == id) {
+        m_element_sets.erase(it);
+        return true;
+      }
+    }
+    return false;
+  }
+  ElementSet* findElementSetById(int id) {
+    for (std::size_t i = 0; i < m_element_sets.size(); ++i) {
+      if (m_element_sets[i].getId() == id) return &m_element_sets[i];
+    }
+    return nullptr;
+  }
+  const ElementSet* findElementSetById(int id) const {
+    for (std::size_t i = 0; i < m_element_sets.size(); ++i) {
+      if (m_element_sets[i].getId() == id) return &m_element_sets[i];
+    }
+    return nullptr;
+  }
+  int getFaceSetCount() const { return static_cast<int>(m_face_sets.size()); }
+  FaceSet& getFaceSet(const int& i){ return m_face_sets[i]; }
+  const FaceSet& getFaceSet(const int& i) const { return m_face_sets[i]; }
+  void addFaceSet(const FaceSet& set){ m_face_sets.push_back(set); }
+  bool removeFaceSetById(int id) {
+    for (std::vector<FaceSet>::iterator it = m_face_sets.begin(); it != m_face_sets.end(); ++it) {
+      if (it->getId() == id) {
+        m_face_sets.erase(it);
+        return true;
+      }
+    }
+    return false;
+  }
+  FaceSet* findFaceSetById(int id) {
+    for (std::size_t i = 0; i < m_face_sets.size(); ++i) {
+      if (m_face_sets[i].getId() == id) return &m_face_sets[i];
+    }
+    return nullptr;
+  }
+  const FaceSet* findFaceSetById(int id) const {
+    for (std::size_t i = 0; i < m_face_sets.size(); ++i) {
+      if (m_face_sets[i].getId() == id) return &m_face_sets[i];
+    }
+    return nullptr;
+  }
   
   const int & getDim() const {return m_dim;}
 
@@ -100,7 +150,8 @@ protected:
   std::vector <Element*> m_elem; //BUT THIS ARE FROM THE PART!!
   std::vector <int>      elnod_h;
   
-  std::vector < Set<Element> >  m_set_elem;
+  std::vector <ElementSet>  m_element_sets;
+  std::vector <FaceSet>     m_face_sets;
   std::vector <NodeSet>   m_node_sets;
   std::vector <Node*>     m_set_node;
   int                     m_gmsh_id; //GMSH entity ID 

@@ -238,3 +238,8 @@
          - Added selected nodes in overlay
          - Added show node number 
          - Begining to implemente Undo/Redo
+20260512 - Begining to add element set
+         - Added Boundary Face set. 
+         - Added show Element Number.
+         - Fixed selection of nodes/elems from only visible parts
+         

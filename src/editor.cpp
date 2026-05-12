@@ -38,6 +38,7 @@
 #include <chrono>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <unordered_set>
 
 #include <gmsh.h>
@@ -70,6 +71,7 @@
 #include <vtkArrowSource.h>
 #include <vtkBillboardTextActor3D.h>
 #include <vtkCellArray.h>
+#include <vtkCellPicker.h>
 #include <vtkCenterOfMass.h>
 #include <vtkMapper.h>
 #include <vtkMath.h>
@@ -582,6 +584,151 @@ Mesh* findCommonMeshForNodes(Model* model, const std::vector<Node*>& nodes)
     return commonMesh;
 }
 
+Mesh* findOwningMeshForElement(Model* model, Element* element)
+{
+    if (model == nullptr || element == nullptr) {
+        return nullptr;
+    }
+
+    for (int p = 0; p < model->getPartCount(); ++p) {
+        Part* part = model->getPart(p);
+        if (part == nullptr || part->getMesh() == nullptr) {
+            continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        for (int e = 0; e < mesh->getElemCount(); ++e) {
+            if (mesh->getElem(e) == element) {
+                return mesh;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+Mesh* findCommonMeshForElements(Model* model, const std::vector<Element*>& elements)
+{
+    if (model == nullptr || elements.empty()) {
+        return nullptr;
+    }
+
+    Mesh* commonMesh = findOwningMeshForElement(model, elements.front());
+    if (commonMesh == nullptr) {
+        return nullptr;
+    }
+
+    for (std::size_t i = 1; i < elements.size(); ++i) {
+        if (findOwningMeshForElement(model, elements[i]) != commonMesh) {
+            return nullptr;
+        }
+    }
+
+    return commonMesh;
+}
+
+std::vector<std::vector<int>> getElementBoundarySides(const Mesh* mesh, const Element* element)
+{
+    std::vector<std::vector<int>> sides;
+    if (mesh == nullptr || element == nullptr) {
+        return sides;
+    }
+
+    const int nodeCount = element->getNodeCount();
+    const int dim = mesh->getDim();
+
+    if (nodeCount == 3) {
+        sides.push_back({element->getNodeId(0), element->getNodeId(1)});
+        sides.push_back({element->getNodeId(1), element->getNodeId(2)});
+        sides.push_back({element->getNodeId(2), element->getNodeId(0)});
+    } else if (nodeCount == 4 && dim == 2) {
+        sides.push_back({element->getNodeId(0), element->getNodeId(1)});
+        sides.push_back({element->getNodeId(1), element->getNodeId(2)});
+        sides.push_back({element->getNodeId(2), element->getNodeId(3)});
+        sides.push_back({element->getNodeId(3), element->getNodeId(0)});
+    } else if (nodeCount == 4 && dim == 3) {
+        sides.push_back({element->getNodeId(0), element->getNodeId(1), element->getNodeId(2)});
+        sides.push_back({element->getNodeId(0), element->getNodeId(1), element->getNodeId(3)});
+        sides.push_back({element->getNodeId(1), element->getNodeId(2), element->getNodeId(3)});
+        sides.push_back({element->getNodeId(2), element->getNodeId(0), element->getNodeId(3)});
+    } else if (nodeCount == 8) {
+        sides.push_back({element->getNodeId(0), element->getNodeId(1), element->getNodeId(2), element->getNodeId(3)});
+        sides.push_back({element->getNodeId(4), element->getNodeId(5), element->getNodeId(6), element->getNodeId(7)});
+        sides.push_back({element->getNodeId(0), element->getNodeId(1), element->getNodeId(5), element->getNodeId(4)});
+        sides.push_back({element->getNodeId(1), element->getNodeId(2), element->getNodeId(6), element->getNodeId(5)});
+        sides.push_back({element->getNodeId(2), element->getNodeId(3), element->getNodeId(7), element->getNodeId(6)});
+        sides.push_back({element->getNodeId(3), element->getNodeId(0), element->getNodeId(4), element->getNodeId(7)});
+    }
+
+    return sides;
+}
+
+std::string faceKeyFromNodeIds(const std::vector<int>& nodeIds)
+{
+    std::vector<int> sortedIds = nodeIds;
+    std::sort(sortedIds.begin(), sortedIds.end());
+
+    std::ostringstream key;
+    for (std::size_t i = 0; i < sortedIds.size(); ++i) {
+        if (i > 0) {
+            key << "-";
+        }
+        key << sortedIds[i];
+    }
+    return key.str();
+}
+
+FaceSet buildBoundaryFaceSetFromElementSet(Mesh* mesh, const ElementSet& elementSet, int faceSetId, const std::string& label)
+{
+    struct FaceCandidate {
+        std::vector<int> nodeIds;
+        int ownerElementId = -1;
+        int localFaceIndex = -1;
+        int count = 0;
+    };
+
+    std::map<std::string, FaceCandidate> faceMap;
+    for (int i = 0; i < elementSet.getItemCount(); ++i) {
+        const Element* element = elementSet.getItem(i);
+        if (element == nullptr) {
+            continue;
+        }
+
+        const std::vector<std::vector<int>> sides = getElementBoundarySides(mesh, element);
+        for (std::size_t sideIndex = 0; sideIndex < sides.size(); ++sideIndex) {
+            const std::vector<int>& sideNodeIds = sides[sideIndex];
+            const std::string key = faceKeyFromNodeIds(sideNodeIds);
+            FaceCandidate& candidate = faceMap[key];
+            if (candidate.count == 0) {
+                candidate.nodeIds = sideNodeIds;
+                candidate.ownerElementId = element->getId();
+                candidate.localFaceIndex = static_cast<int>(sideIndex);
+            }
+            candidate.count++;
+        }
+    }
+
+    FaceSet faceSet(mesh);
+    faceSet.setEntityId(faceSetId);
+    faceSet.setLabel(label);
+
+    int nextFaceId = 0;
+    for (std::map<std::string, FaceCandidate>::const_iterator it = faceMap.begin(); it != faceMap.end(); ++it) {
+        const FaceCandidate& candidate = it->second;
+        if (candidate.count != 1) {
+            continue;
+        }
+
+        Face face(candidate.nodeIds);
+        face.setEntityId(nextFaceId++);
+        face.setOwnerElementId(candidate.ownerElementId);
+        face.setLocalFaceIndex(candidate.localFaceIndex);
+        faceSet.add(face);
+    }
+
+    return faceSet;
+}
+
 int findNextNodeSetId(Model* model)
 {
     if (model == nullptr) {
@@ -602,6 +749,49 @@ int findNextNodeSetId(Model* model)
     }
     return maxId + 1;
 }
+
+int findNextElementSetId(Model* model)
+{
+    if (model == nullptr) {
+        return 0;
+    }
+
+    int maxId = -1;
+    for (int p = 0; p < model->getPartCount(); ++p) {
+        Part* part = model->getPart(p);
+        if (part == nullptr || part->getMesh() == nullptr) {
+            continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        for (int s = 0; s < mesh->getElementSetCount(); ++s) {
+            maxId = std::max(maxId, mesh->getElementSet(s).getId());
+        }
+    }
+    return maxId + 1;
+}
+
+int findNextFaceSetId(Model* model)
+{
+    if (model == nullptr) {
+        return 0;
+    }
+
+    int maxId = -1;
+    for (int p = 0; p < model->getPartCount(); ++p) {
+        Part* part = model->getPart(p);
+        if (part == nullptr || part->getMesh() == nullptr) {
+            continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        for (int s = 0; s < mesh->getFaceSetCount(); ++s) {
+            maxId = std::max(maxId, mesh->getFaceSet(s).getId());
+        }
+    }
+    return maxId + 1;
+}
+
 }
 
 template <typename T>
@@ -631,6 +821,10 @@ void Editor::drawSelectionControls()
   int target = static_cast<int>(m_selector.getTarget());
   if (ImGui::RadioButton("Nodes", &target, static_cast<int>(SelectionTarget::Node))) {
     m_selector.setTarget(SelectionTarget::Node);
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Elements", &target, static_cast<int>(SelectionTarget::Element))) {
+    m_selector.setTarget(SelectionTarget::Element);
   }
   ImGui::SameLine();
   ImGui::BeginDisabled();
@@ -666,8 +860,14 @@ void Editor::drawSelectionControls()
   ImGui::SameLine();
   if (ImGui::Button("Create Set")) {
     m_setdlg.reset();
-    m_setdlg.set_type = NODE_SET;
-    const std::string defaultSetName = "set_" + std::to_string(findNextNodeSetId(m_model));
+    if (m_selector.isElementTarget()) {
+      m_setdlg.set_type = ELEM_SET;
+    } else {
+      m_setdlg.set_type = NODE_SET;
+    }
+    const std::string defaultSetName = (m_setdlg.set_type == ELEM_SET)
+      ? ("elem_set_" + std::to_string(findNextElementSetId(m_model)))
+      : ("set_" + std::to_string(findNextNodeSetId(m_model)));
     m_setdlg.setDefaultName(defaultSetName.c_str());
     m_setdlg.m_selecting = m_selection_enabled;
     m_show_set_dlg = true;
@@ -675,24 +875,41 @@ void Editor::drawSelectionControls()
 
   if (m_selector.isPickMode()) {
     ImGui::TextDisabled("Pick: Click = single select");
-    ImGui::TextDisabled("Pick: Ctrl+Click = add/remove node");
+    ImGui::TextDisabled("Pick: Ctrl+Click = add/remove %s",
+                        m_selector.isElementTarget() ? "element" : "node");
   } else {
-    ImGui::TextDisabled("Box: drag on viewport to select nodes");
+    ImGui::TextDisabled("Box: drag on viewport to select %s",
+                        m_selector.isElementTarget() ? "elements" : "nodes");
   }
 
   ImGui::Text("Selection mode: %s", m_selection_enabled ? "Active" : "Idle");
 
-  ImGui::Text("Selected nodes: %d", m_selector.getSelectedNodeCount());
-  const std::vector<Node*>& selectedNodes = m_selector.getSelectedNodes();
-  const int previewCount = std::min<int>(selectedNodes.size(), 8);
-  for (int i = 0; i < previewCount; ++i) {
-    if (selectedNodes[i] == nullptr) {
-      continue;
+  if (m_selector.isElementTarget()) {
+    ImGui::Text("Selected elements: %d", m_selector.getSelectedElementCount());
+    const std::vector<Element*>& selectedElements = m_selector.getSelectedElements();
+    const int previewCount = std::min<int>(selectedElements.size(), 8);
+    for (int i = 0; i < previewCount; ++i) {
+      if (selectedElements[i] == nullptr) {
+        continue;
+      }
+      ImGui::Text("Element %d", selectedElements[i]->getId());
     }
-    ImGui::Text("Node %d", selectedNodes[i]->getId());
-  }
-  if (selectedNodes.size() > static_cast<std::size_t>(previewCount)) {
-    ImGui::Text("...");
+    if (selectedElements.size() > static_cast<std::size_t>(previewCount)) {
+      ImGui::Text("...");
+    }
+  } else {
+    ImGui::Text("Selected nodes: %d", m_selector.getSelectedNodeCount());
+    const std::vector<Node*>& selectedNodes = m_selector.getSelectedNodes();
+    const int previewCount = std::min<int>(selectedNodes.size(), 8);
+    for (int i = 0; i < previewCount; ++i) {
+      if (selectedNodes[i] == nullptr) {
+        continue;
+      }
+      ImGui::Text("Node %d", selectedNodes[i]->getId());
+    }
+    if (selectedNodes.size() > static_cast<std::size_t>(previewCount)) {
+      ImGui::Text("...");
+    }
   }
 
   ImGui::Separator();
@@ -719,6 +936,9 @@ bool Editor::shouldDrawSelectionOverlay() const
 {
   return m_selection_enabled ||
          m_selector.getSelectedNodeCount() > 0 ||
+         m_selector.getSelectedElementCount() > 0 ||
+         getSelectedFaceSet() != nullptr ||
+         getSelectedElementSet() != nullptr ||
          getSelectedNodeSet() != nullptr;
 }
 
@@ -733,6 +953,10 @@ void Editor::selectNodeSet(Mesh* mesh, int setIndex)
     return;
   }
 
+  m_selected_element_set_mesh = nullptr;
+  m_selected_element_set_index = -1;
+  m_selected_face_set_mesh = nullptr;
+  m_selected_face_set_index = -1;
   m_selected_node_set_mesh = mesh;
   m_selected_node_set_index = setIndex;
 
@@ -745,9 +969,58 @@ void Editor::selectNodeSet(Mesh* mesh, int setIndex)
     }
   }
 
+  m_selector.getSelectedElements().clear();
   m_selector.setSelectedNodes(nodes);
   m_is_node_sel = !nodes.empty();
   m_sel_node = nodes.empty() ? -1 : nodes.front()->getId();
+}
+
+void Editor::selectElementSet(Mesh* mesh, int setIndex)
+{
+  if (mesh == nullptr || setIndex < 0 || setIndex >= mesh->getElementSetCount()) {
+    m_selected_element_set_mesh = nullptr;
+    m_selected_element_set_index = -1;
+    m_selector.getSelectedElements().clear();
+    return;
+  }
+
+  m_selected_node_set_mesh = nullptr;
+  m_selected_node_set_index = -1;
+  m_selected_face_set_mesh = nullptr;
+  m_selected_face_set_index = -1;
+  m_selected_element_set_mesh = mesh;
+  m_selected_element_set_index = setIndex;
+  ElementSet& elementSet = mesh->getElementSet(setIndex);
+  std::vector<Element*> elements;
+  for (int i = 0; i < elementSet.getItemCount(); ++i) {
+    Element* element = elementSet.getItem(i);
+    if (element != nullptr) {
+      elements.push_back(element);
+    }
+  }
+  m_selector.getSelectedNodes().clear();
+  m_selector.setSelectedElements(elements);
+  m_sel_node = -1;
+  m_is_node_sel = false;
+}
+
+void Editor::selectFaceSet(Mesh* mesh, int setIndex)
+{
+  if (mesh == nullptr || setIndex < 0 || setIndex >= mesh->getFaceSetCount()) {
+    m_selected_face_set_mesh = nullptr;
+    m_selected_face_set_index = -1;
+    return;
+  }
+
+  m_selected_node_set_mesh = nullptr;
+  m_selected_node_set_index = -1;
+  m_selected_element_set_mesh = nullptr;
+  m_selected_element_set_index = -1;
+  m_selected_face_set_mesh = mesh;
+  m_selected_face_set_index = setIndex;
+  m_selector.clearSelection();
+  m_sel_node = -1;
+  m_is_node_sel = false;
 }
 
 NodeSet* Editor::getSelectedNodeSet()
@@ -770,6 +1043,46 @@ const NodeSet* Editor::getSelectedNodeSet() const
   return &m_selected_node_set_mesh->getNodeSet(m_selected_node_set_index);
 }
 
+ElementSet* Editor::getSelectedElementSet()
+{
+  if (m_selected_element_set_mesh == nullptr ||
+      m_selected_element_set_index < 0 ||
+      m_selected_element_set_index >= m_selected_element_set_mesh->getElementSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_element_set_mesh->getElementSet(m_selected_element_set_index);
+}
+
+const ElementSet* Editor::getSelectedElementSet() const
+{
+  if (m_selected_element_set_mesh == nullptr ||
+      m_selected_element_set_index < 0 ||
+      m_selected_element_set_index >= m_selected_element_set_mesh->getElementSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_element_set_mesh->getElementSet(m_selected_element_set_index);
+}
+
+FaceSet* Editor::getSelectedFaceSet()
+{
+  if (m_selected_face_set_mesh == nullptr ||
+      m_selected_face_set_index < 0 ||
+      m_selected_face_set_index >= m_selected_face_set_mesh->getFaceSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_face_set_mesh->getFaceSet(m_selected_face_set_index);
+}
+
+const FaceSet* Editor::getSelectedFaceSet() const
+{
+  if (m_selected_face_set_mesh == nullptr ||
+      m_selected_face_set_index < 0 ||
+      m_selected_face_set_index >= m_selected_face_set_mesh->getFaceSetCount()) {
+    return nullptr;
+  }
+  return &m_selected_face_set_mesh->getFaceSet(m_selected_face_set_index);
+}
+
 void Editor::clearStateForDeletedMesh(Mesh* mesh)
 {
   if (mesh == nullptr) {
@@ -783,6 +1096,16 @@ void Editor::clearStateForDeletedMesh(Mesh* mesh)
   if (m_selected_node_set_mesh == mesh) {
     m_selected_node_set_mesh = nullptr;
     m_selected_node_set_index = -1;
+  }
+
+  if (m_selected_element_set_mesh == mesh) {
+    m_selected_element_set_mesh = nullptr;
+    m_selected_element_set_index = -1;
+  }
+
+  if (m_selected_face_set_mesh == mesh) {
+    m_selected_face_set_mesh = nullptr;
+    m_selected_face_set_index = -1;
   }
 }
 
@@ -825,6 +1148,46 @@ void Editor::clearStateForDeletedCondition(Condition* condition)
   }
 }
 
+void Editor::clearSelectionForHiddenPart(Part* part)
+{
+  if (part == nullptr || part->getMesh() == nullptr) {
+    return;
+  }
+
+  Mesh* mesh = part->getMesh();
+
+  std::vector<Node*>& selectedNodes = m_selector.getSelectedNodes();
+  selectedNodes.erase(
+    std::remove_if(selectedNodes.begin(),
+                   selectedNodes.end(),
+                   [this, mesh](Node* node) {
+                     return node != nullptr && findOwningMeshForNode(m_model, node) == mesh;
+                   }),
+    selectedNodes.end());
+
+  std::vector<Element*>& selectedElements = m_selector.getSelectedElements();
+  selectedElements.erase(
+    std::remove_if(selectedElements.begin(),
+                   selectedElements.end(),
+                   [this, mesh](Element* element) {
+                     return element != nullptr && findOwningMeshForElement(m_model, element) == mesh;
+                   }),
+    selectedElements.end());
+
+  if (m_selected_node_set_mesh == mesh) {
+    clearSelectedNodeSet();
+  }
+  if (m_selected_element_set_mesh == mesh) {
+    clearSelectedElementSet();
+  }
+  if (m_selected_face_set_mesh == mesh) {
+    clearSelectedFaceSet();
+  }
+
+  m_is_node_sel = !selectedNodes.empty();
+  m_sel_node = m_is_node_sel ? selectedNodes.front()->getId() : -1;
+}
+
 bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
 {
   if (node == nullptr || viewer == nullptr || viewer->getRenderer() == nullptr) {
@@ -834,6 +1197,58 @@ bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
   auto renderer = viewer->getRenderer();
   const Vector3f& pos = node->getPos();
   renderer->SetWorldPoint(pos.x, pos.y, pos.z, 1.0);
+  renderer->WorldToDisplay();
+
+  double display[3] = {0.0, 0.0, 0.0};
+  renderer->GetDisplayPoint(display);
+  if (display[2] < 0.0 || display[2] > 1.0) {
+    return false;
+  }
+
+  x = display[0];
+  y = static_cast<double>(viewer->getViewportHeight()) - display[1];
+  return true;
+}
+
+bool Editor::projectElementCentroidToViewport(Element* element, double& x, double& y) const
+{
+  if (element == nullptr || element->getNodeCount() <= 0) {
+    return false;
+  }
+
+  Mesh* owningMesh = findOwningMeshForElement(m_model, element);
+  if (owningMesh == nullptr) {
+    return false;
+  }
+
+  Vector3f centroid(0.0f, 0.0f, 0.0f);
+  int validNodeCount = 0;
+  for (int i = 0; i < element->getNodeCount(); ++i) {
+    const int nodeId = element->getNodeId(i);
+    Node* node = nullptr;
+    for (int n = 0; n < owningMesh->getNodeCount(); ++n) {
+      Node* candidate = owningMesh->getNode(n);
+      if (candidate != nullptr && candidate->getId() == nodeId) {
+        node = candidate;
+        break;
+      }
+    }
+
+    if (node == nullptr) {
+      continue;
+    }
+
+    centroid += node->getPos();
+    ++validNodeCount;
+  }
+
+  if (validNodeCount <= 0 || viewer == nullptr || viewer->getRenderer() == nullptr) {
+    return false;
+  }
+
+  centroid = centroid / static_cast<double>(validNodeCount);
+  auto renderer = viewer->getRenderer();
+  renderer->SetWorldPoint(centroid.x, centroid.y, centroid.z, 1.0);
   renderer->WorldToDisplay();
 
   double display[3] = {0.0, 0.0, 0.0};
@@ -858,7 +1273,7 @@ Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) co
 
   for (int p = 0; p < m_model->getPartCount(); ++p) {
     Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
       continue;
     }
 
@@ -884,6 +1299,68 @@ Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) co
   return closest;
 }
 
+Element* Editor::pickClosestElementAt(double x, double y, double maxDistancePixels) const
+{
+  if (m_model == nullptr || viewer == nullptr || viewer->getRenderer() == nullptr) {
+    return nullptr;
+  }
+
+  vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
+  picker->SetTolerance(0.0005);
+  const double pickY = static_cast<double>(viewer->getViewportHeight()) - y;
+  if (picker->Pick(x, pickY, 0.0, viewer->getRenderer())) {
+    vtkActor* pickedActor = picker->GetActor();
+    const vtkIdType cellId = picker->GetCellId();
+    if (pickedActor != nullptr && cellId >= 0) {
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part* part = m_model->getPart(p);
+        if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+          continue;
+        }
+        GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
+        if (graphicMesh == nullptr || graphicMesh->getActor() != pickedActor) {
+          continue;
+        }
+
+        Mesh* mesh = part->getMesh();
+        if (cellId >= 0 && cellId < mesh->getElemCount()) {
+          return mesh->getElem(static_cast<int>(cellId));
+        }
+      }
+    }
+  }
+
+  Element* closest = nullptr;
+  double bestDist2 = maxDistancePixels * maxDistancePixels;
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int e = 0; e < mesh->getElemCount(); ++e) {
+      Element* element = mesh->getElem(e);
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectElementCentroidToViewport(element, sx, sy)) {
+        continue;
+      }
+
+      const double dx = sx - x;
+      const double dy = sy - y;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 <= bestDist2) {
+        bestDist2 = dist2;
+        closest = element;
+      }
+    }
+  }
+
+  return closest;
+}
+
 void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
 {
   if (m_model == nullptr) {
@@ -901,7 +1378,7 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
 
   for (int p = 0; p < m_model->getPartCount(); ++p) {
     Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
       continue;
     }
 
@@ -921,9 +1398,53 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
   }
 
   m_selector.setSelectedNodes(selectedNodes);
+  m_selector.getSelectedElements().clear();
   m_is_node_sel = !selectedNodes.empty();
   m_sel_node = selectedNodes.empty() ? -1 : selectedNodes.front()->getId();
   cout << "Selected " << selectedNodes.size() << " nodes" << endl;
+}
+
+void Editor::selectElementsInBox(double x0, double y0, double x1, double y1)
+{
+  if (m_model == nullptr) {
+    m_selector.getSelectedElements().clear();
+    return;
+  }
+
+  const double minX = std::min(x0, x1);
+  const double maxX = std::max(x0, x1);
+  const double minY = std::min(y0, y1);
+  const double maxY = std::max(y0, y1);
+
+  std::vector<Element*> selectedElements;
+  std::unordered_set<Element*> seen;
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int e = 0; e < mesh->getElemCount(); ++e) {
+      Element* element = mesh->getElem(e);
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectElementCentroidToViewport(element, sx, sy)) {
+        continue;
+      }
+
+      if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY && seen.insert(element).second) {
+        selectedElements.push_back(element);
+      }
+    }
+  }
+
+  m_selector.setSelectedElements(selectedElements);
+  m_selector.getSelectedNodes().clear();
+  m_is_node_sel = false;
+  m_sel_node = -1;
+  cout << "Selected " << selectedElements.size() << " elements" << endl;
 }
 
 void Editor::handleSelectionInteraction()
@@ -942,7 +1463,7 @@ void Editor::handleSelectionInteraction()
     return;
   }
 
-  if (viewer == nullptr || !m_selector.isNodeTarget()) {
+  if (viewer == nullptr || (!m_selector.isNodeTarget() && !m_selector.isElementTarget())) {
     return;
   }
 
@@ -958,20 +1479,41 @@ void Editor::handleSelectionInteraction()
 
   if (m_selector.isPickMode()) {
     if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-      Node* node = pickClosestNodeAt(localMouse.x, localMouse.y);
-      if (io.KeyCtrl) {
-        m_selector.toggleNode(node);
-      } else {
-        m_selector.setSingleNode(node);
-      }
-      m_is_node_sel = (m_selector.getSelectedNodeCount() > 0);
-      m_sel_node = m_is_node_sel ? m_selector.getSelectedNodes().front()->getId() : -1;
-      if (node != nullptr) {
+      if (m_selector.isElementTarget()) {
+        Element* element = pickClosestElementAt(localMouse.x, localMouse.y);
         if (io.KeyCtrl) {
-          cout << "Toggled node " << node->getId()
-               << ", selected count=" << m_selector.getSelectedNodeCount() << endl;
+          m_selector.toggleElement(element);
         } else {
-          cout << "Picked node " << node->getId() << endl;
+          m_selector.setSingleElement(element);
+        }
+        m_selector.getSelectedNodes().clear();
+        m_is_node_sel = false;
+        m_sel_node = -1;
+        if (element != nullptr) {
+          if (io.KeyCtrl) {
+            cout << "Toggled element " << element->getId()
+                 << ", selected count=" << m_selector.getSelectedElementCount() << endl;
+          } else {
+            cout << "Picked element " << element->getId() << endl;
+          }
+        }
+      } else {
+        Node* node = pickClosestNodeAt(localMouse.x, localMouse.y);
+        if (io.KeyCtrl) {
+          m_selector.toggleNode(node);
+        } else {
+          m_selector.setSingleNode(node);
+        }
+        m_selector.getSelectedElements().clear();
+        m_is_node_sel = (m_selector.getSelectedNodeCount() > 0);
+        m_sel_node = m_is_node_sel ? m_selector.getSelectedNodes().front()->getId() : -1;
+        if (node != nullptr) {
+          if (io.KeyCtrl) {
+            cout << "Toggled node " << node->getId()
+                 << ", selected count=" << m_selector.getSelectedNodeCount() << endl;
+          } else {
+            cout << "Picked node " << node->getId() << endl;
+          }
         }
       }
     }
@@ -988,12 +1530,21 @@ void Editor::handleSelectionInteraction()
 
   if (m_selector.isBoxSelecting() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
     m_selector.updateBoxSelection(localMouse);
-    selectNodesInBox(
-      m_selector.getBoxStart().x,
-      m_selector.getBoxStart().y,
-      m_selector.getBoxEnd().x,
-      m_selector.getBoxEnd().y
-    );
+    if (m_selector.isElementTarget()) {
+      selectElementsInBox(
+        m_selector.getBoxStart().x,
+        m_selector.getBoxStart().y,
+        m_selector.getBoxEnd().x,
+        m_selector.getBoxEnd().y
+      );
+    } else {
+      selectNodesInBox(
+        m_selector.getBoxStart().x,
+        m_selector.getBoxStart().y,
+        m_selector.getBoxEnd().x,
+        m_selector.getBoxEnd().y
+      );
+    }
     m_selector.finishBoxSelection();
   }
 }
@@ -1011,6 +1562,19 @@ void Editor::drawSelectionOverlay() const
   }
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  const FaceSet* selectedFaceSet = getSelectedFaceSet();
+  auto findMeshNodeById = [](Mesh* mesh, int nodeId) -> Node* {
+    if (mesh == nullptr) {
+      return nullptr;
+    }
+    for (int n = 0; n < mesh->getNodeCount(); ++n) {
+      Node* node = mesh->getNode(n);
+      if (node != nullptr && node->getId() == nodeId) {
+        return node;
+      }
+    }
+    return nullptr;
+  };
   if (m_selector.isBoxSelecting()) {
     const ImVec2 start(viewportMin.x + m_selector.getBoxStart().x, viewportMin.y + m_selector.getBoxStart().y);
     const ImVec2 end(viewportMin.x + m_selector.getBoxEnd().x, viewportMin.y + m_selector.getBoxEnd().y);
@@ -1041,6 +1605,99 @@ void Editor::drawSelectionOverlay() const
       drawList->AddRectFilled(bgMin, bgMax, IM_COL32(18, 22, 28, 180), 4.0f);
       drawList->AddRect(bgMin, bgMax, IM_COL32(255, 244, 196, 70), 4.0f, 0, 1.0f);
       drawList->AddText(textPos, IM_COL32(255, 248, 220, 255), label.c_str());
+    }
+  }
+
+  for (Element* element : m_selector.getSelectedElements()) {
+    double x = 0.0;
+    double y = 0.0;
+    if (!projectElementCentroidToViewport(element, x, y)) {
+      continue;
+    }
+
+    drawList->AddCircleFilled(
+      ImVec2(viewportMin.x + static_cast<float>(x), viewportMin.y + static_cast<float>(y)),
+      6.0f,
+      IM_COL32(80, 220, 255, 255)
+    );
+    drawList->AddCircle(
+      ImVec2(viewportMin.x + static_cast<float>(x), viewportMin.y + static_cast<float>(y)),
+      9.0f,
+      IM_COL32(80, 220, 255, 180),
+      0,
+      2.0f
+    );
+
+    if (m_show_selected_node_labels && element != nullptr) {
+      const std::string label = std::to_string(element->getId());
+      const ImVec2 textPos(
+        viewportMin.x + static_cast<float>(x) + 10.0f,
+        viewportMin.y + static_cast<float>(y) - 10.0f);
+      const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+      const ImVec2 bgMin(textPos.x - 4.0f, textPos.y - 2.0f);
+      const ImVec2 bgMax(textPos.x + textSize.x + 4.0f, textPos.y + textSize.y + 2.0f);
+      drawList->AddRectFilled(bgMin, bgMax, IM_COL32(14, 26, 34, 190), 4.0f);
+      drawList->AddRect(bgMin, bgMax, IM_COL32(120, 235, 255, 80), 4.0f, 0, 1.0f);
+      drawList->AddText(textPos, IM_COL32(220, 250, 255, 255), label.c_str());
+    }
+  }
+
+  if (selectedFaceSet != nullptr && selectedFaceSet->getMesh() != nullptr) {
+    Mesh* faceMesh = const_cast<Mesh*>(selectedFaceSet->getMesh());
+    for (int i = 0; i < selectedFaceSet->getItemCount(); ++i) {
+      const Face* face = selectedFaceSet->getItem(i);
+      if (face == nullptr || face->getNodeCount() < 2) {
+        continue;
+      }
+
+      std::vector<ImVec2> projected;
+      projected.reserve(static_cast<std::size_t>(face->getNodeCount()));
+      double centroidX = 0.0;
+      double centroidY = 0.0;
+      int projectedCount = 0;
+
+      for (int n = 0; n < face->getNodeCount(); ++n) {
+        Node* node = findMeshNodeById(faceMesh, face->getNodeId(n));
+        if (node == nullptr) {
+          continue;
+        }
+
+        double x = 0.0;
+        double y = 0.0;
+        if (!projectNodeToViewport(node, x, y)) {
+          continue;
+        }
+
+        projected.push_back(ImVec2(viewportMin.x + static_cast<float>(x),
+                                   viewportMin.y + static_cast<float>(y)));
+        centroidX += x;
+        centroidY += y;
+        ++projectedCount;
+      }
+
+      if (projected.size() < 2) {
+        continue;
+      }
+
+      for (std::size_t p = 0; p < projected.size(); ++p) {
+        const ImVec2& a = projected[p];
+        const ImVec2& b = projected[(p + 1) % projected.size()];
+        drawList->AddLine(a, b, IM_COL32(255, 120, 80, 230), 3.0f);
+        drawList->AddCircleFilled(a, 3.5f, IM_COL32(255, 170, 110, 240));
+      }
+
+      if (m_show_selected_node_labels && projectedCount > 0) {
+        const std::string label = "E" + std::to_string(face->getOwnerElementId());
+        const ImVec2 textPos(
+          viewportMin.x + static_cast<float>(centroidX / static_cast<double>(projectedCount)) + 8.0f,
+          viewportMin.y + static_cast<float>(centroidY / static_cast<double>(projectedCount)) - 10.0f);
+        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+        const ImVec2 bgMin(textPos.x - 4.0f, textPos.y - 2.0f);
+        const ImVec2 bgMax(textPos.x + textSize.x + 4.0f, textPos.y + textSize.y + 2.0f);
+        drawList->AddRectFilled(bgMin, bgMax, IM_COL32(42, 20, 16, 195), 4.0f);
+        drawList->AddRect(bgMin, bgMax, IM_COL32(255, 180, 130, 90), 4.0f, 0, 1.0f);
+        drawList->AddText(textPos, IM_COL32(255, 220, 200, 255), label.c_str());
+      }
     }
   }
 }
@@ -1793,6 +2450,46 @@ NodeSet* Editor::findNodeSetById(int setId) const
   return nullptr;
 }
 
+ElementSet* Editor::findElementSetById(int setId) const
+{
+  if (m_model == nullptr) {
+    return nullptr;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    if (ElementSet* set = part->getMesh()->findElementSetById(setId)) {
+      return set;
+    }
+  }
+
+  return nullptr;
+}
+
+FaceSet* Editor::findFaceSetById(int setId) const
+{
+  if (m_model == nullptr) {
+    return nullptr;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    if (FaceSet* set = part->getMesh()->findFaceSetById(setId)) {
+      return set;
+    }
+  }
+
+  return nullptr;
+}
+
 bool Editor::selectNodeSetById(int setId)
 {
   if (m_model == nullptr) {
@@ -1817,9 +2514,67 @@ bool Editor::selectNodeSetById(int setId)
   return false;
 }
 
+bool Editor::selectElementSetById(int setId)
+{
+  if (m_model == nullptr) {
+    return false;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int s = 0; s < mesh->getElementSetCount(); ++s) {
+      if (mesh->getElementSet(s).getId() == setId) {
+        selectElementSet(mesh, s);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool Editor::selectFaceSetById(int setId)
+{
+  if (m_model == nullptr) {
+    return false;
+  }
+
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    Part* part = m_model->getPart(i);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int s = 0; s < mesh->getFaceSetCount(); ++s) {
+      if (mesh->getFaceSet(s).getId() == setId) {
+        selectFaceSet(mesh, s);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 void Editor::clearSelectedNodeSet()
 {
   selectNodeSet(nullptr, -1);
+}
+
+void Editor::clearSelectedElementSet()
+{
+  selectElementSet(nullptr, -1);
+}
+
+void Editor::clearSelectedFaceSet()
+{
+  selectFaceSet(nullptr, -1);
 }
 
 bool Editor::canUndo() const
@@ -3215,7 +3970,11 @@ void Editor::drawGui() {
               "part_visibility_" + std::to_string(treePart->getId()) + "_" + std::to_string(i);
             const bool partVisible = isPartVisible(treePart);
             if (drawPartVisibilityButton(visibilityButtonId.c_str(), partVisible)) {
-              setPartVisible(treePart, !partVisible);
+              const bool newVisible = !partVisible;
+              setPartVisible(treePart, newVisible);
+              if (!newVisible) {
+                clearSelectionForHiddenPart(treePart);
+              }
               if (viewer != nullptr && viewer->getRenderWindow() != nullptr) {
                 viewer->getRenderWindow()->Render();
               }
@@ -3293,11 +4052,18 @@ void Editor::drawGui() {
 	                      ImGui::TreePop();
 	                  }
 
-                  //~ if (ImGui::TreeNode("Elements"))
-                  //~ {
-                      //~ ImGui::Text("Count: %d", m_model->getPart(i)->getMesh()->getElementCount());
-                      //~ ImGui::TreePop();
-                  //~ }
+	                  if (ImGui::TreeNode("Elements"))
+	                  {
+                        if (ImGui::IsItemHovered()) {
+                          part_branch_hovered = true;
+                          hovered_prt = treePart;
+                        }
+	                      if (ImGui::IsItemClicked()) {
+	                        model_tree_item_clicked = true;
+	                      }
+	                      ImGui::Text("Count: %d", treePart->getMesh()->getElemCount());
+	                      ImGui::TreePop();
+	                  }
 
                   ImGui::TreePop(); // Cierra "Mesh"
               }//If MESH            
@@ -3406,6 +4172,7 @@ void Editor::drawGui() {
           if (open_) //Expand
           {
              bool anySetShown = false;
+             ImGui::TextDisabled("Node Sets");
              for (int i = 0; i < m_model->getPartCount(); ++i) {
                Part* part = m_model->getPart(i);
                if (part == nullptr || part->getMesh() == nullptr) {
@@ -3444,8 +4211,105 @@ void Editor::drawGui() {
                  anySetShown = true;
                }
              }
+
+             ImGui::Separator();
+             ImGui::TextDisabled("Element Sets");
+             bool anyElementSetShown = false;
+             for (int i = 0; i < m_model->getPartCount(); ++i) {
+               Part* part = m_model->getPart(i);
+               if (part == nullptr || part->getMesh() == nullptr) {
+                 continue;
+               }
+
+               Mesh* mesh = part->getMesh();
+               for (int s = 0; s < mesh->getElementSetCount(); ++s) {
+                 const ElementSet& elementSet = mesh->getElementSet(s);
+                 const std::string label = elementSet.getLabel().empty()
+                   ? "Element Set"
+                   : elementSet.getLabel();
+                 const bool isSelected =
+                   (m_selected_element_set_mesh == mesh && m_selected_element_set_index == s);
+                 const std::string displayLabel = label + " [id " + std::to_string(elementSet.getId()) + "]";
+                 if (ImGui::Selectable((displayLabel + "##model_elemset_" + std::to_string(i) + "_" + std::to_string(s)).c_str(),
+                                       isSelected)) {
+                   selectElementSet(mesh, s);
+                 }
+                 if (ImGui::IsItemHovered()) {
+                   ImGui::SetTooltip("%d elements", elementSet.getItemCount());
+                 }
+                 if (ImGui::BeginPopupContextItem()) {
+                   if (ImGui::MenuItem("Edit")) {
+                     selectElementSet(mesh, s);
+                     m_setdlg.reset();
+                     m_setdlg.set_type = ELEM_SET;
+                     m_setdlg.m_edit_mode = true;
+                     m_setdlg.setDefaultName(label.c_str());
+                     m_show_set_dlg = true;
+                   }
+                   if (ImGui::MenuItem("Create Boundary Face Set")) {
+                     selectElementSet(mesh, s);
+                     const FaceSet faceSet = buildBoundaryFaceSetFromElementSet(
+                       mesh,
+                       elementSet,
+                       findNextFaceSetId(m_model),
+                       label + "_faces");
+                     mesh->addFaceSet(faceSet);
+                     selectFaceSet(mesh, mesh->getFaceSetCount() - 1);
+                     pushAction(std::unique_ptr<Action>(new CreateFaceSetAction(this, mesh, faceSet)));
+                     cout << "Created face set from element set: name=" << faceSet.getLabel()
+                          << ", id=" << faceSet.getId()
+                          << ", faces=" << faceSet.getItemCount() << endl;
+                   }
+                   ImGui::EndPopup();
+                 }
+                 ImGui::SameLine();
+                 ImGui::TextDisabled("(%d elements)", elementSet.getItemCount());
+                 anyElementSetShown = true;
+                 anySetShown = true;
+               }
+             }
+
+             ImGui::Separator();
+             ImGui::TextDisabled("Face Sets");
+             bool anyFaceSetShown = false;
+             for (int i = 0; i < m_model->getPartCount(); ++i) {
+               Part* part = m_model->getPart(i);
+               if (part == nullptr || part->getMesh() == nullptr) {
+                 continue;
+               }
+
+               Mesh* mesh = part->getMesh();
+               for (int s = 0; s < mesh->getFaceSetCount(); ++s) {
+                 const FaceSet& faceSet = mesh->getFaceSet(s);
+                 const std::string label = faceSet.getLabel().empty()
+                   ? "Face Set"
+                   : faceSet.getLabel();
+                 const bool isSelected =
+                   (m_selected_face_set_mesh == mesh && m_selected_face_set_index == s);
+                 const std::string displayLabel = label + " [id " + std::to_string(faceSet.getId()) + "]";
+                 if (ImGui::Selectable((displayLabel + "##model_faceset_" + std::to_string(i) + "_" + std::to_string(s)).c_str(),
+                                       isSelected)) {
+                   selectFaceSet(mesh, s);
+                 }
+                 if (ImGui::IsItemHovered()) {
+                   ImGui::SetTooltip("%d faces", faceSet.getItemCount());
+                 }
+                 ImGui::SameLine();
+                 ImGui::TextDisabled("(%d faces)", faceSet.getItemCount());
+                 anyFaceSetShown = true;
+                 anySetShown = true;
+               }
+             }
+
              if (!anySetShown) {
                ImGui::TextDisabled("No sets created.");
+             } else {
+               if (!anyElementSetShown) {
+                 ImGui::TextDisabled("No element sets created.");
+               }
+               if (!anyFaceSetShown) {
+                 ImGui::TextDisabled("No face sets created.");
+               }
              }
              ImGui::TreePop();
           }
@@ -3900,18 +4764,115 @@ void Editor::drawGui() {
         closeCurrentResults();
       }
 
-      open_ = ImGui::TreeNode("Element Sets");      
+      open_ = ImGui::TreeNode("Element Sets");
       if (ImGui::BeginPopupContextItem())
       {
-        // if (ImGui::MenuItem("New Geometry", "CTRL+Z")) {}
-        // if (ImGui::MenuItem("New Mesh", "CTRL+Z")) {}
-          ImGui::EndPopup();          
-      }  
+        if (ImGui::MenuItem("New")) {
+          m_setdlg.reset();
+          m_setdlg.set_type = ELEM_SET;
+          const std::string defaultSetName = "elem_set_" + std::to_string(findNextElementSetId(m_model));
+          m_setdlg.setDefaultName(defaultSetName.c_str());
+          m_show_set_dlg = true;
+        }
+        ImGui::EndPopup();
+      }
       if (open_)
       {
-         // your tree code stuff
+         bool anyElementSetShown = false;
+         for (int i = 0; i < m_model->getPartCount(); ++i) {
+           Part* part = m_model->getPart(i);
+           if (part == nullptr || part->getMesh() == nullptr) {
+             continue;
+           }
+
+           Mesh* mesh = part->getMesh();
+           for (int s = 0; s < mesh->getElementSetCount(); ++s) {
+             const ElementSet& elementSet = mesh->getElementSet(s);
+             const std::string label = elementSet.getLabel().empty()
+               ? "Element Set"
+               : elementSet.getLabel();
+             const bool isSelected =
+               (m_selected_element_set_mesh == mesh && m_selected_element_set_index == s);
+             const std::string displayLabel = label + " [id " + std::to_string(elementSet.getId()) + "]";
+             if (ImGui::Selectable((displayLabel + "##elemset_" + std::to_string(i) + "_" + std::to_string(s)).c_str(),
+                                   isSelected)) {
+               selectElementSet(mesh, s);
+             }
+             if (ImGui::IsItemHovered()) {
+               ImGui::SetTooltip("%d elements", elementSet.getItemCount());
+             }
+             if (ImGui::BeginPopupContextItem()) {
+               if (ImGui::MenuItem("Edit")) {
+                 selectElementSet(mesh, s);
+                 m_setdlg.reset();
+                 m_setdlg.set_type = ELEM_SET;
+                 m_setdlg.m_edit_mode = true;
+                 m_setdlg.setDefaultName(label.c_str());
+                 m_show_set_dlg = true;
+               }
+               if (ImGui::MenuItem("Create Boundary Face Set")) {
+                 selectElementSet(mesh, s);
+                 const FaceSet faceSet = buildBoundaryFaceSetFromElementSet(
+                   mesh,
+                   elementSet,
+                   findNextFaceSetId(m_model),
+                   label + "_faces");
+                 mesh->addFaceSet(faceSet);
+                 selectFaceSet(mesh, mesh->getFaceSetCount() - 1);
+                 pushAction(std::unique_ptr<Action>(new CreateFaceSetAction(this, mesh, faceSet)));
+                 cout << "Created face set from element set: name=" << faceSet.getLabel()
+                      << ", id=" << faceSet.getId()
+                      << ", faces=" << faceSet.getItemCount() << endl;
+               }
+               ImGui::EndPopup();
+             }
+             ImGui::SameLine();
+             ImGui::TextDisabled("(%d elements)", elementSet.getItemCount());
+             anyElementSetShown = true;
+           }
+         }
+         if (!anyElementSetShown) {
+           ImGui::TextDisabled("No element sets created.");
+         }
          ImGui::TreePop();
-      }      
+      }
+
+      open_ = ImGui::TreeNode("Face Sets");
+      if (open_)
+      {
+         bool anyFaceSetShown = false;
+         for (int i = 0; i < m_model->getPartCount(); ++i) {
+           Part* part = m_model->getPart(i);
+           if (part == nullptr || part->getMesh() == nullptr) {
+             continue;
+           }
+
+           Mesh* mesh = part->getMesh();
+           for (int s = 0; s < mesh->getFaceSetCount(); ++s) {
+             const FaceSet& faceSet = mesh->getFaceSet(s);
+             const std::string label = faceSet.getLabel().empty()
+               ? "Face Set"
+               : faceSet.getLabel();
+             const bool isSelected =
+               (m_selected_face_set_mesh == mesh && m_selected_face_set_index == s);
+             const std::string displayLabel = label + " [id " + std::to_string(faceSet.getId()) + "]";
+             if (ImGui::Selectable((displayLabel + "##faceset_" + std::to_string(i) + "_" + std::to_string(s)).c_str(),
+                                   isSelected)) {
+               selectFaceSet(mesh, s);
+             }
+             if (ImGui::IsItemHovered()) {
+               ImGui::SetTooltip("%d faces", faceSet.getItemCount());
+             }
+             ImGui::SameLine();
+             ImGui::TextDisabled("(%d faces)", faceSet.getItemCount());
+             anyFaceSetShown = true;
+           }
+         }
+         if (!anyFaceSetShown) {
+           ImGui::TextDisabled("No face sets created.");
+         }
+         ImGui::TreePop();
+      }
       ImGui::EndTabItem(); 
     }
     
@@ -4569,10 +5530,14 @@ void Editor::drawGui() {
   }
   else if (m_show_set_dlg) {
     const std::vector<Node*> selectedNodesForSet = m_selector.getSelectedNodes();
+    const std::vector<Element*> selectedElementsForSet = m_selector.getSelectedElements();
+    const int selectedItemCount = (m_setdlg.set_type == ELEM_SET)
+      ? static_cast<int>(selectedElementsForSet.size())
+      : static_cast<int>(selectedNodesForSet.size());
     m_setdlg.m_selecting = m_selection_enabled;
     m_setdlg.Draw(m_setdlg.m_edit_mode ? "Edit Set" : "Create Set",
                   &m_show_set_dlg,
-                  static_cast<int>(selectedNodesForSet.size()));
+                  selectedItemCount);
     m_selection_enabled = m_setdlg.m_selecting;
     if (m_setdlg.create_set) {
       if (m_setdlg.set_type == NODE_SET) {
@@ -4607,6 +5572,39 @@ void Editor::drawGui() {
           cout << "Created node set: name=" << m_setdlg.m_name
                << ", id=" << nodeSet.getId()
                << ", nodes=" << nodeSet.getItemCount() << endl;
+        }
+      } else if (m_setdlg.set_type == ELEM_SET) {
+        Mesh* targetMesh = findCommonMeshForElements(m_model, selectedElementsForSet);
+        if (targetMesh == nullptr) {
+          cout << "Cannot create element set: selected elements must belong to the same mesh" << endl;
+        } else if (m_setdlg.m_edit_mode) {
+          ElementSet* selectedSet = getSelectedElementSet();
+          if (selectedSet == nullptr || targetMesh != m_selected_element_set_mesh) {
+            cout << "Cannot edit element set: selected elements must belong to the same mesh as the set" << endl;
+          } else {
+            selectedSet->clear();
+            selectedSet->setLabel(m_setdlg.m_name);
+            for (Element* element : selectedElementsForSet) {
+              selectedSet->add(element);
+            }
+            selectElementSet(targetMesh, m_selected_element_set_index);
+            cout << "Updated element set: name=" << m_setdlg.m_name
+                 << ", id=" << selectedSet->getId()
+                 << ", elements=" << selectedSet->getItemCount() << endl;
+          }
+        } else {
+          ElementSet elementSet(targetMesh);
+          elementSet.setEntityId(findNextElementSetId(m_model));
+          elementSet.setLabel(m_setdlg.m_name);
+          for (Element* element : selectedElementsForSet) {
+            elementSet.add(element);
+          }
+          targetMesh->addElementSet(elementSet);
+          selectElementSet(targetMesh, targetMesh->getElementSetCount() - 1);
+          pushAction(std::unique_ptr<Action>(new CreateElementSetAction(this, targetMesh, elementSet)));
+          cout << "Created element set: name=" << m_setdlg.m_name
+               << ", id=" << elementSet.getId()
+               << ", elements=" << elementSet.getItemCount() << endl;
         }
       } else {
         cout << "Create set requested: name=" << m_setdlg.m_name

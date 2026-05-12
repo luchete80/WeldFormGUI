@@ -278,6 +278,82 @@ void ModelWriter::writeToFile(std::string fname){
     std::cout << "Done writing " << totalNodeSets << " node sets." << std::endl;
   }
 
+  int totalElementSets = 0;
+  for (int partIndex = 0; partIndex < m_model.getPartCount(); ++partIndex) {
+    Part* part = m_model.getPart(partIndex);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int setIndex = 0; setIndex < mesh->getElementSetCount(); ++setIndex) {
+      const ElementSet& elementSet = mesh->getElementSet(setIndex);
+
+      json jset;
+      jset["id"] = elementSet.getId();
+      jset["label"] = elementSet.getLabel();
+      jset["partId"] = part->getId();
+      jset["elementIds"] = json::array();
+
+      for (int elementIndex = 0; elementIndex < elementSet.getItemCount(); ++elementIndex) {
+        const Element* element = elementSet.getItem(elementIndex);
+        if (element != nullptr) {
+          jset["elementIds"].push_back(element->getId());
+        }
+      }
+
+      m_json["ElementSets"].push_back(jset);
+      totalElementSets++;
+    }
+  }
+
+  if (totalElementSets > 0) {
+    std::cout << "Done writing " << totalElementSets << " element sets." << std::endl;
+  }
+
+  int totalFaceSets = 0;
+  for (int partIndex = 0; partIndex < m_model.getPartCount(); ++partIndex) {
+    Part* part = m_model.getPart(partIndex);
+    if (part == nullptr || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    for (int setIndex = 0; setIndex < mesh->getFaceSetCount(); ++setIndex) {
+      const FaceSet& faceSet = mesh->getFaceSet(setIndex);
+
+      json jset;
+      jset["id"] = faceSet.getId();
+      jset["label"] = faceSet.getLabel();
+      jset["partId"] = part->getId();
+      jset["faces"] = json::array();
+
+      for (int faceIndex = 0; faceIndex < faceSet.getItemCount(); ++faceIndex) {
+        const Face* face = faceSet.getItem(faceIndex);
+        if (face == nullptr) {
+          continue;
+        }
+
+        json jface;
+        jface["id"] = face->getId();
+        jface["ownerElementId"] = face->getOwnerElementId();
+        jface["localFaceIndex"] = face->getLocalFaceIndex();
+        jface["nodeIds"] = json::array();
+        for (int nodeIndex = 0; nodeIndex < face->getNodeCount(); ++nodeIndex) {
+          jface["nodeIds"].push_back(face->getNodeId(nodeIndex));
+        }
+        jset["faces"].push_back(jface);
+      }
+
+      m_json["FaceSets"].push_back(jset);
+      totalFaceSets++;
+    }
+  }
+
+  if (totalFaceSets > 0) {
+    std::cout << "Done writing " << totalFaceSets << " face sets." << std::endl;
+  }
+
 
   if (m_model.getMaterialCount()>0){
     

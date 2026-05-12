@@ -372,6 +372,118 @@ bool ModelReader::readFromFile(const std::string& fname) {
         }
     }
 
+    if (j.contains("ElementSets") && j["ElementSets"].is_array()) {
+        cout << "[ModelReader] Reading " << j["ElementSets"].size() << " element set(s)" << endl;
+
+        for (const auto& jset : j["ElementSets"]) {
+            const int partId = jset.value("partId", -1);
+            const int setId = jset.value("id", -1);
+            const std::string label = jset.value("label", "");
+
+            Part* targetPart = nullptr;
+            for (int i = 0; i < m_model->getPartCount(); ++i) {
+                Part* part = m_model->getPart(i);
+                if (part != nullptr && part->getId() == partId) {
+                    targetPart = part;
+                    break;
+                }
+            }
+
+            if (targetPart == nullptr || targetPart->getMesh() == nullptr) {
+                cerr << "  [Warning] ElementSet " << setId
+                     << " references missing partId=" << partId << endl;
+                continue;
+            }
+
+            Mesh* mesh = targetPart->getMesh();
+            ElementSet elementSet(mesh);
+            elementSet.setEntityId(setId);
+            elementSet.setLabel(label);
+
+            if (jset.contains("elementIds") && jset["elementIds"].is_array()) {
+                for (const auto& jelementId : jset["elementIds"]) {
+                    const int elementId = jelementId.get<int>();
+                    Element* targetElement = nullptr;
+
+                    for (int e = 0; e < mesh->getElemCount(); ++e) {
+                        Element* element = mesh->getElem(e);
+                        if (element != nullptr && element->getId() == elementId) {
+                            targetElement = element;
+                            break;
+                        }
+                    }
+
+                    if (targetElement != nullptr) {
+                        elementSet.add(targetElement);
+                    } else {
+                        cerr << "  [Warning] ElementSet " << setId
+                             << " references missing elementId=" << elementId << endl;
+                    }
+                }
+            }
+
+            mesh->addElementSet(elementSet);
+            cout << "  -> ElementSet id=" << setId
+                 << " label=\"" << label << "\""
+                 << " elements=" << elementSet.getItemCount()
+                 << " partId=" << partId << endl;
+        }
+    }
+
+    if (j.contains("FaceSets") && j["FaceSets"].is_array()) {
+        cout << "[ModelReader] Reading " << j["FaceSets"].size() << " face set(s)" << endl;
+
+        for (const auto& jset : j["FaceSets"]) {
+            const int partId = jset.value("partId", -1);
+            const int setId = jset.value("id", -1);
+            const std::string label = jset.value("label", "");
+
+            Part* targetPart = nullptr;
+            for (int i = 0; i < m_model->getPartCount(); ++i) {
+                Part* part = m_model->getPart(i);
+                if (part != nullptr && part->getId() == partId) {
+                    targetPart = part;
+                    break;
+                }
+            }
+
+            if (targetPart == nullptr || targetPart->getMesh() == nullptr) {
+                cerr << "  [Warning] FaceSet " << setId
+                     << " references missing partId=" << partId << endl;
+                continue;
+            }
+
+            Mesh* mesh = targetPart->getMesh();
+            FaceSet faceSet(mesh);
+            faceSet.setEntityId(setId);
+            faceSet.setLabel(label);
+
+            if (jset.contains("faces") && jset["faces"].is_array()) {
+                for (const auto& jface : jset["faces"]) {
+                    Face face;
+                    face.setEntityId(jface.value("id", faceSet.getItemCount()));
+                    face.setOwnerElementId(jface.value("ownerElementId", -1));
+                    face.setLocalFaceIndex(jface.value("localFaceIndex", -1));
+
+                    std::vector<int> nodeIds;
+                    if (jface.contains("nodeIds") && jface["nodeIds"].is_array()) {
+                        for (const auto& jnodeId : jface["nodeIds"]) {
+                            nodeIds.push_back(jnodeId.get<int>());
+                        }
+                    }
+                    face.setNodeIds(nodeIds);
+                    faceSet.add(face);
+                }
+            }
+
+            mesh->addFaceSet(faceSet);
+            cout << "  -> FaceSet id=" << setId
+                 << " label=\"" << label << "\""
+                 << " faces=" << faceSet.getItemCount()
+                 << " partId=" << partId << endl;
+        }
+    }
+
     // =============================================================
     // Boundary Conditions
     // =============================================================
