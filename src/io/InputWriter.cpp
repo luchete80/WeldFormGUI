@@ -238,6 +238,9 @@ std::vector<double> buildEnginePlasticConstants(const Material_ *mat) {
 }
 
 std::string buildEngineMaterialType(const Material_ *mat) {
+  if (mat != nullptr && mat->tabulated_enabled)
+    return "Tabulated";
+
   if (mat == nullptr || !mat->isPlastic() || mat->m_plastic == nullptr)
     return "Elastic";
 
@@ -252,6 +255,8 @@ std::string buildEngineMaterialType(const Material_ *mat) {
       return "GMT";
     case NORTON_HOFF:
       return "NortonHoff";
+    case TABULATED:
+      return "Tabulated";
     default:
       return "UnknownPlastic";
   }
@@ -279,6 +284,21 @@ json buildEngineMaterialJson(const Material_ *mat, int index) {
     std::vector<double> plastic_const = buildEnginePlasticConstants(mat);
     if (!plastic_const.empty())
       mat_json["const"] = plastic_const;
+  }
+
+  if (mat->tabulated_enabled &&
+      !mat->tabulatedStrainGrid.empty() &&
+      !mat->tabulatedRateGrid.empty() &&
+      !mat->tabulatedTemperatureGrid.empty() &&
+      !mat->tabulatedStressValues.empty()) {
+    if (mat->tabulated_export_csv_reference && !mat->tableCsvPath.empty()) {
+      mat_json["flowStressCsv"] = mat->tableCsvPath;
+    } else {
+      mat_json["flowStressTable"]["strainGrid"] = mat->tabulatedStrainGrid;
+      mat_json["flowStressTable"]["strainRateGrid"] = mat->tabulatedRateGrid;
+      mat_json["flowStressTable"]["temperatureGrid"] = mat->tabulatedTemperatureGrid;
+      mat_json["flowStressTable"]["stressValues"] = mat->tabulatedStressValues;
+    }
   }
 
   return mat_json;

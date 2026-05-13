@@ -242,4 +242,7 @@
          - Added Boundary Face set. 
          - Added show Element Number.
          - Fixed selection of nodes/elems from only visible parts
-         
+20260513 - Added tabulated material family support in material dialog and model/input serialization.
+         - Added CSV import path and tabulated preview plots in `src/material_dialog`.
+         - Added tabulated material read/write support in `src/io/ModelReader.cpp`, `ModelWriter.cpp`, and `InputWriter.cpp`.
+         - Stored imported flow-stress tables in GUI material model so they export to solver JSON.     

@@ -6,10 +6,18 @@
 #include "Dialog.h"
 #include "Material_Db.h"
 
+#include <array>
+
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
 struct MaterialDialog:
 public Dialog{
+  struct TabulatedRow {
+    double strain = 0.0;
+    double strain_rate = 1.0e-3;
+    double temperature = 20.0;
+    double stress = 0.0;
+  };
   
   bool m_initiated = false; /// FOR FIRST CREATED
   
@@ -46,6 +54,15 @@ public Dialog{
   double jc_B, jc_n, jc_C, jc_eps0, jc_m, jc_Tm, jc_Tt;
   double gmt_C1, gmt_C2;
   double gmt_n1, gmt_n2, gmt_m1, gmt_m2, gmt_I1, gmt_I2;
+  std::array<char, 512> m_tabulated_csv_path = {};
+  std::string m_tabulated_csv_error;
+  bool m_tabulated_export_csv_reference = false;
+  std::vector<double> m_tabulated_strain_grid;
+  std::vector<double> m_tabulated_rate_grid;
+  std::vector<double> m_tabulated_temperature_grid;
+  std::vector<double> m_tabulated_stress_values;
+  std::vector<TabulatedRow> m_tabulated_rows;
+  bool m_tabulated_rows_dirty = false;
 
   std::vector<double> m_pl_const;
   GMT m_gmt;

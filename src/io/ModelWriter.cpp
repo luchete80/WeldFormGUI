@@ -367,7 +367,20 @@ void ModelWriter::writeToFile(std::string fname){
       m_json["Materials"]["strRange"] = {m_model.getMaterial(0)->strRange[0], m_model.getMaterial(0)->strRange[1]};
     
     cout << "Checking plastic "<<endl;
-    if (!m_model.getMaterial(0)->isPlastic()) {
+    if (m_model.getMaterial(0)->tabulated_enabled) {
+      cout << "Tabulated" << endl;
+      m_json["Materials"]["type"] = "Tabulated";
+      m_json["Materials"]["strdotRange"] = {m_model.getMaterial(0)->er_min, m_model.getMaterial(0)->er_max};
+      m_json["Materials"]["tempRange"] = {m_model.getMaterial(0)->T_min, m_model.getMaterial(0)->T_max};
+      if (m_model.getMaterial(0)->tabulated_export_csv_reference && !m_model.getMaterial(0)->tableCsvPath.empty()) {
+        m_json["Materials"]["flowStressCsv"] = m_model.getMaterial(0)->tableCsvPath;
+      } else {
+        m_json["Materials"]["flowStressTable"]["strainGrid"] = m_model.getMaterial(0)->tabulatedStrainGrid;
+        m_json["Materials"]["flowStressTable"]["strainRateGrid"] = m_model.getMaterial(0)->tabulatedRateGrid;
+        m_json["Materials"]["flowStressTable"]["temperatureGrid"] = m_model.getMaterial(0)->tabulatedTemperatureGrid;
+        m_json["Materials"]["flowStressTable"]["stressValues"] = m_model.getMaterial(0)->tabulatedStressValues;
+      }
+    } else if (!m_model.getMaterial(0)->isPlastic()) {
       cout << "Elastic"<<endl;
       m_json["Materials"]["type"] = "Elastic";     
     } else {
@@ -395,6 +408,22 @@ void ModelWriter::writeToFile(std::string fname){
 
                       
             break;
+          case TABULATED:
+            cout << "Tabulated" << endl;
+            m_json["Materials"]["type"] = "Tabulated";
+            m_json["Materials"]["strdotRange"] = {m_model.getMaterial(0)->er_min, m_model.getMaterial(0)->er_max};
+            m_json["Materials"]["tempRange"] = {m_model.getMaterial(0)->T_min, m_model.getMaterial(0)->T_max};
+            if (m_model.getMaterial(0)->tabulated_enabled) {
+              if (m_model.getMaterial(0)->tabulated_export_csv_reference && !m_model.getMaterial(0)->tableCsvPath.empty()) {
+                m_json["Materials"]["flowStressCsv"] = m_model.getMaterial(0)->tableCsvPath;
+              } else {
+                m_json["Materials"]["flowStressTable"]["strainGrid"] = m_model.getMaterial(0)->tabulatedStrainGrid;
+                m_json["Materials"]["flowStressTable"]["strainRateGrid"] = m_model.getMaterial(0)->tabulatedRateGrid;
+                m_json["Materials"]["flowStressTable"]["temperatureGrid"] = m_model.getMaterial(0)->tabulatedTemperatureGrid;
+                m_json["Materials"]["flowStressTable"]["stressValues"] = m_model.getMaterial(0)->tabulatedStressValues;
+              }
+            }
+            break;
           default:
             break;
         }//Switch material model
@@ -404,7 +433,7 @@ void ModelWriter::writeToFile(std::string fname){
       }
       if (plasticConst.size()>0)
         m_json["Materials"]["const"] = plasticConst;  // esto crea un array JSON automáticamente
-      else
+      else if (m_model.getMaterial(0)->m_plastic->Material_model != TABULATED)
         cout << "ERROR: No plastic constants present."<<endl;
     }//PLASTIC
     

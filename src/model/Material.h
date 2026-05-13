@@ -10,9 +10,11 @@
 #define JOHNSON_COOK		3
 #define _GMT_         	4
 #define NORTON_HOFF     5
+#define TABULATED       6
 
 #include <cmath>
 #include <cstdio>
+#include <string>
 #include <vector>
 class Elastic_{
 	private:
@@ -134,6 +136,13 @@ class Material_{
     K_nh = 0.0;
     m_nh = 0.0;
     epsdot0 = 1.0e-3;
+    tabulated_enabled = false;
+    tabulated_export_csv_reference = false;
+    tableCsvPath.clear();
+    tabulatedStrainGrid.clear();
+    tabulatedRateGrid.clear();
+    tabulatedTemperatureGrid.clear();
+    tabulatedStressValues.clear();
   }
 
   void InitHollomon() {}
@@ -230,6 +239,13 @@ class Material_{
   double epsdot0 = 1.0e-3;
   double yieldStress0 = 190.0E6;
   std::vector<double> strRange = {0.0, 0.65};
+  bool tabulated_enabled = false;
+  bool tabulated_export_csv_reference = false;
+  std::string tableCsvPath;
+  std::vector<double> tabulatedStrainGrid;
+  std::vector<double> tabulatedRateGrid;
+  std::vector<double> tabulatedTemperatureGrid;
+  std::vector<double> tabulatedStressValues;
 
 };
 
@@ -257,6 +273,115 @@ inline double CalcHollomonTangentModulus(const double &strain, Material_ *mat) {
 inline double CalcNortonHoffEqStress(const double &edot_eq, Material_ *mat) {
   const double ed = edot_eq + mat->epsdot0;
   return mat->K_nh * std::pow(ed, mat->m_nh);
+}
+
+inline int TabulatedStressIndex(const Material_ *mat, int ie, int ir, int it) {
+  return (it * static_cast<int>(mat->tabulatedRateGrid.size()) + ir) *
+             static_cast<int>(mat->tabulatedStrainGrid.size()) +
+         ie;
+}
+
+inline double TabulatedStressAt(const Material_ *mat, int ie, int ir, int it) {
+  return mat->tabulatedStressValues[TabulatedStressIndex(mat, ie, ir, it)];
+}
+
+inline int FindTabulatedBracket(const std::vector<double> &grid, double value, double &weight) {
+  weight = 0.0;
+  if (grid.size() <= 1) {
+    return 0;
+  }
+  if (value <= grid.front()) {
+    const double denom = grid[1] - grid[0];
+    weight = std::fabs(denom) > 0.0 ? (value - grid[0]) / denom : 0.0;
+    return 0;
+  }
+  for (size_t i = 0; i + 1 < grid.size(); ++i) {
+    if (value <= grid[i + 1]) {
+      const double denom = grid[i + 1] - grid[i];
+      weight = std::fabs(denom) > 0.0 ? (value - grid[i]) / denom : 0.0;
+      return static_cast<int>(i);
+    }
+  }
+  const int last = static_cast<int>(grid.size()) - 2;
+  const double denom = grid.back() - grid[last];
+  weight = std::fabs(denom) > 0.0 ? (value - grid[last]) / denom : 0.0;
+  return last;
+}
+
+inline double CalcTabulatedYieldStress(const double &strain, const double &strain_rate,
+                                       const double &temp, Material_ *mat) {
+  if (mat == nullptr || !mat->tabulated_enabled || mat->tabulatedStrainGrid.empty() ||
+      mat->tabulatedRateGrid.empty() || mat->tabulatedTemperatureGrid.empty() ||
+      mat->tabulatedStressValues.empty()) {
+    return mat ? mat->yieldStress0 : 0.0;
+  }
+
+  const double e = ClampMaterialValue(strain, mat->tabulatedStrainGrid.front(), mat->tabulatedStrainGrid.back());
+  const double er = ClampMaterialValue(strain_rate, mat->tabulatedRateGrid.front(), mat->tabulatedRateGrid.back());
+  const double T = ClampMaterialValue(temp, mat->tabulatedTemperatureGrid.front(), mat->tabulatedTemperatureGrid.back());
+
+  double we = 0.0;
+  double wr = 0.0;
+  double wt = 0.0;
+  const int ie0 = FindTabulatedBracket(mat->tabulatedStrainGrid, e, we);
+  const int ir0 = FindTabulatedBracket(mat->tabulatedRateGrid, er, wr);
+  const int it0 = FindTabulatedBracket(mat->tabulatedTemperatureGrid, T, wt);
+  const int ie1 = mat->tabulatedStrainGrid.size() > 1 ? ie0 + 1 : ie0;
+  const int ir1 = mat->tabulatedRateGrid.size() > 1 ? ir0 + 1 : ir0;
+  const int it1 = mat->tabulatedTemperatureGrid.size() > 1 ? it0 + 1 : it0;
+
+  const double c000 = TabulatedStressAt(mat, ie0, ir0, it0);
+  const double c100 = TabulatedStressAt(mat, ie1, ir0, it0);
+  const double c010 = TabulatedStressAt(mat, ie0, ir1, it0);
+  const double c110 = TabulatedStressAt(mat, ie1, ir1, it0);
+  const double c001 = TabulatedStressAt(mat, ie0, ir0, it1);
+  const double c101 = TabulatedStressAt(mat, ie1, ir0, it1);
+  const double c011 = TabulatedStressAt(mat, ie0, ir1, it1);
+  const double c111 = TabulatedStressAt(mat, ie1, ir1, it1);
+
+  const double c00 = c000 * (1.0 - we) + c100 * we;
+  const double c10 = c010 * (1.0 - we) + c110 * we;
+  const double c01 = c001 * (1.0 - we) + c101 * we;
+  const double c11 = c011 * (1.0 - we) + c111 * we;
+  const double c0 = c00 * (1.0 - wr) + c10 * wr;
+  const double c1 = c01 * (1.0 - wr) + c11 * wr;
+  return c0 * (1.0 - wt) + c1 * wt;
+}
+
+inline double CalcTabulatedTangentModulus(const double &strain, const double &strain_rate,
+                                          const double &temp, Material_ *mat) {
+  if (mat == nullptr || !mat->tabulated_enabled || mat->tabulatedStrainGrid.size() <= 1 ||
+      mat->tabulatedRateGrid.empty() || mat->tabulatedTemperatureGrid.empty()) {
+    return 0.0;
+  }
+
+  const double e = ClampMaterialValue(strain, mat->tabulatedStrainGrid.front(), mat->tabulatedStrainGrid.back());
+  const double er = ClampMaterialValue(strain_rate, mat->tabulatedRateGrid.front(), mat->tabulatedRateGrid.back());
+  const double T = ClampMaterialValue(temp, mat->tabulatedTemperatureGrid.front(), mat->tabulatedTemperatureGrid.back());
+
+  double we = 0.0;
+  double wr = 0.0;
+  double wt = 0.0;
+  const int ie0 = FindTabulatedBracket(mat->tabulatedStrainGrid, e, we);
+  const int ir0 = FindTabulatedBracket(mat->tabulatedRateGrid, er, wr);
+  const int it0 = FindTabulatedBracket(mat->tabulatedTemperatureGrid, T, wt);
+  const int ie1 = ie0 + 1;
+  const int ir1 = mat->tabulatedRateGrid.size() > 1 ? ir0 + 1 : ir0;
+  const int it1 = mat->tabulatedTemperatureGrid.size() > 1 ? it0 + 1 : it0;
+
+  const double de = mat->tabulatedStrainGrid[ie1] - mat->tabulatedStrainGrid[ie0];
+  if (std::fabs(de) <= 0.0) {
+    return 0.0;
+  }
+
+  const double s00 = (TabulatedStressAt(mat, ie1, ir0, it0) - TabulatedStressAt(mat, ie0, ir0, it0)) / de;
+  const double s10 = (TabulatedStressAt(mat, ie1, ir1, it0) - TabulatedStressAt(mat, ie0, ir1, it0)) / de;
+  const double s01 = (TabulatedStressAt(mat, ie1, ir0, it1) - TabulatedStressAt(mat, ie0, ir0, it1)) / de;
+  const double s11 = (TabulatedStressAt(mat, ie1, ir1, it1) - TabulatedStressAt(mat, ie0, ir1, it1)) / de;
+
+  const double sr0 = s00 * (1.0 - wr) + s10 * wr;
+  const double sr1 = s01 * (1.0 - wr) + s11 * wr;
+  return sr0 * (1.0 - wt) + sr1 * wt;
 }
 
 inline double CalcJohnsonCookYieldStress(const double &strain, const double &strain_rate,
@@ -327,6 +452,20 @@ inline double CalcGMTTangentModulus(const double &plstrain, const double &strain
          (-mat->I1 * T - mat->I2 + e * (mat->n1 * T + mat->n2)) *
          std::exp((mat->I1 * T + mat->I2) / e);
 }
+
+class Tabulated:
+public Plastic_{
+  public:
+    Tabulated() {
+      Material_model = TABULATED;
+    }
+
+    Plastic_* clone() const override { return new Tabulated(*this); }
+
+    std::vector<double> getPlasticConstants() override {
+      return {};
+    }
+};
 
 
 class Bilinear:

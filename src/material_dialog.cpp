@@ -2,20 +2,30 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "implot.h"
+#include "ImGuiFileDialog.h"
 
 #include "material_dialog.h"
 
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstdio>
 #include <cmath>
+#include <cstring>
+#include <fstream>
 #include <iostream>
+#include <limits>
+#include <map>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace std;
 
 namespace {
+
+constexpr const char *kTabulatedMaterialCsvDialogId = "ChooseFileDlgMaterialCsv";
 
 constexpr int kMaterialCurveSamples = 256;
 
@@ -79,6 +89,273 @@ std::vector<std::string> MakeRateLabels(const std::vector<double> &rates) {
     labels.push_back(oss.str());
   }
   return labels;
+}
+
+std::string NormalizeHeader(std::string value) {
+  std::string normalized;
+  normalized.reserve(value.size());
+  for (char c : value) {
+    if (std::isalnum(static_cast<unsigned char>(c))) {
+      normalized.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+    }
+  }
+  return normalized;
+}
+
+std::vector<std::string> SplitCsvLine(const std::string &line) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::stringstream ss(line);
+  while (std::getline(ss, token, ',')) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
+bool ParseDouble(const std::string &token, double &value) {
+  std::stringstream ss(token);
+  ss >> value;
+  return !ss.fail();
+}
+
+bool IsStrainHeader(const std::string &header) {
+  return header == "strain" || header == "plasticstrain" || header == "equivalentstrain" ||
+         header == "eps" || header == "epsp";
+}
+
+bool IsStrainRateHeader(const std::string &header) {
+  return header == "strainrate" || header == "plasticstrainrate" || header == "equivalentstrainrate" ||
+         header == "epsdot" || header == "edot";
+}
+
+bool IsTemperatureHeader(const std::string &header) {
+  return header == "temperature" || header == "temp" || header == "t";
+}
+
+bool IsStressHeader(const std::string &header) {
+  return header == "stress" || header == "flowstress" || header == "yieldstress" ||
+         header == "sigma" || header == "sigmay";
+}
+
+bool LoadTabulatedCsv(const std::string &csv_path,
+                      std::vector<double> &strain_grid,
+                      std::vector<double> &rate_grid,
+                      std::vector<double> &temperature_grid,
+                      std::vector<double> &stress_values,
+                      std::string &error) {
+  std::ifstream file(csv_path);
+  if (!file.is_open()) {
+    error = "Could not open CSV file.";
+    return false;
+  }
+
+  std::string header_line;
+  if (!std::getline(file, header_line)) {
+    error = "CSV file is empty.";
+    return false;
+  }
+
+  const std::vector<std::string> headers = SplitCsvLine(header_line);
+  int strain_col = -1;
+  int rate_col = -1;
+  int temp_col = -1;
+  int stress_col = -1;
+  for (int i = 0; i < static_cast<int>(headers.size()); ++i) {
+    const std::string header = NormalizeHeader(headers[i]);
+    if (IsStrainHeader(header)) strain_col = i;
+    else if (IsStrainRateHeader(header)) rate_col = i;
+    else if (IsTemperatureHeader(header)) temp_col = i;
+    else if (IsStressHeader(header)) stress_col = i;
+  }
+
+  if (strain_col < 0 || rate_col < 0 || temp_col < 0 || stress_col < 0) {
+    error = "Expected headers: strain, strain_rate, temperature, stress.";
+    return false;
+  }
+
+  std::vector<double> strains;
+  std::vector<double> rates;
+  std::vector<double> temps;
+  std::map<std::tuple<double, double, double>, double> stress_map;
+  std::string line;
+  while (std::getline(file, line)) {
+    if (line.empty()) continue;
+    const std::vector<std::string> tokens = SplitCsvLine(line);
+    const int required_cols = std::max(std::max(strain_col, rate_col), std::max(temp_col, stress_col));
+    if (static_cast<int>(tokens.size()) <= required_cols) {
+      error = "Malformed CSV row.";
+      return false;
+    }
+    double e = 0.0;
+    double er = 0.0;
+    double T = 0.0;
+    double sigma = 0.0;
+    if (!ParseDouble(tokens[strain_col], e) ||
+        !ParseDouble(tokens[rate_col], er) ||
+        !ParseDouble(tokens[temp_col], T) ||
+        !ParseDouble(tokens[stress_col], sigma)) {
+      error = "Invalid numeric value in CSV.";
+      return false;
+    }
+    strains.push_back(e);
+    rates.push_back(er);
+    temps.push_back(T);
+    stress_map[std::make_tuple(e, er, T)] = sigma;
+  }
+
+  std::sort(strains.begin(), strains.end());
+  strains.erase(std::unique(strains.begin(), strains.end()), strains.end());
+  std::sort(rates.begin(), rates.end());
+  rates.erase(std::unique(rates.begin(), rates.end()), rates.end());
+  std::sort(temps.begin(), temps.end());
+  temps.erase(std::unique(temps.begin(), temps.end()), temps.end());
+
+  if (strains.empty() || rates.empty() || temps.empty()) {
+    error = "CSV table has no data.";
+    return false;
+  }
+
+  strain_grid = strains;
+  rate_grid = rates;
+  temperature_grid = temps;
+  stress_values.assign(strains.size() * rates.size() * temps.size(), std::numeric_limits<double>::quiet_NaN());
+
+  for (size_t it = 0; it < temps.size(); ++it) {
+    for (size_t ir = 0; ir < rates.size(); ++ir) {
+      for (size_t ie = 0; ie < strains.size(); ++ie) {
+        auto map_it = stress_map.find(std::make_tuple(strains[ie], rates[ir], temps[it]));
+        if (map_it == stress_map.end()) {
+          error = "CSV table is incomplete for the full strain/rate/temperature grid.";
+          return false;
+        }
+        const size_t index = (it * rates.size() + ir) * strains.size() + ie;
+        stress_values[index] = map_it->second;
+      }
+    }
+  }
+
+  return true;
+}
+
+void BuildRowsFromTabulatedTable(MaterialDialog &dialog) {
+  dialog.m_tabulated_rows.clear();
+  for (size_t it = 0; it < dialog.m_tabulated_temperature_grid.size(); ++it) {
+    for (size_t ir = 0; ir < dialog.m_tabulated_rate_grid.size(); ++ir) {
+      for (size_t ie = 0; ie < dialog.m_tabulated_strain_grid.size(); ++ie) {
+        const size_t index =
+            (it * dialog.m_tabulated_rate_grid.size() + ir) * dialog.m_tabulated_strain_grid.size() + ie;
+        if (index >= dialog.m_tabulated_stress_values.size()) {
+          continue;
+        }
+        MaterialDialog::TabulatedRow row;
+        row.strain = dialog.m_tabulated_strain_grid[ie];
+        row.strain_rate = dialog.m_tabulated_rate_grid[ir];
+        row.temperature = dialog.m_tabulated_temperature_grid[it];
+        row.stress = dialog.m_tabulated_stress_values[index];
+        dialog.m_tabulated_rows.push_back(row);
+      }
+    }
+  }
+  dialog.m_tabulated_rows_dirty = false;
+}
+
+bool RebuildTabulatedTableFromRows(MaterialDialog &dialog) {
+  dialog.m_tabulated_csv_error.clear();
+
+  if (dialog.m_tabulated_rows.empty()) {
+    dialog.m_tabulated_strain_grid.clear();
+    dialog.m_tabulated_rate_grid.clear();
+    dialog.m_tabulated_temperature_grid.clear();
+    dialog.m_tabulated_stress_values.clear();
+    dialog.m_tabulated_rows_dirty = false;
+    return true;
+  }
+
+  std::vector<double> strains;
+  std::vector<double> rates;
+  std::vector<double> temps;
+  std::map<std::tuple<double, double, double>, double> stress_map;
+
+  for (const auto &row : dialog.m_tabulated_rows) {
+    strains.push_back(row.strain);
+    rates.push_back(row.strain_rate);
+    temps.push_back(row.temperature);
+    const auto key = std::make_tuple(row.strain, row.strain_rate, row.temperature);
+    if (stress_map.find(key) != stress_map.end()) {
+      dialog.m_tabulated_csv_error = "Duplicated strain/strain_rate/temperature row.";
+      return false;
+    }
+    stress_map[key] = row.stress;
+  }
+
+  std::sort(strains.begin(), strains.end());
+  strains.erase(std::unique(strains.begin(), strains.end()), strains.end());
+  std::sort(rates.begin(), rates.end());
+  rates.erase(std::unique(rates.begin(), rates.end()), rates.end());
+  std::sort(temps.begin(), temps.end());
+  temps.erase(std::unique(temps.begin(), temps.end()), temps.end());
+
+  std::vector<double> stress_values(strains.size() * rates.size() * temps.size(),
+                                    std::numeric_limits<double>::quiet_NaN());
+
+  for (size_t it = 0; it < temps.size(); ++it) {
+    for (size_t ir = 0; ir < rates.size(); ++ir) {
+      for (size_t ie = 0; ie < strains.size(); ++ie) {
+        const auto key = std::make_tuple(strains[ie], rates[ir], temps[it]);
+        auto map_it = stress_map.find(key);
+        if (map_it == stress_map.end()) {
+          dialog.m_tabulated_csv_error =
+              "Rows do not define a complete strain/rate/temperature Cartesian grid.";
+          return false;
+        }
+        const size_t index = (it * rates.size() + ir) * strains.size() + ie;
+        stress_values[index] = map_it->second;
+      }
+    }
+  }
+
+  dialog.m_tabulated_strain_grid = strains;
+  dialog.m_tabulated_rate_grid = rates;
+  dialog.m_tabulated_temperature_grid = temps;
+  dialog.m_tabulated_stress_values = stress_values;
+  dialog.m_strain_range_min = strains.front();
+  dialog.m_strain_range_max = strains.back();
+  dialog.m_strain_rate_range_min = rates.front();
+  dialog.m_strain_rate_range_max = rates.back();
+  dialog.m_temperature_range_min = temps.front();
+  dialog.m_temperature_range_max = temps.back();
+  dialog.m_tabulated_rows_dirty = false;
+  return true;
+}
+
+bool ImportTabulatedCsvIntoDialog(const std::string &csv_path, MaterialDialog &dialog) {
+  dialog.m_tabulated_csv_error.clear();
+  if (!LoadTabulatedCsv(csv_path,
+                        dialog.m_tabulated_strain_grid,
+                        dialog.m_tabulated_rate_grid,
+                        dialog.m_tabulated_temperature_grid,
+                        dialog.m_tabulated_stress_values,
+                        dialog.m_tabulated_csv_error)) {
+    if (dialog.m_tabulated_csv_error.empty()) {
+      dialog.m_tabulated_csv_error = "CSV import failed.";
+    }
+    return false;
+  }
+
+  std::snprintf(dialog.m_tabulated_csv_path.data(),
+                dialog.m_tabulated_csv_path.size(),
+                "%s",
+                csv_path.c_str());
+  dialog.m_strain_range_min = dialog.m_tabulated_strain_grid.front();
+  dialog.m_strain_range_max = dialog.m_tabulated_strain_grid.back();
+  dialog.m_strain_rate_range_min = dialog.m_tabulated_rate_grid.front();
+  dialog.m_strain_rate_range_max = dialog.m_tabulated_rate_grid.back();
+  dialog.m_temperature_range_min = dialog.m_tabulated_temperature_grid.front();
+  dialog.m_temperature_range_max = dialog.m_tabulated_temperature_grid.back();
+  dialog.m_plot_temperature = dialog.m_temperature_range_min;
+  dialog.m_plot_strain = 0.5 * (dialog.m_strain_range_min + dialog.m_strain_range_max);
+  BuildRowsFromTabulatedTable(dialog);
+  return true;
 }
 
 bool BuildHollomonCurve(const MaterialDialog &dialog,
@@ -410,6 +687,79 @@ void DrawGMTPlots(const MaterialDialog &dialog) {
                  temp_family_curves, rate_labels, temp_y_max, fit_temp_next);
 }
 
+bool BuildTabulatedPreviewMaterial(const MaterialDialog &dialog, Material_ &preview_material) {
+  if (dialog.m_tabulated_strain_grid.empty() || dialog.m_tabulated_rate_grid.empty() ||
+      dialog.m_tabulated_temperature_grid.empty() || dialog.m_tabulated_stress_values.empty()) {
+    return false;
+  }
+
+  preview_material.elastic_m = Elastic_(dialog.m_elastic_const, dialog.m_poisson_const);
+  preview_material.Material_model = TABULATED;
+  preview_material.tabulated_enabled = true;
+  preview_material.tabulatedStrainGrid = dialog.m_tabulated_strain_grid;
+  preview_material.tabulatedRateGrid = dialog.m_tabulated_rate_grid;
+  preview_material.tabulatedTemperatureGrid = dialog.m_tabulated_temperature_grid;
+  preview_material.tabulatedStressValues = dialog.m_tabulated_stress_values;
+  preview_material.e_min = dialog.m_tabulated_strain_grid.front();
+  preview_material.e_max = dialog.m_tabulated_strain_grid.back();
+  preview_material.er_min = dialog.m_tabulated_rate_grid.front();
+  preview_material.er_max = dialog.m_tabulated_rate_grid.back();
+  preview_material.T_min = dialog.m_tabulated_temperature_grid.front();
+  preview_material.T_max = dialog.m_tabulated_temperature_grid.back();
+  preview_material.yieldStress0 = dialog.m_yield_stress0;
+  return true;
+}
+
+void DrawTabulatedPlots(const MaterialDialog &dialog) {
+  static bool fit_strain_next = true;
+  static bool fit_temp_next = true;
+
+  Material_ preview_material;
+  if (!BuildTabulatedPreviewMaterial(dialog, preview_material)) {
+    ImGui::TextDisabled("Import a CSV or load a tabulated family to plot.");
+    return;
+  }
+
+  const std::vector<double> rate_values = preview_material.tabulatedRateGrid;
+  const std::vector<std::string> rate_labels = MakeRateLabels(rate_values);
+  const double strain_min = preview_material.e_min;
+  const double strain_max = preview_material.e_max;
+  const double temp_min = preview_material.T_min;
+  const double temp_max = preview_material.T_max;
+  const double plot_temp = ClampMaterialValue(dialog.m_plot_temperature, temp_min, temp_max);
+  const double plot_strain = ClampMaterialValue(dialog.m_plot_strain, strain_min, strain_max);
+
+  const std::vector<double> strain_values = BuildAxisRange(strain_min, strain_max);
+  std::vector<std::vector<double>> strain_family_curves;
+  double strain_y_max = 0.0;
+  BuildFamilyCurves(
+    strain_values, rate_values,
+    [&preview_material, plot_temp](double strain, double strain_rate) {
+      return CalcTabulatedYieldStress(strain, strain_rate, plot_temp, &preview_material);
+    },
+    strain_family_curves, strain_y_max);
+
+  ImGui::Text("Stress-strain curves at T = %.3e", plot_temp);
+  DrawPlotToolbar("Reset Zoom##tabulated_strain", fit_strain_next);
+  DrawFamilyPlot("##TabulatedCurve", "Strain", "Stress", strain_values, strain_family_curves,
+                 rate_labels, strain_y_max, fit_strain_next);
+
+  const std::vector<double> temperature_values = BuildAxisRange(temp_min, temp_max);
+  std::vector<std::vector<double>> temp_family_curves;
+  double temp_y_max = 0.0;
+  BuildFamilyCurves(
+    temperature_values, rate_values,
+    [&preview_material, plot_strain](double temp, double strain_rate) {
+      return CalcTabulatedYieldStress(plot_strain, strain_rate, temp, &preview_material);
+    },
+    temp_family_curves, temp_y_max);
+
+  ImGui::Text("Stress-temperature curves at strain = %.3e", plot_strain);
+  DrawPlotToolbar("Reset Zoom##tabulated_temp", fit_temp_next);
+  DrawFamilyPlot("##TabulatedTempCurve", "Temperature", "Stress", temperature_values,
+                 temp_family_curves, rate_labels, temp_y_max, fit_temp_next);
+}
+
 }  // namespace
 
 void MaterialDialog::InitFromMaterial(Material_* mat) {
@@ -454,6 +804,15 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
     m_temperature_range_max = 1000.0;
     m_plot_temperature = 20.0;
     m_plot_strain = 0.2;
+    m_tabulated_csv_path[0] = '\0';
+    m_tabulated_csv_error.clear();
+    m_tabulated_export_csv_reference = false;
+    m_tabulated_strain_grid.clear();
+    m_tabulated_rate_grid.clear();
+    m_tabulated_temperature_grid.clear();
+    m_tabulated_stress_values.clear();
+    m_tabulated_rows.clear();
+    m_tabulated_rows_dirty = false;
     return;
   }
 
@@ -499,6 +858,14 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
   gmt_m2 = mat->m2;
   gmt_I1 = mat->I1;
   gmt_I2 = mat->I2;
+  std::snprintf(m_tabulated_csv_path.data(), m_tabulated_csv_path.size(), "%s", mat->tableCsvPath.c_str());
+  m_tabulated_csv_error.clear();
+  m_tabulated_export_csv_reference = mat->tabulated_export_csv_reference;
+  m_tabulated_strain_grid = mat->tabulatedStrainGrid;
+  m_tabulated_rate_grid = mat->tabulatedRateGrid;
+  m_tabulated_temperature_grid = mat->tabulatedTemperatureGrid;
+  m_tabulated_stress_values = mat->tabulatedStressValues;
+  BuildRowsFromTabulatedTable(*this);
 
   if (mat->isPlastic()) {
     m_pl = mat->getPlastic()->clone();
@@ -545,6 +912,9 @@ void MaterialDialog::InitFromMaterial(Material_* mat) {
         }
         break;
 
+      case TABULATED:
+        break;
+
       default:
         break;
     }
@@ -583,7 +953,7 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
     ImGui::TextDisabled("Thermal coupling disabled in model: cp/k are hidden.");
   }
 
-  const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh" };
+  const char* items[] = { "None", "Bilinear", "Hollomon", "Johnson Cook", "GMT", "Sinh", "Tabulated" };
 
   ImGui::SetNextItemOpen(true, ImGuiCond_Once);
   if (ImGui::CollapsingHeader("Plastic")) {
@@ -633,6 +1003,142 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
       ImGui::Spacing();
       DrawGMTPlots(*this);
     }
+
+    if (item_current == TABULATED) {
+      ImGui::InputText("CSV Path", m_tabulated_csv_path.data(), m_tabulated_csv_path.size());
+      ImGui::SameLine();
+      if (ImGui::Button("Browse...")) {
+        ImGuiFileDialog::Instance()->OpenDialog(kTabulatedMaterialCsvDialogId,
+                                                "Choose CSV File",
+                                                ".csv,.CSV",
+                                                ".");
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Import CSV")) {
+        ImportTabulatedCsvIntoDialog(m_tabulated_csv_path.data(), *this);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Add Row")) {
+        MaterialDialog::TabulatedRow row;
+        if (!m_tabulated_rows.empty()) {
+          row = m_tabulated_rows.back();
+        } else {
+          row.stress = m_yield_stress0;
+        }
+        m_tabulated_rows.push_back(row);
+        m_tabulated_rows_dirty = true;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Duplicate Last") && !m_tabulated_rows.empty()) {
+        m_tabulated_rows.push_back(m_tabulated_rows.back());
+        m_tabulated_rows_dirty = true;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Clear Rows")) {
+        m_tabulated_rows.clear();
+        m_tabulated_strain_grid.clear();
+        m_tabulated_rate_grid.clear();
+        m_tabulated_temperature_grid.clear();
+        m_tabulated_stress_values.clear();
+        m_tabulated_rows_dirty = false;
+        m_tabulated_csv_error.clear();
+      }
+      if (ImGui::Button("Apply Rows")) {
+        RebuildTabulatedTableFromRows(*this);
+      }
+      ImGui::Checkbox("Export input as CSV reference", &m_tabulated_export_csv_reference);
+      if (m_tabulated_export_csv_reference) {
+        ImGui::TextDisabled("The solver input will only contain the CSV path, not the embedded table.");
+      } else {
+        ImGui::TextDisabled("The solver input will contain the embedded table and will not depend on the CSV file.");
+      }
+      if (!m_tabulated_csv_error.empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f), "%s", m_tabulated_csv_error.c_str());
+      }
+      if (m_tabulated_rows_dirty) {
+        ImGui::TextDisabled("Rows changed. Click 'Apply Rows' to rebuild the tabulated grid.");
+      }
+      if (ImGui::BeginTable("##TabulatedRows", 5,
+                            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                            ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable,
+                            ImVec2(-1.0f, 220.0f))) {
+        ImGui::TableSetupColumn("Strain");
+        ImGui::TableSetupColumn("Strain Rate");
+        ImGui::TableSetupColumn("Temperature");
+        ImGui::TableSetupColumn("Stress");
+        ImGui::TableSetupColumn("Action");
+        ImGui::TableHeadersRow();
+
+        int row_to_remove = -1;
+        int row_to_insert_after = -1;
+        for (int row_index = 0; row_index < static_cast<int>(m_tabulated_rows.size()); ++row_index) {
+          auto &row = m_tabulated_rows[row_index];
+          ImGui::PushID(row_index);
+          ImGui::TableNextRow();
+
+          ImGui::TableSetColumnIndex(0);
+          if (ImGui::InputDouble("##strain", &row.strain, 0.0, 0.0, "%.6g")) {
+            m_tabulated_rows_dirty = true;
+          }
+          ImGui::TableSetColumnIndex(1);
+          if (ImGui::InputDouble("##strain_rate", &row.strain_rate, 0.0, 0.0, "%.6g")) {
+            m_tabulated_rows_dirty = true;
+          }
+          ImGui::TableSetColumnIndex(2);
+          if (ImGui::InputDouble("##temperature", &row.temperature, 0.0, 0.0, "%.6g")) {
+            m_tabulated_rows_dirty = true;
+          }
+          ImGui::TableSetColumnIndex(3);
+          if (ImGui::InputDouble("##stress", &row.stress, 0.0, 0.0, "%.6g")) {
+            m_tabulated_rows_dirty = true;
+          }
+          ImGui::TableSetColumnIndex(4);
+          if (ImGui::SmallButton("Add After")) {
+            row_to_insert_after = row_index;
+          }
+          ImGui::SameLine();
+          if (ImGui::SmallButton("Remove")) {
+            row_to_remove = row_index;
+          }
+          ImGui::PopID();
+        }
+        if (row_to_insert_after >= 0) {
+          MaterialDialog::TabulatedRow new_row;
+          if (!m_tabulated_rows.empty()) {
+            new_row = m_tabulated_rows[row_to_insert_after];
+          } else {
+            new_row.stress = m_yield_stress0;
+          }
+          m_tabulated_rows.insert(m_tabulated_rows.begin() + row_to_insert_after + 1, new_row);
+          m_tabulated_rows_dirty = true;
+        }
+        if (row_to_remove >= 0) {
+          m_tabulated_rows.erase(m_tabulated_rows.begin() + row_to_remove);
+          m_tabulated_rows_dirty = true;
+        }
+        ImGui::EndTable();
+      }
+      if (!m_tabulated_strain_grid.empty()) {
+        ImGui::Text("Grid: %d strain x %d rate x %d temperature",
+                    static_cast<int>(m_tabulated_strain_grid.size()),
+                    static_cast<int>(m_tabulated_rate_grid.size()),
+                    static_cast<int>(m_tabulated_temperature_grid.size()));
+        ImGui::InputDouble("Plot Temperature", &m_plot_temperature, 0.0f, 1.0f, "%.4e");
+        ImGui::InputDouble("Plot Strain", &m_plot_strain, 0.0f, 1.0f, "%.4f");
+        ImGui::Spacing();
+        DrawTabulatedPlots(*this);
+      } else {
+        ImGui::TextDisabled("CSV columns: strain, strain_rate, temperature, stress.");
+      }
+    }
+  }
+
+  if (ImGuiFileDialog::Instance()->Display(kTabulatedMaterialCsvDialogId)) {
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      const std::string file_path_name = ImGuiFileDialog::Instance()->GetFilePathName();
+      ImportTabulatedCsvIntoDialog(file_path_name, *this);
+    }
+    ImGuiFileDialog::Instance()->Close();
   }
 
   if (ImGui::Button("Save to Database")) {
@@ -643,16 +1149,25 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
   }
 
   if (ImGui::Button("Ok")) {
-    create_material = true;
-    *p_open = false;
     m_selected_model = item_current;
+    if (m_selected_model == TABULATED &&
+        m_tabulated_export_csv_reference &&
+        std::string(m_tabulated_csv_path.data()).empty()) {
+      m_tabulated_csv_error = "CSV export mode requires a valid CSV path.";
+      create_material = false;
+    } else if (m_selected_model == TABULATED && !RebuildTabulatedTableFromRows(*this)) {
+      create_material = false;
+    } else {
+      create_material = true;
+      *p_open = false;
+    }
 
-    if (!mat && !m_temp_mat) {
+    if (create_material && !mat && !m_temp_mat) {
       m_temp_mat = new Material_();
       mat = m_temp_mat;
     }
 
-    if (mat) {
+    if (create_material && mat) {
       mat->setDensityConstant(m_density_const);
       mat->elastic_m = Elastic_(m_elastic_const, m_poisson_const);
       mat->yieldStress0 = m_yield_stress0;
@@ -707,6 +1222,31 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
                           m_temperature_range_min, m_temperature_range_max);
             break;
 
+          case TABULATED:
+            m_pl = new Tabulated();
+            mat->Material_model = TABULATED;
+            mat->tabulated_enabled = true;
+            mat->tabulated_export_csv_reference = m_tabulated_export_csv_reference;
+            mat->tableCsvPath = m_tabulated_csv_path.data();
+            mat->tabulatedStrainGrid = m_tabulated_strain_grid;
+            mat->tabulatedRateGrid = m_tabulated_rate_grid;
+            mat->tabulatedTemperatureGrid = m_tabulated_temperature_grid;
+            mat->tabulatedStressValues = m_tabulated_stress_values;
+            if (!mat->tabulatedStrainGrid.empty()) {
+              mat->e_min = mat->tabulatedStrainGrid.front();
+              mat->e_max = mat->tabulatedStrainGrid.back();
+              mat->strRange = {mat->e_min, mat->e_max};
+            }
+            if (!mat->tabulatedRateGrid.empty()) {
+              mat->er_min = mat->tabulatedRateGrid.front();
+              mat->er_max = mat->tabulatedRateGrid.back();
+            }
+            if (!mat->tabulatedTemperatureGrid.empty()) {
+              mat->T_min = mat->tabulatedTemperatureGrid.front();
+              mat->T_max = mat->tabulatedTemperatureGrid.back();
+            }
+            break;
+
           default:
             break;
         }
@@ -754,6 +1294,13 @@ Material_ ShowCreateMaterialDialog(bool* p_open, MaterialDialog *matdlg, bool *c
       ret.er_max = matdlg->m_strain_rate_range_max;
       ret.T_min = matdlg->m_temperature_range_min;
       ret.T_max = matdlg->m_temperature_range_max;
+      ret.tableCsvPath = matdlg->m_tabulated_csv_path.data();
+      ret.tabulated_export_csv_reference = matdlg->m_tabulated_export_csv_reference;
+      ret.tabulatedStrainGrid = matdlg->m_tabulated_strain_grid;
+      ret.tabulatedRateGrid = matdlg->m_tabulated_rate_grid;
+      ret.tabulatedTemperatureGrid = matdlg->m_tabulated_temperature_grid;
+      ret.tabulatedStressValues = matdlg->m_tabulated_stress_values;
+      ret.tabulated_enabled = !ret.tabulatedStrainGrid.empty();
       if (matdlg->m_pl != nullptr) {
         ret.m_plastic = matdlg->m_pl->clone();
         ret.m_isplastic = true;

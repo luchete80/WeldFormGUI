@@ -155,6 +155,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
             material->T_min = mat["tempRange"][0].get<double>();
             material->T_max = mat["tempRange"][1].get<double>();
         }
+        material->tabulated_export_csv_reference = mat.contains("flowStressCsv");
 
         // Plastic rule (if applicable)
         if (mat.contains("type")) {
@@ -209,6 +210,44 @@ bool ModelReader::readFromFile(const std::string& fname) {
                                        material->er_min, material->er_max,
                                        material->T_min, material->T_max);
                     cout << "    GMT(n1=" << n1 << ", n2=" << n2 << ", C1=" << C1 << ", C2=" << C2 << ")" << endl;
+                }
+
+                if (type == "Tabulated" && mat.contains("flowStressTable")) {
+                    const auto &table = mat["flowStressTable"];
+                    if (table.contains("strainGrid") && table.contains("strainRateGrid") &&
+                        table.contains("temperatureGrid") && table.contains("stressValues")) {
+                        material->tabulated_enabled = true;
+                        material->tabulatedStrainGrid = table["strainGrid"].get<std::vector<double>>();
+                        material->tabulatedRateGrid = table["strainRateGrid"].get<std::vector<double>>();
+                        material->tabulatedTemperatureGrid = table["temperatureGrid"].get<std::vector<double>>();
+                        material->tabulatedStressValues = table["stressValues"].get<std::vector<double>>();
+                        if (table.contains("csvFile")) {
+                            material->tableCsvPath = table["csvFile"].get<std::string>();
+                        }
+                        material->Material_model = TABULATED;
+                        if (!material->tabulatedStrainGrid.empty()) {
+                            material->e_min = material->tabulatedStrainGrid.front();
+                            material->e_max = material->tabulatedStrainGrid.back();
+                            material->strRange = {material->e_min, material->e_max};
+                        }
+                        if (!material->tabulatedRateGrid.empty()) {
+                            material->er_min = material->tabulatedRateGrid.front();
+                            material->er_max = material->tabulatedRateGrid.back();
+                        }
+                        if (!material->tabulatedTemperatureGrid.empty()) {
+                            material->T_min = material->tabulatedTemperatureGrid.front();
+                            material->T_max = material->tabulatedTemperatureGrid.back();
+                        }
+                        plRule = new Tabulated();
+                        cout << "    Tabulated flow-stress family loaded: "
+                             << material->tabulatedStrainGrid.size() << "x"
+                             << material->tabulatedRateGrid.size() << "x"
+                             << material->tabulatedTemperatureGrid.size() << endl;
+                    }
+                }
+                if (type == "Tabulated" && mat.contains("flowStressCsv")) {
+                    material->tableCsvPath = mat["flowStressCsv"].get<std::string>();
+                    material->tabulated_export_csv_reference = true;
                 }
 
                 if (plRule) {
