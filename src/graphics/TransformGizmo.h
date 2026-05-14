@@ -7,6 +7,7 @@
 
 #include <vtkActor.h>
 #include <vtkArrowSource.h>
+#include <vtkCamera.h>
 #include <vtkCellPicker.h>
 #include <vtkCylinderSource.h>
 #include <vtkInteractorStyleTrackballCamera.h>
@@ -82,6 +83,11 @@ public:
         UpdatePlacementFromTargetActor();
     }
 
+    void SetReferenceRenderer(vtkRenderer* renderer) {
+        this->ReferenceRenderer = renderer;
+        UpdatePlacementFromTargetActor();
+    }
+
     void SetOriginPosition(const double origin[3]) {
         if (!origin) return;
         for (int i = 0; i < 3; ++i)
@@ -100,12 +106,18 @@ public:
         double bounds[6];
         TargetActor->GetBounds(bounds);
 
-        const double center[3] = {
+        const double actorCenter[3] = {
             0.5 * (bounds[0] + bounds[1]),
             0.5 * (bounds[2] + bounds[3]),
             0.5 * (bounds[4] + bounds[5])
         };
-        DragCenter = {center[0], center[1], center[2]};
+        double placementCenter[3] = {
+            actorCenter[0],
+            actorCenter[1],
+            actorCenter[2]
+        };
+        ComputeViewCenteredPlacement(actorCenter, placementCenter);
+        DragCenter = {placementCenter[0], placementCenter[1], placementCenter[2]};
 
         const double maxDim = std::max({
             bounds[1] - bounds[0],
@@ -114,18 +126,29 @@ public:
         });
         const double effectiveDim = std::max(maxDim, 1e-9);
 
-        DragLength = std::max(effectiveDim * 0.55, 1e-6);
-        DragRadius = std::max(effectiveDim * 0.015, 5e-7);
-        PickRadius = std::max(effectiveDim * 0.06, DragRadius * 3.5);
-        TipLength = std::max(effectiveDim * 0.16, 1e-6);
-        TipRadius = std::max(effectiveDim * 0.055, DragRadius * 2.0);
-        OriginLength = std::max(effectiveDim * 0.18, 1e-6);
-        OriginRadius = std::max(effectiveDim * 0.008, 2.5e-7);
+        const double worldUnitsPerPixel = ComputeWorldUnitsPerPixel(actorCenter);
+        if (worldUnitsPerPixel > 0.0) {
+            DragLength = std::max(worldUnitsPerPixel * 110.0, 1e-6);
+            DragRadius = std::max(worldUnitsPerPixel * 3.0, 5e-7);
+            PickRadius = std::max(worldUnitsPerPixel * 12.0, DragRadius * 3.5);
+            TipLength = std::max(worldUnitsPerPixel * 20.0, 1e-6);
+            TipRadius = std::max(worldUnitsPerPixel * 7.0, DragRadius * 2.0);
+            OriginLength = std::max(worldUnitsPerPixel * 24.0, 1e-6);
+            OriginRadius = std::max(worldUnitsPerPixel * 2.0, 2.5e-7);
+        } else {
+            DragLength = std::max(effectiveDim * 0.55, 1e-6);
+            DragRadius = std::max(effectiveDim * 0.015, 5e-7);
+            PickRadius = std::max(effectiveDim * 0.06, DragRadius * 3.5);
+            TipLength = std::max(effectiveDim * 0.16, 1e-6);
+            TipRadius = std::max(effectiveDim * 0.055, DragRadius * 2.0);
+            OriginLength = std::max(effectiveDim * 0.18, 1e-6);
+            OriginRadius = std::max(effectiveDim * 0.008, 2.5e-7);
+        }
 
         for (int axis = 0; axis < 3; ++axis) {
-            ApplyPositiveAxisPose(DragSources[axis], DragAxes[axis], center, axis, DragLength, DragRadius);
-            ApplyPositiveAxisPose(PickSources[axis], PickAxes[axis], center, axis, DragLength, PickRadius);
-            ApplyArrowTipPose(TipSources[axis], DragTips[axis], center, axis, DragLength, TipLength, TipRadius);
+            ApplyPositiveAxisPose(DragSources[axis], DragAxes[axis], placementCenter, axis, DragLength, DragRadius);
+            ApplyPositiveAxisPose(PickSources[axis], PickAxes[axis], placementCenter, axis, DragLength, PickRadius);
+            ApplyArrowTipPose(TipSources[axis], DragTips[axis], placementCenter, axis, DragLength, TipLength, TipRadius);
         }
 
         UpdateOriginPlacement();
@@ -345,6 +368,88 @@ private:
         }
     }
 
+    double ComputeWorldUnitsPerPixel(const double center[3]) const {
+        if (!ReferenceRenderer) {
+            return 0.0;
+        }
+
+        vtkCamera* camera = ReferenceRenderer->GetActiveCamera();
+        vtkRenderWindow* renderWindow = ReferenceRenderer->GetRenderWindow();
+        if (!camera || !renderWindow) {
+            return 0.0;
+        }
+
+        int* size = renderWindow->GetSize();
+        if (size == nullptr || size[1] <= 0) {
+            return 0.0;
+        }
+
+        if (camera->GetParallelProjection()) {
+            return (2.0 * camera->GetParallelScale()) / static_cast<double>(size[1]);
+        }
+
+        double cameraPosition[3];
+        camera->GetPosition(cameraPosition);
+        double directionOfProjection[3];
+        camera->GetDirectionOfProjection(directionOfProjection);
+        vtkMath::Normalize(directionOfProjection);
+
+        const double cameraToCenter[3] = {
+            center[0] - cameraPosition[0],
+            center[1] - cameraPosition[1],
+            center[2] - cameraPosition[2]
+        };
+        const double depth = std::abs(vtkMath::Dot(cameraToCenter, directionOfProjection));
+        if (depth <= 1.0e-9) {
+            return 0.0;
+        }
+
+        const double viewAngleRadians = vtkMath::RadiansFromDegrees(camera->GetViewAngle());
+        const double visibleWorldHeight = 2.0 * depth * std::tan(0.5 * viewAngleRadians);
+        return visibleWorldHeight / static_cast<double>(size[1]);
+    }
+
+    bool ComputeViewCenteredPlacement(const double referencePoint[3], double placement[3]) const {
+        if (!ReferenceRenderer) {
+            return false;
+        }
+
+        vtkRenderWindow* renderWindow = ReferenceRenderer->GetRenderWindow();
+        if (!renderWindow) {
+            return false;
+        }
+
+        double displayReference[3] = {0.0, 0.0, 0.0};
+        ReferenceRenderer->SetWorldPoint(referencePoint[0], referencePoint[1], referencePoint[2], 1.0);
+        ReferenceRenderer->WorldToDisplay();
+        ReferenceRenderer->GetDisplayPoint(displayReference);
+        if (displayReference[2] < 0.0 || displayReference[2] > 1.0) {
+            return false;
+        }
+
+        int* size = renderWindow->GetSize();
+        if (size == nullptr || size[0] <= 0 || size[1] <= 0) {
+            return false;
+        }
+
+        ReferenceRenderer->SetDisplayPoint(
+            0.5 * static_cast<double>(size[0]),
+            0.5 * static_cast<double>(size[1]),
+            displayReference[2]);
+        ReferenceRenderer->DisplayToWorld();
+
+        double worldPoint[4] = {0.0, 0.0, 0.0, 0.0};
+        ReferenceRenderer->GetWorldPoint(worldPoint);
+        if (std::abs(worldPoint[3]) <= 1.0e-9) {
+            return false;
+        }
+
+        placement[0] = worldPoint[0] / worldPoint[3];
+        placement[1] = worldPoint[1] / worldPoint[3];
+        placement[2] = worldPoint[2] / worldPoint[3];
+        return true;
+    }
+
 private:
     std::array<vtkSmartPointer<vtkCylinderSource>, 3> DragSources;
     std::array<vtkSmartPointer<vtkCylinderSource>, 3> PickSources;
@@ -355,6 +460,7 @@ private:
     std::array<vtkSmartPointer<vtkActor>, 3> PickAxes;
     std::array<vtkSmartPointer<vtkActor>, 3> OriginAxes;
     vtkSmartPointer<vtkActor> TargetActor;
+    vtkRenderer* ReferenceRenderer = nullptr;
     std::array<double, 3> OriginPosition = {0.0, 0.0, 0.0};
     std::array<double, 3> DragCenter = {0.0, 0.0, 0.0};
     int Dimension = 3;
@@ -525,6 +631,7 @@ public:
             }
 
             if (Gizmo) {
+                Gizmo->SetReferenceRenderer(renderer);
                 Gizmo->UpdatePlacementFromTargetActor();
                 Gizmo->SetOriginPosition(0.0, 0.0, 0.0);
             }
@@ -551,6 +658,8 @@ private:
     int PickAxisAt(int x, int y) {
         if (!Gizmo || !this->GetDefaultRenderer())
             return -1;
+
+        Gizmo->SetReferenceRenderer(this->GetDefaultRenderer());
 
         const std::array<std::array<double, 3>, 3> directions = {{
             {{1.0, 0.0, 0.0}},

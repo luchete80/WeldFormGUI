@@ -594,6 +594,7 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                                 double currentTime,
                                 bool& isPlaying,
                                 const std::vector<std::string>& fieldNames,
+                                const std::string& activeFieldName,
                                 int& selectedField,
                                 bool& fieldSelectionChanged,
                                 bool& manualColorScale,
@@ -601,6 +602,9 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                                 int activeFieldComponents,
                                 int& selectedFieldComponent,
                                 bool& componentChanged,
+                                bool vectorFieldAvailable,
+                                bool& showVectorGlyphs,
+                                bool& vectorGlyphVisibilityChanged,
                                 double& manualMin,
                                 double& manualMax,
                                 bool& manualRangeChanged)
@@ -658,7 +662,12 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                     buttonCount = 4;
 
                 for (int comp = 0; comp < buttonCount; ++comp) {
-                    std::string label = std::to_string(comp);
+                    std::string label;
+                    if (comp == 0) label = "X";
+                    else if (comp == 1) label = "Y";
+                    else if (comp == 2) label = "Z";
+                    else if (comp == 3) label = "|V|";
+                    else label = std::to_string(comp);
                     const bool isSelected = (selectedFieldComponent == comp);
                     if (isSelected)
                         ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
@@ -674,6 +683,21 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                     if (comp + 1 < buttonCount)
                         ImGui::SameLine();
                 }
+
+                const char* selectedComponentLabel = "All";
+                if (selectedFieldComponent == 0) selectedComponentLabel = "X";
+                else if (selectedFieldComponent == 1) selectedComponentLabel = "Y";
+                else if (selectedFieldComponent == 2) selectedComponentLabel = "Z";
+                else if (selectedFieldComponent == 3) selectedComponentLabel = "|V|";
+                ImGui::Text("Viewing: %s [%s]", activeFieldName.c_str(), selectedComponentLabel);
+            } else if (!activeFieldName.empty()) {
+                ImGui::Text("Viewing: %s", activeFieldName.c_str());
+            }
+
+            if (vectorFieldAvailable) {
+                bool toggled = ImGui::Checkbox("Show Vector Shape", &showVectorGlyphs);
+                if (toggled)
+                    vectorGlyphVisibilityChanged = true;
             }
 
             const bool autoScale = !manualColorScale;
@@ -870,6 +894,32 @@ void drawResultProbeOverlay(const ResultProbeInfo& probe, const std::string& act
     ImGui::End();
 
     ImGui::PopStyleVar(3);
+}
+
+std::string buildActiveFieldDisplayName(const std::string& activeFieldName,
+                                        int activeFieldComponents,
+                                        int selectedFieldComponent) {
+    if (activeFieldName.empty()) {
+        return "";
+    }
+
+    if (activeFieldComponents <= 1) {
+        return activeFieldName;
+    }
+
+    if (selectedFieldComponent == 0) {
+        return activeFieldName + " [X]";
+    }
+    if (selectedFieldComponent == 1) {
+        return activeFieldName + " [Y]";
+    }
+    if (selectedFieldComponent == 2) {
+        return activeFieldName + " [Z]";
+    }
+    if (selectedFieldComponent == 3) {
+        return activeFieldName + " [|V|]";
+    }
+    return activeFieldName;
 }
 
 double computeProbeMarkerRadius(vtkUnstructuredGrid* mesh) {
@@ -1500,9 +1550,11 @@ int main(int argc, char* argv[])
 	              static std::string activeFieldName = "";
 	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
                 static vtkSmartPointer<vtkActor> currentProbeHighlightActor = nullptr;
+	              static vtkSmartPointer<vtkActor> currentVectorFieldActor = nullptr;
 	              static int activeFieldComponents = 1;
                 static int selectedField = 0;
 	              static int selectedFieldComponent = -2;
+                static bool showVectorGlyphs = false;
 	              auto getActiveArray = [&](ResultFrame& resultFrame) -> vtkDataArray* {
 	                  if (activeFieldName.empty() || !resultFrame.mesh)
 	                      return nullptr;
@@ -1562,7 +1614,11 @@ int main(int argc, char* argv[])
 
 	                  if (array->GetNumberOfComponents() == 3 && selectedFieldComponent == 3) {
 	                      resultFrame.setActiveScalarField(activeFieldName);
-	                      resultFrame.updateScalarBar(activeFieldName, globalMin, globalMax);
+                        resultFrame.updateVectorGlyphs(activeFieldName, isCellField, showVectorGlyphs);
+	                      resultFrame.updateScalarBar(
+                            buildActiveFieldDisplayName(activeFieldName, array->GetNumberOfComponents(), selectedFieldComponent),
+                            globalMin,
+                            globalMax);
 	                      return;
 	                  }
 
@@ -1579,7 +1635,11 @@ int main(int argc, char* argv[])
 	                  mapper->SetScalarRange(globalMin, globalMax);
 	                  mapper->ScalarVisibilityOn();
 	                  mapper->Update();
-	                  resultFrame.updateScalarBar(activeFieldName, globalMin, globalMax);
+                    resultFrame.updateVectorGlyphs(activeFieldName, isCellField, showVectorGlyphs);
+	                  resultFrame.updateScalarBar(
+                        buildActiveFieldDisplayName(activeFieldName, array->GetNumberOfComponents(), selectedFieldComponent),
+                        globalMin,
+                        globalMax);
 	              };
 	              auto applyActiveFieldSelectionToAllFrames = [&]() {
 	                  if (!editor->getResults() || activeFieldName.empty())
@@ -1589,6 +1649,17 @@ int main(int argc, char* argv[])
 	                          applyActiveFieldSelection(*resultFrame);
 	                  }
 	              };
+                auto syncCurrentVectorFieldActor = [&](ResultFrame& resultFrame) {
+                    if (currentVectorFieldActor != nullptr) {
+                        renderer->RemoveActor(currentVectorFieldActor);
+                        currentVectorFieldActor = nullptr;
+                    }
+
+                    if (resultFrame.hasVisibleVectorGlyphs() && resultFrame.getVectorActor() != nullptr) {
+                        currentVectorFieldActor = resultFrame.getVectorActor();
+                        renderer->AddActor(currentVectorFieldActor);
+                    }
+                };
 
 	              // Botones de background específicos
 	              //~ if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
@@ -1686,6 +1757,7 @@ int main(int argc, char* argv[])
 		                      if (!activeFieldName.empty()) {
 		                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
 		                      }
+                        syncCurrentVectorFieldActor(*editor->getResults()->frames[currentFrame]);
                         applyDisplayModeToActor(editor->getResults()->frames[currentFrame]->actor,
                                                 resultsOverlayState.displayMode, resultsOverlayState.showEdges, true);
 	                      
@@ -1725,16 +1797,20 @@ int main(int argc, char* argv[])
                   bool fieldSelectionChanged = false;
                   bool colorScaleModeChanged = false;
                   bool componentChanged = false;
+                  bool vectorGlyphVisibilityChanged = false;
                   bool manualRangeChanged = false;
                   vtkDataArray* overlayActiveArray = getActiveArray(overlayFrame);
                   if (overlayActiveArray)
                       activeFieldComponents = overlayActiveArray->GetNumberOfComponents();
+                  const bool vectorFieldAvailable = (overlayActiveArray != nullptr &&
+                                                     overlayActiveArray->GetNumberOfComponents() == 3);
                   drawResultsPlaybackOverlay(vtkViewer_res,
                                              safeFrame,
                                              (int)editor->getResults()->frames.size(),
                                              editor->getResults()->frames[safeFrame]->time,
                                              isPlaying,
                                              overlayFieldNames,
+                                             activeFieldName,
                                              selectedField,
                                              fieldSelectionChanged,
                                              manualColorScale,
@@ -1742,6 +1818,9 @@ int main(int argc, char* argv[])
                                              activeFieldComponents,
                                              selectedFieldComponent,
                                              componentChanged,
+                                             vectorFieldAvailable,
+                                             showVectorGlyphs,
+                                             vectorGlyphVisibilityChanged,
                                              manualMin,
                                              manualMax,
                                              manualRangeChanged);
@@ -1756,35 +1835,46 @@ int main(int argc, char* argv[])
                       activeFieldComponents = selectedArray ? selectedArray->GetNumberOfComponents() : 1;
                       selectedFieldComponent = (activeFieldComponents == 3) ? 3 :
                                                (activeFieldComponents > 1 ? 0 : -1);
+                      showVectorGlyphs = false;
 
-                      recomputeActiveFieldScale();
-                      applyActiveFieldSelectionToAllFrames();
-                      applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
-                      vtkViewer_res.render();
-                  }
+	                      recomputeActiveFieldScale();
+	                      applyActiveFieldSelectionToAllFrames();
+                        syncCurrentVectorFieldActor(overlayFrame);
+	                      applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
+	                      vtkViewer_res.render();
+	                  }
 
                   if (colorScaleModeChanged) {
                       if (manualColorScale) {
                           manualMin = globalMin;
                           manualMax = globalMax;
                       } else {
-                          recomputeActiveFieldScale();
-                          applyActiveFieldSelectionToAllFrames();
-                      }
-                      vtkViewer_res.render();
-                  }
+	                          recomputeActiveFieldScale();
+	                          applyActiveFieldSelectionToAllFrames();
+                            syncCurrentVectorFieldActor(overlayFrame);
+	                      }
+	                      vtkViewer_res.render();
+	                  }
 
-                  if (componentChanged) {
-                      recomputeActiveFieldScale();
-                      applyActiveFieldSelectionToAllFrames();
-                      vtkViewer_res.render();
-                  }
+	                  if (componentChanged) {
+	                      recomputeActiveFieldScale();
+	                      applyActiveFieldSelectionToAllFrames();
+                        syncCurrentVectorFieldActor(overlayFrame);
+	                      vtkViewer_res.render();
+	                  }
 
-                  if (manualRangeChanged) {
-                      recomputeActiveFieldScale();
-                      applyActiveFieldSelectionToAllFrames();
-                      vtkViewer_res.render();
-                  }
+                    if (vectorGlyphVisibilityChanged) {
+                        applyActiveFieldSelectionToAllFrames();
+                        syncCurrentVectorFieldActor(overlayFrame);
+                        vtkViewer_res.render();
+                    }
+
+	                  if (manualRangeChanged) {
+	                      recomputeActiveFieldScale();
+	                      applyActiveFieldSelectionToAllFrames();
+                        syncCurrentVectorFieldActor(overlayFrame);
+	                      vtkViewer_res.render();
+	                  }
 
                   if (!activeFieldName.empty()) {
                       const ResultProbeInfo probe = buildResultProbeInfo(vtkViewer_res,
@@ -1792,7 +1882,11 @@ int main(int argc, char* argv[])
                                                                          activeFieldName,
                                                                          isCellField,
                                                                          selectedFieldComponent);
-                      drawResultProbeOverlay(probe, activeFieldName);
+                      drawResultProbeOverlay(
+                          probe,
+                          buildActiveFieldDisplayName(activeFieldName,
+                                                      activeFieldComponents,
+                                                      selectedFieldComponent));
 
                       if (vtkViewer_res.isViewportHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                           if (currentProbeHighlightActor != nullptr) {

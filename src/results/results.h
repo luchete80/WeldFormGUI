@@ -14,8 +14,15 @@
 #include <vtkScalarBarActor.h>
 #include <vtkScalarsToColors.h>
 #include <vtkTextProperty.h>
+#include <vtkArrowSource.h>
+#include <vtkCellCenters.h>
+#include <vtkGlyph3D.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkDataObject.h>
+#include <vtkDataArray.h>
 
 // Includes estándar de C++
+#include <cmath>
 #include <string>
 #include <iostream>
 #include <stdexcept>
@@ -70,14 +77,23 @@ public:
     vtkSmartPointer<vtkDataSetMapper> mapper;
     vtkSmartPointer<vtkContourFilter> contourFilter;
     vtkSmartPointer<vtkScalarBarActor> scalarBar;
+    vtkSmartPointer<vtkCellCenters> vectorCellCenters;
+    vtkSmartPointer<vtkGlyph3D> vectorGlyphs;
+    vtkSmartPointer<vtkPolyDataMapper> vectorMapper;
+    vtkSmartPointer<vtkActor> vectorActor;
     bool useContour;
     bool showEdges;
+    bool vectorGlyphVisible;
+    bool vectorGlyphEnabled;
     
     // Constructor moderno y seguro
     explicit ResultFrame(const std::string& name_) : name(name_) {
         showEdges = false;
+        vectorGlyphVisible = false;
+        vectorGlyphEnabled = false;
         loadVTKFile(name_);
         setupRenderingPipeline();
+        setupVectorGlyphPipeline();
         setupScalarBar();
     }
 
@@ -232,6 +248,51 @@ void loadVTKFile(const std::string& filename) {
         scalarBar->GetLabelTextProperty()->BoldOff();
         scalarBar->GetLabelTextProperty()->ItalicOff();
         scalarBar->GetLabelTextProperty()->ShadowOff();
+    }
+
+    double computeVectorGlyphScale() const {
+        if (!mesh)
+            return 1.0;
+
+        double bounds[6];
+        mesh->GetBounds(bounds);
+        const double dx = bounds[1] - bounds[0];
+        const double dy = bounds[3] - bounds[2];
+        const double dz = bounds[5] - bounds[4];
+        const double diag = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (diag <= 1.0e-12)
+            return 1.0;
+        return 0.04 * diag;
+    }
+
+    void setupVectorGlyphPipeline() {
+        auto arrowSource = vtkSmartPointer<vtkArrowSource>::New();
+        arrowSource->SetTipResolution(16);
+        arrowSource->SetShaftResolution(12);
+
+        vectorCellCenters = vtkSmartPointer<vtkCellCenters>::New();
+        vectorCellCenters->SetInputData(mesh);
+        vectorCellCenters->CopyArraysOn();
+
+        vectorGlyphs = vtkSmartPointer<vtkGlyph3D>::New();
+        vectorGlyphs->SetSourceConnection(arrowSource->GetOutputPort());
+        vectorGlyphs->OrientOn();
+        vectorGlyphs->SetVectorModeToUseVector();
+        vectorGlyphs->SetScaleModeToDataScalingOff();
+        vectorGlyphs->ClampingOff();
+        vectorGlyphs->SetScaleFactor(computeVectorGlyphScale());
+
+        vectorMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        vectorMapper->SetInputConnection(vectorGlyphs->GetOutputPort());
+        vectorMapper->ScalarVisibilityOff();
+
+        vectorActor = vtkSmartPointer<vtkActor>::New();
+        vectorActor->SetMapper(vectorMapper);
+        vectorActor->GetProperty()->SetColor(0.98, 0.82, 0.18);
+        vectorActor->GetProperty()->SetOpacity(0.95);
+        vectorActor->GetProperty()->LightingOff();
+        vectorActor->PickableOff();
+        vectorActor->SetVisibility(false);
     }
     
     void setupContourPipeline() {
@@ -396,6 +457,50 @@ public:
           if (mapper) mapper->Modified();
           if (actor) actor->Modified();
       }
+
+    void updateVectorGlyphs(const std::string& fieldName, bool isCellField, bool enabled) {
+        vectorGlyphEnabled = enabled;
+        vectorGlyphVisible = false;
+        if (!mesh || !vectorGlyphs || !vectorActor) {
+            return;
+        }
+
+        if (!enabled) {
+            vectorActor->SetVisibility(false);
+            return;
+        }
+
+        vtkDataArray* field = isCellField
+            ? mesh->GetCellData()->GetArray(fieldName.c_str())
+            : mesh->GetPointData()->GetArray(fieldName.c_str());
+
+        if (!field || field->GetNumberOfComponents() != 3) {
+            vectorActor->SetVisibility(false);
+            return;
+        }
+
+        vectorGlyphs->SetScaleFactor(computeVectorGlyphScale());
+        if (isCellField) {
+            vectorCellCenters->SetInputData(mesh);
+            vectorCellCenters->Update();
+            vectorGlyphs->SetInputConnection(vectorCellCenters->GetOutputPort());
+            vectorGlyphs->SetInputArrayToProcess(
+                0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
+        } else {
+            vectorGlyphs->SetInputData(mesh);
+            vectorGlyphs->SetInputArrayToProcess(
+                0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
+        }
+        vectorGlyphs->Update();
+        vectorActor->SetVisibility(true);
+        vectorGlyphVisible = true;
+    }
+
+    void hideVectorGlyphs() {
+        vectorGlyphVisible = false;
+        if (vectorActor)
+            vectorActor->SetVisibility(false);
+    }
     
     // Helper para ver campos disponibles
     void printAvailableFields() const {
@@ -533,6 +638,8 @@ public:
     }
 
     vtkSmartPointer<vtkScalarBarActor> getScalarBarActor() const { return scalarBar; }
+    vtkSmartPointer<vtkActor> getVectorActor() const { return vectorActor; }
+    bool hasVisibleVectorGlyphs() const { return vectorGlyphVisible; }
     
     // Información del mesh
     void printInfo() const {

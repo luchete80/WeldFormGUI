@@ -2293,6 +2293,7 @@ void Editor::applyPartTranslation(Part* part, double dx, double dy, double dz)
       targetActor = graphicMesh->getActor();
     }
     if (targetActor != nullptr) {
+      gizmo->SetReferenceRenderer(viewer->getRenderer());
       gizmo->SetTargetActor(targetActor);
       gizmo->SetOriginPosition(0.0, 0.0, 0.0);
     }
@@ -3902,6 +3903,7 @@ void Editor::drawGui() {
                 if (move_actor != nullptr){
                 gizmo->SetDimension(m_model->getDimension());
                 gizmo->Show();
+                gizmo->SetReferenceRenderer(viewer->getRenderer());
                 gizmo->SetTargetActor(move_actor);
                 gizmo->SetOriginPosition(0.0, 0.0, 0.0);
 
