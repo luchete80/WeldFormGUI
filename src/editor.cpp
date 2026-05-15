@@ -40,6 +40,7 @@
 #include <limits>
 #include <map>
 #include <unordered_set>
+#include <utility>
 
 #include <gmsh.h>
 
@@ -351,6 +352,38 @@ std::string activeModelStem(Model &model)
 fs::path activeModelOutputPath(Model &model, const std::string &filename)
 {
     return fs::path(model.getBaseDir()) / filename;
+}
+
+std::vector<fs::path> existingJobArtifacts(Job* job)
+{
+    std::vector<fs::path> artifacts;
+    if (job == nullptr) {
+        return artifacts;
+    }
+
+    const fs::path runPath(job->getPathFile());
+    const fs::path runDir = runPath.has_parent_path() ? runPath.parent_path() : fs::path(".");
+
+    const fs::path logPath = runDir / "log.txt";
+    if (fs::exists(logPath)) {
+        artifacts.push_back(logPath);
+    }
+
+    std::error_code ec;
+    if (fs::exists(runDir, ec) && fs::is_directory(runDir, ec)) {
+        for (const fs::directory_entry& entry : fs::directory_iterator(runDir, ec)) {
+            if (ec) {
+                break;
+            }
+            if (fs::is_regular_file(entry.path(), ec) && entry.path().extension() == ".wfresult") {
+                artifacts.push_back(entry.path());
+            }
+        }
+    }
+
+    std::sort(artifacts.begin(), artifacts.end());
+    artifacts.erase(std::unique(artifacts.begin(), artifacts.end()), artifacts.end());
+    return artifacts;
 }
 
 std::string ensureWfmodelPath(const std::string& filePathName)
@@ -2012,13 +2045,33 @@ bool Editor::createJobFromActiveModel(bool runJob)
   m_jobs.push_back(job);
 
   if (runJob) {
-    job->Run();
-    job->UpdateOutput();
-    m_jobshowdlg.m_job = job;
-    m_jobshowdlg.m_show = true;
+    requestJobRun(job);
   }
 
   return true;
+}
+
+void Editor::requestJobRun(Job* job)
+{
+  if (job == nullptr) {
+    return;
+  }
+
+  cout << "[Editor] Run requested for job: " << job->getPathFile() << endl;
+  std::vector<fs::path> artifacts = existingJobArtifacts(job);
+  if (artifacts.empty()) {
+    m_pending_job_run_confirmation = PendingJobRunConfirmation{};
+    m_jobshowdlg.m_job = job;
+    job->Run();
+    job->UpdateOutput();
+    m_jobshowdlg.m_show = true;
+    return;
+  }
+
+  cout << "[Editor] Existing job artifacts found. Waiting for user confirmation." << endl;
+  m_pending_job_run_confirmation.job = job;
+  m_pending_job_run_confirmation.artifacts = std::move(artifacts);
+  m_pending_job_run_confirmation.open = true;
 }
 
 bool Editor::scalePartGeometry(Part* part, double factor)
@@ -3118,6 +3171,75 @@ void Editor::drawResultsLoadProgress()
 
   if (m_close_results_load_popup && !ImGui::IsPopupOpen("Loading Results"))
     m_close_results_load_popup = false;
+}
+
+void Editor::executePendingJobRun(bool deleteExistingArtifacts)
+{
+  Job* job = m_pending_job_run_confirmation.job;
+  const std::vector<fs::path> artifacts = m_pending_job_run_confirmation.artifacts;
+  m_pending_job_run_confirmation = PendingJobRunConfirmation{};
+
+  if (job == nullptr) {
+    return;
+  }
+
+  if (deleteExistingArtifacts) {
+    for (const fs::path& artifact : artifacts) {
+      std::error_code ec;
+      if (!fs::remove(artifact, ec) && ec) {
+        cout << "[Job::Run] Could not remove previous artifact: "
+             << artifact.string() << " (" << ec.message() << ")" << endl;
+      }
+    }
+  }
+
+  m_jobshowdlg.m_job = job;
+  job->Run();
+  job->UpdateOutput();
+  m_jobshowdlg.m_show = true;
+}
+
+void Editor::drawPendingJobRunConfirmation()
+{
+  if (!m_pending_job_run_confirmation.open && !ImGui::IsPopupOpen("Existing Job Files")) {
+    return;
+  }
+
+  if (m_pending_job_run_confirmation.open) {
+    ImGui::OpenPopup("Existing Job Files");
+    m_pending_job_run_confirmation.open = false;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(560.0f, 0.0f), ImGuiCond_Appearing);
+  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                          ImGuiCond_Appearing,
+                          ImVec2(0.5f, 0.5f));
+
+  const ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
+                                 ImGuiWindowFlags_NoCollapse |
+                                 ImGuiWindowFlags_NoResize |
+                                 ImGuiWindowFlags_NoSavedSettings;
+  if (ImGui::BeginPopupModal("Existing Job Files", nullptr, flags)) {
+    ImGui::TextWrapped("Se encontraron archivos existentes del job.");
+    ImGui::TextWrapped("Si continuas, se borraran antes de ejecutar.");
+    ImGui::Separator();
+    for (const fs::path& artifact : m_pending_job_run_confirmation.artifacts) {
+      ImGui::BulletText("%s", artifact.filename().string().c_str());
+    }
+    ImGui::Separator();
+
+    if (ImGui::Button("Continuar", ImVec2(140.0f, 0.0f))) {
+      executePendingJobRun(true);
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancelar", ImVec2(140.0f, 0.0f))) {
+      m_pending_job_run_confirmation = PendingJobRunConfirmation{};
+      ImGui::CloseCurrentPopup();
+    }
+
+    ImGui::EndPopup();
+  }
 }
 
 void Editor::meshPart(Part* part){
@@ -4649,10 +4771,7 @@ void Editor::drawGui() {
             //selected_mat = m_mats[i];
           }
           if (ImGui::MenuItem("Run", "")) {
-            m_jobs[i]->Run();
-            m_jobshowdlg.m_job = m_jobs[i];
-            m_jobs[i]->UpdateOutput();
-            m_jobshowdlg.m_show = true;
+            requestJobRun(m_jobs[i]);
           }
           if (ImGui::MenuItem("Load Results", "")) {
             openResultsForJob(m_jobs[i]);
@@ -4669,6 +4788,9 @@ void Editor::drawGui() {
               m_jobshowdlg.m_last_job = nullptr;
               m_jobshowdlg.m_last_refresh_time = -1.0;
               m_jobshowdlg.m_show = false;
+            }
+            if (m_pending_job_run_confirmation.job == jobToDelete) {
+              m_pending_job_run_confirmation = PendingJobRunConfirmation{};
             }
             delete jobToDelete;
             m_jobs.erase(m_jobs.begin() + i);
@@ -5685,6 +5807,7 @@ void Editor::drawGui() {
 
   drawScriptBrowserWindow();
   drawResultsLoadProgress();
+  drawPendingJobRunConfirmation();
   advanceResultsLoad();
   updatePartOverlay();
   updateBoundaryConditionOverlay();

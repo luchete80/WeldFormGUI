@@ -134,6 +134,7 @@ public:
   bool openResultsFromPath(const std::string& filePathName);
   bool openResultsForModel();
   bool openResultsForJob(Job* job);
+  void requestJobRun(Job* job);
   bool refreshOpenResults(int preferredFrameIndex = -1);
   int consumePendingResultsFrameIndex();
   bool scalePartGeometry(Part* part, double factor);
@@ -409,6 +410,12 @@ protected:
   int m_pending_results_frame_index = -1;
   bool m_close_results_load_popup = false;
   bool m_expand_model_tree_once = false;
+  struct PendingJobRunConfirmation {
+    bool open = false;
+    Job* job = nullptr;
+    std::vector<fs::path> artifacts;
+  };
+  PendingJobRunConfirmation m_pending_job_run_confirmation;
 
   bool beginResultsLoadFromJson(const std::string& jsonFile,
                                 bool replaceExistingResults = false,
@@ -416,6 +423,8 @@ protected:
   void advanceResultsLoad();
   void finishResultsLoad();
   void drawResultsLoadProgress();
+  void drawPendingJobRunConfirmation();
+  void executePendingJobRun(bool deleteExistingArtifacts);
   void clearBoundaryConditionOverlay();
   void updateBoundaryConditionOverlay();
   void clearPartOverlay();

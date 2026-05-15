@@ -10,10 +10,14 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <set>
 #include <vector>
+#include <utility>
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 using namespace std;
@@ -74,6 +78,144 @@ int countBdfNodes(const fs::path& path)
 
   return count;
 }
+
+fs::path executableDirectory()
+{
+#ifdef _WIN32
+  std::vector<char> buffer(MAX_PATH, '\0');
+  DWORD length = 0;
+  while (true) {
+    length = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length == 0) {
+      return {};
+    }
+    if (length < buffer.size() - 1) {
+      break;
+    }
+    buffer.resize(buffer.size() * 2, '\0');
+  }
+  return fs::path(std::string(buffer.data(), length)).parent_path();
+#else
+  std::vector<char> buffer(1024, '\0');
+  while (true) {
+    const ssize_t length = ::readlink("/proc/self/exe", buffer.data(), buffer.size() - 1);
+    if (length < 0) {
+      return {};
+    }
+    if (length < static_cast<ssize_t>(buffer.size() - 1)) {
+      return fs::path(std::string(buffer.data(), static_cast<std::size_t>(length))).parent_path();
+    }
+    buffer.resize(buffer.size() * 2, '\0');
+  }
+#endif
+}
+
+std::vector<fs::path> solverSearchDirectories(const fs::path& jobDirectory)
+{
+  std::vector<fs::path> directories;
+  const fs::path exeDir = executableDirectory();
+  const fs::path cwd = fs::current_path();
+
+  if (!exeDir.empty()) {
+    directories.push_back(exeDir / "solvers");
+    directories.push_back(exeDir.parent_path() / "solvers");
+  }
+
+  directories.push_back(cwd / "solvers");
+  directories.push_back(cwd.parent_path() / "WeldFormGUI" / "solvers");
+
+  if (!jobDirectory.empty()) {
+    directories.push_back(jobDirectory / "solvers");
+  }
+
+  std::vector<fs::path> uniqueDirectories;
+  std::set<std::string> seen;
+  for (const fs::path& directory : directories) {
+    if (directory.empty()) {
+      continue;
+    }
+
+    const fs::path keyPath = directory.lexically_normal();
+    const std::string key = keyPath.string();
+    if (seen.insert(key).second) {
+      uniqueDirectories.push_back(keyPath);
+    }
+  }
+
+  return uniqueDirectories;
+}
+
+std::vector<fs::path> solverCandidatePaths(const std::string& solverName,
+                                           const fs::path& jobDirectory)
+{
+  std::vector<fs::path> candidates;
+  for (const fs::path& directory : solverSearchDirectories(jobDirectory)) {
+#ifdef _WIN32
+    candidates.push_back(directory / (solverName + ".exe"));
+#endif
+    candidates.push_back(directory / solverName);
+  }
+  return candidates;
+}
+
+fs::path resolveSolverExecutablePath(const std::string& solverName,
+                                     const fs::path& jobDirectory)
+{
+  for (const fs::path& candidate : solverCandidatePaths(solverName, jobDirectory)) {
+    if (fs::exists(candidate)) {
+      return candidate;
+    }
+  }
+  return {};
+}
+
+std::string joinPathsForLog(const std::vector<fs::path>& paths)
+{
+  if (paths.empty()) {
+    return "<none>";
+  }
+
+  std::ostringstream stream;
+  for (std::size_t i = 0; i < paths.size(); ++i) {
+    if (i > 0) {
+      stream << "; ";
+    }
+    stream << paths[i].string();
+  }
+  return stream.str();
+}
+
+#ifdef _WIN32
+std::string formatWindowsErrorMessage(DWORD errorCode)
+{
+  if (errorCode == 0) {
+    return "unknown error";
+  }
+
+  LPSTR buffer = nullptr;
+  const DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                      FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS;
+  const DWORD length = FormatMessageA(flags,
+                                      nullptr,
+                                      errorCode,
+                                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                      reinterpret_cast<LPSTR>(&buffer),
+                                      0,
+                                      nullptr);
+  if (length == 0 || buffer == nullptr) {
+    return "error code " + std::to_string(errorCode);
+  }
+
+  std::string message(buffer, length);
+  LocalFree(buffer);
+  while (!message.empty() &&
+         (message.back() == '\r' || message.back() == '\n' || message.back() == ' ')) {
+    message.pop_back();
+  }
+  return message;
+}
+#endif
 }
 
 
@@ -235,14 +377,9 @@ std::string Job::getSolverBinaryName(const SolverInputInfo& info) const
 {
   const std::string baseName = info.implicit ? "weldform_imp" : "weldform_exp";
   const SolverEdition requestedEdition = getRequestedSolverEdition();
-  const fs::path solversDir = fs::current_path() / "solvers";
 
   const auto existsForCurrentPlatform = [&](const std::string& binaryName) {
-#ifdef _WIN32
-    return fs::exists(solversDir / (binaryName + ".exe")) || fs::exists(solversDir / binaryName);
-#else
-    return fs::exists(solversDir / binaryName);
-#endif
+    return !resolveSolverExecutablePath(binaryName, getJobDirectory()).empty();
   };
 
   if (requestedEdition == SolverEdition::Full) {
@@ -264,13 +401,8 @@ bool Job::validateSolverSelection(const SolverInputInfo& info,
                                   SolverEdition edition,
                                   const std::string& solverName) const
 {
-  const fs::path solversDir = fs::current_path() / "solvers";
-#ifdef _WIN32
-  const bool solverExists =
-      fs::exists(solversDir / (solverName + ".exe")) || fs::exists(solversDir / solverName);
-#else
-  const bool solverExists = fs::exists(solversDir / solverName);
-#endif
+  const fs::path solverExecutable = resolveSolverExecutablePath(solverName, getJobDirectory());
+  const bool solverExists = !solverExecutable.empty();
 
   const auto persistLogMessage = [&](const std::vector<std::string>& lines) {
     const fs::path logPath = getLogFilePath();
@@ -294,7 +426,8 @@ bool Job::validateSolverSelection(const SolverInputInfo& info,
   if (!solverExists) {
     const std::string line1 = "[Job::Run] Solver binary not found: " + solverName;
     const std::string line2 =
-        "[Job::Run] Expected location: " + (solversDir / solverName).string();
+        "[Job::Run] Searched: " +
+        joinPathsForLog(solverCandidatePaths(solverName, getJobDirectory()));
     std::cout << line1 << std::endl;
     std::cout << line2 << std::endl;
     persistLogMessage({line1, line2});
@@ -369,9 +502,7 @@ int Job::Run(){
   m_pid = -1;
 
   #ifdef _WIN32
-  const fs::path solver_path = fs::current_path() / "solvers" / (solver_name + ".exe");
-  const fs::path solver_path_fallback = fs::current_path() / "solvers" / solver_name;
-  const fs::path solver_executable = fs::exists(solver_path) ? solver_path : solver_path_fallback;
+  const fs::path solver_executable = resolveSolverExecutablePath(solver_name, getJobDirectory());
   const fs::path null_path = "NUL";
 
   SECURITY_ATTRIBUTES sa{};
@@ -405,6 +536,9 @@ int Job::Run(){
   command_buffer.push_back('\0');
 
   std::string working_dir = getJobDirectory().string();
+  cout << "[Job::Run] Launching solver: " << solver_executable.string() << endl;
+  cout << "[Job::Run] Working directory: " << working_dir << endl;
+  cout << "[Job::Run] Input file: " << m_path_file << endl;
   const BOOL created = CreateProcessA(
       nullptr,
       command_buffer.data(),
@@ -420,11 +554,30 @@ int Job::Run(){
   CloseHandle(null_handle);
 
   if (!created) {
-    cout << "[Job::Run] CreateProcess failed for " << solver_executable.string() << endl;
+    const DWORD errorCode = GetLastError();
+    const std::string line1 =
+        "[Job::Run] CreateProcess failed for " + solver_executable.string();
+    const std::string line2 =
+        "[Job::Run] Windows error " + std::to_string(errorCode) + ": " +
+        formatWindowsErrorMessage(errorCode);
+    const std::string line3 = "[Job::Run] Working directory: " + working_dir;
+    const std::string line4 = "[Job::Run] Command line: " + command_line;
+    cout << line1 << endl;
+    cout << line2 << endl;
+    cout << line3 << endl;
+    cout << line4 << endl;
+    std::ofstream logFile(getLogFilePath(), std::ios::out | std::ios::trunc);
+    if (logFile.is_open()) {
+      logFile << line1 << '\n'
+              << line2 << '\n'
+              << line3 << '\n'
+              << line4 << '\n';
+    }
     return -1;
   }
 
   m_pid = static_cast<int>(pi.dwProcessId);
+  cout << "[Job::Run] Started PID " << m_pid << " for " << m_path_file << endl;
   std::ofstream pid_file(pid_path, std::ios::out | std::ios::trunc);
   if (pid_file.is_open()) {
     pid_file << m_pid;
@@ -479,6 +632,11 @@ void Job::UpdateOutput(int max_lines){
   const fs::path temp_path = getTempLogPath();
 
   if (!fs::exists(log_path)) {
+    if (getPid() > 0) {
+      m_log = "[Job::Run] Solver iniciado. Esperando log.txt...\n";
+    } else {
+      m_log = "[Job::Run] No hay log.txt disponible todavia.\n";
+    }
     return;
   }
 
