@@ -640,20 +640,51 @@ bool Job::Stop(){
     return false;
   }
 
-  std::string str;
-  int returnCode = -1;
-
   #ifdef _WIN32
-  str = "taskkill /PID " + std::to_string(pid) + " /T /F";
-  #elif linux
-  str = "kill -TERM " + std::to_string(pid);
-  #endif
+  HANDLE processHandle = OpenProcess(PROCESS_TERMINATE |
+                                     PROCESS_QUERY_LIMITED_INFORMATION |
+                                     SYNCHRONIZE,
+                                     FALSE,
+                                     static_cast<DWORD>(pid));
+  if (processHandle == nullptr) {
+    const DWORD errorCode = GetLastError();
+    cout << "[Job::Stop] OpenProcess failed for PID " << pid
+         << " (" << errorCode << ": " << formatWindowsErrorMessage(errorCode) << ")" << endl;
+    return false;
+  }
 
-  returnCode = system(str.c_str());
+  DWORD exitCode = STILL_ACTIVE;
+  if (GetExitCodeProcess(processHandle, &exitCode) && exitCode != STILL_ACTIVE) {
+    CloseHandle(processHandle);
+    std::remove(getPidFilePath().string().c_str());
+    m_pid = -1;
+    cout << "[Job::Stop] PID " << pid << " was already stopped for " << m_path_file << endl;
+    return true;
+  }
+
+  if (!TerminateProcess(processHandle, 1)) {
+    const DWORD errorCode = GetLastError();
+    CloseHandle(processHandle);
+    cout << "[Job::Stop] TerminateProcess failed for PID " << pid
+         << " (" << errorCode << ": " << formatWindowsErrorMessage(errorCode) << ")" << endl;
+    return false;
+  }
+
+  const DWORD waitResult = WaitForSingleObject(processHandle, 2000);
+  CloseHandle(processHandle);
+  if (waitResult != WAIT_OBJECT_0) {
+    cout << "[Job::Stop] Process " << pid
+         << " did not exit within timeout after termination request." << endl;
+    return false;
+  }
+  #elif linux
+  std::string str = "kill -TERM " + std::to_string(pid);
+  const int returnCode = system(str.c_str());
   if (returnCode != 0) {
     cout << "[Job::Stop] Failed to stop PID " << pid << " for " << m_path_file << endl;
     return false;
   }
+  #endif
 
   std::remove(getPidFilePath().string().c_str());
   m_pid = -1;

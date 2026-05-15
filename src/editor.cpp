@@ -3220,20 +3220,20 @@ void Editor::drawPendingJobRunConfirmation()
                                  ImGuiWindowFlags_NoResize |
                                  ImGuiWindowFlags_NoSavedSettings;
   if (ImGui::BeginPopupModal("Existing Job Files", nullptr, flags)) {
-    ImGui::TextWrapped("Se encontraron archivos existentes del job.");
-    ImGui::TextWrapped("Si continuas, se borraran antes de ejecutar.");
+    ImGui::TextWrapped("Existing job files were found.");
+    ImGui::TextWrapped("If you continue, they will be deleted before running.");
     ImGui::Separator();
     for (const fs::path& artifact : m_pending_job_run_confirmation.artifacts) {
       ImGui::BulletText("%s", artifact.filename().string().c_str());
     }
     ImGui::Separator();
 
-    if (ImGui::Button("Continuar", ImVec2(140.0f, 0.0f))) {
+    if (ImGui::Button("Continue", ImVec2(140.0f, 0.0f))) {
       executePendingJobRun(true);
       ImGui::CloseCurrentPopup();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Cancelar", ImVec2(140.0f, 0.0f))) {
+    if (ImGui::Button("Cancel", ImVec2(140.0f, 0.0f))) {
       m_pending_job_run_confirmation = PendingJobRunConfirmation{};
       ImGui::CloseCurrentPopup();
     }
