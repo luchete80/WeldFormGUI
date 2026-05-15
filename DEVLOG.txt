@@ -246,3 +246,7 @@
          - Added CSV import path and tabulated preview plots in `src/material_dialog`.
          - Added tabulated material read/write support in `src/io/ModelReader.cpp`, `ModelWriter.cpp`, and `InputWriter.cpp`.
          - Stored imported flow-stress tables in GUI material model so they export to solver JSON.     
+20260514 - Fixed normal recalculation in solvers.
+         - Show normal glyph (WIP)
+         - Show vector/tensor component ID and added magnitude
+         - Corrected Moving gizmo to autoscale & auto positioning.
