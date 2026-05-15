@@ -234,6 +234,20 @@ fs::path Job::getLogFilePath() const{
   return getJobDirectory() / "log.txt";
 }
 
+namespace {
+fs::path getEarlyLogPathForJobFile(const std::string& jobFilePath)
+{
+  fs::path input_path(jobFilePath);
+  fs::path dir = input_path.parent_path();
+  if (dir.empty())
+    dir = ".";
+  std::string stem = input_path.stem().string();
+  if (stem.empty())
+    stem = "job";
+  return dir / (stem + "_launch.log");
+}
+}
+
 fs::path Job::getTempLogPath() const{
   fs::path input_path(m_path_file);
   std::string stem = input_path.stem().string();
@@ -479,6 +493,7 @@ int Job::Run(){
   const SolverEdition requestedEdition = getRequestedSolverEdition();
   const std::string solver_name = getSolverBinaryName(inputInfo);
   const std::string pid_path = getPidFilePath().string();
+  const fs::path absolute_input_path = fs::absolute(fs::path(m_path_file));
 
   if (!validateSolverSelection(inputInfo, requestedEdition, solver_name)) {
     return -1;
@@ -503,22 +518,25 @@ int Job::Run(){
 
   #ifdef _WIN32
   const fs::path solver_executable = resolveSolverExecutablePath(solver_name, getJobDirectory());
-  const fs::path null_path = "NUL";
+  const fs::path solver_working_dir =
+      solver_executable.has_parent_path() ? solver_executable.parent_path() : fs::current_path();
+  const fs::path early_log_path = getEarlyLogPathForJobFile(m_path_file);
 
   SECURITY_ATTRIBUTES sa{};
   sa.nLength = sizeof(sa);
   sa.bInheritHandle = TRUE;
 
-  HANDLE null_handle = CreateFileA(
-      null_path.string().c_str(),
+  HANDLE early_log_handle = CreateFileA(
+      early_log_path.string().c_str(),
       GENERIC_WRITE,
-      FILE_SHARE_READ | FILE_SHARE_WRITE,
+      FILE_SHARE_READ,
       &sa,
-      OPEN_EXISTING,
+      CREATE_ALWAYS,
       FILE_ATTRIBUTE_NORMAL,
       nullptr);
-  if (null_handle == INVALID_HANDLE_VALUE) {
-    cout << "[Job::Run] Could not open NUL redirection handle." << endl;
+  if (early_log_handle == INVALID_HANDLE_VALUE) {
+    cout << "[Job::Run] Could not open early launch log: "
+         << early_log_path.string() << endl;
     return -1;
   }
 
@@ -526,19 +544,20 @@ int Job::Run(){
   si.cb = sizeof(si);
   si.dwFlags = STARTF_USESTDHANDLES;
   si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-  si.hStdOutput = null_handle;
-  si.hStdError = null_handle;
+  si.hStdOutput = early_log_handle;
+  si.hStdError = early_log_handle;
 
   PROCESS_INFORMATION pi{};
   std::string command_line =
-      "\"" + solver_executable.string() + "\" \"" + m_path_file + "\"";
+      "\"" + solver_executable.string() + "\" \"" + absolute_input_path.string() + "\"";
   std::vector<char> command_buffer(command_line.begin(), command_line.end());
   command_buffer.push_back('\0');
 
-  std::string working_dir = getJobDirectory().string();
+  std::string working_dir = solver_working_dir.string();
   cout << "[Job::Run] Launching solver: " << solver_executable.string() << endl;
   cout << "[Job::Run] Working directory: " << working_dir << endl;
-  cout << "[Job::Run] Input file: " << m_path_file << endl;
+  cout << "[Job::Run] Input file: " << absolute_input_path.string() << endl;
+  cout << "[Job::Run] Early output log: " << early_log_path.string() << endl;
   const BOOL created = CreateProcessA(
       nullptr,
       command_buffer.data(),
@@ -551,7 +570,7 @@ int Job::Run(){
       &si,
       &pi);
 
-  CloseHandle(null_handle);
+  CloseHandle(early_log_handle);
 
   if (!created) {
     const DWORD errorCode = GetLastError();
@@ -584,6 +603,22 @@ int Job::Run(){
   }
 
   CloseHandle(pi.hThread);
+  Sleep(250);
+  DWORD exitCode = STILL_ACTIVE;
+  if (GetExitCodeProcess(pi.hProcess, &exitCode)) {
+    if (exitCode != STILL_ACTIVE) {
+      cout << "[Job::Run] Process exited immediately with code " << exitCode << endl;
+      std::ofstream logFile(getLogFilePath(), std::ios::out | std::ios::trunc);
+      if (logFile.is_open()) {
+        logFile << "[Job::Run] Process exited immediately with code "
+                << exitCode << '\n';
+        logFile << "[Job::Run] Solver: " << solver_executable.string() << '\n';
+        logFile << "[Job::Run] Working directory: " << working_dir << '\n';
+        logFile << "[Job::Run] Input file: " << absolute_input_path.string() << '\n';
+        logFile << "[Job::Run] Early output log: " << early_log_path.string() << '\n';
+      }
+    }
+  }
   CloseHandle(pi.hProcess);
   returnCode = 0;
   #elif linux
@@ -630,18 +665,20 @@ void Job::UpdateOutput(int max_lines){
 
   const fs::path log_path = getLogFilePath();
   const fs::path temp_path = getTempLogPath();
+  const fs::path early_log_path = getEarlyLogPathForJobFile(m_path_file);
+  const fs::path source_path = fs::exists(log_path) ? log_path : early_log_path;
 
-  if (!fs::exists(log_path)) {
+  if (!fs::exists(source_path)) {
     if (getPid() > 0) {
-      m_log = "[Job::Run] Solver iniciado. Esperando log.txt...\n";
+      m_log = "[Job::Run] Solver iniciado. Esperando salida...\n";
     } else {
-      m_log = "[Job::Run] No hay log.txt disponible todavia.\n";
+      m_log = "[Job::Run] No hay salida disponible todavia.\n";
     }
     return;
   }
 
   try {
-    fs::copy_file(log_path, temp_path, fs::copy_options::overwrite_existing);
+    fs::copy_file(source_path, temp_path, fs::copy_options::overwrite_existing);
   } catch (const std::exception& e) {
     return;
   }
