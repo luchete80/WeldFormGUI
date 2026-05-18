@@ -68,6 +68,7 @@ add_executable(${EXEC_NAME} main.cpp
                             bc_dialog.cpp
                             ini_dialog.cpp
                             load_plot_dialog.cpp
+                            energy_plot_dialog.cpp
                             demo_dialog.cpp
                             material_dialog.cpp
                             set_dialog.cpp

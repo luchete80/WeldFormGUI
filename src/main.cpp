@@ -78,6 +78,7 @@
 
 #include "results.h"
 #include "load_plot_dialog.h"
+#include "energy_plot_dialog.h"
 //using App;
 #include "geom/vtkOCCTGeom.h"
 #include "geom/ShapeToPolyData.h"
@@ -1244,7 +1245,9 @@ int main(int argc, char* argv[])
   VtkViewer vtkViewer2;
   VtkViewer vtkViewer_res;
   LoadPlotDialog loadPlotDialog;
+  EnergyPlotDialog energyPlotDialog;
   bool showLoadPlotDialog = false;
+  bool showEnergyPlotDialog = false;
 
   static DemoDialog demoDialog;
   static bool showDemoDialog = false;
@@ -1689,6 +1692,19 @@ int main(int argc, char* argv[])
 	                  loadPlotDialog.SetCsvPath(csv_path.string());
 	                  showLoadPlotDialog = true;
 	              }
+                ImGui::SameLine();
+                if (ImGui::Button("energy plot")) {
+                    std::filesystem::path csv_path;
+                    if (editor->getResults()) {
+                        if (!editor->getResults()->sourceDirectory.empty()) {
+                            csv_path = editor->getResults()->sourceDirectory / "energy.csv";
+                        } else if (!editor->getResults()->frames.empty()) {
+                            csv_path = std::filesystem::path(editor->getResults()->frames.front()->name).parent_path() / "energy.csv";
+                        }
+                    }
+                    energyPlotDialog.SetCsvPath(csv_path.string());
+                    showEnergyPlotDialog = true;
+                }
 		              if (editor->getResults()){
                       const int restoredFrame = editor->consumePendingResultsFrameIndex();
                       if (restoredFrame >= 0) {
@@ -1915,6 +1931,7 @@ int main(int argc, char* argv[])
         ImGui::End(); // cierre de la ventana contenedora
 
     loadPlotDialog.Draw("Load Plot", &showLoadPlotDialog);
+    energyPlotDialog.Draw("Energy Plot", &showEnergyPlotDialog);
     demoDialog.Draw("Available Demos", &showDemoDialog);
     std::string selectedDemoFolder = demoDialog.ConsumeSelectedDemoPath();
 

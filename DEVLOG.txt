@@ -252,3 +252,6 @@
          - Corrected Moving gizmo to autoscale & auto positioning.
 20260515 - Added a popup message at job launching when log.txt & result file exists
          - Fixed relative path on windows (solver was not running).
+20260518 - Added Scripting for entire load model workflow
+         - Added Energy plot dialog for implict solver. 
+         
