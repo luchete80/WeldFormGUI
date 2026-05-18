@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <sstream>
 
 namespace {
@@ -115,6 +116,11 @@ void LoadPlotDialog::SetCsvPath(const std::string& csv_path) {
 }
 
 bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
+  std::map<std::string, bool> previous_visibility;
+  for (std::size_t i = 0; i < m_series_names.size() && i < m_series_visible.size(); ++i) {
+    previous_visibility[m_series_names[i]] = m_series_visible[i];
+  }
+
   m_csv_path = csv_path;
   m_error_message.clear();
   m_x_label = "Time";
@@ -228,7 +234,11 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     return false;
   }
 
-  m_series_visible.assign(m_series_names.size(), true);
+  m_series_visible.resize(m_series_names.size(), true);
+  for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+    const auto it = previous_visibility.find(m_series_names[i]);
+    m_series_visible[i] = (it != previous_visibility.end()) ? it->second : true;
+  }
 
   return true;
 }

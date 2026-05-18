@@ -20,6 +20,7 @@
 #include "BoundaryCondition.h"
 #include "Mesh.h"
 #include "Part.h"
+#include "Step.h"
 #include "WorkflowAPI.h"
 #include "../io/ModelWriter.h"
 %}
@@ -42,6 +43,7 @@
 %include "BoundaryCondition.h"
 %include "Mesh.h"
 %include "Part.h"
+%include "Step.h"
 %include "WorkflowAPI.h"
 %include "../io/ModelWriter.h"  // ✅ This is what exposes ModelWriter to Python
 %newobject ModelWriter::ModelWriter;
@@ -49,3 +51,4 @@
 %newobject create_rectangle_part;
 %newobject import_step_part;
 %newobject import_step_part_at;
+%newobject create_hollomon_material;

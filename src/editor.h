@@ -147,6 +147,10 @@ public:
   int getSelectedElementCount() const { return m_selector.getSelectedElementCount(); }
   bool getShowSelectedNodeLabels() const { return m_show_selected_node_labels; }
   void setShowSelectedNodeLabels(bool value) { m_show_selected_node_labels = value; }
+  bool getShowAllElementLabels() const { return m_show_all_element_labels; }
+  void setShowAllElementLabels(bool value) { m_show_all_element_labels = value; }
+  void setActiveViewer(VtkViewer* activeViewer) { viewer = activeViewer; }
+  void clearPartSelectionState();
   bool canUndo() const;
   bool canRedo() const;
   bool undoLastAction();
@@ -199,6 +203,7 @@ protected:
   bool shouldDrawSelectionOverlay() const;
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   bool projectElementCentroidToViewport(Element* element, double& x, double& y) const;
+  Mesh* findResultViewerTargetMesh() const;
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
   Element* pickClosestElementAt(double x, double y, double maxDistancePixels = 16.0) const;
   void selectNodesInBox(double x0, double y0, double x1, double y1);
@@ -380,6 +385,7 @@ protected:
   bool m_activate_results_viewer = false;
   bool m_selection_enabled = false;
   bool m_show_selected_node_labels = false;
+  bool m_show_all_element_labels = false;
   enum class SidebarTab {
     Model,
     Results

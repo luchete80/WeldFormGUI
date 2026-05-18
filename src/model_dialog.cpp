@@ -18,6 +18,8 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
       m_cancelled = false;
       if (model->getAnalysisType() == Solid3D)
         m_antype = Solid3D;
+      else if (model->getAnalysisType() == PlaneStress2D)
+        m_antype = PlaneStress2D;
       else if (model->getAnalysisType() == PlaneStrain2D)
         m_antype = PlaneStrain2D;
       else if (model->getAnalysisType() == Axisymmetric2D)
@@ -46,6 +48,9 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
   }
   if (ImGui::RadioButton("AxiSymm 2D", m_antype == Axisymmetric2D)) {
       m_antype = Axisymmetric2D;
+  }
+  if (ImGui::RadioButton("Plane Stress 2D", m_antype == PlaneStress2D)) {
+      m_antype = PlaneStress2D;
   }
   if (ImGui::RadioButton("Plane Strain 2D", m_antype == PlaneStrain2D)) {
       m_antype = PlaneStrain2D;

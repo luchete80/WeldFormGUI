@@ -485,11 +485,11 @@ public:
             vectorCellCenters->Update();
             vectorGlyphs->SetInputConnection(vectorCellCenters->GetOutputPort());
             vectorGlyphs->SetInputArrayToProcess(
-                0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
+                1, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
         } else {
             vectorGlyphs->SetInputData(mesh);
             vectorGlyphs->SetInputArrayToProcess(
-                0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
+                1, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, fieldName.c_str());
         }
         vectorGlyphs->Update();
         vectorActor->SetVisibility(true);

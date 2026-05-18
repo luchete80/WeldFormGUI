@@ -4,11 +4,13 @@
 #include "implot.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <sstream>
 
 namespace {
@@ -56,6 +58,21 @@ bool TryParseEnergyDouble(const std::string& token, double& value) {
   return true;
 }
 
+std::string ToLowerEnergy(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return value;
+}
+
+bool IsDefaultVisibleEnergySeries(const std::string& name) {
+  const std::string normalized = ToLowerEnergy(TrimEnergy(name));
+  return normalized == "eint" ||
+         normalized == "ekin" ||
+         normalized == "wext" ||
+         normalized == "etot" ||
+         normalized == "ebal";
+}
+
 }  // namespace
 
 void EnergyPlotDialog::SetCsvPath(const std::string& csv_path) {
@@ -66,6 +83,11 @@ void EnergyPlotDialog::SetCsvPath(const std::string& csv_path) {
 }
 
 bool EnergyPlotDialog::LoadCsv(const std::string& csv_path) {
+  std::map<std::string, bool> previous_visibility;
+  for (std::size_t i = 0; i < m_series_names.size() && i < m_series_visible.size(); ++i) {
+    previous_visibility[m_series_names[i]] = m_series_visible[i];
+  }
+
   m_csv_path = csv_path;
   m_error_message.clear();
   m_x_label = "Time";
@@ -169,7 +191,12 @@ bool EnergyPlotDialog::LoadCsv(const std::string& csv_path) {
     return false;
   }
 
-  m_series_visible.assign(m_series_names.size(), true);
+  m_series_visible.resize(m_series_names.size(), true);
+  for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+    const auto it = previous_visibility.find(m_series_names[i]);
+    m_series_visible[i] =
+        (it != previous_visibility.end()) ? it->second : IsDefaultVisibleEnergySeries(m_series_names[i]);
+  }
   return true;
 }
 

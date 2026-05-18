@@ -565,6 +565,12 @@ void drawViewportOverlay(VtkViewer& viewer,
         if (drawScreenshotIconButton()) {
             viewer.saveScreenshot();
         }
+        if (editor != nullptr) {
+            ImGui::SameLine();
+            if (drawToolbarButton("Ei", editor->getShowAllElementLabels(), "Show all element ids")) {
+                editor->setShowAllElementLabels(!editor->getShowAllElementLabels());
+            }
+        }
         if (editor != nullptr &&
             (editor->getSelectedNodeCount() > 0 || editor->getSelectedElementCount() > 0)) {
             ImGui::SameLine();
@@ -1474,6 +1480,8 @@ int main(int argc, char* argv[])
       if (ImGui::BeginTabBar("##ViewersTabBar", ImGuiTabBarFlags_None))
       {
           bool activate_results_tab = editor->consumeResultsViewerActivationRequest();
+          static bool was_results_viewer_active = false;
+          bool results_viewer_active = false;
           if (activate_results_tab) {
               vtk_res_open = true;
           }
@@ -1521,6 +1529,7 @@ int main(int argc, char* argv[])
               // Render del viewer
               vtkViewer2.render();
               drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true, editor);
+              editor->setActiveViewer(&vtkViewer2);
               editor->handleMeasurementInteraction();
               editor->handleSelectionInteraction();
               editor->drawMeasurementOverlay();
@@ -1534,6 +1543,10 @@ int main(int argc, char* argv[])
           ImGuiTabItemFlags results_tab_flags = activate_results_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
           if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
+                results_viewer_active = true;
+                if (!was_results_viewer_active) {
+                    editor->clearPartSelectionState();
+                }
 	              ImGui::PushFont(current_ui_font);
 
 	              auto renderer = vtkViewer_res.getRenderer();
@@ -1806,6 +1819,9 @@ int main(int argc, char* argv[])
               // Render del viewer
               vtkViewer_res.render();
               drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false, editor);
+              editor->setActiveViewer(&vtkViewer_res);
+              editor->handleSelectionInteraction();
+              editor->drawSelectionOverlay();
               if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
                   const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
                   auto& overlayFrame = *editor->getResults()->frames[safeFrame];
@@ -1924,9 +1940,10 @@ int main(int argc, char* argv[])
               ImGui::PopFont();
               ImGui::EndTabItem();
           }
-
-            ImGui::EndTabBar();
-        }
+          was_results_viewer_active = results_viewer_active;
+          
+          ImGui::EndTabBar();
+      }
 
         ImGui::End(); // cierre de la ventana contenedora
 

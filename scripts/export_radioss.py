@@ -1,0 +1,578 @@
+from model import *
+
+import os
+
+
+DEFAULT_OUTPUT_ROOT = None
+
+
+PLANE_STRESS_2D = 0
+PLANE_STRAIN_2D = 1
+AXISYMMETRIC_2D = 2
+SOLID_3D = 3
+APPLY_TO_PART = 0
+APPLY_TO_NODE_SET = 1
+
+VELOCITY_BC = 0
+DISPLACEMENT_BC = 1
+SYMMETRY_BC = 2
+
+
+def _active_model():
+    try:
+        return get_active_model()
+    except NameError:
+        return getApp().getActiveModel()
+
+
+def _safe_name(name, fallback):
+    if name:
+        cleaned = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in name.strip())
+        if cleaned:
+            return cleaned
+    return fallback
+
+
+def _safe_part_name(part, fallback_index):
+    return _safe_name(part.getName(), f"Part_{fallback_index}")
+
+
+def _safe_set_name(node_set, fallback_index):
+    return _safe_name(node_set.getLabel(), f"NodeSet_{fallback_index}")
+
+
+def _default_output_root(model):
+    model_path = ""
+    try:
+        model_path = model.getFilePath()
+    except Exception:
+        model_path = ""
+
+    if model_path:
+        stem, _ = os.path.splitext(model_path)
+        return os.path.abspath(stem)
+
+    model_name = model.getName() or "model"
+    stem, _ = os.path.splitext(model_name)
+    if not stem:
+        stem = "model"
+    return os.path.abspath(stem)
+
+
+def _starter_path(root_path):
+    return root_path + "_0000.rad"
+
+
+def _engine_path(root_path):
+    return root_path + "_0001.rad"
+
+
+def _write_int_field(value, width=10):
+    return f"{int(value):>{width}d}"
+
+
+def _write_float_field(value, width=20, decimals=10):
+    return f"{float(value):>{width}.{decimals}e}"
+
+
+def _write_10col_line(values):
+    line = ""
+    for value in values:
+        if isinstance(value, int):
+            line += _write_int_field(value, 10)
+        elif isinstance(value, float):
+            line += _write_float_field(value, 20, 10)
+        else:
+            line += f"{str(value):>10}"
+    return line.rstrip() + "\n"
+
+
+def _write_comment(out, text):
+    out.write(f"# {text}\n")
+
+
+def _node_label_map(mesh):
+    mapping = {}
+    for i in range(mesh.getNodeCount()):
+        node = mesh.getNode(i)
+        mapping[node.getId()] = node.getId()
+    return mapping
+
+
+def _infer_mesh_dimension(mesh):
+    declared_dim = mesh.getDim()
+    if declared_dim == 2:
+        return 2
+
+    if mesh.getNodeCount() <= 0 or mesh.getElemCount() <= 0:
+        return declared_dim
+
+    planar_z = True
+    for node_index in range(mesh.getNodeCount()):
+        node = mesh.getNode(node_index)
+        if abs(node.getPos(2)) > 1.0e-12:
+            planar_z = False
+            break
+
+    if not planar_z:
+        return declared_dim
+
+    supported_2d_topology = True
+    for elem_index in range(mesh.getElemCount()):
+        elem = mesh.getElem(elem_index)
+        if elem.getNodeCount() not in (2, 3, 4):
+            supported_2d_topology = False
+            break
+
+    if supported_2d_topology:
+        return 2
+
+    return declared_dim
+
+
+def _element_keyword(mesh_dim, elem):
+    node_count = elem.getNodeCount()
+    if mesh_dim == 2:
+        if node_count == 4:
+            return "/SHELL"
+        if node_count == 3:
+            return "/SH3N"
+    else:
+        if node_count == 8:
+            return "/BRICK"
+        if node_count == 4:
+            return "/TETRA4"
+    raise ValueError(
+        f"Unsupported Radioss element topology: meshDim={mesh_dim}, "
+        f"nodesPerElement={node_count}"
+    )
+
+
+def _material_id(index):
+    return index + 1
+
+
+def _property_id(index):
+    return index + 1
+
+
+def _part_virtual_thickness(mesh_dim):
+    if mesh_dim == 2:
+        return 1.0
+    return 0.0
+
+
+def _write_header_and_begin(out, run_name, title):
+    out.write("#RADIOSS STARTER\n")
+    _write_comment(out, "WeldFormGUI export to OpenRadioss starter")
+    out.write("/BEGIN\n")
+    out.write(f"{run_name}\n")
+    out.write(f"{2023:>10}{0:>10}\n")
+    out.write(f"{'kg':>20}{'mm':>20}{'ms':>20}\n")
+    out.write(f"{'kg':>20}{'mm':>20}{'ms':>20}\n")
+    out.write("/TITLE\n")
+    out.write(f"{title}\n")
+
+
+def _write_nodes(model, out):
+    out.write("/NODE\n")
+    for part_index in range(model.getPartCount()):
+        part = model.getPart(part_index)
+        if part is None or part.getMesh() is None:
+            continue
+        mesh = part.getMesh()
+        for node_index in range(mesh.getNodeCount()):
+            node = mesh.getNode(node_index)
+            out.write(
+                _write_int_field(node.getId(), 10) +
+                _write_float_field(node.getPos(0), 20, 10) +
+                _write_float_field(node.getPos(1), 20, 10) +
+                _write_float_field(node.getPos(2), 20, 10) + "\n"
+            )
+
+
+def _write_materials(model, out):
+    material_count = model.getMaterialCount()
+    if material_count <= 0:
+        return {}
+
+    material_ids = {}
+    for material_index in range(material_count):
+        material = model.getMaterial(material_index)
+        if material is None:
+            continue
+        mat_id = _material_id(material_index)
+        material_ids[material_index] = mat_id
+        out.write(f"/MAT/LAW1/{mat_id}\n")
+        out.write(f"{_safe_name(material.getName() if hasattr(material, 'getName') else '', f'Material_{mat_id}')}\n")
+        out.write(_write_float_field(material.getDensityConstant(), 20, 10) + "\n")
+        out.write(
+            _write_float_field(material.Elastic().E(), 20, 10) +
+            _write_float_field(material.Elastic().nu(), 20, 10) + "\n"
+        )
+    return material_ids
+
+
+def _write_properties_and_parts(model, out, material_ids):
+    part_records = []
+    for part_index in range(model.getPartCount()):
+        part = model.getPart(part_index)
+        if part is None or part.getMesh() is None:
+            continue
+
+        mesh = part.getMesh()
+        mesh_dim = _infer_mesh_dimension(mesh)
+        part_id = part_index + 1
+        prop_id = _property_id(part_index)
+        mat_id = material_ids.get(0, 1)
+        part_name = _safe_part_name(part, part_index)
+
+        if mesh_dim == 2:
+            out.write(f"/PROP/TYPE1/{prop_id}\n")
+            out.write(f"{part_name}_shell_prop\n")
+            out.write(
+                _write_int_field(1, 10) +
+                _write_int_field(2, 10) +
+                _write_int_field(2, 10) +
+                _write_int_field(2, 10) +
+                _write_float_field(1.0, 20, 10) +
+                _write_float_field(0.01, 20, 10) +
+                _write_float_field(0.01, 20, 10) +
+                _write_float_field(0.01, 20, 10) +
+                _write_float_field(0.0, 20, 10) +
+                _write_float_field(1.0, 20, 10) + "\n"
+            )
+        else:
+            out.write(f"/PROP/TYPE14/{prop_id}\n")
+            out.write(f"{part_name}_solid_prop\n")
+            out.write(
+                _write_int_field(1, 10) +
+                _write_int_field(-1, 10) +
+                _write_int_field(-1, 10) +
+                _write_int_field(-1, 10) +
+                _write_int_field(0, 10) +
+                _write_int_field(0, 10) +
+                _write_int_field(0, 10) +
+                _write_int_field(0, 10) +
+                _write_float_field(0.0, 20, 10) + "\n"
+            )
+            out.write(
+                _write_float_field(1.1, 20, 10) +
+                _write_float_field(0.05, 20, 10) +
+                _write_float_field(0.1, 20, 10) +
+                _write_float_field(0.0, 20, 10) +
+                _write_float_field(0.0, 20, 10) + "\n"
+            )
+
+        out.write(f"/PART/{part_id}\n")
+        out.write(f"{part_name}\n")
+        out.write(
+            _write_int_field(prop_id, 10) +
+            _write_int_field(mat_id, 10) +
+            _write_int_field(0, 10) +
+            _write_float_field(_part_virtual_thickness(mesh_dim), 20, 10) + "\n"
+        )
+
+        part_records.append(
+            {
+                "part": part,
+                "part_id": part_id,
+                "part_name": part_name,
+                "mesh": mesh,
+                "mesh_dim": mesh_dim,
+            }
+        )
+
+    return part_records
+
+
+def _write_elements(part_records, out):
+    for record in part_records:
+        mesh = record["mesh"]
+        part_id = record["part_id"]
+        mesh_dim = record["mesh_dim"]
+
+        grouped = {}
+        for elem_index in range(mesh.getElemCount()):
+            elem = mesh.getElem(elem_index)
+            keyword = _element_keyword(mesh_dim, elem)
+            grouped.setdefault(keyword, []).append((elem_index, elem))
+
+        for keyword, elems in grouped.items():
+            out.write(f"{keyword}/{part_id}\n")
+            for elem_index, elem in elems:
+                fields = [elem_index + 1]
+                for local_node in range(elem.getNodeCount()):
+                    fields.append(elem.getNodeId(local_node))
+                if keyword == "/SH3N":
+                    fields += [0.0, 1.0]
+                elif keyword == "/SHELL":
+                    fields += [1.0]
+                out.write(_write_10col_line(fields))
+
+
+def _write_node_groups(part_records, out):
+    group_records = {
+        "part_groups": {},
+        "set_groups": {},
+    }
+
+    next_group_id = 1
+
+    for record in part_records:
+        mesh = record["mesh"]
+        part_group_id = next_group_id
+        next_group_id += 1
+        group_records["part_groups"][record["part_id"]] = part_group_id
+
+        out.write(f"/GRNOD/NODE/{part_group_id}\n")
+        out.write(f"{record['part_name']}_all_nodes\n")
+        node_ids = [mesh.getNode(i).getId() for i in range(mesh.getNodeCount())]
+        for start in range(0, len(node_ids), 10):
+            out.write("".join(_write_int_field(node_id, 10) for node_id in node_ids[start:start + 10]) + "\n")
+
+        for set_index in range(mesh.getNodeSetCount()):
+            node_set = mesh.getNodeSet(set_index)
+            set_group_id = next_group_id
+            next_group_id += 1
+            group_records["set_groups"][node_set.getId()] = {
+                "group_id": set_group_id,
+                "part_id": record["part_id"],
+                "name": _safe_set_name(node_set, set_index),
+            }
+
+            out.write(f"/GRNOD/NODE/{set_group_id}\n")
+            out.write(f"{_safe_set_name(node_set, set_index)}\n")
+            node_ids = [node_set.getItem(i).getId() for i in range(node_set.getItemCount())]
+            for start in range(0, len(node_ids), 10):
+                out.write("".join(_write_int_field(node_id, 10) for node_id in node_ids[start:start + 10]) + "\n")
+
+    return group_records
+
+
+def _bc_target_group_id(bc, group_records):
+    if bc.getApplyTo() == APPLY_TO_PART:
+        return group_records["part_groups"].get(bc.getTargetId())
+    if bc.getApplyTo() == APPLY_TO_NODE_SET:
+        record = group_records["set_groups"].get(bc.getTargetId())
+        if record is not None:
+            return record["group_id"]
+    return None
+
+
+def _bc_dof_mask(bc):
+    return [bc.getDofMaskX(), bc.getDofMaskY(), bc.getDofMaskZ()]
+
+
+def _bcs_code_from_mask(mask):
+    return f"{int(mask[0])}{int(mask[1])}{int(mask[2])}111"
+
+
+def _direction_labels_from_mask(mask):
+    labels = []
+    if mask[0]:
+        labels.append("X")
+    if mask[1]:
+        labels.append("Y")
+    if mask[2]:
+        labels.append("Z")
+    return labels
+
+
+def _write_function(out, func_id, final_value, stop_time):
+    out.write("/FUNCT\n")
+    out.write(f"{func_id}\n")
+    out.write(
+        _write_float_field(0.0, 20, 10) +
+        _write_float_field(0.0, 20, 10) + "\n"
+    )
+    out.write(
+        _write_float_field(stop_time, 20, 10) +
+        _write_float_field(final_value, 20, 10) + "\n"
+    )
+
+
+def _write_boundary_conditions(model, out, group_records, stop_time):
+    function_id = 1
+    imposed_id = 1
+    bcs_id = 1
+
+    for bc_index in range(model.getBCCount()):
+        bc = model.getBC(bc_index)
+        if bc is None:
+            continue
+
+        group_id = _bc_target_group_id(bc, group_records)
+        if group_id is None:
+            out.write(f"# Skipping BC {bc_index}: missing node group target\n")
+            continue
+
+        mask = _bc_dof_mask(bc)
+        values = [bc.getValueX(), bc.getValueY(), bc.getValueZ()]
+        bc_type = bc.getType()
+
+        if bc_type == SYMMETRY_BC:
+            normal = [abs(bc.getNormalX()), abs(bc.getNormalY()), abs(bc.getNormalZ())]
+            if normal[0] > 0.5:
+                mask = [True, False, False]
+            elif normal[1] > 0.5:
+                mask = [False, True, False]
+            elif normal[2] > 0.5:
+                mask = [False, False, True]
+            else:
+                out.write(f"# Skipping BC {bc_index}: unsupported symmetry normal\n")
+                continue
+            out.write(f"/BCS/{bcs_id}\n")
+            out.write(f"symmetry_{bc_index}\n")
+            out.write(
+                f"{_bcs_code_from_mask(mask):>10}" +
+                _write_int_field(0, 10) +
+                _write_int_field(group_id, 10) + "\n"
+            )
+            bcs_id += 1
+            continue
+
+        if bc_type == DISPLACEMENT_BC:
+            zero_only = all((not active) or abs(value) <= 1.0e-12 for active, value in zip(mask, values))
+            if zero_only:
+                out.write(f"/BCS/{bcs_id}\n")
+                out.write(f"disp_fix_{bc_index}\n")
+                out.write(
+                    f"{_bcs_code_from_mask(mask):>10}" +
+                    _write_int_field(0, 10) +
+                    _write_int_field(group_id, 10) + "\n"
+                )
+                bcs_id += 1
+                continue
+
+            for axis, active in enumerate(mask):
+                if not active:
+                    continue
+                value = values[axis]
+                if abs(value) <= 1.0e-12:
+                    continue
+                _write_function(out, function_id, value, stop_time)
+                out.write(f"/IMPDISP/{imposed_id}\n")
+                out.write(f"disp_bc_{bc_index}_{axis}\n")
+                direction = ["X", "Y", "Z"][axis]
+                out.write(
+                    _write_int_field(function_id, 10) +
+                    f"{direction:>10}" +
+                    _write_int_field(0, 10) +
+                    _write_int_field(0, 10) +
+                    _write_int_field(group_id, 10) +
+                    f"{'':>10}" +
+                    _write_int_field(0, 10) + "\n"
+                )
+                out.write(
+                    _write_float_field(1.0, 20, 10) +
+                    _write_float_field(1.0, 20, 10) +
+                    _write_float_field(0.0, 20, 10) +
+                    _write_float_field(stop_time, 20, 10) + "\n"
+                )
+                function_id += 1
+                imposed_id += 1
+            continue
+
+        if bc_type == VELOCITY_BC:
+            for axis, active in enumerate(mask):
+                if not active:
+                    continue
+                value = values[axis]
+                if abs(value) <= 1.0e-12:
+                    continue
+                _write_function(out, function_id, value, stop_time)
+                out.write(f"/IMPVEL/{imposed_id}\n")
+                out.write(f"vel_bc_{bc_index}_{axis}\n")
+                direction = ["X", "Y", "Z"][axis]
+                out.write(
+                    _write_int_field(function_id, 10) +
+                    f"{direction:>10}" +
+                    _write_int_field(0, 10) +
+                    _write_int_field(0, 10) +
+                    _write_int_field(group_id, 10) +
+                    _write_int_field(0, 10) +
+                    _write_int_field(0, 10) + "\n"
+                )
+                out.write(
+                    _write_float_field(1.0, 20, 10) +
+                    _write_float_field(1.0, 20, 10) +
+                    _write_float_field(0.0, 20, 10) +
+                    _write_float_field(stop_time, 20, 10) + "\n"
+                )
+                function_id += 1
+                imposed_id += 1
+            continue
+
+        out.write(f"# Skipping BC {bc_index}: unsupported BC type {bc_type}\n")
+
+
+def _simulation_time(model):
+    if model.getStepCount() > 0 and model.getStep(0) is not None:
+        return float(model.getStep(0).m_simTime)
+    return 1.0
+
+
+def _output_dt(model):
+    if model.getStepCount() > 0 and model.getStep(0) is not None:
+        return max(float(model.getStep(0).m_outTime), 1.0e-9)
+    return 0.1
+
+
+def _write_engine_file(model, engine_path, run_name):
+    t_stop = _simulation_time(model)
+    dt_out = _output_dt(model)
+
+    with open(engine_path, "w", encoding="ascii") as out:
+        out.write("/RUN/" + run_name + "/1\n")
+        out.write(_write_float_field(t_stop, 20, 10) + "\n")
+        out.write("/ANIM/DT\n")
+        out.write(
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(dt_out, 20, 10) +
+            _write_float_field(t_stop, 20, 10) + "\n"
+        )
+        out.write("/TFILE/3\n")
+        out.write(_write_float_field(dt_out, 20, 10) + "\n")
+
+
+def export_model_to_radioss(model, output_root):
+    if model is None:
+        raise RuntimeError("No active model available")
+
+    output_root = os.path.abspath(output_root)
+    output_dir = os.path.dirname(output_root)
+    if output_dir and not os.path.isdir(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    run_name = os.path.basename(output_root)
+    starter_path = _starter_path(output_root)
+    engine_path = _engine_path(output_root)
+    title = model.getName() or run_name
+    t_stop = _simulation_time(model)
+
+    with open(starter_path, "w", encoding="ascii") as out:
+        _write_header_and_begin(out, run_name, title)
+        _write_nodes(model, out)
+        material_ids = _write_materials(model, out)
+        part_records = _write_properties_and_parts(model, out, material_ids)
+        _write_elements(part_records, out)
+        group_records = _write_node_groups(part_records, out)
+        _write_boundary_conditions(model, out, group_records, t_stop)
+        out.write("/END\n")
+
+    _write_engine_file(model, engine_path, run_name)
+
+    print(f"OpenRadioss starter written to: {starter_path}")
+    print(f"OpenRadioss engine written to: {engine_path}")
+
+
+def export_active_model_to_radioss(output_root=None):
+    model = _active_model()
+    if output_root is None:
+        output_root = _default_output_root(model)
+    export_model_to_radioss(model, output_root)
+
+
+if __name__ == "__main__":
+    export_active_model_to_radioss(DEFAULT_OUTPUT_ROOT)

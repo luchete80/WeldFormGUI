@@ -254,4 +254,5 @@
          - Fixed relative path on windows (solver was not running).
 20260518 - Added Scripting for entire load model workflow
          - Added Energy plot dialog for implict solver. 
-         
+         - Highlighted parts
+          

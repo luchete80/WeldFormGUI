@@ -657,7 +657,52 @@ Mesh* findCommonMeshForElements(Model* model, const std::vector<Element*>& eleme
         }
     }
 
-    return commonMesh;
+  return commonMesh;
+}
+
+Mesh* findMeshForResultActor(Model* model, MultiResult* results, vtkActor* actor)
+{
+  if (model == nullptr || results == nullptr || actor == nullptr) {
+    return nullptr;
+  }
+
+  ResultFrame* targetFrame = nullptr;
+  for (auto& frame : results->frames) {
+    if (frame && frame->actor == actor) {
+      targetFrame = frame.get();
+      break;
+    }
+  }
+
+  if (targetFrame == nullptr || targetFrame->mesh == nullptr) {
+    return nullptr;
+  }
+
+  const vtkIdType resultCellCount = targetFrame->mesh->GetNumberOfCells();
+  const vtkIdType resultPointCount = targetFrame->mesh->GetNumberOfPoints();
+  Mesh* fallback = nullptr;
+
+  for (int p = 0; p < model->getPartCount(); ++p) {
+    Part* part = model->getPart(p);
+    if (part == nullptr || part->getMesh() == nullptr || !part->isMeshed()) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    if (mesh->getElemCount() != static_cast<int>(resultCellCount)) {
+      continue;
+    }
+
+    if (mesh->getNodeCount() == static_cast<int>(resultPointCount)) {
+      return mesh;
+    }
+
+    if (fallback == nullptr) {
+      fallback = mesh;
+    }
+  }
+
+  return fallback;
 }
 
 std::vector<std::vector<int>> getElementBoundarySides(const Mesh* mesh, const Element* element)
@@ -1295,6 +1340,15 @@ bool Editor::projectElementCentroidToViewport(Element* element, double& x, doubl
   return true;
 }
 
+Mesh* Editor::findResultViewerTargetMesh() const
+{
+  if (viewer == nullptr || res_viewer == nullptr || viewer != res_viewer) {
+    return nullptr;
+  }
+
+  return findMeshForResultActor(m_model, m_results, res_viewer->getCurrentActor());
+}
+
 Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) const
 {
   if (m_model == nullptr) {
@@ -1360,19 +1414,21 @@ Element* Editor::pickClosestElementAt(double x, double y, double maxDistancePixe
           return mesh->getElem(static_cast<int>(cellId));
         }
       }
+
+      Mesh* resultMesh = findResultViewerTargetMesh();
+      if (resultMesh != nullptr && cellId < resultMesh->getElemCount()) {
+        return resultMesh->getElem(static_cast<int>(cellId));
+      }
     }
   }
 
   Element* closest = nullptr;
   double bestDist2 = maxDistancePixels * maxDistancePixels;
-
-  for (int p = 0; p < m_model->getPartCount(); ++p) {
-    Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
-      continue;
+  auto tryClosestFromMesh = [&](Mesh* mesh) {
+    if (mesh == nullptr) {
+      return;
     }
 
-    Mesh* mesh = part->getMesh();
     for (int e = 0; e < mesh->getElemCount(); ++e) {
       Element* element = mesh->getElem(e);
       double sx = 0.0;
@@ -1388,6 +1444,19 @@ Element* Editor::pickClosestElementAt(double x, double y, double maxDistancePixe
         bestDist2 = dist2;
         closest = element;
       }
+    }
+  };
+
+  if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+    tryClosestFromMesh(resultMesh);
+  } else {
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part* part = m_model->getPart(p);
+      if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+        continue;
+      }
+
+      tryClosestFromMesh(part->getMesh());
     }
   }
 
@@ -1451,14 +1520,11 @@ void Editor::selectElementsInBox(double x0, double y0, double x1, double y1)
 
   std::vector<Element*> selectedElements;
   std::unordered_set<Element*> seen;
-
-  for (int p = 0; p < m_model->getPartCount(); ++p) {
-    Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
-      continue;
+  auto collectElementsFromMesh = [&](Mesh* mesh) {
+    if (mesh == nullptr) {
+      return;
     }
 
-    Mesh* mesh = part->getMesh();
     for (int e = 0; e < mesh->getElemCount(); ++e) {
       Element* element = mesh->getElem(e);
       double sx = 0.0;
@@ -1470,6 +1536,19 @@ void Editor::selectElementsInBox(double x0, double y0, double x1, double y1)
       if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY && seen.insert(element).second) {
         selectedElements.push_back(element);
       }
+    }
+  };
+
+  if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+    collectElementsFromMesh(resultMesh);
+  } else {
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part* part = m_model->getPart(p);
+      if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+        continue;
+      }
+
+      collectElementsFromMesh(part->getMesh());
     }
   }
 
@@ -1584,7 +1663,7 @@ void Editor::handleSelectionInteraction()
 
 void Editor::drawSelectionOverlay() const
 {
-  if (m_moving_mode || !shouldDrawSelectionOverlay() || viewer == nullptr) {
+  if (m_moving_mode || viewer == nullptr) {
     return;
   }
 
@@ -1613,6 +1692,54 @@ void Editor::drawSelectionOverlay() const
     const ImVec2 end(viewportMin.x + m_selector.getBoxEnd().x, viewportMin.y + m_selector.getBoxEnd().y);
     drawList->AddRectFilled(start, end, IM_COL32(70, 160, 255, 35));
     drawList->AddRect(start, end, IM_COL32(70, 160, 255, 255), 0.0f, 0, 2.0f);
+  }
+
+  if (m_show_all_element_labels && m_model != nullptr) {
+    auto drawElementLabelsForMesh = [&](Mesh* mesh) {
+      if (mesh == nullptr) {
+        return;
+      }
+
+      for (int e = 0; e < mesh->getElemCount(); ++e) {
+        Element* element = mesh->getElem(e);
+        if (element == nullptr) {
+          continue;
+        }
+
+        double x = 0.0;
+        double y = 0.0;
+        if (!projectElementCentroidToViewport(element, x, y)) {
+          continue;
+        }
+
+        const std::string label = std::to_string(element->getId());
+        const ImVec2 textPos(
+          viewportMin.x + static_cast<float>(x) + 6.0f,
+          viewportMin.y + static_cast<float>(y) - 8.0f);
+        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+        const ImVec2 bgMin(textPos.x - 3.0f, textPos.y - 2.0f);
+        const ImVec2 bgMax(textPos.x + textSize.x + 3.0f, textPos.y + textSize.y + 2.0f);
+        drawList->AddRectFilled(bgMin, bgMax, IM_COL32(12, 20, 28, 140), 3.0f);
+        drawList->AddRect(bgMin, bgMax, IM_COL32(120, 235, 255, 50), 3.0f, 0, 1.0f);
+        drawList->AddText(textPos, IM_COL32(190, 240, 255, 220), label.c_str());
+      }
+    };
+
+    if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+      drawElementLabelsForMesh(resultMesh);
+    } else {
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part* part = m_model->getPart(p);
+        if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+          continue;
+        }
+        drawElementLabelsForMesh(part->getMesh());
+      }
+    }
+  }
+
+  if (!shouldDrawSelectionOverlay()) {
+    return;
   }
 
   for (Node* node : m_selector.getSelectedNodes()) {
@@ -2448,19 +2575,45 @@ void Editor::clearBoundaryConditionOverlay()
 
 void Editor::clearPartOverlay()
 {
-  if (viewer == nullptr || viewer->getRenderer() == nullptr) {
+  if ((viewer == nullptr || viewer->getRenderer() == nullptr) &&
+      (res_viewer == nullptr || res_viewer->getRenderer() == nullptr)) {
     m_part_overlay_actors.clear();
     return;
   }
 
-  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
   for (std::size_t i = 0; i < m_part_overlay_actors.size(); ++i) {
     vtkSmartPointer<vtkProp> actor = m_part_overlay_actors[i];
-    if (actor != nullptr && renderer->HasViewProp(actor)) {
-      renderer->RemoveViewProp(actor);
+    if (actor == nullptr) {
+      continue;
+    }
+
+    if (viewer != nullptr && viewer->getRenderer() != nullptr) {
+      vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+      if (renderer->HasViewProp(actor)) {
+        renderer->RemoveViewProp(actor);
+      }
+    }
+
+    if (res_viewer != nullptr && res_viewer->getRenderer() != nullptr) {
+      vtkSmartPointer<vtkRenderer> renderer = res_viewer->getRenderer();
+      if (renderer->HasViewProp(actor)) {
+        renderer->RemoveViewProp(actor);
+      }
     }
   }
   m_part_overlay_actors.clear();
+}
+
+void Editor::clearPartSelectionState()
+{
+  if (m_moving_mode) {
+    finishMoveMode(true);
+  }
+
+  selected_prt = nullptr;
+  highlighted_prt = nullptr;
+  hovered_prt = nullptr;
+  clearPartOverlay();
 }
 
 Part* Editor::findBoundaryConditionTargetPart(const Condition* condition) const
