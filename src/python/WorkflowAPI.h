@@ -12,7 +12,10 @@
 #include "../model/Part.h"
 #include "../model/Step.h"
 
+#include <gmsh.h>
+
 #include <set>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -24,6 +27,7 @@
 #include <windows.h>
 #else
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -158,6 +162,139 @@ inline std::vector<std::filesystem::path> solver_search_directories(const std::f
   return unique_dirs;
 }
 
+inline std::vector<std::filesystem::path> runtime_search_directories()
+{
+  namespace fs = std::filesystem;
+  std::vector<fs::path> dirs;
+  const fs::path exe_dir = executable_directory();
+  const fs::path cwd = fs::current_path();
+
+  if (!exe_dir.empty()) {
+    dirs.push_back(exe_dir);
+    dirs.push_back(exe_dir / "solvers");
+    dirs.push_back(exe_dir.parent_path());
+    dirs.push_back(exe_dir.parent_path() / "solvers");
+  }
+
+  dirs.push_back(cwd);
+  dirs.push_back(cwd / "solvers");
+
+  std::vector<fs::path> unique_dirs;
+  std::set<std::string> seen;
+  for (const fs::path& dir : dirs) {
+    const std::string key = dir.lexically_normal().string();
+    if (seen.insert(key).second)
+      unique_dirs.push_back(dir.lexically_normal());
+  }
+  return unique_dirs;
+}
+
+inline std::filesystem::path resolve_runtime_executable_path(const std::vector<std::string>& candidates)
+{
+  namespace fs = std::filesystem;
+  for (const fs::path& dir : runtime_search_directories()) {
+    for (const std::string& candidate_name : candidates) {
+#ifdef _WIN32
+      fs::path candidate = dir / (candidate_name + ".exe");
+      if (fs::exists(candidate))
+        return candidate;
+#endif
+      const fs::path candidate = dir / candidate_name;
+      if (fs::exists(candidate))
+        return candidate;
+    }
+  }
+  return {};
+}
+
+inline std::string active_model_stem(Model& model)
+{
+  namespace fs = std::filesystem;
+  fs::path model_name(model.getName());
+  std::string stem = model_name.stem().string();
+  if (stem.empty())
+    stem = model_name.filename().string();
+  if (stem.empty())
+    stem = "model";
+  return stem;
+}
+
+inline std::filesystem::path active_model_output_path(Model& model, const std::string& filename)
+{
+  return std::filesystem::path(model.getBaseDir()) / filename;
+}
+
+inline bool is_2d_analysis_type(AnalysisType analysis_type)
+{
+  return analysis_type == PlaneStress2D ||
+         analysis_type == PlaneStrain2D ||
+         analysis_type == Axisymmetric2D;
+}
+
+inline int curve_node_count_from_element_size(int curve_tag, double element_size)
+{
+  if (element_size <= 0.0)
+    return 2;
+
+  double xmin = 0.0;
+  double ymin = 0.0;
+  double zmin = 0.0;
+  double xmax = 0.0;
+  double ymax = 0.0;
+  double zmax = 0.0;
+  gmsh::model::getBoundingBox(1, curve_tag, xmin, ymin, zmin, xmax, ymax, zmax);
+
+  const double dx = xmax - xmin;
+  const double dy = ymax - ymin;
+  const double dz = zmax - zmin;
+  const double approx_length = std::sqrt(dx * dx + dy * dy + dz * dz);
+  return std::max(2, static_cast<int>(std::ceil(approx_length / element_size)) + 1);
+}
+
+inline void apply_mesh_size_to_current_gmsh_model(double element_size)
+{
+  if (element_size <= 0.0)
+    return;
+
+  std::vector<std::pair<int, int>> point_entities;
+  gmsh::model::getEntities(point_entities, 0);
+  for (const auto& entity : point_entities) {
+    gmsh::model::mesh::setSize({entity}, element_size);
+  }
+
+  std::vector<std::pair<int, int>> curve_entities;
+  gmsh::model::getEntities(curve_entities, 1);
+  for (const auto& entity : curve_entities) {
+    gmsh::model::mesh::setTransfiniteCurve(
+      entity.second, curve_node_count_from_element_size(entity.second, element_size));
+  }
+}
+
+inline int find_part_index(Model* model, Part* part)
+{
+  if (model == nullptr || part == nullptr)
+    return -1;
+
+  for (int i = 0; i < model->getPartCount(); ++i) {
+    if (model->getPart(i) == part)
+      return i;
+  }
+  return -1;
+}
+
+inline int system_exit_code(int status_code)
+{
+#ifdef _WIN32
+  return status_code;
+#else
+  if (status_code == -1)
+    return -1;
+  if (!WIFEXITED(status_code))
+    return status_code;
+  return WEXITSTATUS(status_code);
+#endif
+}
+
 inline bool active_model_is_implicit()
 {
   Model* model = get_active_model();
@@ -249,7 +386,7 @@ inline int launch_detached_process(const std::filesystem::path& executable_path,
   if (pid == 0) {
     setsid();
     const std::string working_dir = executable_path.has_parent_path() ? executable_path.parent_path().string() : std::string(".");
-    chdir(working_dir.c_str());
+    (void)chdir(working_dir.c_str());
     execl(executable_path.c_str(), executable_path.c_str(), input_path.c_str(), static_cast<char*>(nullptr));
     _exit(127);
   }
@@ -503,6 +640,124 @@ inline Part* import_step_part_at(const std::string& step_path,
     return nullptr;
   }
   return new Part(geom);
+}
+
+inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
+{
+  namespace fs = std::filesystem;
+
+  Model* model = get_active_model();
+  if (model == nullptr || part == nullptr || part->getGeom() == nullptr)
+    return false;
+
+  const int part_index = wfgui::workflow::find_part_index(model, part);
+  if (part_index < 0)
+    return false;
+
+  const double resolved_element_size =
+    (element_size > 0.0) ? element_size : model->getElementSize();
+
+  Geom* geom = part->getGeom();
+  const fs::path step_path = wfgui::workflow::active_model_output_path(
+    *model,
+    wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + ".step");
+
+  std::error_code ec;
+  if (step_path.has_parent_path())
+    fs::create_directories(step_path.parent_path(), ec);
+
+  geom->setFileName(step_path.string());
+  geom->ExportSTEP();
+
+  if (part->isMeshed())
+    part->deleteMesh();
+
+  const AnalysisType analysis_type = model->getAnalysisType();
+  const bool is_2d_analysis = wfgui::workflow::is_2d_analysis_type(analysis_type);
+  const bool is_rigid_part = (part->getType() == Rigid);
+
+  if (is_2d_analysis && !is_rigid_part) {
+    const fs::path bdf_export_path = wfgui::workflow::active_model_output_path(
+      *model,
+      wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + ".bdf");
+    const fs::path remesh_log_path = wfgui::workflow::active_model_output_path(
+      *model,
+      wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp");
+    const fs::path remesher_path = wfgui::workflow::resolve_runtime_executable_path(
+      {"mesh-adapt", "mesh-adapt_std"});
+    const std::string remesher = remesher_path.empty() ? std::string("mesh-adapt") : remesher_path.string();
+
+    const fs::path previous_cwd = fs::current_path();
+    fs::path output_bdf_path = previous_cwd / "output_smoothed.bdf";
+    if (step_path.has_parent_path())
+      fs::current_path(step_path.parent_path(), ec);
+
+    output_bdf_path = fs::current_path() / "output_smoothed.bdf";
+    std::filesystem::remove(output_bdf_path, ec);
+    const std::string remesh_cmd =
+      "\"" + remesher + "\" \"" + step_path.string() + "\" " +
+      std::to_string(resolved_element_size) + " > \"" + remesh_log_path.string() + "\" 2>&1";
+    const int remesh_status = std::system(remesh_cmd.c_str());
+    fs::current_path(previous_cwd, ec);
+
+    if (wfgui::workflow::system_exit_code(remesh_status) != 0)
+      return false;
+    if (!fs::exists(output_bdf_path))
+      return false;
+
+    fs::copy_file(output_bdf_path, bdf_export_path, fs::copy_options::overwrite_existing, ec);
+    if (ec)
+      return false;
+
+    part->generateMeshFromNastranFile(bdf_export_path.string());
+    return true;
+  }
+
+  gmsh::clear();
+  gmsh::model::add("wf_script_mesh");
+  std::vector<std::pair<int, int>> entities;
+  gmsh::model::occ::importShapes(step_path.string(), entities);
+  gmsh::model::occ::synchronize();
+  const int gmsh_dim = gmsh::model::getDimension();
+
+  wfgui::workflow::apply_mesh_size_to_current_gmsh_model(resolved_element_size);
+
+  if (is_2d_analysis && is_rigid_part) {
+    gmsh::model::mesh::generate(1);
+  } else {
+    gmsh::model::getEntities(entities);
+    for (const auto& entity : entities) {
+      if (entity.first == 2) {
+        gmsh::model::mesh::setTransfiniteSurface(entity.second);
+        gmsh::model::mesh::setRecombine(2, entity.second);
+      }
+    }
+    if (gmsh_dim > -1)
+      gmsh::model::mesh::generate(gmsh_dim);
+  }
+
+  const fs::path mesh_path = wfgui::workflow::active_model_output_path(
+    *model,
+    wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + ".msh");
+  gmsh::write(mesh_path.string().c_str());
+  part->generateMesh();
+  return true;
+}
+
+inline Part* import_and_mesh_step_part(const std::string& step_path,
+                                       double element_size = -1.0,
+                                       double origin_x = 0.0,
+                                       double origin_y = 0.0,
+                                       double origin_z = 0.0)
+{
+  Part* part = import_step_part_at(step_path, origin_x, origin_y, origin_z);
+  if (part == nullptr)
+    return nullptr;
+
+  add_part_to_active_model(part);
+  if (!mesh_part_geometry(part, element_size))
+    return nullptr;
+  return part;
 }
 
 inline Material_* create_hollomon_material(double young_modulus,

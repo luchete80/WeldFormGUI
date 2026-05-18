@@ -255,4 +255,5 @@
 20260518 - Added Scripting for entire load model workflow
          - Added Energy plot dialog for implict solver. 
          - Highlighted parts
-          
+         - Fixed element ids at showing.
+         - Add script actions of import part STEP geometry.

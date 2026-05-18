@@ -567,6 +567,10 @@ void drawViewportOverlay(VtkViewer& viewer,
         }
         if (editor != nullptr) {
             ImGui::SameLine();
+            if (drawToolbarButton("Ni", editor->getShowAllNodeLabels(), "Show all node ids")) {
+                editor->setShowAllNodeLabels(!editor->getShowAllNodeLabels());
+            }
+            ImGui::SameLine();
             if (drawToolbarButton("Ei", editor->getShowAllElementLabels(), "Show all element ids")) {
                 editor->setShowAllElementLabels(!editor->getShowAllElementLabels());
             }

@@ -51,4 +51,5 @@
 %newobject create_rectangle_part;
 %newobject import_step_part;
 %newobject import_step_part_at;
+%newobject import_and_mesh_step_part;
 %newobject create_hollomon_material;

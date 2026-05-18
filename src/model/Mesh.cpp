@@ -9,6 +9,28 @@
 #include <array>
 using namespace std;
 
+namespace {
+void assignSequentialEntityIds(std::vector<Node*>& nodes, int start_id = 1)
+{
+  for (std::size_t i = 0; i < nodes.size(); ++i) {
+    if (nodes[i] != nullptr) {
+      int id = start_id + static_cast<int>(i);
+      nodes[i]->setId(id);
+    }
+  }
+}
+
+void assignSequentialEntityIds(std::vector<Element*>& elements, int start_id = 1)
+{
+  for (std::size_t i = 0; i < elements.size(); ++i) {
+    if (elements[i] != nullptr) {
+      int id = start_id + static_cast<int>(i);
+      elements[i]->setId(id);
+    }
+  }
+}
+}
+
 /*
 void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
                     std::vector <int>      elnod){
@@ -36,7 +58,14 @@ void Mesh::addNode(Node *node){
 }
 
 void Mesh::addElement(Element *el, bool alloc){
-    m_elem.push_back(new Element(*el));
+    Element* new_element = new Element(*el);
+    int next_id = 1;
+    for (int i = 0; i < m_elem.size(); ++i) {
+      if (m_elem[i] != nullptr && m_elem[i]->getId() >= next_id)
+        next_id = m_elem[i]->getId() + 1;
+    }
+    new_element->m_id = next_id;
+    m_elem.push_back(new_element);
 
 }
 
@@ -155,7 +184,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 					//x_H[p] = Xp;
           //nod%x(p,:) = Xp(:);
           cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
-          m_node.push_back(new Node(Xp.x,Xp.y,0.0,p));
+          m_node.push_back(new Node(Xp.x,Xp.y,0.0,p + 1));
           p++;
           Xp.x += 2.0 * r;
         }
@@ -176,7 +205,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
             //x_H[p] = Xp;
             //nod%x(p,:) = Xp(:);
             cout << "node " << p <<"X: "<<Xp[0]<<"Y: "<<Xp.y<<"Z: "<<Xp.z<<endl;
-            m_node.push_back(new Node(Xp.x,Xp.y,Xp.z,p));
+            m_node.push_back(new Node(Xp.x,Xp.y,Xp.z,p + 1));
             p++;
             Xp.x += 2.0 * r;
           }
@@ -223,7 +252,9 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 
         n[0] = m_node[(nel[0]+1)*ey + ex];        n[1] = m_node[(nel[0]+1)*ey + ex+1];
         n[2] = m_node[(nel[0]+1)*(ey+1) + ex+1];  n[3] = m_node[(nel[0]+1)*(ey+1) + ex];
-        m_elem.push_back(new Quad(n));
+        Quad* quad = new Quad(n);
+        quad->m_id = static_cast<int>(m_elem.size()) + 1;
+        m_elem.push_back(quad);
 				 // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
 					// cout << "Nel x : "<<nel[0]<<endl;
 					// cout << "nodes "<<endl;
@@ -255,7 +286,9 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
             // for (int i=0;i<8;i++)
               // cout << n[i]->getId()<<", ";
             // cout <<endl;
-            m_elem.push_back(new Element(n));
+            Element* element = new Element(n);
+            element->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(element);
             
              
              // for (int i=0;i<m_nodxelem;i++)cout << elnod_h[ei+i]<<", ";
@@ -265,6 +298,9 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
         } 
       }
 		}//if dim 
+
+    assignSequentialEntityIds(m_node);
+    assignSequentialEntityIds(m_elem);
 
     // // //cudaMalloc((void **)&m_elnod, m_elem_count * m_nodxelem * sizeof (int));	
     // // malloc_t(m_elnod, unsigned int, m_elem_count * m_nodxelem);
@@ -678,7 +714,7 @@ void Mesh::genFromGmshModel() {
     // Crear nodos
     m_node_count = pts.size();
     for(std::size_t p = 0; p < pts.size(); p++) {
-        m_node.push_back(new Node(pts[p][0], pts[p][1], pts[p][2], p));
+        m_node.push_back(new Node(pts[p][0], pts[p][1], pts[p][2], static_cast<int>(p) + 1));
     }
 
     // Crear elementos - INSERCIÓN SEGÚN EL TIPO DE ELEMENTO
@@ -696,13 +732,21 @@ void Mesh::genFromGmshModel() {
         }
 
         if(numNodes == 2) {
-            m_elem.push_back(new Line(elementNodes));
+            Line* line = new Line(elementNodes);
+            line->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(line);
         } else if(numNodes == 3 && max_dim == 2) {
-            m_elem.push_back(new Tria(elementNodes));
+            Tria* tria = new Tria(elementNodes);
+            tria->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(tria);
         } else if(numNodes == 4 && max_dim == 2) {
-            m_elem.push_back(new Quad(elementNodes));
+            Quad* quad = new Quad(elementNodes);
+            quad->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(quad);
         } else {
-            m_elem.push_back(new Element(elementNodes));
+            Element* element = new Element(elementNodes);
+            element->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(element);
         }
     }
 
@@ -710,6 +754,8 @@ void Mesh::genFromGmshModel() {
     m_dim = max_mesh_dim;
     
     m_elem_count  =m_elem.size();
+    assignSequentialEntityIds(m_node);
+    assignSequentialEntityIds(m_elem);
 
     std::cout << "Mesh created successfully with " << m_node.size() 
               << " nodes and " << m_elem.size() << " elements" << std::endl;
@@ -736,7 +782,7 @@ void Mesh::genFromNastranFile(const std::string& filename) {
     const int maxNodesPerElem = reader.getMaxNodesPerElem();
 
     for(int i = 0; i < nodeCount; ++i) {
-        m_node.push_back(new Node(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2], i));
+        m_node.push_back(new Node(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2], i + 1));
     }
 
     for(int e = 0; e < elemCount; ++e) {
@@ -749,15 +795,26 @@ void Mesh::genFromNastranFile(const std::string& filename) {
         }
 
         if(elementNodes.size() == 2) {
-            m_elem.push_back(new Line(elementNodes));
+            Line* line = new Line(elementNodes);
+            line->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(line);
         } else if(elementNodes.size() == 3) {
-            m_elem.push_back(new Tria(elementNodes));
+            Tria* tria = new Tria(elementNodes);
+            tria->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(tria);
         } else if(elementNodes.size() == 4 && reader.dim == 2) {
-            m_elem.push_back(new Quad(elementNodes));
+            Quad* quad = new Quad(elementNodes);
+            quad->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(quad);
         } else {
-            m_elem.push_back(new Element(elementNodes));
+            Element* element = new Element(elementNodes);
+            element->m_id = static_cast<int>(m_elem.size()) + 1;
+            m_elem.push_back(element);
         }
     }
+
+    assignSequentialEntityIds(m_node);
+    assignSequentialEntityIds(m_elem);
 
     m_dim = reader.dim;
     m_node_count = m_node.size();
@@ -1190,7 +1247,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         Node* node = m_node[i];
         auto pos = node->getPos();
 
-        const int nodeId = static_cast<int>(i) + 1;
+        const int nodeId = node != nullptr ? node->getId() : static_cast<int>(i) + 1;
         if (debugNodeIds.count(nodeId) > 0) {
             std::cout << "  node " << nodeId
                       << " export=(" << pos.x << ", " << pos.y << ", " << pos.z << ")"
@@ -1226,10 +1283,10 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         //DIMENSION SHOULD BE 1 TO WRITE THIS 
         if ( numNodes == 2 && m_dim == 1) {
             // Elemento barra CBAR
-            outfile << "CBAR    " << std::setw(8) << i + 1  // EID
+            outfile << "CBAR    " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 1          // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1  // GA
-                    << std::setw(8) << elem->getNodeId(1) + 1  // GB
+                    << std::setw(8) << elem->getNodeId(0)  // GA
+                    << std::setw(8) << elem->getNodeId(1)  // GB
                     //<< ",,0.0,1.0,0.0" // Vector de orientación 
                     << std::endl;     
             cbarCount++;
@@ -1245,46 +1302,46 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
         // }
         else if (numNodes == 3 && m_dim == 2) {
             // Elemento triangular 2D CTRIA3
-            outfile << "CTRIA3  " << std::setw(8) << i + 1  // EID
+            outfile << "CTRIA3  " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 1           // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1
-                    << std::setw(8) << elem->getNodeId(1) + 1
-                    << std::setw(8) << elem->getNodeId(2) + 1
+                    << std::setw(8) << elem->getNodeId(0)
+                    << std::setw(8) << elem->getNodeId(1)
+                    << std::setw(8) << elem->getNodeId(2)
                     << std::endl;
             ctri3Count++;
         }
         else if (numNodes == 4 && m_dim == 2) {
             // Elemento cuadrilátero 2D CQUAD4
-            outfile << "CQUAD4  " << std::setw(8) << i + 1  // EID
+            outfile << "CQUAD4  " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 1           // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1
-                    << std::setw(8) << elem->getNodeId(1) + 1
-                    << std::setw(8) << elem->getNodeId(2) + 1
-                    << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::setw(8) << elem->getNodeId(0)
+                    << std::setw(8) << elem->getNodeId(1)
+                    << std::setw(8) << elem->getNodeId(2)
+                    << std::setw(8) << elem->getNodeId(3)
                     << std::endl;
             cquad4Count++;
         }
         else if (numNodes == 4 && m_dim == 3) {
             // Elemento tetraédrico CTETRA
-            outfile << "CTETRA  " << std::setw(8) << i + 1  // EID
+            outfile << "CTETRA  " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 5           // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1
-                    << std::setw(8) << elem->getNodeId(1) + 1
-                    << std::setw(8) << elem->getNodeId(2) + 1
-                    << std::setw(8) << elem->getNodeId(3) + 1
+                    << std::setw(8) << elem->getNodeId(0)
+                    << std::setw(8) << elem->getNodeId(1)
+                    << std::setw(8) << elem->getNodeId(2)
+                    << std::setw(8) << elem->getNodeId(3)
                     << std::endl;
             ctetraCount++;
         }
         else if (numNodes == 8 && m_dim == 3) {
             // Elemento hexaédrico CHEXA
-            outfile << "CHEXA   " << std::setw(8) << i + 1  // EID
+            outfile << "CHEXA   " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 6           // PID
-                    << std::setw(8) << elem->getNodeId(0) + 1
-                    << std::setw(8) << elem->getNodeId(1) + 1
-                    << std::setw(8) << elem->getNodeId(2) + 1
-                    << std::setw(8) << elem->getNodeId(3) + 1
-                    << std::setw(8) << elem->getNodeId(4) + 1
-                    << std::setw(8) << elem->getNodeId(5) + 1
+                    << std::setw(8) << elem->getNodeId(0)
+                    << std::setw(8) << elem->getNodeId(1)
+                    << std::setw(8) << elem->getNodeId(2)
+                    << std::setw(8) << elem->getNodeId(3)
+                    << std::setw(8) << elem->getNodeId(4)
+                    << std::setw(8) << elem->getNodeId(5)
                     << std::endl;
             // Continuación para nodos 7 y 8 si es necesario
             chexaCount++;

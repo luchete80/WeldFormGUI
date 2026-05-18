@@ -268,6 +268,7 @@ Summary:
 - Practical consequence:
   - if Python needs `import STEP`, do not wrap OCC directly
   - instead, expose a narrow helper such as `import_step_part(...)` that returns a regular `Part*`
+  - if Python needs `mesh imported geometry`, expose a narrow helper such as `mesh_part_geometry(...)` or `import_and_mesh_step_part(...)`
   - if Python needs an empty mesh-backed part, expose a helper such as `create_empty_mesh_part(...)`
   - if Python needs `create rectangle`, expose a helper such as `create_rectangle_part(...)`
   - if Python needs set creation, expose mesh-side helpers that populate `NodeSet` and `ElementSet`
@@ -280,6 +281,9 @@ Summary:
 
 - Why this is the right cut:
   - geometry creation/import can still use existing C++ `Geom` logic internally
+  - geometry meshing can still use the existing C++ meshing path internally:
+    - 2D deformable parts via `mesh-adapt`
+    - 3D or rigid parts via the existing Gmsh path
   - Python does not need to know about OCC handles or VTK actors
   - the GUI remains responsible for visualization and picking
   - exporters can work from the same mesh/set data used by the GUI
@@ -330,7 +334,6 @@ Summary:
 
 ## Recommended next wrapper steps
 
-- Add a mesh-generation workflow helper for geometry-backed parts.
 - Add `replace_node_set_*` and `replace_element_set_*` helpers that mirror the edit path in `src/editor.cpp`.
 - Add a safe helper to list set contents back to Python for exporter and QA scripts.
 - Keep all of that in `src/python` instead of wrapping dialog or rendering code.

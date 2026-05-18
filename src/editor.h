@@ -147,6 +147,8 @@ public:
   int getSelectedElementCount() const { return m_selector.getSelectedElementCount(); }
   bool getShowSelectedNodeLabels() const { return m_show_selected_node_labels; }
   void setShowSelectedNodeLabels(bool value) { m_show_selected_node_labels = value; }
+  bool getShowAllNodeLabels() const { return m_show_all_node_labels; }
+  void setShowAllNodeLabels(bool value) { m_show_all_node_labels = value; }
   bool getShowAllElementLabels() const { return m_show_all_element_labels; }
   void setShowAllElementLabels(bool value) { m_show_all_element_labels = value; }
   void setActiveViewer(VtkViewer* activeViewer) { viewer = activeViewer; }
@@ -385,6 +387,7 @@ protected:
   bool m_activate_results_viewer = false;
   bool m_selection_enabled = false;
   bool m_show_selected_node_labels = false;
+  bool m_show_all_node_labels = false;
   bool m_show_all_element_labels = false;
   enum class SidebarTab {
     Model,

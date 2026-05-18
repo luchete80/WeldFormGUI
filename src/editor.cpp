@@ -1694,6 +1694,50 @@ void Editor::drawSelectionOverlay() const
     drawList->AddRect(start, end, IM_COL32(70, 160, 255, 255), 0.0f, 0, 2.0f);
   }
 
+  if (m_show_all_node_labels && m_model != nullptr) {
+    auto drawNodeLabelsForMesh = [&](Mesh* mesh) {
+      if (mesh == nullptr) {
+        return;
+      }
+
+      for (int n = 0; n < mesh->getNodeCount(); ++n) {
+        Node* node = mesh->getNode(n);
+        if (node == nullptr) {
+          continue;
+        }
+
+        double x = 0.0;
+        double y = 0.0;
+        if (!projectNodeToViewport(node, x, y)) {
+          continue;
+        }
+
+        const std::string label = std::to_string(node->getId());
+        const ImVec2 textPos(
+          viewportMin.x + static_cast<float>(x) + 6.0f,
+          viewportMin.y + static_cast<float>(y) - 8.0f);
+        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+        const ImVec2 bgMin(textPos.x - 3.0f, textPos.y - 2.0f);
+        const ImVec2 bgMax(textPos.x + textSize.x + 3.0f, textPos.y + textSize.y + 2.0f);
+        drawList->AddRectFilled(bgMin, bgMax, IM_COL32(18, 22, 28, 140), 3.0f);
+        drawList->AddRect(bgMin, bgMax, IM_COL32(255, 244, 196, 50), 3.0f, 0, 1.0f);
+        drawList->AddText(textPos, IM_COL32(255, 248, 220, 220), label.c_str());
+      }
+    };
+
+    if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+      drawNodeLabelsForMesh(resultMesh);
+    } else {
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part* part = m_model->getPart(p);
+        if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+          continue;
+        }
+        drawNodeLabelsForMesh(part->getMesh());
+      }
+    }
+  }
+
   if (m_show_all_element_labels && m_model != nullptr) {
     auto drawElementLabelsForMesh = [&](Mesh* mesh) {
       if (mesh == nullptr) {
