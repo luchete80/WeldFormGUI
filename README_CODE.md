@@ -243,6 +243,98 @@ Summary:
   - `src/python/pywfGUI.i` should stay lean and model-only
   - avoid reintroducing `geom/vtkOCCTGeom.h`, `App.h`, or other viewer / OpenCascade dependencies into the SWIG surface
 
+## Python workflow wrapping plan
+
+- Goal:
+  support end-to-end scripting for common preprocessing tasks without exposing viewer internals.
+
+- The boundary for the SWIG layer should be:
+  - allowed:
+    - `Model`
+    - `Part`
+    - `Mesh`
+    - `Node`
+    - `Element`
+    - `NodeSet`
+    - `ElementSet`
+    - exporter helpers
+    - small workflow helper functions in `src/python`
+  - not allowed:
+    - `vtkOCCTGeom`
+    - ImGui dialog classes
+    - VTK picker / renderer types
+    - raw OCC topology types such as `TopoDS_Shape`
+
+- Practical consequence:
+  - if Python needs `import STEP`, do not wrap OCC directly
+  - instead, expose a narrow helper such as `import_step_part(...)` that returns a regular `Part*`
+  - if Python needs an empty mesh-backed part, expose a helper such as `create_empty_mesh_part(...)`
+  - if Python needs `create rectangle`, expose a helper such as `create_rectangle_part(...)`
+  - if Python needs set creation, expose mesh-side helpers that populate `NodeSet` and `ElementSet`
+  - if Python needs access to the active GUI model, prefer tiny workflow helpers such as `get_active_model()`, `add_part_to_active_model(...)`, and `request_view_update()` instead of wrapping the full `App` API
+
+- Current first implementation:
+  - `src/python/WorkflowAPI.h`
+  - exported through `src/python/pywfGUI.i`
+  - intended to keep the scripting API at the model/workflow level instead of the viewer level
+
+- Why this is the right cut:
+  - geometry creation/import can still use existing C++ `Geom` logic internally
+  - Python does not need to know about OCC handles or VTK actors
+  - the GUI remains responsible for visualization and picking
+  - exporters can work from the same mesh/set data used by the GUI
+
+## Set scripting direction
+
+- `src/set_dialog.cpp` is only the UI layer for naming, mode, and commit/cancel behavior.
+- The real data model is still mesh-backed:
+  - `NodeSet`
+  - `ElementSet`
+  - later `FaceSet`
+
+- For scripting, the useful contract is not dialog interaction itself.
+- The useful contract is:
+  - create a node set from node indices or node IDs
+  - create an element set from element indices or element IDs
+  - later add edit/replace helpers with the same semantics as the GUI commit path in `src/editor.cpp`
+
+- Existing reference:
+  - `scripts/selection.py` already contains a lightweight Python-side implementation for node and element sets by ID.
+  - this is a good behavioral reference, but the longer-term API should live in the wrapped C++ workflow layer so scripts use the same supported entry points.
+
+## Scriptable node selection roadmap
+
+- First scriptable selection layer:
+  - mesh-space box selection by coordinates
+  - example API:
+    - `find_node_indices_in_box(...)`
+    - `find_node_ids_in_box(...)`
+    - `add_node_set_from_box(...)`
+
+- Why start here:
+  - it is deterministic
+  - it depends only on `Mesh` and `Node` coordinates
+  - it does not require wrapping the GUI selector, VTK picker, or OCC topology
+  - it is immediately useful for preprocessing scripts and exporters
+
+- Later extensions that make sense:
+  - selection from one or more points with tolerance
+  - selection from line / polyline distance bands
+  - selection from meshed boundary faces
+  - selection from geometry-derived surfaces once a stable CAD-to-mesh query layer exists
+
+- Important design rule:
+  - Python should express selection criteria
+  - C++ should materialize the resulting `NodeSet` / `ElementSet`
+  - the interactive selector in the GUI remains a separate concern
+
+## Recommended next wrapper steps
+
+- Add a mesh-generation workflow helper for geometry-backed parts.
+- Add `replace_node_set_*` and `replace_element_set_*` helpers that mirror the edit path in `src/editor.cpp`.
+- Add a safe helper to list set contents back to Python for exporter and QA scripts.
+- Keep all of that in `src/python` instead of wrapping dialog or rendering code.
+
 ## Good next sections to document
 
 The next useful areas to document would be:

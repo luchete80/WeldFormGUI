@@ -66,6 +66,5 @@ add_custom_command(TARGET _dnlPython POST_BUILD
       "${CMAKE_CURRENT_BINARY_DIR}/model.py"
       "${PYTHON_WRAPPER_OUTPUT_DIR}"
 
-  COMMENT "Copying SWIG Python wrapper and extension module to output folder"
+  COMMENT "Copying SWIG Python runtime files to output folder"
 )
-

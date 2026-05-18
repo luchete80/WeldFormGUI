@@ -357,6 +357,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     vtkNew<vtkCellArray> verts;
     vtkNew<vtkFloatArray> scalars;
     vtkNew<vtkFloatArray> cellScalars;
+    std::map<int, int> nodeIdToPointIndex;
 
     std::cout << "Node count: " << mesh.getNodeCount() << std::endl;
 
@@ -371,6 +372,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
         verts->InsertNextCell(1);
         verts->InsertCellPoint(n);
         cellScalars->InsertNextTuple1(0.0);
+        if (mesh.m_node[n] != nullptr) {
+            nodeIdToPointIndex[mesh.m_node[n]->getId()] = n;
+        }
     }
 
     // Segunda pasada: procesar elementos según su tipo
@@ -415,12 +419,12 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
 
             // Establecer la conectividad de la celda
             for (int nn = 0; nn < nc; nn++) {
-                // NOTA: Asumiendo que getNodeId() devuelve IDs basados en 1
-                int nodeId = mesh.getElem(e)->getNodeId(nn) ;
-                if (nodeId >= 0 && nodeId < mesh.getNodeCount()) {
-                    cell->GetPointIds()->SetId(nn, nodeId);
+                const int nodeId = mesh.getElem(e)->getNodeId(nn);
+                std::map<int, int>::const_iterator pointIt = nodeIdToPointIndex.find(nodeId);
+                if (pointIt != nodeIdToPointIndex.end()) {
+                    cell->GetPointIds()->SetId(nn, pointIt->second);
                 } else {
-                    std::cerr << "Error: Invalid node ID " << nodeId + 1 
+                    std::cerr << "Error: Invalid node ID " << nodeId
                               << " in element " << e << std::endl;
                 }
             }

@@ -138,7 +138,7 @@ enum class ModelDisplayMode {
 
 struct ModelViewportOverlayState {
     ModelDisplayMode displayMode = ModelDisplayMode::Surface;
-    bool showEdges = false;
+    bool showEdges = true;
     bool axesVisible = false;
     bool orthographic = false;
 };
