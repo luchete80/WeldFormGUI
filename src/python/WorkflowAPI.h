@@ -9,6 +9,7 @@
 #include "../model/BoundaryCondition.h"
 #include "../model/Material.h"
 #include "../model/Mesh.h"
+#include "../model/SetWorkflow.h"
 #include "../model/Node.h"
 #include "../model/Part.h"
 #include "../model/Step.h"
@@ -1138,6 +1139,22 @@ inline int add_node_set_from_box(Mesh* mesh,
   const std::vector<int> node_indices =
     find_node_indices_in_box(mesh, xmin, ymin, zmin, xmax, ymax, zmax);
   return add_node_set_from_indices(mesh, name, node_indices, set_id);
+}
+
+inline int add_boundary_face_set_from_element_set(Mesh* mesh,
+                                                  int element_set_id,
+                                                  const std::string& name = "")
+{
+  Model* model = get_active_model();
+  if (model == nullptr || mesh == nullptr)
+    return -1;
+
+  ElementSet* element_set = mesh->findElementSetById(element_set_id);
+  if (element_set == nullptr)
+    return -1;
+
+  const std::string label = name.empty() ? (element_set->getLabel() + "_faces") : name;
+  return wfgui::setworkflow::add_boundary_face_set_from_element_set(mesh, *element_set, model, label);
 }
 
 #endif

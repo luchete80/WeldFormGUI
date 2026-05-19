@@ -23,6 +23,7 @@
 #include "io/InputWriter.h"
 #include "LSDynaWriter.h"
 #include "action.h"
+#include "model/SetWorkflow.h"
 
 //#include "SceneView.h"
 
@@ -4590,10 +4591,10 @@ void Editor::drawGui() {
                    }
                    if (ImGui::MenuItem("Create Boundary Face Set")) {
                      selectElementSet(mesh, s);
-                     const FaceSet faceSet = buildBoundaryFaceSetFromElementSet(
+                     const FaceSet faceSet = wfgui::setworkflow::build_boundary_face_set_from_element_set(
                        mesh,
                        elementSet,
-                       findNextFaceSetId(m_model),
+                       wfgui::setworkflow::find_next_face_set_id(m_model),
                        label + "_faces");
                      mesh->addFaceSet(faceSet);
                      selectFaceSet(mesh, mesh->getFaceSetCount() - 1);
@@ -5154,10 +5155,10 @@ void Editor::drawGui() {
                }
                if (ImGui::MenuItem("Create Boundary Face Set")) {
                  selectElementSet(mesh, s);
-                 const FaceSet faceSet = buildBoundaryFaceSetFromElementSet(
+                 const FaceSet faceSet = wfgui::setworkflow::build_boundary_face_set_from_element_set(
                    mesh,
                    elementSet,
-                   findNextFaceSetId(m_model),
+                   wfgui::setworkflow::find_next_face_set_id(m_model),
                    label + "_faces");
                  mesh->addFaceSet(faceSet);
                  selectFaceSet(mesh, mesh->getFaceSetCount() - 1);
