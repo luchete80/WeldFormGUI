@@ -426,6 +426,29 @@ add_custom_command(TARGET ${EXEC_NAME} POST_BUILD
     COMMENT "Copying ${EXEC_NAME} to build root"
 )
 
+set(ROOT_RUNTIME_TARGETS
+    app
+    model
+    io
+    geom
+    graphicmesh_
+)
+
+if (BUILD_PYTHON)
+    list(APPEND ROOT_RUNTIME_TARGETS _dnlPython)
+endif()
+
+add_custom_target(copy_root_runtimes ALL DEPENDS ${ROOT_RUNTIME_TARGETS})
+
+foreach(runtime_target IN LISTS ROOT_RUNTIME_TARGETS)
+    add_custom_command(TARGET copy_root_runtimes POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:${runtime_target}>
+            ${CMAKE_BINARY_DIR}/$<TARGET_FILE_NAME:${runtime_target}>
+        COMMENT "Copying ${runtime_target} to build root"
+    )
+endforeach()
+
 add_custom_target(copy_runtime_scripts ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory
         ${CMAKE_BINARY_DIR}/scripts

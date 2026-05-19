@@ -47,9 +47,12 @@
 %include "WorkflowAPI.h"
 %include "../io/ModelWriter.h"  // ✅ This is what exposes ModelWriter to Python
 %newobject ModelWriter::ModelWriter;
+%newobject create_active_model;
 %newobject create_empty_mesh_part;
 %newobject create_rectangle_part;
 %newobject import_step_part;
 %newobject import_step_part_at;
+%newobject import_bdf_part;
+%newobject import_bdf_part_at;
 %newobject import_and_mesh_step_part;
 %newobject create_hollomon_material;

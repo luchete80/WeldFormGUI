@@ -45,6 +45,12 @@ Important:
   - the `Selection` block
   - material, part, model, step, and job dialogs
 
+- Important synchronization detail:
+  - the editor tree uses `Editor::m_model`
+  - the application singleton uses `App::_activeModel`
+  - when Python changes the active model through the workflow layer, the editor must eventually observe that change
+  - the current synchronization point is at the beginning of `Editor::drawGui()`, where the editor compares `getApp().getActiveModel()` against `m_model` and adopts the active model when needed
+
 ## VTK viewer
 
 - `src/VtkViewer.h`
@@ -217,7 +223,56 @@ Summary:
   - it writes shell connectivity / part blocks
   - it is not yet a complete exporter architecture for robust set-driven workflows
 
+## Python workflow model synchronization
+
+- `src/python/WorkflowAPI.h`
+  High-level Python helpers such as `create_active_model(...)`, STEP import, BDF import, translation, and meshing live here.
+
+- `src/python/WorkflowBridge.cpp`
+  This file is intentionally small.
+- Current purpose:
+  - provide a native bridge entry point callable from `WorkflowAPI.h`
+  - keep SWIG-facing workflow code independent from GUI-heavy headers
+  - avoid including `src/editor.h` in the Python wrapper build
+
+- Current implementation rule:
+  - `WorkflowBridge.cpp` should only depend on lightweight application-side APIs when possible
+  - right now `syncScriptModelWithEditor(Model*)` only sets `App::setActiveModel(model)`
+  - it does not directly access the global `editor` symbol anymore
+  - this avoids unresolved-symbol issues when loading `_dnlPython.so`
+
+- Current UI sync behavior:
+  - Python changes the active model through `App`
+  - `Editor::drawGui()` detects when `App::getActiveModel()` differs from `Editor::m_model`
+  - the editor then updates:
+    - `m_model`
+    - `selected_mod`
+    - `is_model`
+    - `m_creating_model`
+    - `m_expand_model_tree_once`
+  - this makes the tree follow Python-created models without requiring the Python module to link against editor-only globals
+
 ## Python wrapper constraints
+
+- `src/python/WorkflowAPI.h`
+  This header is parsed by SWIG and must stay lightweight.
+- Important constraint:
+  - do not include `src/editor.h` from `WorkflowAPI.h`
+  - `editor.h` pulls GUI and rendering types such as `GLFWwindow` and `GLuint`
+  - those dependencies break the Python wrapper build because the SWIG module is not a GUI target
+
+- `src/python/WorkflowBridge.cpp`
+  This file exists as a bridge between the Python workflow layer and the live editor instance.
+- Purpose:
+  - keep `WorkflowAPI.h` independent from editor UI headers
+  - provide a small native C++ entry point for active-model synchronization
+  - allow Python workflows to create or switch the active model without exposing full editor internals to SWIG
+
+- Current design intent:
+  - Python code should call high-level workflow helpers such as `create_active_model(...)`
+  - workflow helpers may call a bridge function such as `syncScriptModelWithEditor(Model*)`
+  - `WorkflowAPI.h` should only declare the bridge function, not include editor-heavy implementation details
+  - prefer indirect synchronization through `App` over direct references to `Editor` from the Python module
 
 - `src/python/pywfGUI.i`
   Current SWIG interface mixes core model headers with GUI / geometry-heavy headers.
@@ -238,6 +293,124 @@ Summary:
   - keep the scripting layer split from the interactive viewer layer
   - if a feature needs VTK or OpenCascade for picking or display, keep that in C++ GUI code and expose only the resulting model-side data structures to Python
   - for example, `Set` creation results should be scriptable, but VTK pick actors and OCC shapes should not be part of the SWIG surface
+
+## Console notes
+
+- `src/console.h`
+  The embedded console now prioritizes output visibility over demo controls.
+- Current behavior:
+  - multiline Python input
+  - compact input area
+  - `Run`, `Clear Input`, `Copy Log`, and `Clear Log` controls grouped near the input
+  - output area should consume most of the console height
+- Important limitation:
+  - this console is useful for short interactive snippets and small script blocks
+  - larger workflows are still better executed as files through the Script Browser
+
+## Build output notes
+
+- `src/CMakeLists.txt`
+  The build root is expected to contain the main executable and selected runtime libraries/modules used during development.
+- Practical note:
+  - copying runtime artifacts from subdirectory targets must not use `add_custom_command(TARGET ...)` from a different CMake directory
+  - if a copy step needs to aggregate targets created in subdirectories, prefer a dedicated custom target that depends on them
+
+## Good prompt/context practice
+
+Yes, it is good practice to maintain a compact "working context" for coding tasks in this repository.
+
+Useful context usually includes:
+- target directories
+- affected subsystems
+- known ownership boundaries
+- runtime assumptions
+- build constraints
+- current limitations
+
+A good compact prompt/context block for this codebase would mention:
+- where the GUI lives
+- where Python workflow code lives
+- where model-side classes live
+- whether the task is UI-side, model-side, or SWIG-side
+- whether the change must be safe for the Python module build
+- whether the result must appear in the editor tree, the viewer, or only in exported data
+
+Recommended rule:
+- keep this context short and operational
+- prefer directory and responsibility notes over long prose
+- update it when architecture decisions change
+- do not duplicate large code explanations when a short map is enough
+
+## Suggested Task Context Template
+
+Use a compact block like this before starting a change:
+
+For a reusable standalone version, see:
+- `TASK_CONTEXT_TEMPLATE.md`
+
+```text
+Task:
+- Short description of the requested change
+
+Scope:
+- Main directories/files involved
+- Example: src/editor.cpp, src/python/WorkflowAPI.h, src/model/*
+
+Layer:
+- UI / Editor
+- App state
+- Model / Mesh
+- Geometry / VTK
+- Python / SWIG
+- Build / CMake
+
+Expected visible result:
+- Tree update
+- Viewer update
+- Exported file change
+- Console behavior
+- Python API change
+
+Constraints:
+- Must not include editor-heavy headers in SWIG-facing code
+- Must preserve runtime loading from build root
+- Must not break model-only code paths
+
+Validation:
+- Reconfigure CMake if sources/CMake changed
+- Rebuild affected targets
+- Test in UI / Script Browser / Python console as needed
+```
+
+Example:
+
+```text
+Task:
+- Add a Python helper that creates a new active model
+
+Scope:
+- src/python/WorkflowAPI.h
+- src/python/WorkflowBridge.cpp
+- src/editor.cpp
+
+Layer:
+- Python / SWIG
+- App state
+- UI / Editor
+
+Expected visible result:
+- New model becomes active
+- Model tree updates on next frame
+
+Constraints:
+- Do not include editor.h in WorkflowAPI.h
+- Do not depend on the global editor symbol from the Python module
+
+Validation:
+- Reconfigure CMake
+- Rebuild _dnlPython
+- Open app and run the helper from Python
+```
 
 - Warning:
   - `src/python/pywfGUI.i` should stay lean and model-only

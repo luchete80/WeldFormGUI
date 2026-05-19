@@ -138,6 +138,7 @@ public:
   bool refreshOpenResults(int preferredFrameIndex = -1);
   int consumePendingResultsFrameIndex();
   bool scalePartGeometry(Part* part, double factor);
+  void adoptModelFromScript(Model* model);
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
   bool hasBlockingDialogOpen() const;

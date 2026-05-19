@@ -2107,6 +2107,7 @@ bool Editor::openScriptFromPath(const std::string& filePathName)
     return false;
   }
 
+  getApp().addRecentFile(filePathName);
   std::cout << "Finished Python script: " << filePathName << std::endl;
   return true;
 #else
@@ -3783,9 +3784,14 @@ void ShowExampleMenuFile(Editor *editor)
                     : fs::path(recentPath).filename().string();
                 if (ImGui::MenuItem(label.c_str())) {
                     if (editor != nullptr) {
-                        const std::string ext = fs::path(recentPath).extension().string();
+                        std::string ext = fs::path(recentPath).extension().string();
+                        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+                            return static_cast<char>(std::tolower(c));
+                        });
                         if (ext == ".wfmodel") {
                             editor->openModelFromPath(recentPath);
+                        } else if (ext == ".py") {
+                            editor->openScriptFromPath(recentPath);
                         } else if (ext == ".wfresult" || ext == ".vtk" || ext == ".json") {
                             editor->openResultsFromPath(recentPath);
                         }
@@ -3952,6 +3958,21 @@ void ShowExampleMenuFile(Editor *editor)
 }
 
 void Editor::drawGui() { 
+  Model* active_model = nullptr;
+  try {
+    active_model = &getApp().getActiveModel();
+  } catch (...) {
+    active_model = nullptr;
+  }
+
+  if (active_model != nullptr && active_model != m_model) {
+    m_model = active_model;
+    selected_mod = active_model;
+    is_model = true;
+    m_creating_model = false;
+    m_expand_model_tree_once = true;
+  }
+
   hovered_bc = nullptr;
   hovered_prt = nullptr;
   bool model_tree_item_clicked = false;
@@ -6327,6 +6348,20 @@ void Editor::scroll(double xoffset, double yoffset)
 {
   zcam +=0.01*yoffset;
   //camera->MoveFwd(yoffset*0.1);
+}
+
+void Editor::adoptModelFromScript(Model* model)
+{
+  if (model == nullptr) {
+    return;
+  }
+
+  m_model = model;
+  selected_mod = model;
+  is_model = true;
+  m_creating_model = false;
+  m_expand_model_tree_once = true;
+  getApp().setActiveModel(model);
 }
 
 
