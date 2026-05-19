@@ -221,6 +221,112 @@ inline std::filesystem::path resolve_runtime_executable_path(
   return {};
 }
 
+inline int run_process_with_output(const std::filesystem::path& executable_path,
+                                   const std::vector<std::string>& arguments,
+                                   const std::filesystem::path& working_directory,
+                                   const std::filesystem::path& output_path)
+{
+#ifdef _WIN32
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+  sa.lpSecurityDescriptor = nullptr;
+  sa.bInheritHandle = TRUE;
+
+  HANDLE output_handle = CreateFileA(
+    output_path.string().c_str(),
+    GENERIC_WRITE,
+    FILE_SHARE_READ | FILE_SHARE_WRITE,
+    &sa,
+    CREATE_ALWAYS,
+    FILE_ATTRIBUTE_NORMAL,
+    nullptr
+  );
+  if (output_handle == INVALID_HANDLE_VALUE)
+    return -1;
+
+  STARTUPINFOA si;
+  PROCESS_INFORMATION pi;
+  ZeroMemory(&si, sizeof(si));
+  ZeroMemory(&pi, sizeof(pi));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = output_handle;
+  si.hStdError = output_handle;
+
+  std::string command_line = "\"" + executable_path.string() + "\"";
+  for (const std::string& argument : arguments)
+    command_line += " \"" + argument + "\"";
+
+  std::vector<char> mutable_command(command_line.begin(), command_line.end());
+  mutable_command.push_back('\0');
+
+  const std::string working_dir =
+    working_directory.empty() ? std::string(".") : working_directory.string();
+
+  const BOOL ok = CreateProcessA(
+    nullptr,
+    mutable_command.data(),
+    nullptr,
+    nullptr,
+    TRUE,
+    0,
+    nullptr,
+    working_dir.c_str(),
+    &si,
+    &pi
+  );
+
+  CloseHandle(output_handle);
+  if (!ok)
+    return -1;
+
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  DWORD exit_code = 0;
+  GetExitCodeProcess(pi.hProcess, &exit_code);
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+  return static_cast<int>(exit_code);
+#else
+  pid_t pid = fork();
+  if (pid < 0)
+    return -1;
+
+  if (pid == 0) {
+    const std::string working_dir =
+      working_directory.empty() ? std::string(".") : working_directory.string();
+    (void)chdir(working_dir.c_str());
+
+    FILE* output_file = std::fopen(output_path.c_str(), "w");
+    if (output_file == nullptr)
+      _exit(127);
+
+    const int fd = fileno(output_file);
+    if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) {
+      std::fclose(output_file);
+      _exit(127);
+    }
+    std::fclose(output_file);
+
+    std::vector<char*> argv;
+    const std::string executable = executable_path.string();
+    argv.push_back(const_cast<char*>(executable.c_str()));
+    std::vector<std::string> owned_arguments = arguments;
+    for (std::string& argument : owned_arguments)
+      argv.push_back(const_cast<char*>(argument.c_str()));
+    argv.push_back(nullptr);
+
+    execv(executable.c_str(), argv.data());
+    _exit(127);
+  }
+
+  int status_code = 0;
+  if (waitpid(pid, &status_code, 0) < 0)
+    return -1;
+  return system_exit_code(status_code);
+#endif
+}
+
 inline std::string active_model_stem(Model& model)
 {
   namespace fs = std::filesystem;
@@ -795,7 +901,7 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
       wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp");
     const fs::path remesher_path = wfgui::workflow::resolve_runtime_executable_path(
       {"mesh-adapt", "mesh-adapt_std"});
-    const std::string remesher = remesher_path.empty() ? std::string("mesh-adapt") : remesher_path.string();
+    const fs::path remesher = remesher_path.empty() ? fs::path("mesh-adapt") : remesher_path;
 
     const fs::path previous_cwd = fs::current_path();
     fs::path output_bdf_path = previous_cwd / "output_smoothed.bdf";
@@ -804,13 +910,15 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
 
     output_bdf_path = fs::current_path() / "output_smoothed.bdf";
     std::filesystem::remove(output_bdf_path, ec);
-    const std::string remesh_cmd =
-      "\"" + remesher + "\" \"" + step_path.string() + "\" " +
-      std::to_string(resolved_element_size) + " > \"" + remesh_log_path.string() + "\" 2>&1";
-    const int remesh_status = std::system(remesh_cmd.c_str());
+    const std::vector<std::string> remesh_args = {
+      step_path.string(),
+      std::to_string(resolved_element_size)
+    };
+    const int remesh_status = wfgui::workflow::run_process_with_output(
+      remesher, remesh_args, fs::current_path(), remesh_log_path);
     fs::current_path(previous_cwd, ec);
 
-    if (wfgui::workflow::system_exit_code(remesh_status) != 0)
+    if (remesh_status != 0)
       return false;
     if (!fs::exists(output_bdf_path))
       return false;
