@@ -276,7 +276,6 @@ if (BUILD_PYTHON)
     message(STATUS "Configurando para Python 3.13+")
     # Python 3.13 requiere definiciones especiales
     add_definitions(-DPy_BUILD_CORE_MODULE)
-    add_definitions(-DPy_LIMITED_API)
   endif()
   
 # CRÍTICO: Force to use python release onevery mode (Error looking for python313t)
