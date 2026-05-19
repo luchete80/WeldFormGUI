@@ -74,15 +74,11 @@ void App::checkUpdate(){
 void App::updateMeshes(){
 
   if (_activeModel!= nullptr){
-  cout << "searching on "<<_activeModel->getPartCount()<<" parts"<<endl;
-  
   for (int p=0;p<_activeModel->getPartCount();p++){
     Part* part = _activeModel->getPart(p);
     if (!part || !part->isMeshed()) {
       continue;
     }
-    cout << "Checking app new parts "<<endl;
-    cout << "Graphics meshes size "<<m_graphicmeshes.size()<<endl;
     bool not_found = true;
       Mesh* partMesh = part->getMesh();
       if (partMesh == nullptr) {
@@ -96,11 +92,8 @@ void App::updateMeshes(){
         }
       if (not_found){
         if (part->isMeshed()){
-          
-        cout << "Creating Graphic Mesh for part "<<p<<endl;
         if (partMesh != nullptr){
           if (partMesh->getType()==SPH){
-            cout << "Creating SPH graphic mesh-----"<<endl;
             m_graphicmeshes.push_back( new GraphicSPHMesh(partMesh)); ///THIS READS FROM GLOBAL GMSH MODEL
             m_graphicmeshes[m_graphicmeshes.size()-1]->createVTKPolyData(*partMesh);
             //ACTOR IS NOT ASSIGNED (THIS IS DONE IN ORDER TO NOT ADD VTK CODE HERE)
@@ -108,18 +101,13 @@ void App::updateMeshes(){
           }
           else
           m_graphicmeshes.push_back(new GraphicMesh(partMesh));
-          cout << "Created FEM mesh"<<endl; 
-        }else 
-          cout << "ERROR: Part mesh is null pointer"<<endl;
-      
-        cout << "Graphic mesh count is "<<m_graphicmeshes.size()<<endl;
+        }
       }
     }//is meshed
   } //part loop
     //NOT WORKING
   
   //Second loop fo deleted parts
-    cout << "Looking for "<<m_graphicmeshes.size()<<" meshes and "<<_activeModel->getPartCount()<< " parts "<<endl;
     auto gmIt = m_graphicmeshes.begin();
     while (gmIt != m_graphicmeshes.end()){
       bool del_part = true;
@@ -133,15 +121,12 @@ void App::updateMeshes(){
         if (partMesh == nullptr) {
           continue;
         }
-        cout << "sm mesh ptr "<<graphicMesh->getMesh()<<", "<<" part msh pointer "<<partMesh<<endl;
       if (graphicMesh->getMesh() == partMesh){//is related to the part mesh
-        cout <<"Found one part with corresponding mesh"<<endl;
         del_part = false;
         break;
         }
       }
       if (del_part){
-        cout<<"Deleting graphic mesh for unexisting part"<<endl; 
         removeGraphicMeshInstance(m_graphicmeshes, gmIt, m_pendingActorRemovals);
       } else {
         ++gmIt;
@@ -182,8 +167,6 @@ Geom* App::loadGeometry(const std::string& file)
 /* -------------------------------------------------------------------------- */
 /* 3) Sync orphan geometries with viewer                                      */
 void App::updateGeoms(/*vtkViewer* viewer*/) {
-    std::cout << "Updating orphan geometries: " << m_orphangeoms.size() << std::endl;
-
     for (Geom* g : m_orphangeoms) {
         // Check if already visualized
         if (geomToVisual.find(g) == geomToVisual.end()) {

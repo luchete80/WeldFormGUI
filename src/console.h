@@ -1,6 +1,8 @@
 //From imgui
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <string>
 
 #define PY_SSIZE_T_CLEAN
 #ifdef BUILD_PYTHON
@@ -48,7 +50,7 @@ PyObject* ioModule = PyImport_ImportModule("io");
 
 struct ExampleAppConsole
 {
-    char                  InputBuf[256];
+    std::string           InputBuf;
     ImVector<char*>       Items;
     ImVector<const char*> Commands;
     ImVector<char*>       History;
@@ -65,7 +67,7 @@ struct ExampleAppConsole
     {
         //IMGUI_DEMO_MARKER("Examples/Console");
         ClearLog();
-        memset(InputBuf, 0, sizeof(InputBuf));
+        InputBuf.reserve(256);
         HistoryPos = -1;
 
         // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
@@ -95,6 +97,7 @@ struct ExampleAppConsole
     static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)s, len); }
     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
+    bool HasPendingInput() const                                 { return !InputBuf.empty(); }
 
     void    ClearLog()
     {
@@ -154,40 +157,12 @@ struct ExampleAppConsole
             ImGui::EndPopup();
         }
 
-        ImGui::TextWrapped(
-            "This example implements a console with basic coloring, completion (TAB key) and history (Up/Down keys). A more elaborate "
-            "implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
-        ImGui::TextWrapped("Enter 'HELP' for help.");
-
-        // TODO: display items starting from the bottom
-
-        if (ImGui::SmallButton("Add Debug Text"))  { AddLog("%d some text", Items.Size); AddLog("some more text"); AddLog("display very important message here!"); }
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Add Debug Error")) { AddLog("[error] something went wrong"); }
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Clear"))           { ClearLog(); }
-        ImGui::SameLine();
-        bool copy_to_clipboard = ImGui::SmallButton("Copy");
-        //static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); AddLog("Spam %f", t); }
-
-        ImGui::Separator();
-
-        // Options menu
-        if (ImGui::BeginPopup("Options"))
-        {
-            ImGui::Checkbox("Auto-scroll", &AutoScroll);
-            ImGui::EndPopup();
-        }
-
-        // Options, Filter
-        if (ImGui::Button("Options"))
-            ImGui::OpenPopup("Options");
-        ImGui::SameLine();
-        Filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
-        ImGui::Separator();
-
-        // Reserve enough left-over height for 1 separator + 1 input text
-        const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        // Reserve enough left-over height for the multiline input area and buttons.
+        const float input_height = ImGui::GetTextLineHeight() * 3.0f;
+        const float footer_height_to_reserve =
+            input_height +
+            ImGui::GetStyle().ItemSpacing.y * 3.0f +
+            ImGui::GetFrameHeightWithSpacing() * 2.0f;
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
         if (ImGui::BeginPopupContextWindow())
         {
@@ -220,6 +195,7 @@ struct ExampleAppConsole
         // - Split them into same height items would be simpler and facilitate random-seeking into your list.
         // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+        bool copy_to_clipboard = false;
         if (copy_to_clipboard)
             ImGui::LogToClipboard();
         for (int i = 0; i < Items.Size; i++)
@@ -253,14 +229,50 @@ struct ExampleAppConsole
 
         // Command-line
         bool reclaim_focus = false;
-        ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        if (ImGui::InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
-        {
-            char* s = InputBuf;
-            Strtrim(s);
-            if (s[0])
-                ExecCommand(s);
-            strcpy(s, "");
+        ImGuiInputTextFlags input_text_flags =
+            ImGuiInputTextFlags_CallbackCompletion |
+            ImGuiInputTextFlags_CallbackHistory |
+            ImGuiInputTextFlags_CallbackResize;
+        ImGui::TextUnformatted("Input");
+        ImGui::InputTextMultiline(
+            "##Input",
+            InputBuf.data(),
+            InputBuf.capacity() + 1,
+            ImVec2(-1.0f, input_height),
+            input_text_flags,
+            &TextEditCallbackStub,
+            (void*)this);
+
+        InputBuf.resize(std::strlen(InputBuf.c_str()));
+        char* s = InputBuf.data();
+        Strtrim(s);
+
+        ImGuiIO& io = ImGui::GetIO();
+        const bool run_shortcut =
+            ImGui::IsItemFocused() &&
+            io.KeyCtrl &&
+            !io.KeyAlt &&
+            !io.KeySuper &&
+            ImGui::IsKeyPressed(ImGuiKey_Enter, false);
+        const bool run_button = ImGui::Button("Run");
+        ImGui::SameLine();
+        if (ImGui::Button("Clear Input")) {
+            InputBuf.clear();
+            reclaim_focus = true;
+        }
+        ImGui::SameLine();
+        copy_to_clipboard = ImGui::Button("Copy Log");
+        ImGui::SameLine();
+        if (ImGui::Button("Clear Log")) {
+            ClearLog();
+        }
+        ImGui::SameLine();
+        ImGui::TextUnformatted("Ctrl+Enter to run");
+
+        if ((run_shortcut || run_button) && s[0]) {
+            InputBuf.resize(std::strlen(InputBuf.c_str()));
+            ExecCommand(InputBuf.c_str());
+            InputBuf.clear();
             reclaim_focus = true;
         }
 
@@ -414,6 +426,13 @@ struct ExampleAppConsole
 
     int     TextEditCallback(ImGuiInputTextCallbackData* data)
     {
+        if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
+        {
+            InputBuf.resize(static_cast<std::size_t>(data->BufTextLen));
+            data->Buf = InputBuf.data();
+            return 0;
+        }
+
         #ifdef BUILD_PYTHON
         //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
         switch (data->EventFlag)

@@ -6,6 +6,9 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 FILE(GLOB SRCS Dummy.h *.h *.cpp)
+list(APPEND SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/WorkflowBridge.cpp
+)
 FILE(GLOB ISRCS *.i)
 
 SET(CMAKE_SWIG_FLAGS "-Wall")

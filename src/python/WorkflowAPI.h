@@ -3,6 +3,7 @@
 
 #include "../App/App.h"
 #include "../geom/Geom.h"
+#include "../graphicmesh/GraphicMesh.h"
 #include "../io/InputWriter.h"
 #include "../io/ModelWriter.h"
 #include "../model/BoundaryCondition.h"
@@ -13,6 +14,9 @@
 #include "../model/Step.h"
 
 #include <gmsh.h>
+#include <vtkNew.h>
+#include <vtkTransform.h>
+#include <vtkTransformFilter.h>
 
 #include <set>
 #include <cmath>
@@ -30,6 +34,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
+
+void syncScriptModelWithEditor(Model* model);
 
 inline Model* get_active_model();
 
@@ -409,14 +415,35 @@ inline Model* get_active_model()
   return &getApp().getActiveModel();
 }
 
+inline Model* create_active_model(const std::string& model_name = "PythonModel")
+{
+  Model* model = new Model();
+  model->setName(model_name);
+  syncScriptModelWithEditor(model);
+  std::cout << "Created model from Python: " << model_name << std::endl;
+  getApp().Update();
+  return model;
+}
+
 inline void add_part_to_active_model(Part* part)
 {
   if (part == nullptr)
     return;
 
   Model* model = get_active_model();
-  if (model != nullptr)
+  if (model != nullptr) {
     model->addPart(part);
+
+    if (part->getGeom() != nullptr) {
+      vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+      if (visual == nullptr) {
+        visual = getApp().registerGeometry(part->getGeom());
+        getApp().registerPartVisual(part, visual);
+      }
+    }
+
+    getApp().Update();
+  }
 }
 
 inline void request_view_update()
@@ -466,6 +493,30 @@ inline int get_active_model_analysis_type()
   if (model == nullptr)
     return Solid3D;
   return static_cast<int>(model->getAnalysisType());
+}
+
+inline void set_active_model_contact_properties(double penalty_factor,
+                                                double gap_penalty_scale,
+                                                bool use_gap_penalty = true,
+                                                double static_friction = 0.0,
+                                                double heat_cond_coeff = 0.5,
+                                                bool heat_conductance = false,
+                                                double max_penet_ratio = 0.05,
+                                                double max_accel = 100000.0)
+{
+  Model* model = get_active_model();
+  if (model == nullptr)
+    return;
+
+  ContactProperties& contact = model->contactProps();
+  contact.penaltyFactor = penalty_factor;
+  contact.gapPenaltyScale = gap_penalty_scale;
+  contact.useGapPenalty = use_gap_penalty;
+  contact.fricCoeffStatic = static_friction;
+  contact.heatCondCoeff = heat_cond_coeff;
+  contact.heatConductance = heat_conductance;
+  contact.maxPenetRatio = max_penet_ratio;
+  contact.maxAccel = max_accel;
 }
 
 inline bool save_active_model(const std::string& requested_path)
@@ -649,6 +700,57 @@ inline Part* import_step_part_at(const std::string& step_path,
   return new Part(geom);
 }
 
+inline Part* import_bdf_part(const std::string& bdf_path)
+{
+  namespace fs = std::filesystem;
+  Part* part = new Part();
+  part->generateMeshFromNastranFile(bdf_path);
+  part->setName(fs::path(bdf_path).stem().string().c_str());
+  return part;
+}
+
+inline void translate_part(Part* part, double dx, double dy, double dz)
+{
+  if (part == nullptr)
+    return;
+
+  if (std::abs(dx) <= 1.0e-12 && std::abs(dy) <= 1.0e-12 && std::abs(dz) <= 1.0e-12)
+    return;
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr && visual->getPolydata() != nullptr) {
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Translate(dx, dy, dz);
+
+    vtkNew<vtkTransformFilter> transform_filter;
+    transform_filter->SetInputData(visual->getPolydata());
+    transform_filter->SetTransform(transform);
+    transform_filter->Update();
+    visual->getPolydata()->ShallowCopy(transform_filter->GetOutput());
+  }
+
+  if (part->getGeom() != nullptr)
+    part->getGeom()->Move(dx, dy, dz);
+
+  if (GraphicMesh* graphic_mesh = getApp().getGraphicMeshFromPart(part))
+    graphic_mesh->Translate(dx, dy, dz);
+
+  getApp().Update();
+}
+
+inline Part* import_bdf_part_at(const std::string& bdf_path,
+                                double origin_x,
+                                double origin_y,
+                                double origin_z)
+{
+  Part* part = import_bdf_part(bdf_path);
+  if (part == nullptr)
+    return nullptr;
+
+  translate_part(part, origin_x, origin_y, origin_z);
+  return part;
+}
+
 inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
 {
   namespace fs = std::filesystem;
@@ -810,6 +912,28 @@ inline void add_velocity_bc_to_node_set(int node_set_id,
   model->addBoundaryCondition(bc);
 }
 
+inline void add_velocity_bc_to_part(Part* part,
+                                    double vx,
+                                    double vy,
+                                    double vz,
+                                    bool dof_x = true,
+                                    bool dof_y = true,
+                                    bool dof_z = true)
+{
+  Model* model = get_active_model();
+  if (model == nullptr || part == nullptr)
+    return;
+
+  BoundaryCondition* bc = new BoundaryCondition(
+    VelocityBC,
+    ApplyToPart,
+    part->getId(),
+    make_double3(vx, vy, vz)
+  );
+  bc->setDofMask(dof_x, dof_y, dof_z);
+  model->addBoundaryCondition(bc);
+}
+
 inline void add_displacement_bc_to_node_set(int node_set_id,
                                             double ux,
                                             double uy,
@@ -832,12 +956,42 @@ inline void add_displacement_bc_to_node_set(int node_set_id,
   model->addBoundaryCondition(bc);
 }
 
+inline void add_displacement_bc_to_part(Part* part,
+                                        double ux,
+                                        double uy,
+                                        double uz,
+                                        bool dof_x = true,
+                                        bool dof_y = true,
+                                        bool dof_z = true)
+{
+  Model* model = get_active_model();
+  if (model == nullptr || part == nullptr)
+    return;
+
+  BoundaryCondition* bc = new BoundaryCondition(
+    DisplacementBC,
+    ApplyToPart,
+    part->getId(),
+    make_double3(ux, uy, uz)
+  );
+  bc->setDofMask(dof_x, dof_y, dof_z);
+  model->addBoundaryCondition(bc);
+}
+
 inline void add_fixed_bc_to_node_set(int node_set_id,
                                      bool fix_x = true,
                                      bool fix_y = true,
                                      bool fix_z = true)
 {
   add_displacement_bc_to_node_set(node_set_id, 0.0, 0.0, 0.0, fix_x, fix_y, fix_z);
+}
+
+inline void add_fixed_bc_to_part(Part* part,
+                                 bool fix_x = true,
+                                 bool fix_y = true,
+                                 bool fix_z = true)
+{
+  add_displacement_bc_to_part(part, 0.0, 0.0, 0.0, fix_x, fix_y, fix_z);
 }
 
 inline int add_node_set_from_indices(Mesh* mesh,

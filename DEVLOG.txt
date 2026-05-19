@@ -257,3 +257,8 @@
          - Highlighted parts
          - Fixed element ids at showing.
          - Add script actions of import part STEP geometry.
+20260519 - Added Extrusion scripts
+         - Increased console buffer size and set to multiline
+         - Added Create model and set to update tree.
+         - Fixed create geoms by script were not visible.
+         - Add scripts to recent files. 
