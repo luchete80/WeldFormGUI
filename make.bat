@@ -11,5 +11,5 @@ cmake ..\WeldFormGUI -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ^
 -DPYTHON_LIBRARY=%PYTHON_LIB%\libs\python313.lib ^
 -DPYTHON_LIBRARY_DEBUG=%PYTHON_LIB%\libs\python313.lib ^
 -DOpenCASCADE_DIR=%LIB_DIR%\OCCT_7.5.0\occt-vc143-64\cmake ^
--DBUILD_PYTHON=OFF ^
+-DBUILD_PYTHON=ON ^
 -DGMSH_DIR=%LIB_DIR%\gmsh-4.13.0_install

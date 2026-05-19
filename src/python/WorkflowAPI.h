@@ -189,21 +189,28 @@ inline std::vector<std::filesystem::path> runtime_search_directories()
   return unique_dirs;
 }
 
-inline std::filesystem::path resolve_runtime_executable_path(const std::vector<std::string>& candidates)
+inline std::filesystem::path resolve_runtime_executable_path(
+    const std::vector<std::string>& candidates)
 {
   namespace fs = std::filesystem;
+
   for (const fs::path& dir : runtime_search_directories()) {
     for (const std::string& candidate_name : candidates) {
+
 #ifdef _WIN32
-      fs::path candidate = dir / (candidate_name + ".exe");
-      if (fs::exists(candidate))
-        return candidate;
+      fs::path candidate_exe = dir / (candidate_name + ".exe");
+
+      if (fs::exists(candidate_exe))
+        return candidate_exe;
 #endif
-      const fs::path candidate = dir / candidate_name;
+
+      fs::path candidate = dir / candidate_name;
+
       if (fs::exists(candidate))
         return candidate;
     }
   }
+
   return {};
 }
 

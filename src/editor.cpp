@@ -11,6 +11,13 @@
 //#include "freetypeGL.h"
 #endif
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
+#ifndef Py_PYTHON_H
+#error Python.h was not included
+#endif
+
 #include "editor.h"
 #include <sstream>
 
