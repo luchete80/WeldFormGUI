@@ -28,9 +28,11 @@
 #include "io/ModelWriter.h"
 #include "io/ModelReader.h"
 #include "io/InputWriter.h"
+#include "modelcheck/ModelCheck.h"
 #include "LSDynaWriter.h"
 #include "action.h"
 #include "model/SetWorkflow.h"
+#include "model/ElementType.h"
 
 //#include "SceneView.h"
 
@@ -226,6 +228,35 @@ bool drawPartVisibilityButton(const char* id, bool visible)
 
   ImGui::PopID();
   return pressed;
+}
+
+std::string buildElementTypeSummary(Mesh* mesh)
+{
+  if (mesh == nullptr) {
+    return "No mesh";
+  }
+
+  std::map<std::string, int> counts;
+  for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+    Element* element = mesh->getElem(elemIndex);
+    const ElementType type = inferElementType(mesh, element);
+    counts[toString(type)] += 1;
+  }
+
+  if (counts.empty()) {
+    return "No elements";
+  }
+
+  std::ostringstream oss;
+  bool first = true;
+  for (std::map<std::string, int>::const_iterator it = counts.begin(); it != counts.end(); ++it) {
+    if (!first) {
+      oss << ", ";
+    }
+    oss << it->first << " x" << it->second;
+    first = false;
+  }
+  return oss.str();
 }
 }
 
@@ -2173,6 +2204,11 @@ void Editor::closeCurrentModel()
   selected_mod = nullptr;
   selected_step = nullptr;
   selected_bc = nullptr;
+  hovered_bc = nullptr;
+  selected_ic = nullptr;
+  clearSelectedNodeSet();
+  clearSelectedElementSet();
+  clearSelectedFaceSet();
   m_show_mod_dlg_edit = false;
   m_creating_model = false;
   m_show_prt_dlg_edit = false;
@@ -2185,6 +2221,13 @@ void Editor::closeCurrentModel()
   is_model = false;
   getApp().setActiveModel(m_model);
   getApp().Update();
+
+  if (viewer != nullptr && viewer->getRenderWindow() != nullptr) {
+    viewer->getRenderWindow()->Render();
+  }
+  if (res_viewer != nullptr && res_viewer->getRenderWindow() != nullptr) {
+    res_viewer->getRenderWindow()->Render();
+  }
 
   if (oldModel != nullptr)
     delete oldModel;
@@ -2217,6 +2260,10 @@ bool Editor::createJobFromActiveModel(bool runJob)
     return false;
   }
 
+  if (runJob && !runModelCheckBeforeJobRun(model)) {
+    return false;
+  }
+
   fs::path input_path = activeModelOutputPath(model, activeModelStem(model) + ".wfinput");
   InputWriter writer(&model);
   writer.writeToFile(input_path.string());
@@ -2226,6 +2273,43 @@ bool Editor::createJobFromActiveModel(bool runJob)
 
   if (runJob) {
     requestJobRun(job);
+  }
+
+  return true;
+}
+
+bool Editor::runModelCheckBeforeJobRun(Model& model)
+{
+  wfgui::modelcheck::CheckContext context;
+  context.model = &model;
+  context.profile = wfgui::modelcheck::CheckProfile::WeldForm;
+
+  const wfgui::modelcheck::CheckReport report =
+      wfgui::modelcheck::ModelChecker::run(context);
+
+  if (report.issues.empty()) {
+    cout << "[ModelCheck] " << wfgui::modelcheck::formatSummary(report) << endl;
+    return true;
+  }
+
+  const std::string summary = wfgui::modelcheck::formatSummary(report);
+  cout << "[ModelCheck] " << summary << endl;
+  appendToAppConsole("[ModelCheck] " + summary + "\n");
+
+  for (std::size_t i = 0; i < report.issues.size(); ++i) {
+    const std::string line = wfgui::modelcheck::formatIssue(report.issues[i]);
+    cout << "[ModelCheck] " << line << endl;
+    appendToAppConsole("[ModelCheck] " + line + "\n");
+  }
+
+  if (report.warningCount > 0 || report.errorCount > 0) {
+    m_show_app_console = true;
+  }
+
+  if (wfgui::modelcheck::hasErrors(report)) {
+    m_model_check_popup.report = report;
+    m_model_check_popup.open = true;
+    return false;
   }
 
   return true;
@@ -2624,6 +2708,10 @@ void Editor::clearBoundaryConditionOverlay()
     }
   }
   m_bc_overlay_actors.clear();
+
+  if (viewer->getRenderWindow() != nullptr) {
+    viewer->getRenderWindow()->Render();
+  }
 }
 
 void Editor::clearPartOverlay()
@@ -3442,6 +3530,59 @@ void Editor::drawPendingJobRunConfirmation()
     if (ImGui::Button("Cancel", ImVec2(140.0f, 0.0f))) {
       m_pending_job_run_confirmation = PendingJobRunConfirmation{};
       ImGui::CloseCurrentPopup();
+    }
+
+    ImGui::EndPopup();
+  }
+}
+
+void Editor::drawModelCheckPopup()
+{
+  if (!m_model_check_popup.open && !ImGui::IsPopupOpen("Model Check")) {
+    return;
+  }
+
+  if (m_model_check_popup.open) {
+    ImGui::OpenPopup("Model Check");
+    m_model_check_popup.open = false;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(720.0f, 0.0f), ImGuiCond_Appearing);
+  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                          ImGuiCond_Appearing,
+                          ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Model Check", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    const wfgui::modelcheck::CheckReport& report = m_model_check_popup.report;
+    ImGui::TextWrapped("%s", wfgui::modelcheck::formatSummary(report).c_str());
+    ImGui::Separator();
+
+    if (report.issues.empty()) {
+      ImGui::TextDisabled("No issues found.");
+    } else {
+      for (std::size_t i = 0; i < report.issues.size(); ++i) {
+        const wfgui::modelcheck::CheckIssue& issue = report.issues[i];
+        ImVec4 color = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+        if (issue.severity == wfgui::modelcheck::CheckSeverity::Error) {
+          color = ImVec4(1.0f, 0.35f, 0.35f, 1.0f);
+        } else if (issue.severity == wfgui::modelcheck::CheckSeverity::Warning) {
+          color = ImVec4(1.0f, 0.78f, 0.25f, 1.0f);
+        }
+
+        ImGui::PushStyleColor(ImGuiCol_Text, color);
+        ImGui::TextWrapped("%s", wfgui::modelcheck::formatIssue(issue).c_str());
+        ImGui::PopStyleColor();
+      }
+    }
+
+    ImGui::Separator();
+    if (ImGui::Button("Open Console", ImVec2(140.0f, 0.0f))) {
+      m_show_app_console = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Close", ImVec2(120.0f, 0.0f))) {
+      ImGui::CloseCurrentPopup();
+      m_model_check_popup.report = wfgui::modelcheck::CheckReport{};
     }
 
     ImGui::EndPopup();
@@ -4412,6 +4553,8 @@ void Editor::drawGui() {
 	                        model_tree_item_clicked = true;
 	                      }
 	                      ImGui::Text("Count: %d", treePart->getMesh()->getElemCount());
+                        ImGui::TextWrapped("Types: %s",
+                                           buildElementTypeSummary(treePart->getMesh()).c_str());
 	                      ImGui::TreePop();
 	                  }
 
@@ -6034,6 +6177,7 @@ void Editor::drawGui() {
   drawScriptBrowserWindow();
   drawResultsLoadProgress();
   drawPendingJobRunConfirmation();
+  drawModelCheckPopup();
   advanceResultsLoad();
   updatePartOverlay();
   updateBoundaryConditionOverlay();

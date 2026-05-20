@@ -134,9 +134,9 @@ def _element_keyword(mesh_dim, elem):
     node_count = elem.getNodeCount()
     if mesh_dim == 2:
         if node_count == 4:
-            return "/SHELL"
+            return "/QUAD"
         if node_count == 3:
-            return "/SH3N"
+            return "/TRIA"
     else:
         if node_count == 8:
             return "/BRICK"
@@ -146,6 +146,75 @@ def _element_keyword(mesh_dim, elem):
         f"Unsupported Radioss element topology: meshDim={mesh_dim}, "
         f"nodesPerElement={node_count}"
     )
+
+
+def _element_type_name(mesh_dim, elem):
+    node_count = elem.getNodeCount()
+    if mesh_dim == 2:
+        if node_count == 2:
+            return "Line2"
+        if node_count == 3:
+            return "Tria3"
+        if node_count == 4:
+            return "Quad4"
+    else:
+        if node_count == 3:
+            return "Tria3"
+        if node_count == 4:
+            return "Tetra4"
+        if node_count == 8:
+            return "Hexa8"
+    return f"Unknown({node_count})"
+
+
+def _is_bulk_element(mesh_dim, elem):
+    node_count = elem.getNodeCount()
+    if mesh_dim == 2:
+        return node_count in (3, 4)
+    return node_count in (4, 8)
+
+
+def _is_boundary_element(mesh_dim, elem):
+    node_count = elem.getNodeCount()
+    if mesh_dim == 2:
+        return node_count == 2
+    return node_count == 3
+
+
+def _part_type_name(part):
+    try:
+        return "Rigid" if part.getType() == 1 else "Deformable"
+    except Exception:
+        return "Unknown"
+
+
+def _collect_exportable_elements(part, mesh, mesh_dim):
+    deformable = True
+    try:
+        deformable = part.getType() == 0
+    except Exception:
+        deformable = True
+
+    exportable = []
+    skipped_boundary = []
+    skipped_unsupported = []
+
+    for elem_index in range(mesh.getElemCount()):
+        elem = mesh.getElem(elem_index)
+        if elem is None:
+            continue
+
+        if deformable and _is_bulk_element(mesh_dim, elem):
+            exportable.append((elem_index, elem))
+            continue
+
+        if (not deformable) and _is_boundary_element(mesh_dim, elem):
+            skipped_boundary.append((elem_index, elem))
+            continue
+
+        skipped_unsupported.append((elem_index, elem))
+
+    return exportable, skipped_boundary, skipped_unsupported
 
 
 def _material_id(index):
@@ -172,6 +241,25 @@ def _write_header_and_begin(out, run_name, title):
     out.write(f"{'kg':>20}{'mm':>20}{'ms':>20}\n")
     out.write("/TITLE\n")
     out.write(f"{title}\n")
+
+
+def _radioss_analysis_flag(model):
+    analysis_type = SOLID_3D
+    try:
+        analysis_type = model.getAnalysisType()
+    except Exception:
+        analysis_type = SOLID_3D
+
+    if analysis_type == AXISYMMETRIC_2D:
+        return 1
+    if analysis_type in (PLANE_STRESS_2D, PLANE_STRAIN_2D):
+        return 2
+    return 0
+
+
+def _write_analysis_block(model, out):
+    out.write("/ANALY\n")
+    out.write(f"{_radioss_analysis_flag(model):>10}\n")
 
 
 def _write_nodes(model, out):
@@ -222,10 +310,27 @@ def _write_properties_and_parts(model, out, material_ids):
 
         mesh = part.getMesh()
         mesh_dim = _infer_mesh_dimension(mesh)
+        exportable_elements, skipped_boundary_elements, skipped_unsupported_elements = (
+            _collect_exportable_elements(part, mesh, mesh_dim)
+        )
         part_id = part_index + 1
         prop_id = _property_id(part_index)
         mat_id = material_ids.get(0, 1)
         part_name = _safe_part_name(part, part_index)
+        part_type_name = _part_type_name(part)
+
+        if not exportable_elements:
+            if skipped_boundary_elements:
+                out.write(
+                    f"# Skipping part {part_name}: {part_type_name} part contains only boundary elements "
+                    f"({', '.join(_element_type_name(mesh_dim, elem) for _, elem in skipped_boundary_elements[:3])}) "
+                    "and rigid Radioss export is not implemented yet.\n"
+                )
+            else:
+                out.write(
+                    f"# Skipping part {part_name}: no exportable bulk elements for Radioss.\n"
+                )
+            continue
 
         if mesh_dim == 2:
             out.write(f"/PROP/TYPE1/{prop_id}\n")
@@ -280,6 +385,9 @@ def _write_properties_and_parts(model, out, material_ids):
                 "part_name": part_name,
                 "mesh": mesh,
                 "mesh_dim": mesh_dim,
+                "exportable_elements": exportable_elements,
+                "skipped_boundary_elements": skipped_boundary_elements,
+                "skipped_unsupported_elements": skipped_unsupported_elements,
             }
         )
 
@@ -291,12 +399,26 @@ def _write_elements(part_records, out):
         mesh = record["mesh"]
         part_id = record["part_id"]
         mesh_dim = record["mesh_dim"]
+        exportable_elements = record.get("exportable_elements", [])
+        skipped_boundary_elements = record.get("skipped_boundary_elements", [])
+        skipped_unsupported_elements = record.get("skipped_unsupported_elements", [])
 
         grouped = {}
-        for elem_index in range(mesh.getElemCount()):
-            elem = mesh.getElem(elem_index)
+        for elem_index, elem in exportable_elements:
             keyword = _element_keyword(mesh_dim, elem)
             grouped.setdefault(keyword, []).append((elem_index, elem))
+
+        if skipped_boundary_elements:
+            out.write(
+                f"# Part {record['part_name']}: skipped {len(skipped_boundary_elements)} boundary element(s) "
+                "for current Radioss bulk export.\n"
+            )
+
+        if skipped_unsupported_elements:
+            out.write(
+                f"# Part {record['part_name']}: skipped {len(skipped_unsupported_elements)} unsupported element(s): "
+                f"{', '.join(sorted(set(_element_type_name(mesh_dim, elem) for _, elem in skipped_unsupported_elements)))}\n"
+            )
 
         for keyword, elems in grouped.items():
             out.write(f"{keyword}/{part_id}\n")
@@ -553,6 +675,7 @@ def export_model_to_radioss(model, output_root):
 
     with open(starter_path, "w", encoding="ascii") as out:
         _write_header_and_begin(out, run_name, title)
+        _write_analysis_block(model, out)
         _write_nodes(model, out)
         material_ids = _write_materials(model, out)
         part_records = _write_properties_and_parts(model, out, material_ids)

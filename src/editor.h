@@ -48,6 +48,7 @@
 #include "bc_dialog.h"
 #include "ini_dialog.h"
 #include "mesh_dialog.h"
+#include "modelcheck/ModelCheck.h"
 
 
 //#include "gMesh.h"
@@ -426,6 +427,11 @@ protected:
     std::vector<fs::path> artifacts;
   };
   PendingJobRunConfirmation m_pending_job_run_confirmation;
+  struct ModelCheckPopupState {
+    bool open = false;
+    wfgui::modelcheck::CheckReport report;
+  };
+  ModelCheckPopupState m_model_check_popup;
 
   bool beginResultsLoadFromJson(const std::string& jsonFile,
                                 bool replaceExistingResults = false,
@@ -435,6 +441,8 @@ protected:
   void drawResultsLoadProgress();
   void drawPendingJobRunConfirmation();
   void executePendingJobRun(bool deleteExistingArtifacts);
+  bool runModelCheckBeforeJobRun(Model& model);
+  void drawModelCheckPopup();
   void clearBoundaryConditionOverlay();
   void updateBoundaryConditionOverlay();
   void clearPartOverlay();

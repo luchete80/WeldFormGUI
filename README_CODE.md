@@ -33,6 +33,15 @@ Important:
 - It is also not in `src/ViewportWindow.cpp`.
 - The current VTK viewport overlay used by the app lives in `src/main.cpp`.
 
+Important distinction:
+- toolbar / HUD overlay belongs to `src/main.cpp`
+- model-highlight and boundary-condition VTK actor overlays belong to `src/editor.cpp`
+- relevant editor-side functions:
+  - `Editor::updateBoundaryConditionOverlay()`
+  - `Editor::clearBoundaryConditionOverlay()`
+  - `Editor::updatePartOverlay()`
+  - `Editor::clearPartOverlay()`
+
 ## Left panel and model/results tree
 
 - `src/editor.cpp`
@@ -89,12 +98,72 @@ It is better treated as old or auxiliary viewport code until we decide to clean 
 - `src/model/Material.h`
   Material definition and helpers such as Hollomon / Johnson-Cook.
 
+## Element Types
+
+- `src/model/Element.h`
+  Runtime element classes still represent the concrete mesh items used by the current solver and viewer.
+- `src/model/ElementType.h`
+  Element-type inference helpers live here.
+- Current behavior:
+  - `ElementType` is currently inferred, not persisted
+  - the initial supported inferred types are:
+    - `Line2`
+    - `Tria3`
+    - `Quad4`
+    - `Tetra4`
+    - `Hexa8`
+  - `ElementUsage` is also inferred:
+    - `Bulk`
+    - `Boundary`
+    - `Unknown`
+
+- Important:
+  - this layer is intended to support model checks and exporters first
+  - it should not change the current WeldForm solver input contract by itself
+  - future `Section` work should build on these inferred/export-facing semantics instead of duplicating them
+
 ## Results
 
 - `src/editor.cpp`
   Result loading and result-side editor state.
 - `src/main.cpp`
   Result viewport rendering and visual overlay application.
+
+## Model Check
+
+- `src/modelcheck/ModelCheck.h`
+- `src/modelcheck/ModelCheck.cpp`
+  The current model validation layer lives here.
+- Current behavior:
+  - `ModelChecker` runs solver-agnostic checks plus profile-specific checks
+  - the first integrated profile is `WeldForm`
+  - current report shape includes:
+    - severity
+    - category
+    - code
+    - message
+    - optional entity id
+  - current WeldForm-oriented topology checks include:
+    - deformable parts without bulk elements
+    - rigid parts containing bulk elements
+    - rigid 2D parts not using `Line2`
+    - rigid 3D parts not using `Tria3`
+    - implicit deformable parts not using `Quad4`
+
+- `src/editor.cpp`
+  Current integration point for launch-time validation.
+- Relevant pieces:
+  - `Editor::createJobFromActiveModel(bool runJob)`
+    Runs the check before creating/running a job from the active model
+  - `Editor::runModelCheckBeforeJobRun(Model&)`
+    Logs issues to the app console and blocks job creation when errors exist
+  - `Editor::drawModelCheckPopup()`
+    Shows the blocking popup summary when the check fails
+
+- Important:
+  - the current check runs before `Run` when launching from the active model
+  - it does not yet re-validate an already-exported `.wfinput` when rerunning an old job entry
+  - this is intentionally model-level validation, not solver-binary validation
 
 ## Dialog blocking and set creation
 
@@ -205,6 +274,36 @@ Summary:
   - contact should prefer `FaceSet` / surface-style data rather than raw node groups
   - exporters and boundary-condition assignment become much easier once set identity and membership rules are stable
   - implementing geometry-driven sets before the mesh set model is generalized would force duplicate logic
+
+## Pending architecture priorities
+
+- Keep planned work separate from currently-implemented behavior.
+- Near-term priorities that are not yet complete:
+  - `Section` model for solver-facing property assignment
+  - smarter selection workflows, including face-oriented and geometry-assisted selection
+  - pre-run `model check` validation before launching the solver
+
+- Recommended order:
+  - first make solver-critical assignment explicit:
+    - material assignment must become robust before multi-solver export can be trusted
+    - a future `Section` should likely own:
+      - material reference
+      - element / formulation type
+      - optional solver-facing properties such as thickness or integration options
+  - then continue improving selection:
+    - selection should stay mesh-backed internally even when the UI becomes geometry-driven
+    - `FaceSet` remains the correct base for contact and surface export workflows
+  - add a `model check` gate before solver launch:
+    - validate missing material / section assignment
+    - validate empty or cross-mesh sets
+    - validate unsupported combinations for the chosen solver/exporter
+    - validate required step / boundary-condition / mesh prerequisites
+
+- Reasoning:
+  - multi-solver export needs a stable semantic layer for "what properties apply to which region"
+  - that semantic layer is closer to `Section` than to raw selection
+  - selection quality still matters, but it should feed stable model objects instead of becoming the semantic model itself
+  - `model check` is important early because it protects solver runs while the data model is still evolving
 
 ## Script Browser and Python scripts
 

@@ -262,3 +262,6 @@
          - Added Create model and set to update tree.
          - Fixed create geoms by script were not visible.
          - Add scripts to recent files. 
+20260520 - Begining to build model checker. 
+         - Fixed remaining BCs symbols after closing model.  
+         - Fixed radioss output to /ANALY and /QUAD instead of shell.

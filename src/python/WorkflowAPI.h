@@ -43,6 +43,8 @@ inline Model* get_active_model();
 namespace wfgui {
 namespace workflow {
 
+inline int system_exit_code(int status_code);
+
 inline bool point_in_box(double x,
                          double y,
                          double z,
