@@ -16,6 +16,7 @@
 #include "Face.h"
 #include "Set.h"
 #include "Material.h"
+#include "Section.h"
 #include "Condition.h"
 #include "BoundaryCondition.h"
 #include "Mesh.h"
@@ -39,6 +40,7 @@
 %template(NodeEntitySet) Set<Node>;
 %template(ElementEntitySet) Set<Element>;
 %include "Material.h"
+%include "Section.h"
 %include "Condition.h"
 %include "BoundaryCondition.h"
 %include "Mesh.h"

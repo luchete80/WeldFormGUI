@@ -20,6 +20,7 @@ class Mesh;
 class Particle;
 class Geom;
 class Vec3_t;
+class Section;
 class Editor;
 class LSDynaWriter;
 class GraphicMesh;
@@ -74,6 +75,11 @@ public:
   Material_* getMaterial (const int &m){return m_mat[m];}
   void addMaterial(Material_*m){m_mat.push_back(m);} //Existent material
   int getMaterialCount(){return m_mat.size();}
+  Section* getSection(const int &s){return m_section[s];}
+  int getSectionCount(){return m_section.size();}
+  void addSection(Section* section){m_section.push_back(section);}
+  void delSection(const int &s){m_section.erase(m_section.begin() + s);}
+  Section* findSectionById(int id);
   const bool &isAnyMesh()const {return have_meshes;}
    Part* getPart(const int &i) {return m_part[i];}
   Part* getLastPart(){return m_part[m_part.size()-1];} 
@@ -140,6 +146,7 @@ public:
 protected:
   std::vector <Part*>        m_part;
   std::vector <Material_*>   m_mat;  
+  std::vector <Section*>     m_section;
   std::vector <Geom*>        m_geom;
   // TODO: SHOULD ANALYZE IF IT IS NECESARY TO HAVE REPEATED POINTERS FOR MESH AND MODEL 
   // NDOES AND ELEMENTS

@@ -11,12 +11,20 @@ Featuring:
 - visualization tools,
 and extensible automation pipelines.
 
+## Documentation
+
+- [Installation](docs/Install.md)
+- [Code Guidelines](docs/README_CODE.md)
+- [User Guide](docs/UsersGuide.md)
+- [Architecture](docs/WeldFormGUI_Architecture.md)
+- [Devlog](docs/DEVLOG.txt)
+
 
 # Downloads
 
 Student demo binaries for Windows are available here:
 
-[Download WeldFormGUI v0.0.6](https://github.com/luchete80/WeldFormGUI/releases/tag/v0.0.6)
+[Download WeldFormGUI v0.0.8](https://github.com/luchete80/WeldFormGUI/releases/tag/v0.0.8)
 
 Current demo release includes:
 - integrated GUI workflow,
@@ -29,15 +37,15 @@ The goal of this release is to provide a complete end-to-end FEM workflow experi
 
 inside a unified workflow focused on nonlinear large deformation problems.
 
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/202605_GUI.gif)
+![GUI overview](docs/images/202605_GUI.gif)
 
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_1.png)
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/ss_2.png)
+![GUI screenshot 1](docs/images/ss_1.png)
+![GUI screenshot 2](docs/images/ss_2.png)
 
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_01.png)
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/image_02.png)
+![Model screenshot 1](docs/images/image_01.png)
+![Model screenshot 2](docs/images/image_02.png)
 
-![alt text](https://github.com/luchete80/WeldFormGUI/blob/master/python_GUI.gif)
+![Python workflow](docs/images/python_GUI.gif)
 
 ---
 

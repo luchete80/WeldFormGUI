@@ -18,7 +18,7 @@ Run the following steps:
 If running with python:
 set PYTHON_LIB=C:\Users\54113\AppData\Local\Programs\Python\Python311 (WHERE PYTHON IS)
 
-Finally Run make.bat (on this dir)
+Finally run `scripts/windows/make.bat`
 
 #PREVIOUS TO RUN
 1. Set OCCT env vars: 

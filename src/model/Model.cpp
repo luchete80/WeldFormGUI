@@ -4,6 +4,7 @@
 #include "Node.h"
 #include "Mesh.h"
 #include "Part.h"
+#include "Section.h"
 
 
 #include "gmsh.h"
@@ -153,4 +154,14 @@ void Model::addGeom(Geom *geom){
 void Model::addBoundaryCondition(BoundaryCondition *bc)
 {
   m_bc.push_back(bc);
+}
+
+Section* Model::findSectionById(int id)
+{
+  for (Section* section : m_section) {
+    if (section != nullptr && section->getId() == id) {
+      return section;
+    }
+  }
+  return nullptr;
 }

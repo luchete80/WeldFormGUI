@@ -6,6 +6,7 @@
 #include "Node.h"
 #include "Element.h"
 #include "ElementType.h"
+#include "Section.h"
 #include "Set.h"
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
@@ -63,6 +64,22 @@ NodeSet* findNodeSetById(Model* model, int setId)
   }
 
   return nullptr;
+}
+
+bool partHasBulkElements(Part* part)
+{
+  if (part == nullptr || part->getMesh() == nullptr) {
+    return false;
+  }
+
+  Mesh* mesh = part->getMesh();
+  for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+    Element* element = mesh->getElem(elemIndex);
+    if (element != nullptr && inferElementUsage(mesh, element) == ElementUsage::Bulk) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void addIssue(CheckReport& report,
@@ -349,6 +366,45 @@ void runGeneralChecks(const CheckContext& context, CheckReport& report)
              CheckCategory::Materials,
              "MATERIAL_MISSING",
              "Model has deformable meshed parts but no material defined.");
+  }
+
+  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    Part* part = model->getPart(partIndex);
+    if (part == nullptr || part->getType() != Elastic || !partHasBulkElements(part)) {
+      continue;
+    }
+
+    if (part->getSectionId() < 0) {
+      addIssue(report,
+               CheckSeverity::Warning,
+               CheckCategory::Sections,
+               "SECTION_MISSING_FOR_DEFORMABLE_PART",
+               "Deformable part " + std::to_string(part->getId()) + " has no section assigned.",
+               part->getId());
+      continue;
+    }
+
+    Section* section = model->findSectionById(part->getSectionId());
+    if (section == nullptr) {
+      addIssue(report,
+               CheckSeverity::Warning,
+               CheckCategory::Sections,
+               "SECTION_REFERENCE_MISSING",
+               "Part " + std::to_string(part->getId()) + " references missing section id " +
+                 std::to_string(part->getSectionId()) + ".",
+               part->getId());
+      continue;
+    }
+
+    if (section->getMaterialIndex() < 0 || section->getMaterialIndex() >= model->getMaterialCount()) {
+      addIssue(report,
+               CheckSeverity::Warning,
+               CheckCategory::Sections,
+               "SECTION_MATERIAL_INVALID",
+               "Section " + std::to_string(section->getId()) + " has invalid material index " +
+                 std::to_string(section->getMaterialIndex()) + ".",
+               section->getId());
+    }
   }
 
   for (int bcIndex = 0; bcIndex < model->getBCCount(); ++bcIndex) {

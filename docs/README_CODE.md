@@ -120,7 +120,28 @@ It is better treated as old or auxiliary viewport code until we decide to clean 
 - Important:
   - this layer is intended to support model checks and exporters first
   - it should not change the current WeldForm solver input contract by itself
-  - future `Section` work should build on these inferred/export-facing semantics instead of duplicating them
+  - the current minimal `Section` layer builds on these inferred/export-facing semantics instead of duplicating them
+
+## Sections
+
+- `src/model/Section.h`
+  Minimal solver-facing section metadata.
+- Current behavior:
+  - `Section` is persisted in the GUI model JSON under `Sections`
+  - each `Part` can reference a `sectionId`
+  - current stored fields are:
+    - section id
+    - name
+    - material index
+    - intended element type
+    - thickness
+  - sections are currently used by:
+    - the model tree UI in `src/editor.cpp`
+    - `Model Check`
+    - future exporters / scripting
+- Important:
+  - the current WeldForm solver input/export contract is intentionally unchanged
+  - `InputWriter` still follows the legacy solver path, so sections are additive metadata for now
 
 ## Results
 
@@ -149,6 +170,10 @@ It is better treated as old or auxiliary viewport code until we decide to clean 
     - rigid 2D parts not using `Line2`
     - rigid 3D parts not using `Tria3`
     - implicit deformable parts not using `Quad4`
+  - current section-oriented checks include:
+    - deformable bulk parts without section assignment
+    - parts referencing missing sections
+    - sections referencing invalid material indices
 
 - `src/editor.cpp`
   Current integration point for launch-time validation.
@@ -279,7 +304,7 @@ Summary:
 
 - Keep planned work separate from currently-implemented behavior.
 - Near-term priorities that are not yet complete:
-  - `Section` model for solver-facing property assignment
+  - richer `Section` model for solver-facing property assignment
   - smarter selection workflows, including face-oriented and geometry-assisted selection
   - pre-run `model check` validation before launching the solver
 
@@ -445,7 +470,7 @@ Recommended rule:
 Use a compact block like this before starting a change:
 
 For a reusable standalone version, see:
-- `TASK_CONTEXT_TEMPLATE.md`
+- `docs/TASK_CONTEXT_TEMPLATE.md`
 
 ```text
 Task:

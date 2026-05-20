@@ -41,6 +41,7 @@
 #include "move_part_dialog.h"
 
 #include "Material.h"
+#include "Section.h"
 
 #include "job_dialog.h"
 #include "interaction_props_dialog.h"
@@ -333,6 +334,7 @@ protected:
   Model *m_model;
   bool is_model = false;
   Material_ *selected_mat = nullptr;
+  Section *selected_section = nullptr;
   Part      *selected_prt = nullptr;
   Part      *highlighted_prt = nullptr;
   Part      *hovered_prt = nullptr;

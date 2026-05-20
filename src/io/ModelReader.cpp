@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "Part.h"
 #include "Material.h"
+#include "Section.h"
 #include "Geom.h"
 #include "Node.h"
 #include "json_io.h"
@@ -269,6 +270,22 @@ bool ModelReader::readFromFile(const std::string& fname) {
     }
 
     // =============================================================
+    // Sections
+    // =============================================================
+    if (j.contains("Sections") && j["Sections"].is_array()) {
+        cout << "[ModelReader] Reading " << j["Sections"].size() << " section(s)" << endl;
+        for (const auto& jsection : j["Sections"]) {
+            Section* section = new Section();
+            section->setId(jsection.value("id", -1));
+            section->setName(jsection.value("name", std::string()));
+            section->setMaterialIndex(jsection.value("materialIndex", -1));
+            section->setIntendedElementType(jsection.value("intendedElementType", std::string("Auto")));
+            section->setThickness(jsection.value("thickness", 1.0));
+            m_model->addSection(section);
+        }
+    }
+
+    // =============================================================
     // Parts
     // =============================================================
     if (j.contains("model") && j["model"].contains("parts")) {
@@ -313,6 +330,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
             if (jpart.contains("id"))
                 part->setId(jpart["id"].get<int>());
+            if (jpart.contains("sectionId"))
+                part->setSectionId(jpart["sectionId"].get<int>());
 
             // --- Mesh ---
             if (jpart.contains("mesh") && jpart["mesh"].contains("source")) {

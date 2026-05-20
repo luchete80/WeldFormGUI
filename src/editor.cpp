@@ -33,6 +33,7 @@
 #include "action.h"
 #include "model/SetWorkflow.h"
 #include "model/ElementType.h"
+#include "model/Section.h"
 
 //#include "SceneView.h"
 
@@ -257,6 +258,86 @@ std::string buildElementTypeSummary(Mesh* mesh)
     first = false;
   }
   return oss.str();
+}
+
+int nextAvailableSectionId(Model* model)
+{
+  if (model == nullptr) {
+    return 0;
+  }
+
+  int maxId = -1;
+  for (int i = 0; i < model->getSectionCount(); ++i) {
+    Section* section = model->getSection(i);
+    if (section != nullptr && section->getId() > maxId) {
+      maxId = section->getId();
+    }
+  }
+  return maxId + 1;
+}
+
+std::string sectionDisplayName(Section* section)
+{
+  if (section == nullptr) {
+    return "None";
+  }
+
+  if (!section->getName().empty()) {
+    return section->getName();
+  }
+
+  return "Section_" + std::to_string(section->getId());
+}
+
+std::string materialDisplayName(Model* model, int materialIndex)
+{
+  if (model == nullptr || materialIndex < 0 || materialIndex >= model->getMaterialCount()) {
+    return "None";
+  }
+
+  return "Material " + std::to_string(materialIndex);
+}
+
+const char* partSectionPreview(Model* model, Part* part)
+{
+  if (model == nullptr || part == nullptr || part->getSectionId() < 0) {
+    return "None";
+  }
+
+  Section* section = model->findSectionById(part->getSectionId());
+  if (section == nullptr) {
+    return "Missing";
+  }
+
+  return section->getName().empty() ? "Unnamed" : section->getName().c_str();
+}
+
+void removeSectionFromModel(Model* model, int sectionIndex, Section*& selectedSection)
+{
+  if (model == nullptr || sectionIndex < 0 || sectionIndex >= model->getSectionCount()) {
+    return;
+  }
+
+  Section* section = model->getSection(sectionIndex);
+  if (section == nullptr) {
+    model->delSection(sectionIndex);
+    return;
+  }
+
+  const int sectionId = section->getId();
+  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    Part* part = model->getPart(partIndex);
+    if (part != nullptr && part->getSectionId() == sectionId) {
+      part->setSectionId(-1);
+    }
+  }
+
+  if (selectedSection == section) {
+    selectedSection = nullptr;
+  }
+
+  delete section;
+  model->delSection(sectionIndex);
 }
 }
 
@@ -4495,6 +4576,37 @@ void Editor::drawGui() {
                   hovered_prt = treePart;
                 }
 
+                const std::string sectionComboLabel =
+                  "Section##part_section_" + std::to_string(treePart->getId());
+                if (ImGui::BeginCombo(sectionComboLabel.c_str(), partSectionPreview(m_model, treePart))) {
+                  const bool noSectionSelected = (treePart->getSectionId() < 0);
+                  if (ImGui::Selectable("None", noSectionSelected)) {
+                    treePart->setSectionId(-1);
+                  }
+
+                  for (int sectionIndex = 0; sectionIndex < m_model->getSectionCount(); ++sectionIndex) {
+                    Section* section = m_model->getSection(sectionIndex);
+                    if (section == nullptr) {
+                      continue;
+                    }
+
+                    const bool isSelected = (treePart->getSectionId() == section->getId());
+                    const std::string label = sectionDisplayName(section) +
+                      " [id " + std::to_string(section->getId()) + "]";
+                    if (ImGui::Selectable(label.c_str(), isSelected)) {
+                      treePart->setSectionId(section->getId());
+                    }
+                    if (isSelected) {
+                      ImGui::SetItemDefaultFocus();
+                    }
+                  }
+                  ImGui::EndCombo();
+                }
+                if (ImGui::IsItemHovered()) {
+                  part_branch_hovered = true;
+                  hovered_prt = treePart;
+                }
+
 	            if (treePart->isMeshed()){
                   if (expand_model_tree_once) {
                     ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -4805,6 +4917,122 @@ void Editor::drawGui() {
                }
              }
              ImGui::TreePop();
+          }
+
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
+          open_ = ImGui::TreeNode("Sections");
+          if (ImGui::BeginPopupContextItem())
+          {
+            if (ImGui::MenuItem("New")) {
+              Section* section = new Section();
+              const int sectionId = nextAvailableSectionId(m_model);
+              section->setId(sectionId);
+              section->setName("Section_" + std::to_string(sectionId));
+              section->setMaterialIndex(m_model->getMaterialCount() > 0 ? 0 : -1);
+              m_model->addSection(section);
+              selected_section = section;
+            }
+            ImGui::EndPopup();
+          }
+          if (open_) {
+            if (m_model->getSectionCount() == 0) {
+              ImGui::TextDisabled("No sections created.");
+            }
+
+            for (int i = 0; i < m_model->getSectionCount(); ++i) {
+              Section* section = m_model->getSection(i);
+              if (section == nullptr) {
+                continue;
+              }
+
+              bool deleteSection = false;
+
+              if (ImGui::TreeNode((void*)(intptr_t)section->getId(), "%s [id %d]",
+                                  sectionDisplayName(section).c_str(),
+                                  section->getId()))
+              {
+                selected_section = section;
+                if (ImGui::BeginPopupContextItem()) {
+                  if (ImGui::MenuItem("Delete")) {
+                    deleteSection = true;
+                  }
+                  ImGui::EndPopup();
+                }
+
+                if (deleteSection) {
+                  ImGui::TreePop();
+                  removeSectionFromModel(m_model, i, selected_section);
+                  --i;
+                  continue;
+                }
+
+                char nameBuffer[128];
+                std::snprintf(nameBuffer, sizeof(nameBuffer), "%s", section->getName().c_str());
+                if (ImGui::InputText(("Name##section_name_" + std::to_string(section->getId())).c_str(),
+                                     nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
+                  section->setName(nameBuffer);
+                }
+
+                const std::string materialComboLabel =
+                  "Material##section_mat_" + std::to_string(section->getId());
+                if (ImGui::BeginCombo(materialComboLabel.c_str(),
+                                      materialDisplayName(m_model, section->getMaterialIndex()).c_str())) {
+                  const bool noMaterialSelected = (section->getMaterialIndex() < 0);
+                  if (ImGui::Selectable("None", noMaterialSelected)) {
+                    section->setMaterialIndex(-1);
+                  }
+
+                  for (int materialIndex = 0; materialIndex < m_model->getMaterialCount(); ++materialIndex) {
+                    const bool isSelected = (section->getMaterialIndex() == materialIndex);
+                    const std::string label = materialDisplayName(m_model, materialIndex) +
+                      " [index " + std::to_string(materialIndex) + "]";
+                    if (ImGui::Selectable(label.c_str(), isSelected)) {
+                      section->setMaterialIndex(materialIndex);
+                    }
+                    if (isSelected) {
+                      ImGui::SetItemDefaultFocus();
+                    }
+                  }
+                  ImGui::EndCombo();
+                }
+
+                static const char* kSectionElementTargets[] = {"Auto", "Line2", "Tria3", "Quad4", "Tetra4", "Hexa8"};
+                int currentTargetIndex = 0;
+                for (int targetIndex = 0; targetIndex < IM_ARRAYSIZE(kSectionElementTargets); ++targetIndex) {
+                  if (section->getIntendedElementType() == kSectionElementTargets[targetIndex]) {
+                    currentTargetIndex = targetIndex;
+                    break;
+                  }
+                }
+                if (ImGui::Combo(("Target Type##section_target_" + std::to_string(section->getId())).c_str(),
+                                 &currentTargetIndex,
+                                 kSectionElementTargets,
+                                 IM_ARRAYSIZE(kSectionElementTargets))) {
+                  section->setIntendedElementType(kSectionElementTargets[currentTargetIndex]);
+                }
+
+                double thickness = section->getThickness();
+                if (ImGui::InputDouble(("Thickness##section_thickness_" + std::to_string(section->getId())).c_str(),
+                                       &thickness, 0.0, 0.0, "%.6f")) {
+                  section->setThickness(thickness);
+                }
+
+                ImGui::TreePop();
+              } else if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Delete")) {
+                  deleteSection = true;
+                }
+                ImGui::EndPopup();
+              }
+
+              if (deleteSection) {
+                removeSectionFromModel(m_model, i, selected_section);
+                --i;
+              }
+            }
+            ImGui::TreePop();
           }
 
           if (expand_model_tree_once) {

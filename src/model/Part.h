@@ -8,6 +8,7 @@
 using namespace std;
 
 class Geom;
+class Section;
 
 enum Part_Type {Elastic=0, Rigid};
 
@@ -51,6 +52,8 @@ public:
     if (t==0) m_type = Elastic;
     else if (t==1)m_type = Rigid;
   }
+  int getSectionId() const { return m_section_id; }
+  void setSectionId(int section_id) { m_section_id = section_id; }
   
   const bool isMeshed () const{return m_ismeshed;}
   const bool isGeom () const{return m_isgeom;}
@@ -60,6 +63,7 @@ protected:
   Part_Type m_type;
   Geom* m_geom = nullptr;
   std::string m_mesh_source_file;
+  int m_section_id = -1;
   bool m_ismeshed;
   bool m_isgeom;
   

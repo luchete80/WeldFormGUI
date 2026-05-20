@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <system_error>
 #include "Material.h"
+#include "Section.h"
 #include "Geom.h"
 #include "Node.h"
 
@@ -153,6 +154,24 @@ void ModelWriter::writeToFile(std::string fname){
     cout << "Done."<<endl;
   }
 
+  if (m_model.getSectionCount() > 0) {
+    m_json["Sections"] = json::array();
+    for (int i = 0; i < m_model.getSectionCount(); ++i) {
+      Section* section = m_model.getSection(i);
+      if (section == nullptr) {
+        continue;
+      }
+
+      json jsection;
+      jsection["id"] = section->getId();
+      jsection["name"] = section->getName();
+      jsection["materialIndex"] = section->getMaterialIndex();
+      jsection["intendedElementType"] = section->getIntendedElementType();
+      jsection["thickness"] = section->getThickness();
+      m_json["Sections"].push_back(jsection);
+    }
+  }
+
 
   cout << "Loop thorough " <<m_model.getPartCount()<<" parts..."<<endl;
   int i = 0;
@@ -164,6 +183,7 @@ void ModelWriter::writeToFile(std::string fname){
 
       //if (!part->getName().empty())
           jpart["name"] = part->getName();
+      jpart["sectionId"] = part->getSectionId();
       //else
       //    jpart["name"] = "Part_" + std::to_string(part->getId());
           
