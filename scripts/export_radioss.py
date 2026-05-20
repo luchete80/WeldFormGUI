@@ -157,6 +157,44 @@ def _element_keyword(mesh_dim, elem):
     )
 
 
+def _node_by_id(mesh, node_id):
+    for node_index in range(mesh.getNodeCount()):
+        node = mesh.getNode(node_index)
+        if node is not None and int(node.getId()) == int(node_id):
+            return node
+    return None
+
+
+def _signed_area_2d(mesh, node_ids):
+    points = []
+    for node_id in node_ids:
+        node = _node_by_id(mesh, node_id)
+        if node is None:
+            return 0.0
+        points.append((float(node.getPos(0)), float(node.getPos(1))))
+
+    area2 = 0.0
+    for index in range(len(points)):
+        x1, y1 = points[index]
+        x2, y2 = points[(index + 1) % len(points)]
+        area2 += x1 * y2 - x2 * y1
+    return 0.5 * area2
+
+
+def _radioss_connectivity(mesh, mesh_dim, elem):
+    node_ids = [elem.getNodeId(local_node) for local_node in range(elem.getNodeCount())]
+    if mesh_dim != 2:
+        return node_ids
+
+    area = _signed_area_2d(mesh, node_ids)
+    if area < 0.0:
+        if len(node_ids) == 3:
+            return [node_ids[0], node_ids[2], node_ids[1]]
+        if len(node_ids) == 4:
+            return [node_ids[0], node_ids[3], node_ids[2], node_ids[1]]
+    return node_ids
+
+
 def _element_type_name(mesh_dim, elem):
     node_count = elem.getNodeCount()
     if mesh_dim == 2:
@@ -521,8 +559,8 @@ def _write_elements(part_records, out):
             out.write(f"{keyword}/{part_id}\n")
             for elem_index, elem in elems:
                 fields = [elem_index + 1]
-                for local_node in range(elem.getNodeCount()):
-                    fields.append(elem.getNodeId(local_node))
+                for node_id in _radioss_connectivity(mesh, mesh_dim, elem):
+                    fields.append(node_id)
                 if keyword == "/SH3N":
                     fields += [0.0, 1.0]
                 elif keyword == "/SHELL":
