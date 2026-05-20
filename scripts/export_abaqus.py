@@ -20,6 +20,22 @@ DISPLACEMENT_BC = 1
 SYMMETRY_BC = 2
 
 
+def _active_model():
+    try:
+        return get_active_model()
+    except NameError:
+        return getApp().getActiveModel()
+
+
+def _validate_model_for_export(profile_name="General"):
+    try:
+        report = run_active_model_check_report(profile_name)
+        if active_model_check_has_errors(profile_name):
+            raise RuntimeError(report.strip())
+    except NameError:
+        pass
+
+
 def _safe_part_name(part, fallback_index):
     name = part.getName()
     if name:
@@ -457,7 +473,8 @@ def export_model_to_abaqus(model, output_path):
 
 
 def export_active_model_to_abaqus(output_path=None):
-    model = getApp().getActiveModel()
+    model = _active_model()
+    _validate_model_for_export("Abaqus")
     if output_path is None:
         output_path = _default_output_path(model)
     export_model_to_abaqus(model, output_path)

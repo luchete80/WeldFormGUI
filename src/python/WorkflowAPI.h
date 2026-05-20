@@ -6,6 +6,7 @@
 #include "../graphicmesh/GraphicMesh.h"
 #include "../io/InputWriter.h"
 #include "../io/ModelWriter.h"
+#include "../modelcheck/ModelCheck.h"
 #include "../model/BoundaryCondition.h"
 #include "../model/Material.h"
 #include "../model/Mesh.h"
@@ -24,6 +25,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <system_error>
 #include <string>
 #include <vector>
@@ -466,6 +468,18 @@ inline std::filesystem::path resolve_solver_executable_path(const std::filesyste
   return {};
 }
 
+inline wfgui::modelcheck::CheckProfile model_check_profile_from_string(const std::string& profile_name)
+{
+  const std::string normalized = to_lower_copy(profile_name);
+  if (normalized == "weldform")
+    return wfgui::modelcheck::CheckProfile::WeldForm;
+  if (normalized == "abaqus")
+    return wfgui::modelcheck::CheckProfile::Abaqus;
+  if (normalized == "openradioss" || normalized == "radioss")
+    return wfgui::modelcheck::CheckProfile::OpenRadioss;
+  return wfgui::modelcheck::CheckProfile::General;
+}
+
 inline int launch_detached_process(const std::filesystem::path& executable_path,
                                    const std::filesystem::path& input_path)
 {
@@ -602,6 +616,39 @@ inline int get_active_model_analysis_type()
   if (model == nullptr)
     return Solid3D;
   return static_cast<int>(model->getAnalysisType());
+}
+
+inline std::string run_active_model_check_report(const std::string& profile_name = "General")
+{
+  Model* model = get_active_model();
+  if (model == nullptr)
+    return "Model Check [General]: active model is null.\n";
+
+  wfgui::modelcheck::CheckContext context;
+  context.model = model;
+  context.profile = wfgui::workflow::model_check_profile_from_string(profile_name);
+
+  const wfgui::modelcheck::CheckReport report = wfgui::modelcheck::ModelChecker::run(context);
+
+  std::ostringstream oss;
+  oss << wfgui::modelcheck::formatSummary(report) << "\n";
+  for (const auto& issue : report.issues)
+    oss << wfgui::modelcheck::formatIssue(issue) << "\n";
+  return oss.str();
+}
+
+inline bool active_model_check_has_errors(const std::string& profile_name = "General")
+{
+  Model* model = get_active_model();
+  if (model == nullptr)
+    return true;
+
+  wfgui::modelcheck::CheckContext context;
+  context.model = model;
+  context.profile = wfgui::workflow::model_check_profile_from_string(profile_name);
+
+  const wfgui::modelcheck::CheckReport report = wfgui::modelcheck::ModelChecker::run(context);
+  return wfgui::modelcheck::hasErrors(report);
 }
 
 inline void set_active_model_contact_properties(double penalty_factor,

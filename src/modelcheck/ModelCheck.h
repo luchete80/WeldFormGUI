@@ -29,7 +29,9 @@ enum class CheckCategory {
 
 enum class CheckProfile {
   General,
-  WeldForm
+  WeldForm,
+  Abaqus,
+  OpenRadioss
 };
 
 struct CheckIssue {

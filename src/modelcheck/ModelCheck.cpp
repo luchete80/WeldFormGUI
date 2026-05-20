@@ -82,6 +82,41 @@ bool partHasBulkElements(Part* part)
   return false;
 }
 
+bool isOpenRadiossTopologySupported(int meshDim, Element* element)
+{
+  if (element == nullptr) {
+    return false;
+  }
+
+  const int nodeCount = element->getNodeCount();
+  if (meshDim == 2) {
+    return nodeCount == 2 || nodeCount == 3 || nodeCount == 4;
+  }
+  return nodeCount == 3 || nodeCount == 4 || nodeCount == 8;
+}
+
+bool isAbaqusTopologySupported(AnalysisType analysisType, int meshDim, Element* element)
+{
+  if (element == nullptr) {
+    return false;
+  }
+
+  const int nodeCount = element->getNodeCount();
+  if (nodeCount == 2) {
+    return true;
+  }
+
+  switch (analysisType) {
+    case PlaneStress2D:
+    case PlaneStrain2D:
+    case Axisymmetric2D:
+      return meshDim == 2 && (nodeCount == 3 || nodeCount == 4);
+    case Solid3D:
+    default:
+      return nodeCount == 4 || nodeCount == 6 || nodeCount == 8;
+  }
+}
+
 void addIssue(CheckReport& report,
               CheckSeverity severity,
               CheckCategory category,
@@ -579,6 +614,105 @@ void runWeldFormChecks(const CheckContext& context, CheckReport& report)
   }
 }
 
+void runOpenRadiossChecks(const CheckContext& context, CheckReport& report)
+{
+  Model* model = context.model;
+  if (model == nullptr) {
+    return;
+  }
+
+  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    Part* part = model->getPart(partIndex);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    const int meshDim = mesh->getDim();
+    int boundaryElementCount = 0;
+    int bulkElementCount = 0;
+    bool rigidBoundaryOnlyPart = (part->getType() == Rigid);
+
+    for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+      Element* element = mesh->getElem(elemIndex);
+      if (element == nullptr) {
+        continue;
+      }
+
+      const ElementUsage usage = inferElementUsage(mesh, element);
+      if (usage == ElementUsage::Boundary) {
+        ++boundaryElementCount;
+      } else if (usage == ElementUsage::Bulk) {
+        ++bulkElementCount;
+        rigidBoundaryOnlyPart = false;
+      } else {
+        rigidBoundaryOnlyPart = false;
+      }
+
+      if (!isOpenRadiossTopologySupported(meshDim, element)) {
+        const CheckSeverity severity = rigidBoundaryOnlyPart
+          ? CheckSeverity::Warning
+          : CheckSeverity::Error;
+        addIssue(report,
+                 severity,
+                 CheckCategory::ExportCompatibility,
+                 "OPENRADIOSS_TOPOLOGY_UNSUPPORTED",
+                 "OpenRadioss exporter does not support part " + std::to_string(part->getId()) +
+                   " element topology " + toString(inferElementType(mesh, element)) + ".",
+                 part->getId());
+        break;
+      }
+    }
+
+    if (part->getType() == Rigid && boundaryElementCount > 0 && bulkElementCount == 0) {
+      addIssue(report,
+               CheckSeverity::Warning,
+               CheckCategory::ExportCompatibility,
+               "OPENRADIOSS_RIGID_BOUNDARY_SKIPPED",
+               "Rigid part " + std::to_string(part->getId()) +
+                 " contains only boundary elements and current OpenRadioss export skips rigid boundary parts.",
+               part->getId());
+    }
+  }
+}
+
+void runAbaqusChecks(const CheckContext& context, CheckReport& report)
+{
+  Model* model = context.model;
+  if (model == nullptr) {
+    return;
+  }
+
+  const AnalysisType analysisType = model->getAnalysisType();
+  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    Part* part = model->getPart(partIndex);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    Mesh* mesh = part->getMesh();
+    const int meshDim = mesh->getDim();
+    for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+      Element* element = mesh->getElem(elemIndex);
+      if (element == nullptr) {
+        continue;
+      }
+
+      if (!isAbaqusTopologySupported(analysisType, meshDim, element)) {
+        addIssue(report,
+                 CheckSeverity::Error,
+                 CheckCategory::ExportCompatibility,
+                 "ABAQUS_TOPOLOGY_UNSUPPORTED",
+                 "Abaqus exporter does not support part " + std::to_string(part->getId()) +
+                   " element topology " + toString(inferElementType(mesh, element)) +
+                   " for the current analysis type.",
+                 part->getId());
+        break;
+      }
+    }
+  }
+}
+
 }  // namespace
 
 CheckReport ModelChecker::run(const CheckContext& context)
@@ -590,6 +724,10 @@ CheckReport ModelChecker::run(const CheckContext& context)
 
   if (context.profile == CheckProfile::WeldForm) {
     runWeldFormChecks(context, report);
+  } else if (context.profile == CheckProfile::OpenRadioss) {
+    runOpenRadiossChecks(context, report);
+  } else if (context.profile == CheckProfile::Abaqus) {
+    runAbaqusChecks(context, report);
   }
 
   return report;
@@ -645,6 +783,10 @@ const char* toString(CheckProfile profile)
       return "General";
     case CheckProfile::WeldForm:
       return "WeldForm";
+    case CheckProfile::Abaqus:
+      return "Abaqus";
+    case CheckProfile::OpenRadioss:
+      return "OpenRadioss";
   }
   return "General";
 }

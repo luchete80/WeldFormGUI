@@ -25,6 +25,15 @@ def _active_model():
         return getApp().getActiveModel()
 
 
+def _validate_model_for_export(profile_name="General"):
+    try:
+        report = run_active_model_check_report(profile_name)
+        if active_model_check_has_errors(profile_name):
+            raise RuntimeError(report.strip())
+    except NameError:
+        pass
+
+
 def _safe_name(name, fallback):
     if name:
         cleaned = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in name.strip())
@@ -279,6 +288,93 @@ def _write_nodes(model, out):
             )
 
 
+def _max_node_id(model):
+    max_id = 0
+    for part_index in range(model.getPartCount()):
+        part = model.getPart(part_index)
+        if part is None or part.getMesh() is None:
+            continue
+        mesh = part.getMesh()
+        for node_index in range(mesh.getNodeCount()):
+            node = mesh.getNode(node_index)
+            if node is not None:
+                max_id = max(max_id, int(node.getId()))
+    return max_id
+
+
+def _boundary_part_centroid(mesh):
+    count = 0
+    sx = 0.0
+    sy = 0.0
+    sz = 0.0
+
+    for node_index in range(mesh.getNodeCount()):
+        node = mesh.getNode(node_index)
+        if node is None:
+            continue
+        sx += float(node.getPos(0))
+        sy += float(node.getPos(1))
+        sz += float(node.getPos(2))
+        count += 1
+
+    if count <= 0:
+        return 0.0, 0.0, 0.0
+    return sx / count, sy / count, sz / count
+
+
+def _build_rigid_part_records(model):
+    records = []
+    next_ref_node_id = _max_node_id(model) + 1
+
+    for part_index in range(model.getPartCount()):
+        part = model.getPart(part_index)
+        if part is None or part.getMesh() is None:
+            continue
+
+        if part.getType() != 1:
+            continue
+
+        mesh = part.getMesh()
+        mesh_dim = _infer_mesh_dimension(mesh)
+        exportable_elements, skipped_boundary_elements, skipped_unsupported_elements = (
+            _collect_exportable_elements(part, mesh, mesh_dim)
+        )
+
+        if exportable_elements:
+            continue
+        if not skipped_boundary_elements:
+            continue
+
+        cx, cy, cz = _boundary_part_centroid(mesh)
+        records.append(
+            {
+                "part": part,
+                "part_index": part_index,
+                "part_name": _safe_part_name(part, part_index),
+                "mesh": mesh,
+                "mesh_dim": mesh_dim,
+                "boundary_elements": skipped_boundary_elements,
+                "unsupported_elements": skipped_unsupported_elements,
+                "reference_node_id": next_ref_node_id,
+                "reference_point": (cx, cy, cz),
+            }
+        )
+        next_ref_node_id += 1
+
+    return records
+
+
+def _write_rigid_reference_nodes(rigid_part_records, out):
+    for record in rigid_part_records:
+        x, y, z = record["reference_point"]
+        out.write(
+            _write_int_field(record["reference_node_id"], 10) +
+            _write_float_field(x, 20, 10) +
+            _write_float_field(y, 20, 10) +
+            _write_float_field(z, 20, 10) + "\n"
+        )
+
+
 def _write_materials(model, out):
     material_count = model.getMaterialCount()
     if material_count <= 0:
@@ -324,7 +420,7 @@ def _write_properties_and_parts(model, out, material_ids):
                 out.write(
                     f"# Skipping part {part_name}: {part_type_name} part contains only boundary elements "
                     f"({', '.join(_element_type_name(mesh_dim, elem) for _, elem in skipped_boundary_elements[:3])}) "
-                    "and rigid Radioss export is not implemented yet.\n"
+                    "and is handled separately as a rigid body candidate.\n"
                 )
             else:
                 out.write(
@@ -381,6 +477,7 @@ def _write_properties_and_parts(model, out, material_ids):
         part_records.append(
             {
                 "part": part,
+                "target_part_id": part.getId(),
                 "part_id": part_id,
                 "part_name": part_name,
                 "mesh": mesh,
@@ -437,6 +534,7 @@ def _write_node_groups(part_records, out):
     group_records = {
         "part_groups": {},
         "set_groups": {},
+        "rigid_ref_groups": {},
     }
 
     next_group_id = 1
@@ -445,7 +543,7 @@ def _write_node_groups(part_records, out):
         mesh = record["mesh"]
         part_group_id = next_group_id
         next_group_id += 1
-        group_records["part_groups"][record["part_id"]] = part_group_id
+        group_records["part_groups"][record["target_part_id"]] = part_group_id
 
         out.write(f"/GRNOD/NODE/{part_group_id}\n")
         out.write(f"{record['part_name']}_all_nodes\n")
@@ -472,8 +570,79 @@ def _write_node_groups(part_records, out):
     return group_records
 
 
+def _write_rigid_body_groups(rigid_part_records, out, group_records, start_group_id):
+    next_group_id = start_group_id
+
+    for record in rigid_part_records:
+        part_group_id = next_group_id
+        next_group_id += 1
+        group_records["part_groups"][record["part"].getId()] = part_group_id
+
+        out.write(f"/GRNOD/NODE/{part_group_id}\n")
+        out.write(f"{record['part_name']}_rigid_nodes\n")
+        node_ids = [record["mesh"].getNode(i).getId() for i in range(record["mesh"].getNodeCount())]
+        for start in range(0, len(node_ids), 10):
+            out.write("".join(_write_int_field(node_id, 10) for node_id in node_ids[start:start + 10]) + "\n")
+
+        ref_group_id = next_group_id
+        next_group_id += 1
+        group_records["rigid_ref_groups"][record["part"].getId()] = ref_group_id
+
+        out.write(f"/GRNOD/NODE/{ref_group_id}\n")
+        out.write(f"{record['part_name']}_ref_node\n")
+        out.write(_write_int_field(record["reference_node_id"], 10) + "\n")
+
+    return next_group_id
+
+
+def _write_rigid_bodies(rigid_part_records, group_records, out):
+    if not rigid_part_records:
+        return
+
+        out.write("# Rigid body definitions generated for boundary-only rigid parts.\n")
+    out.write("# Boundary line element export card is still pending; RBODY uses the rigid part node group and reference node.\n")
+
+    unit_id = 1
+    for rigid_index, record in enumerate(rigid_part_records, start=1):
+        part_id = record["part"].getId()
+        sens_group_id = group_records["part_groups"].get(part_id)
+        if sens_group_id is None:
+            out.write(f"# Skipping RBODY for {record['part_name']}: missing node group.\n")
+            continue
+
+        out.write(f"/RBODY/{rigid_index}/{unit_id}\n")
+        out.write(f"{record['part_name']}_rbody\n")
+        out.write(
+            _write_int_field(record["reference_node_id"], 10) +
+            _write_int_field(sens_group_id, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) + "\n"
+        )
+        out.write(
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) + "\n"
+        )
+        out.write(
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) + "\n"
+        )
+        out.write(
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) + "\n"
+        )
+
+
 def _bc_target_group_id(bc, group_records):
     if bc.getApplyTo() == APPLY_TO_PART:
+        if bc.getTargetId() in group_records.get("rigid_ref_groups", {}):
+            return group_records["rigid_ref_groups"].get(bc.getTargetId())
         return group_records["part_groups"].get(bc.getTargetId())
     if bc.getApplyTo() == APPLY_TO_NODE_SET:
         record = group_records["set_groups"].get(bc.getTargetId())
@@ -672,15 +841,24 @@ def export_model_to_radioss(model, output_root):
     engine_path = _engine_path(output_root)
     title = model.getName() or run_name
     t_stop = _simulation_time(model)
+    rigid_part_records = _build_rigid_part_records(model)
 
     with open(starter_path, "w", encoding="ascii") as out:
         _write_header_and_begin(out, run_name, title)
         _write_analysis_block(model, out)
         _write_nodes(model, out)
+        _write_rigid_reference_nodes(rigid_part_records, out)
         material_ids = _write_materials(model, out)
         part_records = _write_properties_and_parts(model, out, material_ids)
         _write_elements(part_records, out)
         group_records = _write_node_groups(part_records, out)
+        _write_rigid_body_groups(
+            rigid_part_records,
+            out,
+            group_records,
+            len(group_records["part_groups"]) + len(group_records["set_groups"]) + 1
+        )
+        _write_rigid_bodies(rigid_part_records, group_records, out)
         _write_boundary_conditions(model, out, group_records, t_stop)
         out.write("/END\n")
 
@@ -692,6 +870,7 @@ def export_model_to_radioss(model, output_root):
 
 def export_active_model_to_radioss(output_root=None):
     model = _active_model()
+    _validate_model_for_export("OpenRadioss")
     if output_root is None:
         output_root = _default_output_root(model)
     export_model_to_radioss(model, output_root)

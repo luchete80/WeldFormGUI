@@ -8,6 +8,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 FILE(GLOB SRCS Dummy.h *.h *.cpp)
 list(APPEND SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/WorkflowBridge.cpp
+  ${CMAKE_SOURCE_DIR}/src/modelcheck/ModelCheck.cpp
 )
 FILE(GLOB ISRCS *.i)
 
