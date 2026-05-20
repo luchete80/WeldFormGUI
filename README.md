@@ -1,15 +1,17 @@
 # WeldFormGUI
 
-WeldFormGUI
-Open-source simulation and scripting platform for engineering workflows.
-Featuring:
-- geometry creation,
-- meshing (gmsh & own quad mesher),
-- early Python scripting support,
-- integrated solver workflows,
-- postprocessing and animation,
-- visualization tools,
-and extensible automation pipelines.
+<!-- Logo placeholder -->
+<!-- ![WeldFormGUI Logo](docs/images/logo.png) -->
+
+![GUI overview](docs/images/202605_GUI.gif)
+
+Lightweight programmable FEM workflow platform.
+
+- Geometry creation and STEP import
+- Meshing with Gmsh and custom 2D workflows
+- Python-driven model building and automation
+- Integrated explicit and implicit solver workflows
+- Postprocessing, animation and visualization tools
 
 ## Documentation
 
@@ -33,11 +35,7 @@ Current demo release includes:
 - preprocessing and postprocessing workflow,
 - animated result visualization.
 
-The goal of this release is to provide a complete end-to-end FEM workflow experience for educational and research purposes.
-
-inside a unified workflow focused on nonlinear large deformation problems.
-
-![GUI overview](docs/images/202605_GUI.gif)
+The goal of this release is to provide a complete end-to-end FEM workflow experience for educational and research purposes inside a unified workflow focused on nonlinear large deformation problems.
 
 ![GUI screenshot 1](docs/images/ss_1.png)
 ![GUI screenshot 2](docs/images/ss_2.png)
