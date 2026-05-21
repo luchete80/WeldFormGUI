@@ -9,6 +9,51 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "implot.h"
+
+#include <algorithm>
+
+namespace {
+
+void ensureAmplitudeTableDefaults(std::vector<double> &timeValues,
+                                  std::vector<double> &amplitudeValues) {
+    if (timeValues.size() == amplitudeValues.size() && timeValues.size() >= 2)
+        return;
+
+    timeValues = {0.0, 1.0};
+    amplitudeValues = {1.0, 1.0};
+}
+
+void buildAmplitudePlotData(const std::vector<double> &timeValues,
+                            const std::vector<double> &amplitudeValues,
+                            std::vector<double> &plotTime,
+                            std::vector<double> &plotAmplitude) {
+    plotTime.clear();
+    plotAmplitude.clear();
+
+    const std::size_t pointCount = (std::min)(timeValues.size(), amplitudeValues.size());
+    if (pointCount == 0)
+        return;
+
+    std::vector<std::pair<double, double>> points;
+    points.reserve(pointCount);
+    for (std::size_t i = 0; i < pointCount; ++i)
+        points.push_back({timeValues[i], amplitudeValues[i]});
+
+    std::stable_sort(points.begin(), points.end(),
+                     [](const std::pair<double, double> &lhs, const std::pair<double, double> &rhs) {
+                         return lhs.first < rhs.first;
+                     });
+
+    plotTime.reserve(pointCount);
+    plotAmplitude.reserve(pointCount);
+    for (const auto &point : points) {
+        plotTime.push_back(point.first);
+        plotAmplitude.push_back(point.second);
+    }
+}
+
+}
 
 
 //// IS DOUBLE ONLY TO MODIDY PTR.
@@ -34,16 +79,24 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
 
     bool m_isSymmetry = false;
     
-    bool create = (*sel_bc == nullptr);  
+    bool create = true;
     //cout << "sel bc "<<*sel_bc<<endl; 
     
     if (!initialized) {
-        if (!create && *sel_bc) {
-          Condition* bc = *sel_bc;  // ✔ obtener BC real
+        m_editTarget = *sel_bc;
+        m_editingExisting = (m_editTarget != nullptr);
+        create = !m_editingExisting;
+
+        if (m_editingExisting) {
+          Condition* bc = m_editTarget;  // ✔ obtener BC real
             m_applyTo = (bc->getApplyTo() == ApplyToPart) ? 0 : 1;
             m_targetId = bc->getTargetId();
             m_vel = bc->getValue();
             m_normal = bc->getNormal();
+            m_valueType = static_cast<int>(bc->getValueType());
+            m_amplitudeFactor = bc->getAmplitudeFactor();
+            m_amplitudeTime = bc->getAmplitudeTime();
+            m_amplitudeValue = bc->getAmplitudeValue();
             m_dof_mask[0] = bc->getDofMaskX();
             m_dof_mask[1] = bc->getDofMaskY();
             m_dof_mask[2] = bc->getDofMaskZ();
@@ -66,8 +119,15 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         m_dof_mask[0] = true;
         m_dof_mask[1] = true;
         m_dof_mask[2] = true;
+        m_valueType = 0;
+        m_amplitudeFactor = 1.0;
+        m_amplitudeTime = {0.0, 1.0};
+        m_amplitudeValue = {1.0, 1.0};
         }
         initialized = true;
+    }
+    else {
+        create = !m_editingExisting;
     }
 
     if (!ImGui::Begin(title, p_open)) {
@@ -227,14 +287,66 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     }
 
     if (bcType == 0 || bcType == 1) {
+        ImGui::Text("Value Mode:");
+        ImGui::RadioButton("Constant", &m_valueType, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Function", &m_valueType, 1);
+
         float v[3] = {
             static_cast<float>(m_vel.x),
             static_cast<float>(m_vel.y),
             static_cast<float>(m_vel.z)
         };
-        const char* valueLabel = (bcType == 0) ? "Velocity" : "Displacement";
+        const char* valueLabel = (bcType == 0)
+            ? (m_valueType == 0 ? "Velocity" : "Velocity Base")
+            : (m_valueType == 0 ? "Displacement" : "Displacement Base");
         ImGui::InputFloat3(valueLabel, v, "%.3f");
         m_vel = make_double3(v[0], v[1], v[2]);
+
+        if (m_valueType == 1) {
+            ensureAmplitudeTableDefaults(m_amplitudeTime, m_amplitudeValue);
+
+            ImGui::SetNextItemWidth(140.0f);
+            ImGui::InputDouble("Amplitude Factor", &m_amplitudeFactor, 0.0, 0.0, "%.6g");
+            ImGui::TextDisabled("Applied value = base vector * factor * amplitude(t)");
+
+            for (int i = 0; i < static_cast<int>(m_amplitudeTime.size()); ++i) {
+                ImGui::PushID(i);
+                ImGui::SetNextItemWidth(120.0f);
+                ImGui::InputDouble("Time", &m_amplitudeTime[i], 0.0, 0.0, "%.6g");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(120.0f);
+                ImGui::InputDouble("Scale", &m_amplitudeValue[i], 0.0, 0.0, "%.6g");
+                ImGui::PopID();
+            }
+
+            if (ImGui::Button("Add Point")) {
+                const double nextTime = m_amplitudeTime.empty() ? 0.0 : (m_amplitudeTime.back() + 1.0);
+                const double nextValue = m_amplitudeValue.empty() ? 1.0 : m_amplitudeValue.back();
+                m_amplitudeTime.push_back(nextTime);
+                m_amplitudeValue.push_back(nextValue);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Remove Point") && m_amplitudeTime.size() > 2) {
+                m_amplitudeTime.pop_back();
+                m_amplitudeValue.pop_back();
+            }
+
+            std::vector<double> plotTime;
+            std::vector<double> plotAmplitude;
+            buildAmplitudePlotData(m_amplitudeTime, m_amplitudeValue, plotTime, plotAmplitude);
+            if (!plotTime.empty() &&
+                ImPlot::BeginPlot("##BCAmplitudePlot", ImVec2(-1.0f, 220.0f))) {
+                ImPlot::SetupAxes("Time", "Scale");
+                if (plotTime.size() >= 2) {
+                    ImPlot::PlotLine("Amplitude", plotTime.data(), plotAmplitude.data(),
+                                     static_cast<int>(plotTime.size()));
+                }
+                ImPlot::PlotScatter("Points", plotTime.data(), plotAmplitude.data(),
+                                    static_cast<int>(plotTime.size()));
+                ImPlot::EndPlot();
+            }
+        }
 
         ImGui::Text("Apply DOFs:");
         ImGui::Checkbox("X", &m_dof_mask[0]);
@@ -247,7 +359,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     }
 
     // --- BOTÓN OK / CREATE ---
-    std::string butleg = create ? "Create" : "OK";
+    std::string butleg = create ? "Create" : "Update";
     if (ImGui::Button(butleg.c_str())) {
 
 
@@ -265,6 +377,9 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
                 bc = new BoundaryCondition(SymmetryBC, target, m_targetId, m_normal);
 
             if (bc != nullptr && bcType != 2) {
+              bc->setValueType(m_valueType);
+              bc->setAmplitudeFactor(m_amplitudeFactor);
+              bc->setAmplitudeTable(m_amplitudeTime, m_amplitudeValue);
               bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
             }
 
@@ -272,6 +387,9 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
           } else if (isInitial){
             ic = new InitialCondition(VelocityBC, target, m_targetId, m_vel);
             if (ic != nullptr) {
+              ic->setValueType(m_valueType);
+              ic->setAmplitudeFactor(m_amplitudeFactor);
+              ic->setAmplitudeTable(m_amplitudeTime, m_amplitudeValue);
               ic->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
             }
           
@@ -281,7 +399,15 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
           }
         }
         else {
-            Condition* bc = *sel_bc;      // ✔ puntero real
+            Condition* bc = m_editTarget;      // ✔ puntero real
+            if (bc == nullptr) {
+                *p_open = false;
+                ImGui::End();
+                initialized = false;
+                m_editingExisting = false;
+                m_editTarget = nullptr;
+                return;
+            }
             
             bc->setApplyTo(target);
             bc->setTargetId(m_targetId);
@@ -289,10 +415,16 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             if (bcType == 0) {
                 bc->setType(VelocityBC);
                 bc->setValue(m_vel);
+                bc->setValueType(m_valueType);
+                bc->setAmplitudeFactor(m_amplitudeFactor);
+                bc->setAmplitudeTable(m_amplitudeTime, m_amplitudeValue);
                 bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
             } else if (bcType == 1) {
                 bc->setType(DisplacementBC);
                 bc->setValue(m_vel);
+                bc->setValueType(m_valueType);
+                bc->setAmplitudeFactor(m_amplitudeFactor);
+                bc->setAmplitudeTable(m_amplitudeTime, m_amplitudeValue);
                 bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
             } else {
                 bc->setType(SymmetryBC);
@@ -314,6 +446,8 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
 
     if (!(*p_open)) {
         initialized = false;
+        m_editingExisting = false;
+        m_editTarget = nullptr;
         *sel_bc = nullptr;
         cout << "closed. sel_çbc "<<*sel_bc<<endl;
     }

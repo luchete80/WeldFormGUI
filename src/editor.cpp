@@ -2316,6 +2316,11 @@ void Editor::closeCurrentModel()
 
 void Editor::closeCurrentResults()
 {
+  clearBoundaryConditionOverlay();
+  clearPartOverlay();
+  hovered_bc = nullptr;
+  hovered_prt = nullptr;
+
   if (res_viewer != nullptr) {
     res_viewer->setActor(nullptr);
   }

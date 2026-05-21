@@ -536,6 +536,12 @@ void ModelWriter::writeToFile(std::string fname){
           // Valor (velocidad o desplazamiento)
           double3 v = bc->getValue();
           jbc["value"] = {v.x, v.y, v.z};
+          jbc["valueType"] = static_cast<int>(bc->getValueType());
+          jbc["amplitudeFactor"] = bc->getAmplitudeFactor();
+          if (bc->usesAmplitude()) {
+              jbc["amplitudeTime"] = bc->getAmplitudeTime();
+              jbc["amplitudeValue"] = bc->getAmplitudeValue();
+          }
           jbc["dofMask"] = {bc->getDofMaskX(), bc->getDofMaskY(), bc->getDofMaskZ()};
 
           // Agregar al array
@@ -566,6 +572,12 @@ void ModelWriter::writeToFile(std::string fname){
           jic["targetId"] = ic->getTargetId();
           const double3 v = ic->getValue();
           jic["value"] = {v.x, v.y, v.z};
+          jic["valueType"] = static_cast<int>(ic->getValueType());
+          jic["amplitudeFactor"] = ic->getAmplitudeFactor();
+          if (ic->usesAmplitude()) {
+              jic["amplitudeTime"] = ic->getAmplitudeTime();
+              jic["amplitudeValue"] = ic->getAmplitudeValue();
+          }
           jic["dofMask"] = {ic->getDofMaskX(), ic->getDofMaskY(), ic->getDofMaskZ()};
           m_json["InitialConditions"].push_back(jic);
       }

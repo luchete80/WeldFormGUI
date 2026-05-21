@@ -5,6 +5,7 @@
 #include "Condition.h"
 #include "Dialog.h"
 #include "double3.h"
+#include <vector>
 
 enum class DialogMode {
     Auto,       // usar sel_bc para decidir
@@ -29,11 +30,17 @@ public Dialog
   bool create_bc;
   int m_targetId;
   bool initialized = false;
+  bool m_editingExisting = false;
+  Condition* m_editTarget = nullptr;
   int symPreset = 0;
   
   int m_applyTo;
   double3 m_vel;
   bool m_dof_mask[3] = {true, true, true};
+  int m_valueType = 0;
+  double m_amplitudeFactor = 1.0;
+  std::vector<double> m_amplitudeTime;
+  std::vector<double> m_amplitudeValue;
 
   int bcType = 0;      // 0 = Velocity, 1 = Displacement, 2 = Symmetry
   double3 m_normal = make_double3(0,0,1);

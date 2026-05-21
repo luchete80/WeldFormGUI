@@ -128,7 +128,30 @@ void appendNodeSets(json &root, Model *model) {
   }
 }
 
-void appendDirectionalBoundaryCondition(json &bc_array, Model *model, BoundaryCondition *bc, int export_id) {
+bool appendAmplitudeForCondition(json &amplitude_array, const Condition *condition, int amplitude_id) {
+  if (condition == nullptr || !condition->usesAmplitude())
+    return false;
+
+  const std::vector<double> &timeValues = condition->getAmplitudeTime();
+  const std::vector<double> &amplitudeValues = condition->getAmplitudeValue();
+  if (timeValues.size() < 2 || timeValues.size() != amplitudeValues.size())
+    return false;
+
+  amplitude_array.push_back({
+    {"id", amplitude_id},
+    {"valueType", 1},
+    {"time", timeValues},
+    {"value", amplitudeValues}
+  });
+  return true;
+}
+
+void appendDirectionalBoundaryCondition(json &bc_array,
+                                        json &amplitude_array,
+                                        Model *model,
+                                        BoundaryCondition *bc,
+                                        int export_id,
+                                        int &next_amplitude_id) {
   if (bc == nullptr || bc->getType() == SymmetryBC)
     return;
 
@@ -141,12 +164,14 @@ void appendDirectionalBoundaryCondition(json &bc_array, Model *model, BoundaryCo
     jbc["zoneId"] = bc->getTargetId();
   }
 
-  if (bc->getType() == DisplacementBC) {
-    jbc["valueType"] = 1;
-    jbc["amplitudeId"] = 1;
-    jbc["amplitudeFactor"] = 1.0;
-  } else {
-    jbc["valueType"] = 0;
+  jbc["valueType"] = static_cast<int>(bc->getValueType());
+  if (bc->usesAmplitude()) {
+    if (appendAmplitudeForCondition(amplitude_array, bc, next_amplitude_id)) {
+      jbc["amplitudeId"] = next_amplitude_id++;
+      jbc["amplitudeFactor"] = bc->getAmplitudeFactor();
+    } else {
+      jbc["valueType"] = static_cast<int>(ConstantValue);
+    }
   }
 
   const double3 value = bc->getValue();
@@ -404,6 +429,7 @@ void InputWriter::writeToFile(std::string fname) {
   bool xSymm = false;
   bool ySymm = false;
   bool zSymm = false;
+  int amplitude_id = 1;
   int bc_export_id = 1;
   if (m_model->getBCCount() > 0) {
     for (int i = 0; i < m_model->getBCCount(); ++i) {
@@ -421,7 +447,12 @@ void InputWriter::writeToFile(std::string fname) {
         m_json["Configuration"]["ySymm"] = ySymm;
         m_json["Configuration"]["zSymm"] = zSymm;
       } else {
-        appendDirectionalBoundaryCondition(m_json["BoundaryConditions"], m_model, bc, bc_export_id++);
+        appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
+                                           m_json["Amplitudes"],
+                                           m_model,
+                                           bc,
+                                           bc_export_id++,
+                                           amplitude_id);
       }
     }
   }
@@ -562,7 +593,12 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     if (bc->getType() == SymmetryBC)
       continue;
 
-    appendDirectionalBoundaryCondition(m_json["BoundaryConditions"], m_model, bc, bc_export_id++);
+    appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
+                                       m_json["Amplitudes"],
+                                       m_model,
+                                       bc,
+                                       bc_export_id++,
+                                       amplitude_id);
   }
 
   if (m_json["BoundaryConditions"].empty()) {

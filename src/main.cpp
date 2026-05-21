@@ -1591,6 +1591,27 @@ int main(int argc, char* argv[])
                 static int selectedField = 0;
 	              static int selectedFieldComponent = -2;
                 static bool showVectorGlyphs = false;
+                auto clearResultsViewerTransientProps = [&]() {
+                    if (currentScalarBar != nullptr) {
+                        renderer->RemoveActor2D(currentScalarBar);
+                        currentScalarBar = nullptr;
+                    }
+                    if (currentProbeHighlightActor != nullptr) {
+                        renderer->RemoveActor(currentProbeHighlightActor);
+                        currentProbeHighlightActor = nullptr;
+                    }
+                    if (currentVectorFieldActor != nullptr) {
+                        renderer->RemoveActor(currentVectorFieldActor);
+                        currentVectorFieldActor = nullptr;
+                    }
+                    activeFieldName.clear();
+                    selectedField = 0;
+                    selectedFieldComponent = -2;
+                    activeFieldComponents = 1;
+                    showVectorGlyphs = false;
+                    currentFrame = 0;
+                    lastFrame = -1;
+                };
 	              auto getActiveArray = [&](ResultFrame& resultFrame) -> vtkDataArray* {
 	                  if (activeFieldName.empty() || !resultFrame.mesh)
 	                      return nullptr;
@@ -1835,7 +1856,11 @@ int main(int argc, char* argv[])
                       //~ ImGui::Text("No fields available");
                   //~ }
 
-	              }
+	              } else {
+                    clearResultsViewerTransientProps();
+                    vtkViewer_res.setActor(nullptr);
+                    vtkViewer_res.render();
+                }
 	            }
               
               applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);

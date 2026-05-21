@@ -17,6 +17,11 @@ VELOCITY_BC = 0
 DISPLACEMENT_BC = 1
 SYMMETRY_BC = 2
 
+NONE = 0
+BILINEAR = 1
+HOLLOMON = 2
+JOHNSON_COOK = 3
+
 
 def _active_model():
     try:
@@ -139,6 +144,26 @@ def _infer_mesh_dimension(mesh):
     return declared_dim
 
 
+def _analysis_type(model):
+    try:
+        return model.getAnalysisType()
+    except Exception:
+        return SOLID_3D
+
+
+def _use_yz_projection(model):
+    return _analysis_type(model) in (PLANE_STRAIN_2D, AXISYMMETRIC_2D)
+
+
+def _projected_node_coords(model, node):
+    x = float(node.getPos(0))
+    y = float(node.getPos(1))
+    z = float(node.getPos(2))
+    if _use_yz_projection(model):
+        return 0.0, x, y
+    return x, y, z
+
+
 def _element_keyword(mesh_dim, elem):
     node_count = elem.getNodeCount()
     if mesh_dim == 2:
@@ -165,13 +190,14 @@ def _node_by_id(mesh, node_id):
     return None
 
 
-def _signed_area_2d(mesh, node_ids):
+def _signed_area_2d(model, mesh, node_ids):
     points = []
     for node_id in node_ids:
         node = _node_by_id(mesh, node_id)
         if node is None:
             return 0.0
-        points.append((float(node.getPos(0)), float(node.getPos(1))))
+        px, py, _ = _projected_node_coords(model, node)
+        points.append((px, py))
 
     area2 = 0.0
     for index in range(len(points)):
@@ -181,12 +207,12 @@ def _signed_area_2d(mesh, node_ids):
     return 0.5 * area2
 
 
-def _radioss_connectivity(mesh, mesh_dim, elem):
+def _radioss_connectivity(model, mesh, mesh_dim, elem):
     node_ids = [elem.getNodeId(local_node) for local_node in range(elem.getNodeCount())]
     if mesh_dim != 2:
         return node_ids
 
-    area = _signed_area_2d(mesh, node_ids)
+    area = _signed_area_2d(model, mesh, node_ids)
     if area < 0.0:
         if len(node_ids) == 3:
             return [node_ids[0], node_ids[2], node_ids[1]]
@@ -273,8 +299,6 @@ def _property_id(index):
 
 
 def _part_virtual_thickness(mesh_dim):
-    if mesh_dim == 2:
-        return 1.0
     return 0.0
 
 
@@ -291,11 +315,7 @@ def _write_header_and_begin(out, run_name, title):
 
 
 def _radioss_analysis_flag(model):
-    analysis_type = SOLID_3D
-    try:
-        analysis_type = model.getAnalysisType()
-    except Exception:
-        analysis_type = SOLID_3D
+    analysis_type = _analysis_type(model)
 
     if analysis_type == AXISYMMETRIC_2D:
         return 1
@@ -318,11 +338,12 @@ def _write_nodes(model, out):
         mesh = part.getMesh()
         for node_index in range(mesh.getNodeCount()):
             node = mesh.getNode(node_index)
+            px, py, pz = _projected_node_coords(model, node)
             out.write(
                 _write_int_field(node.getId(), 10) +
-                _write_float_field(node.getPos(0), 20, 10) +
-                _write_float_field(node.getPos(1), 20, 10) +
-                _write_float_field(node.getPos(2), 20, 10) + "\n"
+                _write_float_field(px, 20, 10) +
+                _write_float_field(py, 20, 10) +
+                _write_float_field(pz, 20, 10) + "\n"
             )
 
 
@@ -340,7 +361,7 @@ def _max_node_id(model):
     return max_id
 
 
-def _boundary_part_centroid(mesh):
+def _boundary_part_centroid(model, mesh):
     count = 0
     sx = 0.0
     sy = 0.0
@@ -350,9 +371,10 @@ def _boundary_part_centroid(mesh):
         node = mesh.getNode(node_index)
         if node is None:
             continue
-        sx += float(node.getPos(0))
-        sy += float(node.getPos(1))
-        sz += float(node.getPos(2))
+        px, py, pz = _projected_node_coords(model, node)
+        sx += px
+        sy += py
+        sz += pz
         count += 1
 
     if count <= 0:
@@ -383,7 +405,7 @@ def _build_rigid_part_records(model):
         if not skipped_boundary_elements:
             continue
 
-        cx, cy, cz = _boundary_part_centroid(mesh)
+        cx, cy, cz = _boundary_part_centroid(model, mesh)
         records.append(
             {
                 "part": part,
@@ -425,8 +447,82 @@ def _write_materials(model, out):
             continue
         mat_id = _material_id(material_index)
         material_ids[material_index] = mat_id
+        mat_name = _safe_name(material.getName() if hasattr(material, 'getName') else '', f'Material_{mat_id}')
+
+        plastic_type = NONE
+        try:
+            if material.isPlastic() and material.getPlastic() is not None:
+                plastic_type = material.getPlastic().getType()
+        except Exception:
+            plastic_type = getattr(material, "Material_model", NONE)
+
+        if plastic_type in (HOLLOMON, JOHNSON_COOK):
+            density = float(material.getDensityConstant())
+            young = float(material.Elastic().E())
+            poisson = float(material.Elastic().nu())
+            yield_stress = float(getattr(material, "yieldStress0", 0.0))
+
+            if plastic_type == HOLLOMON:
+                jc_a = yield_stress
+                jc_b = float(getattr(material, "K", 0.0))
+                jc_n = float(getattr(material, "m", 0.0))
+                jc_c = 0.0
+                jc_eps0 = max(float(getattr(material, "epsdot0", 1.0)), 1.0e-12)
+                jc_m = 0.0
+                jc_tm = float(getattr(material, "T_m", 0.0))
+                jc_tr = float(getattr(material, "T_t", 273.0))
+            else:
+                jc_a = yield_stress
+                jc_b = float(getattr(material, "B", 0.0))
+                jc_n = float(getattr(material, "n", 0.0))
+                jc_c = float(getattr(material, "C", 0.0))
+                jc_eps0 = max(float(getattr(material, "eps_0", 1.0)), 1.0e-12)
+                jc_m = float(getattr(material, "m", 0.0))
+                jc_tm = float(getattr(material, "T_m", 0.0))
+                jc_tr = float(getattr(material, "T_t", 273.0))
+
+            if jc_tm <= 0.0:
+                jc_tm = max(float(getattr(material, "T_max", 0.0)), jc_tr)
+            if jc_tr <= 0.0:
+                jc_tr = 273.0
+
+            rho_cp = density * max(float(getattr(material, "cp_T", 0.0)), 0.0)
+
+            out.write(f"/MAT/PLAS_JOHNS/{mat_id}\n")
+            out.write(f"{mat_name}\n")
+            out.write(_write_float_field(density, 20, 10) + "\n")
+            out.write(
+                _write_float_field(young, 20, 10) +
+                _write_float_field(poisson, 20, 10) +
+                _write_int_field(0, 10) +
+                _write_float_field(0.0, 20, 10) +
+                _write_float_field(0.0, 20, 10) + "\n"
+            )
+            out.write(
+                _write_float_field(jc_a, 20, 10) +
+                _write_float_field(jc_b, 20, 10) +
+                _write_float_field(jc_n, 20, 10) +
+                _write_float_field(1.0e30, 20, 10) +
+                _write_float_field(1.0e30, 20, 10) + "\n"
+            )
+            out.write(
+                _write_float_field(jc_c, 20, 10) +
+                _write_float_field(jc_eps0, 20, 10) +
+                _write_int_field(1, 10) +
+                _write_int_field(1, 10) +
+                _write_float_field(1.0e30, 20, 10) +
+                _write_int_field(0, 10) + "\n"
+            )
+            out.write(
+                _write_float_field(jc_m, 20, 10) +
+                _write_float_field(jc_tm, 20, 10) +
+                _write_float_field(rho_cp, 20, 10) +
+                _write_float_field(jc_tr, 20, 10) + "\n"
+            )
+            continue
+
         out.write(f"/MAT/LAW1/{mat_id}\n")
-        out.write(f"{_safe_name(material.getName() if hasattr(material, 'getName') else '', f'Material_{mat_id}')}\n")
+        out.write(f"{mat_name}\n")
         out.write(_write_float_field(material.getDensityConstant(), 20, 10) + "\n")
         out.write(
             _write_float_field(material.Elastic().E(), 20, 10) +
@@ -466,42 +562,38 @@ def _write_properties_and_parts(model, out, material_ids):
                 )
             continue
 
-        if mesh_dim == 2:
-            out.write(f"/PROP/TYPE1/{prop_id}\n")
-            out.write(f"{part_name}_shell_prop\n")
-            out.write(
-                _write_int_field(1, 10) +
-                _write_int_field(2, 10) +
-                _write_int_field(2, 10) +
-                _write_int_field(2, 10) +
-                _write_float_field(1.0, 20, 10) +
-                _write_float_field(0.01, 20, 10) +
-                _write_float_field(0.01, 20, 10) +
-                _write_float_field(0.01, 20, 10) +
-                _write_float_field(0.0, 20, 10) +
-                _write_float_field(1.0, 20, 10) + "\n"
-            )
-        else:
-            out.write(f"/PROP/TYPE14/{prop_id}\n")
-            out.write(f"{part_name}_solid_prop\n")
-            out.write(
-                _write_int_field(1, 10) +
-                _write_int_field(-1, 10) +
-                _write_int_field(-1, 10) +
-                _write_int_field(-1, 10) +
-                _write_int_field(0, 10) +
-                _write_int_field(0, 10) +
-                _write_int_field(0, 10) +
-                _write_int_field(0, 10) +
-                _write_float_field(0.0, 20, 10) + "\n"
-            )
-            out.write(
-                _write_float_field(1.1, 20, 10) +
-                _write_float_field(0.05, 20, 10) +
-                _write_float_field(0.1, 20, 10) +
-                _write_float_field(0.0, 20, 10) +
-                _write_float_field(0.0, 20, 10) + "\n"
-            )
+        out.write(f"/PROP/TYPE14/{prop_id}\n")
+        out.write(f"{part_name}_solid_prop\n")
+        out.write(
+            _write_int_field(1, 10) +
+            _write_int_field(-1, 10) +
+            _write_int_field(-1, 10) +
+            _write_int_field(-1, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_float_field(0.0, 20, 10) + "\n"
+        )
+        out.write(
+            _write_float_field(1.1, 20, 10) +
+            _write_float_field(0.05, 20, 10) +
+            _write_float_field(0.1, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) + "\n"
+        )
+        out.write(
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) +
+            _write_float_field(0.0, 20, 10) + "\n"
+        )
+        out.write(
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) +
+            _write_int_field(0, 10) + "\n"
+        )
 
         out.write(f"/PART/{part_id}\n")
         out.write(f"{part_name}\n")
@@ -529,7 +621,7 @@ def _write_properties_and_parts(model, out, material_ids):
     return part_records
 
 
-def _write_elements(part_records, out):
+def _write_elements(model, part_records, out):
     for record in part_records:
         mesh = record["mesh"]
         part_id = record["part_id"]
@@ -559,7 +651,7 @@ def _write_elements(part_records, out):
             out.write(f"{keyword}/{part_id}\n")
             for elem_index, elem in elems:
                 fields = [elem_index + 1]
-                for node_id in _radioss_connectivity(mesh, mesh_dim, elem):
+                for node_id in _radioss_connectivity(model, mesh, mesh_dim, elem):
                     fields.append(node_id)
                 if keyword == "/SH3N":
                     fields += [0.0, 1.0]
@@ -708,17 +800,44 @@ def _direction_labels_from_mask(mask):
     return labels
 
 
-def _write_function(out, func_id, final_value, stop_time):
-    out.write("/FUNCT\n")
-    out.write(f"{func_id}\n")
-    out.write(
-        _write_float_field(0.0, 20, 10) +
-        _write_float_field(0.0, 20, 10) + "\n"
-    )
-    out.write(
-        _write_float_field(stop_time, 20, 10) +
-        _write_float_field(final_value, 20, 10) + "\n"
-    )
+def _write_function(out, func_id, title, xy_points):
+    out.write(f"/FUNCT/{func_id}\n")
+    out.write(f"{title}\n")
+    for x_value, y_value in xy_points:
+        out.write(
+            _write_float_field(x_value, 20, 10) +
+            _write_float_field(y_value, 20, 10) + "\n"
+        )
+
+
+def _scaled_function_points(bc, component_value, stop_time, ramp_from_zero):
+    try:
+        uses_amplitude = bc.usesAmplitude()
+    except Exception:
+        uses_amplitude = False
+
+    if uses_amplitude:
+        try:
+            time_values = list(bc.getAmplitudeTime())
+            amplitude_values = list(bc.getAmplitudeValue())
+            amplitude_factor = float(bc.getAmplitudeFactor())
+        except Exception:
+            time_values = []
+            amplitude_values = []
+            amplitude_factor = 1.0
+
+        point_count = min(len(time_values), len(amplitude_values))
+        if point_count >= 2:
+            points = []
+            for i in range(point_count):
+                points.append((float(time_values[i]),
+                               float(component_value) * amplitude_factor * float(amplitude_values[i])))
+            points.sort(key=lambda point: point[0])
+            return points
+
+    if ramp_from_zero:
+        return [(0.0, 0.0), (float(stop_time), float(component_value))]
+    return [(0.0, float(component_value)), (float(stop_time), float(component_value))]
 
 
 def _write_boundary_conditions(model, out, group_records, stop_time):
@@ -762,28 +881,17 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
             continue
 
         if bc_type == DISPLACEMENT_BC:
-            zero_only = all((not active) or abs(value) <= 1.0e-12 for active, value in zip(mask, values))
-            if zero_only:
-                out.write(f"/BCS/{bcs_id}\n")
-                out.write(f"disp_fix_{bc_index}\n")
-                out.write(
-                    f"{_bcs_code_from_mask(mask):>10}" +
-                    _write_int_field(0, 10) +
-                    _write_int_field(group_id, 10) + "\n"
-                )
-                bcs_id += 1
-                continue
-
             for axis, active in enumerate(mask):
                 if not active:
                     continue
                 value = values[axis]
-                if abs(value) <= 1.0e-12:
+                direction = ["X", "Y", "Z"][axis]
+                function_points = _scaled_function_points(bc, value, stop_time, ramp_from_zero=True)
+                if not function_points:
                     continue
-                _write_function(out, function_id, value, stop_time)
+                _write_function(out, function_id, f"disp_bc_{bc_index}_{direction}", function_points)
                 out.write(f"/IMPDISP/{imposed_id}\n")
                 out.write(f"disp_bc_{bc_index}_{axis}\n")
-                direction = ["X", "Y", "Z"][axis]
                 out.write(
                     _write_int_field(function_id, 10) +
                     f"{direction:>10}" +
@@ -808,12 +916,13 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
                 if not active:
                     continue
                 value = values[axis]
-                if abs(value) <= 1.0e-12:
+                direction = ["X", "Y", "Z"][axis]
+                function_points = _scaled_function_points(bc, value, stop_time, ramp_from_zero=False)
+                if not function_points:
                     continue
-                _write_function(out, function_id, value, stop_time)
+                _write_function(out, function_id, f"vel_bc_{bc_index}_{direction}", function_points)
                 out.write(f"/IMPVEL/{imposed_id}\n")
                 out.write(f"vel_bc_{bc_index}_{axis}\n")
-                direction = ["X", "Y", "Z"][axis]
                 out.write(
                     _write_int_field(function_id, 10) +
                     f"{direction:>10}" +
@@ -861,6 +970,19 @@ def _write_engine_file(model, engine_path, run_name):
             _write_float_field(dt_out, 20, 10) +
             _write_float_field(t_stop, 20, 10) + "\n"
         )
+        for result_type in ("VEL", "DISP", "ACC"):
+            out.write(f"/ANIM/VECT/{result_type}\n")
+        for result_type in (
+            "P",
+            "SIGX",
+            "SIGY",
+            "SIGZ",
+            "SIGXY",
+            "SIGYZ",
+            "SIGZX",
+            "VONM",
+        ):
+            out.write(f"/ANIM/ELEM/{result_type}\n")
         out.write("/TFILE/3\n")
         out.write(_write_float_field(dt_out, 20, 10) + "\n")
 
@@ -888,7 +1010,7 @@ def export_model_to_radioss(model, output_root):
         _write_rigid_reference_nodes(rigid_part_records, out)
         material_ids = _write_materials(model, out)
         part_records = _write_properties_and_parts(model, out, material_ids)
-        _write_elements(part_records, out)
+        _write_elements(model, part_records, out)
         group_records = _write_node_groups(part_records, out)
         _write_rigid_body_groups(
             rigid_part_records,

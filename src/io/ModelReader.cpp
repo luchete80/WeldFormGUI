@@ -663,6 +663,20 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
             }
 
+            ConditionValueType valueType = ConstantValue;
+            if (jbc.contains("valueType")) {
+                valueType = (jbc["valueType"].get<int>() == static_cast<int>(AmplitudeValue))
+                  ? AmplitudeValue
+                  : ConstantValue;
+            }
+            const double amplitudeFactor = jbc.value("amplitudeFactor", 1.0);
+            std::vector<double> amplitudeTime;
+            std::vector<double> amplitudeValue;
+            if (jbc.contains("amplitudeTime") && jbc["amplitudeTime"].is_array())
+                amplitudeTime = jbc["amplitudeTime"].get<std::vector<double>>();
+            if (jbc.contains("amplitudeValue") && jbc["amplitudeValue"].is_array())
+                amplitudeValue = jbc["amplitudeValue"].get<std::vector<double>>();
+
             // --- Crear BC ---
             BoundaryCondition* bc = nullptr;
 
@@ -670,6 +684,9 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 bc = new BoundaryCondition(bcType, applyTo, targetId, normal);
             } else {
                 bc = new BoundaryCondition(bcType, applyTo, targetId, val);
+                bc->setValueType(valueType);
+                bc->setAmplitudeFactor(amplitudeFactor);
+                bc->setAmplitudeTable(amplitudeTime, amplitudeValue);
                 bc->setDofMask(dofMask[0], dofMask[1], dofMask[2]);
             }
 
@@ -720,6 +737,17 @@ bool ModelReader::readFromFile(const std::string& fname) {
             }
 
             InitialCondition* ic = new InitialCondition(icType, applyTo, targetId, val);
+            const ConditionValueType valueType =
+              (jic.value("valueType", static_cast<int>(ConstantValue)) == static_cast<int>(AmplitudeValue))
+                ? AmplitudeValue
+                : ConstantValue;
+            ic->setValueType(valueType);
+            ic->setAmplitudeFactor(jic.value("amplitudeFactor", 1.0));
+            if (jic.contains("amplitudeTime") && jic["amplitudeTime"].is_array() &&
+                jic.contains("amplitudeValue") && jic["amplitudeValue"].is_array()) {
+                ic->setAmplitudeTable(jic["amplitudeTime"].get<std::vector<double>>(),
+                                      jic["amplitudeValue"].get<std::vector<double>>());
+            }
             if (jic.contains("dofMask") && jic["dofMask"].is_array() && jic["dofMask"].size() == 3) {
                 ic->setDofMask(jic["dofMask"][0].get<bool>(),
                                jic["dofMask"][1].get<bool>(),
