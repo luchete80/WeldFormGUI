@@ -1116,12 +1116,6 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // Use GL 3.2 (All Platforms)
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
   // Decide GLSL version
 #ifdef __APPLE__
   // GLSL 150
@@ -1136,14 +1130,36 @@ int main(int argc, char* argv[])
   cout << "Monitor width: "<<modes->width<<", height: "<<modes->height<<endl;
 
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(modes->width, modes->height-80, "WeldForm GUI", NULL, NULL);
-  
-  //glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_TRUE);
-  glfwSetWindowPos(window, 1, 30);
+  GLFWwindow* window = nullptr;
+
+  glfwDefaultWindowHints();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  window = glfwCreateWindow(modes->width, modes->height-80, "WeldForm GUI", NULL, NULL);
+
+  if (window == NULL) {
+    fprintf(stderr, "Retrying with OpenGL 3.0 compatibility context.\n");
+    glfwDefaultWindowHints();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    window = glfwCreateWindow(modes->width, modes->height-80, "WeldForm GUI", NULL, NULL);
+  }
+
+  if (window == NULL) {
+    fprintf(stderr, "Retrying with default GLFW context hints.\n");
+    glfwDefaultWindowHints();
+    window = glfwCreateWindow(modes->width, modes->height-80, "WeldForm GUI", NULL, NULL);
+  }
 
   if (window == NULL){
+    fprintf(stderr, "Failed to create GLFW window and OpenGL context.\n");
     return 1;
   }
+
+  //glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_TRUE);
+  glfwSetWindowPos(window, 1, 30);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1); // Enable vsync
 
@@ -1634,6 +1650,9 @@ int main(int argc, char* argv[])
 
 	                  if (array->GetNumberOfComponents() == 3 && selectedFieldComponent == 3) {
 	                      resultFrame.setActiveScalarField(activeFieldName);
+                        mapper->SetScalarRange(globalMin, globalMax);
+                        mapper->ScalarVisibilityOn();
+                        mapper->Update();
                         resultFrame.updateVectorGlyphs(activeFieldName, isCellField, showVectorGlyphs);
 	                      resultFrame.updateScalarBar(
                             buildActiveFieldDisplayName(activeFieldName, array->GetNumberOfComponents(), selectedFieldComponent),
