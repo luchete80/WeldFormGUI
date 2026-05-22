@@ -155,13 +155,25 @@ def _use_yz_projection(model):
     return _analysis_type(model) in (PLANE_STRAIN_2D, AXISYMMETRIC_2D)
 
 
+def _xyz_to_yz_components(model, components):
+    if not _use_yz_projection(model):
+        return [float(component) for component in components]
+    x, y, z = [float(component) for component in components]
+    return [z, x, y]
+
+
+def _xyz_to_yz_mask(model, mask):
+    if not _use_yz_projection(model):
+        return list(mask)
+    x, y, z = [bool(component) for component in mask]
+    return [z, x, y]
+
+
 def _projected_node_coords(model, node):
-    x = float(node.getPos(0))
-    y = float(node.getPos(1))
-    z = float(node.getPos(2))
-    if _use_yz_projection(model):
-        return 0.0, x, y
-    return x, y, z
+    return tuple(_xyz_to_yz_components(
+        model,
+        [node.getPos(0), node.getPos(1), node.getPos(2)]
+    ))
 
 
 def _element_keyword(mesh_dim, elem):
@@ -844,6 +856,7 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
     function_id = 1
     imposed_id = 1
     bcs_id = 1
+    directions = ["X", "Y", "Z"]
 
     for bc_index in range(model.getBCCount()):
         bc = model.getBC(bc_index)
@@ -855,12 +868,18 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
             out.write(f"# Skipping BC {bc_index}: missing node group target\n")
             continue
 
-        mask = _bc_dof_mask(bc)
-        values = [bc.getValueX(), bc.getValueY(), bc.getValueZ()]
+        mask = _xyz_to_yz_mask(model, _bc_dof_mask(bc))
+        values = _xyz_to_yz_components(model, [bc.getValueX(), bc.getValueY(), bc.getValueZ()])
         bc_type = bc.getType()
 
         if bc_type == SYMMETRY_BC:
-            normal = [abs(bc.getNormalX()), abs(bc.getNormalY()), abs(bc.getNormalZ())]
+            normal = [
+                abs(component)
+                for component in _xyz_to_yz_components(
+                    model,
+                    [bc.getNormalX(), bc.getNormalY(), bc.getNormalZ()]
+                )
+            ]
             if normal[0] > 0.5:
                 mask = [True, False, False]
             elif normal[1] > 0.5:
@@ -885,7 +904,7 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
                 if not active:
                     continue
                 value = values[axis]
-                direction = ["X", "Y", "Z"][axis]
+                direction = directions[axis]
                 function_points = _scaled_function_points(bc, value, stop_time, ramp_from_zero=True)
                 if not function_points:
                     continue
@@ -916,7 +935,7 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
                 if not active:
                     continue
                 value = values[axis]
-                direction = ["X", "Y", "Z"][axis]
+                direction = directions[axis]
                 function_points = _scaled_function_points(bc, value, stop_time, ramp_from_zero=False)
                 if not function_points:
                     continue
