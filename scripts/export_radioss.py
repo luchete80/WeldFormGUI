@@ -797,6 +797,15 @@ def _bc_dof_mask(bc):
     return [bc.getDofMaskX(), bc.getDofMaskY(), bc.getDofMaskZ()]
 
 
+def _effective_bc_dof_mask(model, bc):
+    mask = _bc_dof_mask(bc)
+    if _use_yz_projection(model):
+        # The source 2D model lives in XY; original Z must not activate
+        # an out-of-plane X constraint after the XY -> YZ remap.
+        mask[2] = False
+    return _xyz_to_yz_mask(model, mask)
+
+
 def _bcs_code_from_mask(mask):
     return f"{int(mask[0])}{int(mask[1])}{int(mask[2])}111"
 
@@ -868,7 +877,7 @@ def _write_boundary_conditions(model, out, group_records, stop_time):
             out.write(f"# Skipping BC {bc_index}: missing node group target\n")
             continue
 
-        mask = _xyz_to_yz_mask(model, _bc_dof_mask(bc))
+        mask = _effective_bc_dof_mask(model, bc)
         values = _xyz_to_yz_components(model, [bc.getValueX(), bc.getValueY(), bc.getValueZ()])
         bc_type = bc.getType()
 
