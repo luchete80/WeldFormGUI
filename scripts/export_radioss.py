@@ -1009,6 +1009,8 @@ def _write_engine_file(model, engine_path, run_name):
             "SIGYZ",
             "SIGZX",
             "VONM",
+            "EPSP",
+            "ENER",
         ):
             out.write(f"/ANIM/ELEM/{result_type}\n")
         out.write("/TFILE/3\n")
