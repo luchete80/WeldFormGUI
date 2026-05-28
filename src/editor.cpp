@@ -2781,22 +2781,30 @@ void Editor::finishMoveMode(bool acceptTransform)
 
 void Editor::clearBoundaryConditionOverlay()
 {
-  if (viewer == nullptr || viewer->getRenderer() == nullptr) {
-    m_bc_overlay_actors.clear();
+  clearBoundaryConditionOverlayForViewer(model_viewer, m_model_bc_overlay_actors);
+  clearBoundaryConditionOverlayForViewer(res_viewer, m_results_bc_overlay_actors);
+}
+
+void Editor::clearBoundaryConditionOverlayForViewer(
+    VtkViewer* targetViewer,
+    std::vector<vtkSmartPointer<vtkProp>>& overlayActors)
+{
+  if (targetViewer == nullptr || targetViewer->getRenderer() == nullptr) {
+    overlayActors.clear();
     return;
   }
 
-  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
-  for (std::size_t i = 0; i < m_bc_overlay_actors.size(); ++i) {
-    vtkSmartPointer<vtkProp> actor = m_bc_overlay_actors[i];
+  vtkSmartPointer<vtkRenderer> renderer = targetViewer->getRenderer();
+  for (std::size_t i = 0; i < overlayActors.size(); ++i) {
+    vtkSmartPointer<vtkProp> actor = overlayActors[i];
     if (actor != nullptr && renderer->HasViewProp(actor)) {
       renderer->RemoveViewProp(actor);
     }
   }
-  m_bc_overlay_actors.clear();
+  overlayActors.clear();
 
-  if (viewer->getRenderWindow() != nullptr) {
-    viewer->getRenderWindow()->Render();
+  if (targetViewer->getRenderWindow() != nullptr) {
+    targetViewer->getRenderWindow()->Render();
   }
 }
 
@@ -3138,13 +3146,30 @@ vtkSmartPointer<vtkActor> Editor::getPartVisualActor(Part* part) const
 
 void Editor::updateBoundaryConditionOverlay()
 {
-  clearBoundaryConditionOverlay();
+  clearBoundaryConditionOverlayForViewer(model_viewer, m_model_bc_overlay_actors);
+  clearBoundaryConditionOverlayForViewer(res_viewer, m_results_bc_overlay_actors);
 
-  if (viewer == nullptr || viewer->getRenderer() == nullptr || m_model == nullptr) {
+  if (m_model == nullptr) {
     return;
   }
 
-  vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
+  if (is_model) {
+    updateBoundaryConditionOverlayForViewer(model_viewer, m_model_bc_overlay_actors);
+  }
+  if (m_results != nullptr) {
+    updateBoundaryConditionOverlayForViewer(res_viewer, m_results_bc_overlay_actors);
+  }
+}
+
+void Editor::updateBoundaryConditionOverlayForViewer(
+    VtkViewer* targetViewer,
+    std::vector<vtkSmartPointer<vtkProp>>& overlayActors)
+{
+  if (targetViewer == nullptr || targetViewer->getRenderer() == nullptr || m_model == nullptr) {
+    return;
+  }
+
+  vtkSmartPointer<vtkRenderer> renderer = targetViewer->getRenderer();
 
   for (int i = 0; i < m_model->getBCCount(); ++i) {
     Condition* condition = m_model->getBC(i);
@@ -3237,7 +3262,7 @@ void Editor::updateBoundaryConditionOverlay()
       arrowActor->GetProperty()->SetAmbient(1.0);
       arrowActor->GetProperty()->SetDiffuse(0.0);
       renderer->AddActor(arrowActor);
-      m_bc_overlay_actors.push_back(arrowActor);
+      overlayActors.push_back(arrowActor);
     }
 
     if (selected_bc == condition || hovered_bc == condition) {
@@ -3256,7 +3281,7 @@ void Editor::updateBoundaryConditionOverlay()
         surfaceActor->GetProperty()->RenderPointsAsSpheresOn();
       }
       renderer->AddActor(surfaceActor);
-      m_bc_overlay_actors.push_back(surfaceActor);
+      overlayActors.push_back(surfaceActor);
 
       if (condition->getApplyTo() == ApplyToPart) {
         vtkNew<vtkPolyDataMapper> edgeMapper;
@@ -3274,7 +3299,7 @@ void Editor::updateBoundaryConditionOverlay()
         edgeActor->GetProperty()->RenderPointsAsSpheresOn();
         edgeActor->GetProperty()->SetPointSize(9.0);
         renderer->AddActor(edgeActor);
-        m_bc_overlay_actors.push_back(edgeActor);
+        overlayActors.push_back(edgeActor);
       }
 
       if (selected_bc == condition) {
@@ -3298,7 +3323,7 @@ void Editor::updateBoundaryConditionOverlay()
         textActor->GetTextProperty()->SetBackgroundColor(0.0, 0.0, 0.0);
         textActor->GetTextProperty()->SetBackgroundOpacity(0.45);
         renderer->AddActor(textActor);
-        m_bc_overlay_actors.push_back(textActor);
+        overlayActors.push_back(textActor);
       }
     }
   }
@@ -7194,6 +7219,9 @@ void Editor::calcMeshCenter(){
 }
 
 void Editor::addViewer(VtkViewer *v){
-  viewer=v;
+  model_viewer = v;
+  if (viewer == nullptr) {
+    viewer = v;
+  }
   
   }

@@ -1524,8 +1524,22 @@ int main(int argc, char* argv[])
           auto clearResultsViewerTransientProps = [&]() {
               auto resultsRenderer = vtkViewer_res.getRenderer();
               if (resultsRenderer != nullptr) {
+                  if (editor->getResults() != nullptr) {
+                      for (auto& frame : editor->getResults()->frames) {
+                          if (!frame) {
+                              continue;
+                          }
+                          vtkSmartPointer<vtkScalarBarActor> frameScalarBar = frame->getScalarBarActor();
+                          if (frameScalarBar != nullptr) {
+                              frame->hideScalarBar();
+                              resultsRenderer->RemoveActor2D(frameScalarBar);
+                              resultsRenderer->RemoveViewProp(frameScalarBar);
+                          }
+                      }
+                  }
                   if (currentScalarBar != nullptr) {
                       resultsRenderer->RemoveActor2D(currentScalarBar);
+                      resultsRenderer->RemoveViewProp(currentScalarBar);
                   }
                   if (currentProbeHighlightActor != nullptr) {
                       resultsRenderer->RemoveActor(currentProbeHighlightActor);

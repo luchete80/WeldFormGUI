@@ -376,8 +376,9 @@ protected:
   
   ViewportWindow *m_viewport_win;
   
-  VtkViewer *viewer;
-  VtkViewer *res_viewer;  
+  VtkViewer *viewer = nullptr;
+  VtkViewer *model_viewer = nullptr;
+  VtkViewer *res_viewer = nullptr;  
   
   //Visual meshes
   //std::vector<GraphicMesh*> graphic_mesh;
@@ -399,7 +400,8 @@ protected:
     Results
   };
   SidebarTab m_sidebar_tab = SidebarTab::Model;
-  std::vector<vtkSmartPointer<vtkProp>> m_bc_overlay_actors;
+  std::vector<vtkSmartPointer<vtkProp>> m_model_bc_overlay_actors;
+  std::vector<vtkSmartPointer<vtkProp>> m_results_bc_overlay_actors;
   std::vector<vtkSmartPointer<vtkProp>> m_part_overlay_actors;
 
   struct PendingResultsLoad {
@@ -446,6 +448,10 @@ protected:
   void executePendingJobRun(bool deleteExistingArtifacts);
   bool runModelCheckBeforeJobRun(Model& model);
   void drawModelCheckPopup();
+  void clearBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,
+                                              std::vector<vtkSmartPointer<vtkProp>>& overlayActors);
+  void updateBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,
+                                               std::vector<vtkSmartPointer<vtkProp>>& overlayActors);
   void updateBoundaryConditionOverlay();
   void clearPartOverlay();
   void updatePartOverlay();

@@ -270,3 +270,4 @@
          - Added Rigid Body to radioss.
 20260521 - Fixed Manual Max & Min.
 20260528 - Fixed removing  BC symbols and colormap after closing results
+         - trying also to remove arrow from separate result & model viewew.
