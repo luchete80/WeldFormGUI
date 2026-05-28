@@ -155,6 +155,7 @@ public:
   bool getShowAllElementLabels() const { return m_show_all_element_labels; }
   void setShowAllElementLabels(bool value) { m_show_all_element_labels = value; }
   void setActiveViewer(VtkViewer* activeViewer) { viewer = activeViewer; }
+  void clearBoundaryConditionOverlay();
   void clearPartSelectionState();
   bool canUndo() const;
   bool canRedo() const;
@@ -445,7 +446,6 @@ protected:
   void executePendingJobRun(bool deleteExistingArtifacts);
   bool runModelCheckBeforeJobRun(Model& model);
   void drawModelCheckPopup();
-  void clearBoundaryConditionOverlay();
   void updateBoundaryConditionOverlay();
   void clearPartOverlay();
   void updatePartOverlay();

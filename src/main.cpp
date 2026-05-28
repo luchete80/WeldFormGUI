@@ -1502,6 +1502,49 @@ int main(int argc, char* argv[])
           bool activate_results_tab = editor->consumeResultsViewerActivationRequest();
           static bool was_results_viewer_active = false;
           bool results_viewer_active = false;
+          static ModelViewportOverlayState resultsOverlayState;
+          static int currentFrame = 0;
+          static int lastFrame = -1;
+          static double globalMin = 0.0;
+          static double globalMax = 1.0;
+          static bool manualColorScale = false;
+          static double manualMin = 0.0;
+          static double manualMax = 1.0;
+          static bool isCellField = false;
+          static bool isPlaying = false;
+          static double lastPlaybackAdvanceTime = 0.0;
+          static std::string activeFieldName = "";
+          static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
+          static vtkSmartPointer<vtkActor> currentProbeHighlightActor = nullptr;
+          static vtkSmartPointer<vtkActor> currentVectorFieldActor = nullptr;
+          static int activeFieldComponents = 1;
+          static int selectedField = 0;
+          static int selectedFieldComponent = -2;
+          static bool showVectorGlyphs = false;
+          auto clearResultsViewerTransientProps = [&]() {
+              auto resultsRenderer = vtkViewer_res.getRenderer();
+              if (resultsRenderer != nullptr) {
+                  if (currentScalarBar != nullptr) {
+                      resultsRenderer->RemoveActor2D(currentScalarBar);
+                  }
+                  if (currentProbeHighlightActor != nullptr) {
+                      resultsRenderer->RemoveActor(currentProbeHighlightActor);
+                  }
+                  if (currentVectorFieldActor != nullptr) {
+                      resultsRenderer->RemoveActor(currentVectorFieldActor);
+                  }
+              }
+              currentScalarBar = nullptr;
+              currentProbeHighlightActor = nullptr;
+              currentVectorFieldActor = nullptr;
+              activeFieldName.clear();
+              selectedField = 0;
+              selectedFieldComponent = -2;
+              activeFieldComponents = 1;
+              showVectorGlyphs = false;
+              currentFrame = 0;
+              lastFrame = -1;
+          };
           if (activate_results_tab) {
               vtk_res_open = true;
           }
@@ -1570,48 +1613,6 @@ int main(int argc, char* argv[])
 	              ImGui::PushFont(current_ui_font);
 
 	              auto renderer = vtkViewer_res.getRenderer();
-                static ModelViewportOverlayState resultsOverlayState;
-	              static int currentFrame = 0;
-	              static int lastFrame = -1;
-	              static double globalMin = 0.0;
-	              static double globalMax = 1.0;
-	              static bool manualColorScale = false;
-	              static double manualMin = 0.0;
-	              static double manualMax = 1.0;
-	              
-	              static bool isCellField = false;
-                static bool isPlaying = false;
-                static double lastPlaybackAdvanceTime = 0.0;
-	                            
-	              static std::string activeFieldName = "";
-	              static vtkSmartPointer<vtkScalarBarActor> currentScalarBar = nullptr;
-                static vtkSmartPointer<vtkActor> currentProbeHighlightActor = nullptr;
-	              static vtkSmartPointer<vtkActor> currentVectorFieldActor = nullptr;
-	              static int activeFieldComponents = 1;
-                static int selectedField = 0;
-	              static int selectedFieldComponent = -2;
-                static bool showVectorGlyphs = false;
-                auto clearResultsViewerTransientProps = [&]() {
-                    if (currentScalarBar != nullptr) {
-                        renderer->RemoveActor2D(currentScalarBar);
-                        currentScalarBar = nullptr;
-                    }
-                    if (currentProbeHighlightActor != nullptr) {
-                        renderer->RemoveActor(currentProbeHighlightActor);
-                        currentProbeHighlightActor = nullptr;
-                    }
-                    if (currentVectorFieldActor != nullptr) {
-                        renderer->RemoveActor(currentVectorFieldActor);
-                        currentVectorFieldActor = nullptr;
-                    }
-                    activeFieldName.clear();
-                    selectedField = 0;
-                    selectedFieldComponent = -2;
-                    activeFieldComponents = 1;
-                    showVectorGlyphs = false;
-                    currentFrame = 0;
-                    lastFrame = -1;
-                };
 	              auto getActiveArray = [&](ResultFrame& resultFrame) -> vtkDataArray* {
 	                  if (activeFieldName.empty() || !resultFrame.mesh)
 	                      return nullptr;
@@ -1987,6 +1988,13 @@ int main(int argc, char* argv[])
 
               ImGui::PopFont();
               ImGui::EndTabItem();
+          }
+          if (was_results_viewer_active && !results_viewer_active) {
+              editor->setActiveViewer(nullptr);
+              clearResultsViewerTransientProps();
+              editor->clearBoundaryConditionOverlay();
+              vtkViewer_res.setActor(nullptr);
+              vtkViewer_res.render();
           }
           was_results_viewer_active = results_viewer_active;
           
