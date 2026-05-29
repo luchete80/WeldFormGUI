@@ -427,9 +427,19 @@ inline bool active_model_is_implicit()
   return model->getStep(0)->isImplicit();
 }
 
+inline bool active_model_is_3d()
+{
+  Model* model = get_active_model();
+  if (model == nullptr)
+    return true;
+  return model->getDimension() == 3;
+}
+
 inline std::string preferred_solver_binary_name()
 {
-  const std::string base_name = active_model_is_implicit() ? "weldform_imp" : "weldform_exp";
+  std::string base_name = "weldform_exp";
+  if (active_model_is_implicit())
+    base_name = active_model_is_3d() ? "weldform_imp_3d" : "weldform_imp";
   const char* edition_env = std::getenv("WELDFORM_SOLVER_EDITION");
   const std::string edition = edition_env != nullptr ? to_lower_copy(edition_env) : "";
 

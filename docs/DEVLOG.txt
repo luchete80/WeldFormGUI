@@ -271,3 +271,6 @@
 20260521 - Fixed Manual Max & Min.
 20260528 - Fixed removing  BC symbols and colormap after closing results
          - trying also to remove arrow from separate result & model viewew.
+20260529 - Added 3D Implicit Solver. 
+         - Added transparency & cutplane.
+

@@ -1,6 +1,8 @@
 // Standard Library
 #include <iostream>
+#include <array>
 #include <filesystem>
+#include <functional>
 #include <limits>
 
 
@@ -41,6 +43,7 @@
 #include <vtkCellPicker.h>
 #include <vtkExtractCells.h>
 #include <vtkMapper.h>
+#include <vtkPlane.h>
 #include <vtkProperty.h>
 #include <vtkSphereSource.h>
 
@@ -51,6 +54,7 @@
 
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
+#include <vtkObjectFactory.h>
 #include <vtkPolyDataMapper.h>
 
 #include <vtkArrowSource.h>
@@ -75,6 +79,8 @@
 
 #include "App/App.h"
 #include "GraphicMesh.h"
+#include "graphics/TransformGizmo.h"
+#include "model/Node.h"
 
 #include "results.h"
 #include "load_plot_dialog.h"
@@ -143,6 +149,567 @@ struct ModelViewportOverlayState {
     bool axesVisible = false;
     bool orthographic = false;
 };
+
+struct ResultsViewportToolState {
+    bool is3DFrame = false;
+    bool clipEnabled = false;
+    bool transparencyControlsVisible = false;
+    float surfaceOpacity = 1.0f;
+    int clipAxis = 2;
+    bool clipOriginInitialized = false;
+    std::array<double, 3> clipOrigin = {0.0, 0.0, 0.0};
+    vtkSmartPointer<vtkPlane> clipPlane;
+    vtkSmartPointer<TransformGizmo> gizmo;
+    vtkSmartPointer<vtkInteractorStyleTrackballCamera> clipInteractorStyle;
+    bool gizmoAddedToRenderer = false;
+    bool customInteractorInstalled = false;
+};
+
+double distancePointToSegment2D(double px, double py,
+                                double ax, double ay,
+                                double bx, double by)
+{
+    const double abx = bx - ax;
+    const double aby = by - ay;
+    const double abLen2 = abx * abx + aby * aby;
+    if (abLen2 <= 1.0e-12) {
+        const double dx = px - ax;
+        const double dy = py - ay;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    double t = ((px - ax) * abx + (py - ay) * aby) / abLen2;
+    t = std::max(0.0, std::min(1.0, t));
+    const double cx = ax + t * abx;
+    const double cy = ay + t * aby;
+    const double dx = px - cx;
+    const double dy = py - cy;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+void worldToDisplayPoint(vtkRenderer* renderer, const double world[3], double display[3])
+{
+    renderer->SetWorldPoint(world[0], world[1], world[2], 1.0);
+    renderer->WorldToDisplay();
+    renderer->GetDisplayPoint(display);
+}
+
+class ResultClipInteractorStyle : public vtkInteractorStyleTrackballCamera
+{
+public:
+    static ResultClipInteractorStyle* New();
+    vtkTypeMacro(ResultClipInteractorStyle, vtkInteractorStyleTrackballCamera);
+
+    void SetTransformGizmo(vtkSmartPointer<TransformGizmo> gizmo) {
+        Gizmo = gizmo;
+    }
+
+    void SetAxisChangedCallback(std::function<void(int)> callback) {
+        AxisChangedCallback = std::move(callback);
+    }
+
+    void SetAxisDraggedCallback(std::function<void(int, double)> callback) {
+        AxisDraggedCallback = std::move(callback);
+    }
+
+    void OnLeftButtonDown() override {
+        int* clickPos = this->GetInteractor()->GetEventPosition();
+        ClickPos[0] = clickPos[0];
+        ClickPos[1] = clickPos[1];
+
+        SelectedAxis = pickAxisAt(clickPos[0], clickPos[1]);
+        if (SelectedAxis >= 0) {
+            if (AxisChangedCallback)
+                AxisChangedCallback(SelectedAxis);
+            if (Gizmo)
+                Gizmo->HighlightAxis(SelectedAxis);
+            this->GetInteractor()->GetRenderWindow()->Render();
+            return;
+        }
+
+        vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+    }
+
+    void OnMouseMove() override {
+        if (SelectedAxis == -1) {
+            int* pos = this->GetInteractor()->GetEventPosition();
+            int hoveredAxis = pickAxisAt(pos[0], pos[1]);
+            if (hoveredAxis != HoveredAxis) {
+                HoveredAxis = hoveredAxis;
+                if (Gizmo) {
+                    if (hoveredAxis >= 0)
+                        Gizmo->HighlightAxis(hoveredAxis);
+                    else
+                        Gizmo->ClearHighlight();
+                }
+                this->GetInteractor()->GetRenderWindow()->Render();
+            }
+            vtkInteractorStyleTrackballCamera::OnMouseMove();
+            return;
+        }
+
+        vtkRenderer* renderer = this->GetDefaultRenderer();
+        if (renderer == nullptr) {
+            vtkInteractorStyleTrackballCamera::OnMouseMove();
+            return;
+        }
+
+        int* currPos = this->GetInteractor()->GetEventPosition();
+        renderer->SetDisplayPoint(currPos[0], currPos[1], 0.0);
+        renderer->DisplayToWorld();
+        double worldPos1[4] = {0.0, 0.0, 0.0, 0.0};
+        renderer->GetWorldPoint(worldPos1);
+
+        renderer->SetDisplayPoint(ClickPos[0], ClickPos[1], 0.0);
+        renderer->DisplayToWorld();
+        double worldPos0[4] = {0.0, 0.0, 0.0, 0.0};
+        renderer->GetWorldPoint(worldPos0);
+
+        const std::array<std::array<double, 3>, 3> directions = {{
+            {{1.0, 0.0, 0.0}},
+            {{0.0, 1.0, 0.0}},
+            {{0.0, 0.0, 1.0}}
+        }};
+
+        double moveVec[3] = {
+            worldPos1[0] - worldPos0[0],
+            worldPos1[1] - worldPos0[1],
+            worldPos1[2] - worldPos0[2]
+        };
+        const double delta = vtkMath::Dot(moveVec, directions[SelectedAxis].data());
+
+        if (std::abs(delta) > 1.0e-12 && AxisDraggedCallback) {
+            AxisDraggedCallback(SelectedAxis, delta);
+        }
+
+        ClickPos[0] = currPos[0];
+        ClickPos[1] = currPos[1];
+        this->GetInteractor()->GetRenderWindow()->Render();
+    }
+
+    void OnLeftButtonUp() override {
+        SelectedAxis = -1;
+        HoveredAxis = -1;
+        if (Gizmo)
+            Gizmo->ClearHighlight();
+        this->GetInteractor()->GetRenderWindow()->Render();
+        vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+    }
+
+private:
+    int pickAxisAt(int x, int y) {
+        if (!Gizmo || !this->GetDefaultRenderer())
+            return -1;
+
+        Gizmo->SetReferenceRenderer(this->GetDefaultRenderer());
+
+        const std::array<std::array<double, 3>, 3> directions = {{
+            {{1.0, 0.0, 0.0}},
+            {{0.0, 1.0, 0.0}},
+            {{0.0, 0.0, 1.0}}
+        }};
+
+        const std::array<double, 3>& center = Gizmo->GetDragCenter();
+        const double length = Gizmo->GetDragLength();
+        vtkRenderer* renderer = this->GetDefaultRenderer();
+
+        int bestAxis = -1;
+        double bestDistance = 1.0e100;
+        const double pixelThreshold = 20.0;
+
+        for (int axis = 0; axis < 3; ++axis) {
+            if (!Gizmo->IsAxisActive(axis))
+                continue;
+
+            double start[3] = {center[0], center[1], center[2]};
+            double end[3] = {
+                center[0] + directions[axis][0] * length,
+                center[1] + directions[axis][1] * length,
+                center[2] + directions[axis][2] * length
+            };
+
+            double startDisplay[3];
+            double endDisplay[3];
+            worldToDisplayPoint(renderer, start, startDisplay);
+            worldToDisplayPoint(renderer, end, endDisplay);
+
+            const double distance = distancePointToSegment2D(
+                static_cast<double>(x),
+                static_cast<double>(y),
+                startDisplay[0], startDisplay[1],
+                endDisplay[0], endDisplay[1]);
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestAxis = axis;
+            }
+        }
+
+        return bestDistance <= pixelThreshold ? bestAxis : -1;
+    }
+
+    vtkSmartPointer<TransformGizmo> Gizmo;
+    std::function<void(int)> AxisChangedCallback;
+    std::function<void(int, double)> AxisDraggedCallback;
+    int SelectedAxis = -1;
+    int HoveredAxis = -1;
+    int ClickPos[2] = {0, 0};
+};
+
+vtkStandardNewMacro(ResultClipInteractorStyle);
+
+bool resultFrameIs3D(const ResultFrame& frame)
+{
+    if (!frame.mesh) {
+        return false;
+    }
+
+    for (vtkIdType cellId = 0; cellId < frame.mesh->GetNumberOfCells(); ++cellId) {
+        vtkCell* cell = frame.mesh->GetCell(cellId);
+        if (cell != nullptr && cell->GetCellDimension() == 3) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void computeResultFrameCentroid(const ResultFrame& frame, double centroid[3])
+{
+    centroid[0] = 0.0;
+    centroid[1] = 0.0;
+    centroid[2] = 0.0;
+    if (!frame.mesh || frame.mesh->GetNumberOfPoints() == 0) {
+        return;
+    }
+
+    const vtkIdType pointCount = frame.mesh->GetNumberOfPoints();
+    double point[3];
+    for (vtkIdType pointId = 0; pointId < pointCount; ++pointId) {
+        frame.mesh->GetPoint(pointId, point);
+        centroid[0] += point[0];
+        centroid[1] += point[1];
+        centroid[2] += point[2];
+    }
+
+    centroid[0] /= static_cast<double>(pointCount);
+    centroid[1] /= static_cast<double>(pointCount);
+    centroid[2] /= static_cast<double>(pointCount);
+}
+
+void updateClipPlaneDefinition(ResultsViewportToolState& state)
+{
+    if (!state.clipPlane) {
+        state.clipPlane = vtkSmartPointer<vtkPlane>::New();
+    }
+
+    double normal[3] = {0.0, 0.0, 0.0};
+    normal[std::max(0, std::min(2, state.clipAxis))] = 1.0;
+    state.clipPlane->SetOrigin(state.clipOrigin.data());
+    state.clipPlane->SetNormal(normal);
+}
+
+void applyResultsToolState(Editor* editor, ResultsViewportToolState& state)
+{
+    if (editor == nullptr || editor->getResults() == nullptr) {
+        return;
+    }
+
+    updateClipPlaneDefinition(state);
+
+    for (auto& frame : editor->getResults()->frames) {
+        if (!frame) {
+            continue;
+        }
+
+        if (frame->mapper) {
+            frame->mapper->RemoveAllClippingPlanes();
+            if (state.clipEnabled && state.is3DFrame && state.clipPlane) {
+                frame->mapper->AddClippingPlane(state.clipPlane);
+            }
+            frame->mapper->Modified();
+        }
+
+        if (frame->vectorMapper) {
+            frame->vectorMapper->RemoveAllClippingPlanes();
+            if (state.clipEnabled && state.is3DFrame && state.clipPlane) {
+                frame->vectorMapper->AddClippingPlane(state.clipPlane);
+            }
+            frame->vectorMapper->Modified();
+        }
+
+        if (frame->actor && frame->actor->GetProperty()) {
+            const double opacity = state.is3DFrame ? static_cast<double>(state.surfaceOpacity) : 1.0;
+            frame->actor->GetProperty()->SetOpacity(opacity);
+            frame->actor->Modified();
+        }
+    }
+}
+
+vtkSmartPointer<vtkActor> getFirstActiveModelActor()
+{
+    Model& model = getApp().getActiveModel();
+    for (int partIndex = 0; partIndex < model.getPartCount(); ++partIndex) {
+        Part* part = model.getPart(partIndex);
+        if (part == nullptr) {
+            continue;
+        }
+
+        if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+            if (vtkSmartPointer<vtkActor> actor = graphicMesh->getActor()) {
+                return actor;
+            }
+        }
+
+        if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+            if (visual->actor != nullptr) {
+                return visual->actor;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+bool activeModelIs3D()
+{
+    return getApp().getActiveModel().getDimension() == 3;
+}
+
+bool computeActiveModelCentroid(double centroid[3])
+{
+    centroid[0] = 0.0;
+    centroid[1] = 0.0;
+    centroid[2] = 0.0;
+
+    bool hasBounds = false;
+    double bounds[6] = {
+        std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()
+    };
+
+    Model& model = getApp().getActiveModel();
+    for (int partIndex = 0; partIndex < model.getPartCount(); ++partIndex) {
+        Part* part = model.getPart(partIndex);
+        if (part == nullptr) {
+            continue;
+        }
+
+        vtkActor* actor = nullptr;
+        if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+            actor = graphicMesh->getActor();
+        }
+        if (actor == nullptr) {
+            if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+                actor = visual->actor;
+            }
+        }
+        if (actor == nullptr) {
+            continue;
+        }
+
+        double actorBounds[6];
+        actor->GetBounds(actorBounds);
+        if (!std::isfinite(actorBounds[0]) || !std::isfinite(actorBounds[1])) {
+            continue;
+        }
+
+        if (!hasBounds) {
+            for (int i = 0; i < 6; ++i)
+                bounds[i] = actorBounds[i];
+            hasBounds = true;
+        } else {
+            bounds[0] = (std::min)(bounds[0], actorBounds[0]);
+            bounds[1] = (std::max)(bounds[1], actorBounds[1]);
+            bounds[2] = (std::min)(bounds[2], actorBounds[2]);
+            bounds[3] = (std::max)(bounds[3], actorBounds[3]);
+            bounds[4] = (std::min)(bounds[4], actorBounds[4]);
+            bounds[5] = (std::max)(bounds[5], actorBounds[5]);
+        }
+    }
+
+    if (!hasBounds) {
+        return false;
+    }
+
+    centroid[0] = 0.5 * (bounds[0] + bounds[1]);
+    centroid[1] = 0.5 * (bounds[2] + bounds[3]);
+    centroid[2] = 0.5 * (bounds[4] + bounds[5]);
+    return true;
+}
+
+void applyClipAndOpacityToActor(vtkActor* actor, const ResultsViewportToolState& state)
+{
+    if (actor == nullptr) {
+        return;
+    }
+
+    if (vtkMapper* mapper = actor->GetMapper()) {
+        mapper->RemoveAllClippingPlanes();
+        if (state.clipEnabled && state.is3DFrame && state.clipPlane) {
+            mapper->AddClippingPlane(state.clipPlane);
+        }
+        mapper->Modified();
+    }
+
+    if (actor->GetProperty() != nullptr) {
+        const double opacity = state.is3DFrame ? static_cast<double>(state.surfaceOpacity) : 1.0;
+        actor->GetProperty()->SetOpacity(opacity);
+        actor->Modified();
+    }
+}
+
+void applyActiveModelToolState(ResultsViewportToolState& state)
+{
+    updateClipPlaneDefinition(state);
+
+    Model& model = getApp().getActiveModel();
+    for (int partIndex = 0; partIndex < model.getPartCount(); ++partIndex) {
+        Part* part = model.getPart(partIndex);
+        if (part == nullptr) {
+            continue;
+        }
+
+        if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+            applyClipAndOpacityToActor(graphicMesh->getActor(), state);
+        }
+
+        if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+            applyClipAndOpacityToActor(visual->actor, state);
+        }
+    }
+}
+
+void detachResultsClipTools(VtkViewer& viewer, ResultsViewportToolState& state)
+{
+    if (state.gizmo && state.gizmoAddedToRenderer && viewer.getRenderer() != nullptr) {
+        state.gizmo->Hide();
+        state.gizmo->RemoveFromRenderer(viewer.getRenderer());
+        state.gizmoAddedToRenderer = false;
+    }
+    if (state.customInteractorInstalled) {
+        viewer.restoreDefaultInteractorStyle();
+        state.customInteractorInstalled = false;
+    }
+}
+
+void syncResultsClipTools(VtkViewer& viewer,
+                          ResultsViewportToolState& state,
+                          ResultFrame& frame)
+{
+    if (!state.clipEnabled || !state.is3DFrame || frame.actor == nullptr) {
+        detachResultsClipTools(viewer, state);
+        return;
+    }
+
+    if (!state.gizmo) {
+        state.gizmo = vtkSmartPointer<TransformGizmo>::New();
+        state.gizmo->SetDimension(3);
+        state.gizmo->SetViewCenteredPlacementEnabled(false);
+    }
+
+    if (!state.clipInteractorStyle) {
+        vtkSmartPointer<ResultClipInteractorStyle> style =
+            vtkSmartPointer<ResultClipInteractorStyle>::New();
+        style->SetTransformGizmo(state.gizmo);
+        style->SetAxisChangedCallback([&state](int axis) {
+            state.clipAxis = axis;
+            updateClipPlaneDefinition(state);
+        });
+        style->SetAxisDraggedCallback([&viewer, &state](int axis, double delta) {
+            state.clipAxis = axis;
+            state.clipOrigin[axis] += delta;
+            updateClipPlaneDefinition(state);
+            if (state.gizmo) {
+                state.gizmo->SetDragCenterPosition(state.clipOrigin.data());
+                state.gizmo->SetOriginPosition(state.clipOrigin.data());
+            }
+            if (viewer.getRenderer() != nullptr) {
+                viewer.getRenderer()->ResetCameraClippingRange();
+            }
+        });
+        state.clipInteractorStyle = style;
+    }
+
+    state.gizmo->SetReferenceRenderer(viewer.getRenderer());
+    state.gizmo->SetTargetActor(frame.actor);
+    state.gizmo->SetDragCenterPosition(state.clipOrigin.data());
+    state.gizmo->SetOriginPosition(state.clipOrigin.data());
+    state.gizmo->Show();
+
+    if (!state.gizmoAddedToRenderer && viewer.getRenderer() != nullptr) {
+        state.gizmo->AddToRenderer(viewer.getRenderer());
+        state.gizmoAddedToRenderer = true;
+    }
+
+    if (!state.customInteractorInstalled && viewer.getInteractor() != nullptr) {
+        state.clipInteractorStyle->SetDefaultRenderer(viewer.getRenderer());
+        viewer.getInteractor()->SetInteractorStyle(state.clipInteractorStyle);
+        viewer.getInteractor()->EnableRenderOff();
+        state.customInteractorInstalled = true;
+    }
+}
+
+void syncModelClipTools(VtkViewer& viewer, ResultsViewportToolState& state)
+{
+    if (!state.clipEnabled || !state.is3DFrame) {
+        detachResultsClipTools(viewer, state);
+        return;
+    }
+
+    vtkSmartPointer<vtkActor> targetActor = getFirstActiveModelActor();
+    if (targetActor == nullptr) {
+        detachResultsClipTools(viewer, state);
+        return;
+    }
+
+    if (!state.gizmo) {
+        state.gizmo = vtkSmartPointer<TransformGizmo>::New();
+        state.gizmo->SetDimension(3);
+        state.gizmo->SetViewCenteredPlacementEnabled(false);
+    }
+
+    if (!state.clipInteractorStyle) {
+        vtkSmartPointer<ResultClipInteractorStyle> style =
+            vtkSmartPointer<ResultClipInteractorStyle>::New();
+        style->SetTransformGizmo(state.gizmo);
+        style->SetAxisChangedCallback([&state](int axis) {
+            state.clipAxis = axis;
+            updateClipPlaneDefinition(state);
+        });
+        style->SetAxisDraggedCallback([&viewer, &state](int axis, double delta) {
+            state.clipAxis = axis;
+            state.clipOrigin[axis] += delta;
+            updateClipPlaneDefinition(state);
+            if (state.gizmo) {
+                state.gizmo->SetDragCenterPosition(state.clipOrigin.data());
+                state.gizmo->SetOriginPosition(state.clipOrigin.data());
+            }
+            if (viewer.getRenderer() != nullptr) {
+                viewer.getRenderer()->ResetCameraClippingRange();
+            }
+        });
+        state.clipInteractorStyle = style;
+    }
+
+    state.gizmo->SetReferenceRenderer(viewer.getRenderer());
+    state.gizmo->SetTargetActor(targetActor);
+    state.gizmo->SetDragCenterPosition(state.clipOrigin.data());
+    state.gizmo->SetOriginPosition(state.clipOrigin.data());
+    state.gizmo->Show();
+
+    if (!state.gizmoAddedToRenderer && viewer.getRenderer() != nullptr) {
+        state.gizmo->AddToRenderer(viewer.getRenderer());
+        state.gizmoAddedToRenderer = true;
+    }
+
+    if (!state.customInteractorInstalled && viewer.getInteractor() != nullptr) {
+        state.clipInteractorStyle->SetDefaultRenderer(viewer.getRenderer());
+        viewer.getInteractor()->SetInteractorStyle(state.clipInteractorStyle);
+        viewer.getInteractor()->EnableRenderOff();
+        state.customInteractorInstalled = true;
+    }
+}
 
 void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool showEdges, bool preserveScalarColors)
 {
@@ -489,7 +1056,8 @@ void drawViewportOverlay(VtkViewer& viewer,
                          ModelViewportOverlayState& state,
                          const char* windowId,
                          bool allowAxes,
-                         Editor* editor = nullptr)
+                         Editor* editor = nullptr,
+                         ResultsViewportToolState* resultsTools = nullptr)
 {
     const ImVec2 viewportMin = viewer.getViewportScreenMin();
     const ImVec2 viewportMax = viewer.getViewportScreenMax();
@@ -559,6 +1127,44 @@ void drawViewportOverlay(VtkViewer& viewer,
         ImGui::SameLine();
         if (drawToolbarButton("Sf", state.displayMode == ModelDisplayMode::Surface, "Surface")) {
             state.displayMode = ModelDisplayMode::Surface;
+        }
+
+        if (resultsTools != nullptr && resultsTools->is3DFrame) {
+            drawOverlaySeparator();
+            if (drawToolbarButton("Cp", resultsTools->clipEnabled, "Clip plane")) {
+                resultsTools->clipEnabled = !resultsTools->clipEnabled;
+                if (!resultsTools->clipEnabled) {
+                    resultsTools->clipOriginInitialized = false;
+                }
+            }
+            if (resultsTools->clipEnabled) {
+                ImGui::SameLine();
+                if (drawAxisButton("X", ImVec4(0.70f, 0.24f, 0.24f, 1.0f))) {
+                    resultsTools->clipAxis = 0;
+                }
+                ImGui::SameLine();
+                if (drawAxisButton("Y", ImVec4(0.22f, 0.58f, 0.28f, 1.0f))) {
+                    resultsTools->clipAxis = 1;
+                }
+                ImGui::SameLine();
+                if (drawAxisButton("Z", ImVec4(0.24f, 0.40f, 0.76f, 1.0f))) {
+                    resultsTools->clipAxis = 2;
+                }
+            }
+
+            ImGui::SameLine();
+            if (drawToolbarButton("Tp", resultsTools->transparencyControlsVisible, "Transparency")) {
+                resultsTools->transparencyControlsVisible = !resultsTools->transparencyControlsVisible;
+            }
+            if (resultsTools->transparencyControlsVisible) {
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(110.0f);
+                ImGui::SliderFloat("##results_opacity",
+                                   &resultsTools->surfaceOpacity,
+                                   0.08f,
+                                   1.0f,
+                                   "A %.2f");
+            }
         }
 
         drawOverlaySeparator();
@@ -744,6 +1350,7 @@ struct ResultProbeInfo {
     bool valid = false;
     bool isCellField = false;
     vtkIdType pointId = -1;
+    int displayNodeId = -1;
     vtkIdType cellId = -1;
     std::string valueText;
     ImVec2 screenPos = ImVec2(0.0f, 0.0f);
@@ -787,6 +1394,7 @@ std::string formatProbeValue(vtkDataArray* array, vtkIdType tupleId, int selecte
 
 ResultProbeInfo buildResultProbeInfo(VtkViewer& viewer,
                                      ResultFrame& frame,
+                                     Mesh* referenceMesh,
                                      const std::string& activeFieldName,
                                      bool isCellField,
                                      int selectedFieldComponent) {
@@ -871,6 +1479,14 @@ ResultProbeInfo buildResultProbeInfo(VtkViewer& viewer,
     }
 
     probe.pointId = closestPointId;
+    if (referenceMesh != nullptr &&
+        closestPointId >= 0 &&
+        closestPointId < referenceMesh->getNodeCount() &&
+        referenceMesh->getNode(static_cast<int>(closestPointId)) != nullptr) {
+        probe.displayNodeId = referenceMesh->getNode(static_cast<int>(closestPointId))->getId();
+    } else {
+        probe.displayNodeId = static_cast<int>(closestPointId) + 1;
+    }
     probe.valueText = formatProbeValue(field, closestPointId, selectedFieldComponent);
     return probe;
 }
@@ -897,7 +1513,7 @@ void drawResultProbeOverlay(const ResultProbeInfo& probe, const std::string& act
         if (probe.isCellField) {
             ImGui::Text("Element %lld", static_cast<long long>(probe.cellId));
         } else {
-            ImGui::Text("Node %lld", static_cast<long long>(probe.pointId));
+            ImGui::Text("Node %d", probe.displayNodeId);
         }
         ImGui::Separator();
         ImGui::Text("%s = %s", activeFieldName.c_str(), probe.valueText.c_str());
@@ -1503,6 +2119,7 @@ int main(int argc, char* argv[])
           static bool was_results_viewer_active = false;
           bool results_viewer_active = false;
           static ModelViewportOverlayState resultsOverlayState;
+          static ResultsViewportToolState resultsToolState;
           static int currentFrame = 0;
           static int lastFrame = -1;
           static double globalMin = 0.0;
@@ -1570,6 +2187,7 @@ int main(int argc, char* argv[])
 
 	              auto renderer = vtkViewer2.getRenderer();
                 static ModelViewportOverlayState modelOverlayState;
+                static ResultsViewportToolState modelToolState;
 
 	              if (ImGui::Button("Demo")) {
                   showDemoDialog = true;
@@ -1603,9 +2221,45 @@ int main(int argc, char* argv[])
               renderer->SetBackgroundAlpha(vtk2BkgAlpha);
 
               applyDisplayModeToActiveModel(modelOverlayState.displayMode, modelOverlayState.showEdges);
+              modelToolState.is3DFrame = activeModelIs3D();
+              if (!modelToolState.is3DFrame) {
+                  modelToolState.clipEnabled = false;
+                  modelToolState.transparencyControlsVisible = false;
+                  modelToolState.surfaceOpacity = 1.0f;
+                  detachResultsClipTools(vtkViewer2, modelToolState);
+              } else {
+                  if (modelToolState.clipEnabled && !modelToolState.clipOriginInitialized) {
+                      if (computeActiveModelCentroid(modelToolState.clipOrigin.data())) {
+                          modelToolState.clipOriginInitialized = true;
+                      }
+                  }
+                  applyActiveModelToolState(modelToolState);
+                  syncModelClipTools(vtkViewer2, modelToolState);
+              }
               // Render del viewer
               vtkViewer2.render();
-              drawViewportOverlay(vtkViewer2, modelOverlayState, "##ModelViewportOverlay", true, editor);
+              const bool previousModelClipEnabled = modelToolState.clipEnabled;
+              const int previousModelClipAxis = modelToolState.clipAxis;
+              const float previousModelOpacity = modelToolState.surfaceOpacity;
+              drawViewportOverlay(vtkViewer2,
+                                  modelOverlayState,
+                                  "##ModelViewportOverlay",
+                                  true,
+                                  editor,
+                                  &modelToolState);
+              if (modelToolState.is3DFrame) {
+                  if (modelToolState.clipEnabled && !previousModelClipEnabled) {
+                      if (computeActiveModelCentroid(modelToolState.clipOrigin.data())) {
+                          modelToolState.clipOriginInitialized = true;
+                      }
+                  }
+                  if (modelToolState.clipEnabled != previousModelClipEnabled ||
+                      modelToolState.clipAxis != previousModelClipAxis ||
+                      std::abs(modelToolState.surfaceOpacity - previousModelOpacity) > 1.0e-6f) {
+                      applyActiveModelToolState(modelToolState);
+                      syncModelClipTools(vtkViewer2, modelToolState);
+                  }
+              }
               editor->setActiveViewer(&vtkViewer2);
               editor->handleMeasurementInteraction();
               editor->handleSelectionInteraction();
@@ -1842,12 +2496,17 @@ int main(int argc, char* argv[])
 	                      } else {
 	                          renderer->ResetCamera();
 	                      }
-		                      if (!activeFieldName.empty()) {
-		                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
-		                      }
+                      if (!activeFieldName.empty()) {
+                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
+                      }
                         syncCurrentVectorFieldActor(*editor->getResults()->frames[currentFrame]);
                         applyDisplayModeToActor(editor->getResults()->frames[currentFrame]->actor,
                                                 resultsOverlayState.displayMode, resultsOverlayState.showEdges, true);
+                        if (resultsToolState.clipEnabled && resultsToolState.is3DFrame) {
+                            syncResultsClipTools(vtkViewer_res,
+                                                 resultsToolState,
+                                                 *editor->getResults()->frames[currentFrame]);
+                        }
 	                      
 	                      lastFrame = currentFrame;                // Actualizamos el frame anterior
                       //vtkViewer_res.render();
@@ -1879,9 +2538,55 @@ int main(int argc, char* argv[])
 	            }
               
               applyDisplayModeToResults(resultsOverlayState.displayMode, resultsOverlayState.showEdges, editor);
+              if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
+                  const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
+                  auto& activeFrame = *editor->getResults()->frames[safeFrame];
+                  resultsToolState.is3DFrame = resultFrameIs3D(activeFrame);
+                  if (!resultsToolState.is3DFrame) {
+                      resultsToolState.clipEnabled = false;
+                      resultsToolState.transparencyControlsVisible = false;
+                      resultsToolState.surfaceOpacity = 1.0f;
+                  }
+
+                  if (resultsToolState.clipEnabled && !resultsToolState.clipOriginInitialized) {
+                      computeResultFrameCentroid(activeFrame, resultsToolState.clipOrigin.data());
+                      resultsToolState.clipOriginInitialized = true;
+                  }
+
+                  applyResultsToolState(editor, resultsToolState);
+                  syncResultsClipTools(vtkViewer_res, resultsToolState, activeFrame);
+              } else {
+                  resultsToolState.is3DFrame = false;
+                  resultsToolState.clipEnabled = false;
+                  resultsToolState.transparencyControlsVisible = false;
+                  resultsToolState.surfaceOpacity = 1.0f;
+                  detachResultsClipTools(vtkViewer_res, resultsToolState);
+              }
               // Render del viewer
               vtkViewer_res.render();
-              drawViewportOverlay(vtkViewer_res, resultsOverlayState, "##ResultsViewportOverlay", false, editor);
+              const bool previousClipEnabled = resultsToolState.clipEnabled;
+              const int previousClipAxis = resultsToolState.clipAxis;
+              const float previousOpacity = resultsToolState.surfaceOpacity;
+              drawViewportOverlay(vtkViewer_res,
+                                  resultsOverlayState,
+                                  "##ResultsViewportOverlay",
+                                  false,
+                                  editor,
+                                  &resultsToolState);
+              if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
+                  const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));
+                  auto& activeFrame = *editor->getResults()->frames[safeFrame];
+                  if (resultsToolState.clipEnabled && !previousClipEnabled) {
+                      computeResultFrameCentroid(activeFrame, resultsToolState.clipOrigin.data());
+                      resultsToolState.clipOriginInitialized = true;
+                  }
+                  if (resultsToolState.clipEnabled != previousClipEnabled ||
+                      resultsToolState.clipAxis != previousClipAxis ||
+                      std::abs(resultsToolState.surfaceOpacity - previousOpacity) > 1.0e-6f) {
+                      applyResultsToolState(editor, resultsToolState);
+                      syncResultsClipTools(vtkViewer_res, resultsToolState, activeFrame);
+                  }
+              }
               editor->setActiveViewer(&vtkViewer_res);
               editor->handleSelectionInteraction();
               editor->drawSelectionOverlay();
@@ -1972,8 +2677,10 @@ int main(int argc, char* argv[])
 	                  }
 
                   if (!activeFieldName.empty()) {
+                      Mesh* probeReferenceMesh = editor->getResultViewerTargetMesh();
                       const ResultProbeInfo probe = buildResultProbeInfo(vtkViewer_res,
                                                                          overlayFrame,
+                                                                         probeReferenceMesh,
                                                                          activeFieldName,
                                                                          isCellField,
                                                                          selectedFieldComponent);
@@ -2007,6 +2714,8 @@ int main(int argc, char* argv[])
               editor->setActiveViewer(nullptr);
               clearResultsViewerTransientProps();
               editor->clearBoundaryConditionOverlay();
+              detachResultsClipTools(vtkViewer_res, resultsToolState);
+              resultsToolState = ResultsViewportToolState{};
               vtkViewer_res.setActor(nullptr);
               vtkViewer_res.render();
           }

@@ -777,12 +777,14 @@ void Mesh::genFromNastranFile(const std::string& filename) {
 
     const double* nodes = reader.getNodes();
     const int* connectivity = reader.getConnectivity();
+    const int* nodeIds = reader.getNodeIds();
     const int nodeCount = reader.getNodeCount();
     const int elemCount = reader.getElemCount();
     const int maxNodesPerElem = reader.getMaxNodesPerElem();
 
     for(int i = 0; i < nodeCount; ++i) {
-        m_node.push_back(new Node(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2], i + 1));
+        const int nodeId = (nodeIds != nullptr) ? nodeIds[i] : (i + 1);
+        m_node.push_back(new Node(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2], nodeId));
     }
 
     for(int e = 0; e < elemCount; ++e) {
@@ -813,7 +815,6 @@ void Mesh::genFromNastranFile(const std::string& filename) {
         }
     }
 
-    assignSequentialEntityIds(m_node);
     assignSequentialEntityIds(m_elem);
 
     m_dim = reader.dim;

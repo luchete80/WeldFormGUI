@@ -33,6 +33,7 @@ public:
 protected:
   struct SolverInputInfo {
     bool implicit = false;
+    bool is3D = true;
     bool thermal = false;
     int nodeCount = -1;
   };

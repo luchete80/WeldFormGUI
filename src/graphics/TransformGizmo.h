@@ -88,6 +88,24 @@ public:
         UpdatePlacementFromTargetActor();
     }
 
+    void SetViewCenteredPlacementEnabled(bool enabled) {
+        UseViewCenteredPlacement = enabled;
+        UpdatePlacementFromTargetActor();
+    }
+
+    void SetDragCenterPosition(const double center[3]) {
+        if (!center) return;
+        HasCustomDragCenter = true;
+        for (int i = 0; i < 3; ++i)
+            CustomDragCenter[i] = center[i];
+        UpdatePlacementFromTargetActor();
+    }
+
+    void ClearDragCenterPositionOverride() {
+        HasCustomDragCenter = false;
+        UpdatePlacementFromTargetActor();
+    }
+
     void SetOriginPosition(const double origin[3]) {
         if (!origin) return;
         for (int i = 0; i < 3; ++i)
@@ -116,7 +134,13 @@ public:
             actorCenter[1],
             actorCenter[2]
         };
-        ComputeViewCenteredPlacement(actorCenter, placementCenter);
+        if (HasCustomDragCenter) {
+            placementCenter[0] = CustomDragCenter[0];
+            placementCenter[1] = CustomDragCenter[1];
+            placementCenter[2] = CustomDragCenter[2];
+        } else if (UseViewCenteredPlacement) {
+            ComputeViewCenteredPlacement(actorCenter, placementCenter);
+        }
         DragCenter = {placementCenter[0], placementCenter[1], placementCenter[2]};
 
         const double maxDim = std::max({
@@ -465,6 +489,8 @@ private:
     std::array<double, 3> DragCenter = {0.0, 0.0, 0.0};
     int Dimension = 3;
     bool IsVisibleFlag = false;
+    bool UseViewCenteredPlacement = true;
+    bool HasCustomDragCenter = false;
     double DragLength = 1e-3;
     double DragRadius = 2.5e-5;
     double PickRadius = 8e-5;
@@ -472,9 +498,10 @@ private:
     double TipRadius = 7.5e-5;
     double OriginLength = 3e-4;
     double OriginRadius = 1.2e-5;
+    std::array<double, 3> CustomDragCenter = {0.0, 0.0, 0.0};
 };
 
-TransformGizmo* TransformGizmo::New() {
+inline TransformGizmo* TransformGizmo::New() {
     auto newGizmo = new TransformGizmo;
     return newGizmo;
 }
@@ -726,6 +753,8 @@ private:
     int ClickPos[2] = {0, 0};
 };
 
-vtkStandardNewMacro(GizmoInteractorStyle);
+inline GizmoInteractorStyle* GizmoInteractorStyle::New() {
+    return new GizmoInteractorStyle;
+}
 
 #endif

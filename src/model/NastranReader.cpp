@@ -30,6 +30,35 @@ inline std::string trimSpaces(const std::string& s) {
     return out;
 }
 
+inline bool startsWithCard(const std::string& line, const char* card) {
+    const std::string prefix = trimSpaces(line.substr(0, 8));
+    return prefix == std::string(card);
+}
+
+inline double parseNastranRealField(std::string field) {
+    field = trimSpaces(field);
+    if (field.empty()) {
+        return 0.0;
+    }
+
+    for (auto &c : field) {
+        if (c == 'D' || c == 'd') c = 'E';
+    }
+
+    if (field.find('E') == std::string::npos &&
+        field.find('e') == std::string::npos) {
+        for (size_t k = 1; k < field.size(); ++k) {
+            if ((field[k] == '+' || field[k] == '-') &&
+                std::isdigit(static_cast<unsigned char>(field[k - 1]))) {
+                field.insert(k, "E");
+                break;
+            }
+        }
+    }
+
+    return strtod(field.c_str(), nullptr);
+}
+
 void NastranReader::read(const char* fName){
 	string fileName = fName;
   string line;
@@ -52,6 +81,7 @@ void NastranReader::read(const char* fName){
   
   dim = 3;
   max_nodes_per_elem = 3;
+  bool found_ctetra = false;
   
   bool start_node = false;
   bool start_elem = false;
@@ -62,40 +92,79 @@ void NastranReader::read(const char* fName){
 	if (found) {	
 		while(getline(file, line)) {
       rawData.push_back(line /*+ "\n"*/); 
-      //if (strcmp(str_inp1, str_inp2) == 0)
-      //Increment nodes
-      //if (strcmp(str_inp1, str_inp2) == 0)
-        //or str.compare
-      //cout << "Searching "<<line.substr(0,4)<<endl;
-      if (line.substr(0,4) == string("GRID")){
-        //cout << "Node found!"<<endl;
+      if (startsWithCard(line, "GRID")){
         node_count++;
         if (!start_node){
           start_node = true;
           line_start_node = l;
         }
-      } else if (line.substr(0,5) == string("CTRIA") ||
-                 line.substr(0,5) == string("CQUAD") ||
-                 line.substr(0,5) == string("CBEAM") ||
-                 line.substr(0,4) == string("CBAR") ){
+      } else if (startsWithCard(line, "CTRIA") ||
+                 startsWithCard(line, "CQUAD") ||
+                 startsWithCard(line, "CTETRA") ||
+                 startsWithCard(line, "CBEAM") ||
+                 startsWithCard(line, "CBAR") ){
+        if (startsWithCard(line, "CTETRA"))
+          found_ctetra = true;
+      }
+      l++;
+    }
+    file.close();
+
+    file.clear();
+    file.open(fileName.c_str());
+    if (!file.is_open()) {
+      std::cerr << "[E] Failed to reopen Nastran file for parsing: " << fileName << std::endl;
+      return;
+    }
+
+    rawData.clear();
+    l = 0;
+    start_node = false;
+    start_elem = false;
+    node_count = 0;
+    elem_count = 0;
+    dim = found_ctetra ? 3 : 3;
+    max_nodes_per_elem = found_ctetra ? 4 : 3;
+
+		while(getline(file, line)) {
+      rawData.push_back(line);
+      if (startsWithCard(line, "GRID")){
+        node_count++;
+        if (!start_node){
+          start_node = true;
+          line_start_node = l;
+        }
+      } else if (
+          (found_ctetra && startsWithCard(line, "CTETRA")) ||
+          (!found_ctetra && (
+              startsWithCard(line, "CTRIA") ||
+              startsWithCard(line, "CQUAD") ||
+              startsWithCard(line, "CBEAM") ||
+              startsWithCard(line, "CBAR")))) {
         if (!start_elem){
           start_elem = true;
 					line_start_elem = l;
 				}
-        if (line.substr(0,5) == string("CQUAD"))
+        if (startsWithCard(line, "CQUAD"))
           max_nodes_per_elem = 4;
-        if (line.substr(0,5) == string("CTRIA") || line.substr(0,5) == string("CQUAD"))
+        if (startsWithCard(line, "CTETRA")) {
+          max_nodes_per_elem = 4;
+          dim = 3;
+        }
+        if (!found_ctetra && (startsWithCard(line, "CTRIA") || startsWithCard(line, "CQUAD")))
           dim = 2;
-        if (line.substr(0,5) == string("CBEAM") || line.substr(0,4) == string("CBAR"))
-          dim = 1;
-        //cout << "Element found!"<<endl;
+        if (!found_ctetra && (startsWithCard(line, "CBEAM") || startsWithCard(line, "CBAR")))
+          dim = 2;
         elem_count++;
       }
       l++;
     }
 		file.close();
-     
+    
     cout << node_count <<" nodes and "<<elem_count<< " elements found."<<endl;
+    if (found_ctetra) {
+      cout << "[Nastran] CTETRA detected. Shell/beam elements are ignored for solid import." << endl;
+    }
 
 		// Strip all the inline or block comments (C++ style) from the rawData
 		//stripComments(rawData);
@@ -116,46 +185,25 @@ void NastranReader::read(const char* fName){
 	//~ Vec3_t min( 1000., 1000., 1000.);
   //~ Vec3_t max(-1000.,-1000.,-1000.);
 	
-	for (int n=0;n<node_count;n++){
-    //cout << n+1; //DEBUG
-		string temp = rawData[l].substr(FIELD_LENGTH,FIELD_LENGTH); //Second field, id
+  int n = 0;
+  for (l = curr_line; l < line_count && n < node_count; ++l) {
+    if (!startsWithCard(rawData[l], "GRID"))
+      continue;
+
+		string temp = rawData[l].substr(FIELD_LENGTH,FIELD_LENGTH);
 		nodeid[n] = atoi(temp.c_str());
 		nodepos.insert(std::make_pair(atoi(temp.c_str()),n));
-		//cout << "id: "<<nodeid[n]<<endl;
 		for (int i = 0;i<3;i++) {
 			int pos = 3*(FIELD_LENGTH)+ i*FIELD_LENGTH;
-			//cout << "pos: "<<pos<<endl; 
 			string temp = rawData[l].substr(pos,FIELD_LENGTH);
-			
-			//Search + or - symbol (SCIENTIFIC NOTATION)
-			//BUT! If these signs (mainly the minus), are the FIRST character there is 
-			//not the exponential sign
-      for (auto &c : temp) {
-          if (c == 'D' || c == 'd') c = 'E';  // FORTRAN uses D
-      }
-
-      // Si no hay 'E', agregamos en caso necesario
-      if (temp.find('E') == std::string::npos && temp.find('e') == std::string::npos) {
-          for (size_t k = 1; k < temp.size(); ++k) {
-              if (temp[k] == '+' || temp[k] == '-') {
-                  temp.insert(k, "E");
-                  break;
-              }
-          }
-      }
-
-			
-			double d = strtod(temp.c_str(),NULL);
-			//~ //cout << temp<<", conv: "<<d<<"sign pos" << sign_pos<<endl;
-			//~ //cout <<d<< " ";
+			double d = parseNastranRealField(temp);
 			node[3*n+i] = d;
-			//~ if (d<min[i])
-				//~ min[i] = d;
-			//~ else if (d > max[i])
-				//~ max[i] = d;
 		}
-    //cout <<endl;
-		l++;
+    n++;
+  }
+
+  if (n != node_count) {
+    cerr << "[E] Parsed " << n << " GRID entries, expected " << node_count << endl;
   }
 	
 	//cout << "Min values: "<< min <<endl;
@@ -169,27 +217,45 @@ void NastranReader::read(const char* fName){
 	map<int, int>::iterator it;
   curr_line = line_start_elem;
 	l = curr_line;
-  for (int n=0;n<elem_count;n++){
+  int ecount = 0;
+  for (l = curr_line; l < line_count && ecount < elem_count; ++l) {
+    if (!((found_ctetra && startsWithCard(rawData[l], "CTETRA")) ||
+          (!found_ctetra && (
+              startsWithCard(rawData[l], "CTRIA") ||
+              startsWithCard(rawData[l], "CQUAD") ||
+              startsWithCard(rawData[l], "CBEAM") ||
+              startsWithCard(rawData[l], "CBAR"))))) {
+      continue;
+    }
+
     int nodes_per_elem = 3;
-    if (rawData[l].substr(0,5) == string("CQUAD"))
+    if (startsWithCard(rawData[l], "CQUAD") || startsWithCard(rawData[l], "CTETRA"))
       nodes_per_elem = 4;
-    else if (rawData[l].substr(0,5) == string("CBEAM") || rawData[l].substr(0,4) == string("CBAR"))
+    else if (startsWithCard(rawData[l], "CBEAM") || startsWithCard(rawData[l], "CBAR"))
       nodes_per_elem = 2;
 
     for (int en=0;en<nodes_per_elem;en++){
 			int pos = 3*(FIELD_LENGTH)+ en*FIELD_LENGTH;
-			string temp = rawData[l].substr(pos,FIELD_LENGTH); //Second field, id
+			string temp = rawData[l].substr(pos,FIELD_LENGTH);
 			int d = atoi(temp.c_str());
-			int nod = nodepos.find(d)->second;
-			//cout << "node ind: "<<d<<"real node ind: "<<nod<<endl; 
-			elcon[max_nodes_per_elem*n+en] = nod;
-			//cout << d<<" ";
+      auto it_nod = nodepos.find(d);
+      if (it_nod == nodepos.end()) {
+        cerr << "[E] Node id " << d << " referenced by element line " << l
+             << " was not found in GRID table." << endl;
+        elcon[max_nodes_per_elem*ecount+en] = -1;
+        continue;
+      }
+			int nod = it_nod->second;
+			elcon[max_nodes_per_elem*ecount+en] = nod;
 		}
     for (int en=nodes_per_elem; en<max_nodes_per_elem; en++)
-      elcon[max_nodes_per_elem*n+en] = -1;
-		//cout << endl;
-		l++;
-	}    
+      elcon[max_nodes_per_elem*ecount+en] = -1;
+    ecount++;
+	}
+
+  if (ecount != elem_count) {
+    cerr << "[E] Parsed " << ecount << " element entries, expected " << elem_count << endl;
+  }
   cout << "Done."<<endl;
 	
 }

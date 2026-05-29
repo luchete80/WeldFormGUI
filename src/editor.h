@@ -194,6 +194,7 @@ public:
   vtkSmartPointer<vtkActor> getCurrResActor(){return m_curr_res_actor;}
   
   MultiResult* getResults(){return m_results;}
+  Mesh* getResultViewerTargetMesh() const { return findResultViewerTargetMesh(); }
 
     // TODO TOMODIFY
     //~ std::vector<Results*> allResults; // todos los resultados cargados

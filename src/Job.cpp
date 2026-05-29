@@ -312,6 +312,8 @@ Job::SolverInputInfo Job::inspectSolverInput() const
   if (input->contains("Configuration")) {
     const auto& conf = (*input)["Configuration"];
     info.thermal = conf.value("thermal", false);
+    const std::string domType = conf.value("domType", "3D");
+    info.is3D = (domType == "3D");
     if (conf.contains("solver") &&
         conf["solver"].is_object() &&
         conf["solver"].contains("implicit")) {
@@ -375,7 +377,10 @@ Job::SolverEdition Job::getRequestedSolverEdition() const
 
 std::string Job::getSolverBinaryName(const SolverInputInfo& info) const
 {
-  const std::string baseName = info.implicit ? "weldform_imp" : "weldform_exp";
+  std::string baseName = "weldform_exp";
+  if (info.implicit) {
+    baseName = info.is3D ? "weldform_imp_3d" : "weldform_imp";
+  }
   const SolverEdition requestedEdition = getRequestedSolverEdition();
 
   const auto existsForCurrentPlatform = [&](const std::string& binaryName) {
