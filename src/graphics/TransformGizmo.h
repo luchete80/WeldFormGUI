@@ -143,30 +143,28 @@ public:
         }
         DragCenter = {placementCenter[0], placementCenter[1], placementCenter[2]};
 
-        const double maxDim = std::max({
+        const double maxDim = (std::max)(
             bounds[1] - bounds[0],
-            bounds[3] - bounds[2],
-            bounds[5] - bounds[4]
-        });
-        const double effectiveDim = std::max(maxDim, 1e-9);
+            (std::max)(bounds[3] - bounds[2], bounds[5] - bounds[4]));
+        const double effectiveDim = (std::max)(maxDim, 1e-9);
 
         const double worldUnitsPerPixel = ComputeWorldUnitsPerPixel(actorCenter);
         if (worldUnitsPerPixel > 0.0) {
-            DragLength = std::max(worldUnitsPerPixel * 110.0, 1e-6);
-            DragRadius = std::max(worldUnitsPerPixel * 3.0, 5e-7);
-            PickRadius = std::max(worldUnitsPerPixel * 12.0, DragRadius * 3.5);
-            TipLength = std::max(worldUnitsPerPixel * 20.0, 1e-6);
-            TipRadius = std::max(worldUnitsPerPixel * 7.0, DragRadius * 2.0);
-            OriginLength = std::max(worldUnitsPerPixel * 24.0, 1e-6);
-            OriginRadius = std::max(worldUnitsPerPixel * 2.0, 2.5e-7);
+            DragLength = (std::max)(worldUnitsPerPixel * 110.0, 1e-6);
+            DragRadius = (std::max)(worldUnitsPerPixel * 3.0, 5e-7);
+            PickRadius = (std::max)(worldUnitsPerPixel * 12.0, DragRadius * 3.5);
+            TipLength = (std::max)(worldUnitsPerPixel * 20.0, 1e-6);
+            TipRadius = (std::max)(worldUnitsPerPixel * 7.0, DragRadius * 2.0);
+            OriginLength = (std::max)(worldUnitsPerPixel * 24.0, 1e-6);
+            OriginRadius = (std::max)(worldUnitsPerPixel * 2.0, 2.5e-7);
         } else {
-            DragLength = std::max(effectiveDim * 0.55, 1e-6);
-            DragRadius = std::max(effectiveDim * 0.015, 5e-7);
-            PickRadius = std::max(effectiveDim * 0.06, DragRadius * 3.5);
-            TipLength = std::max(effectiveDim * 0.16, 1e-6);
-            TipRadius = std::max(effectiveDim * 0.055, DragRadius * 2.0);
-            OriginLength = std::max(effectiveDim * 0.18, 1e-6);
-            OriginRadius = std::max(effectiveDim * 0.008, 2.5e-7);
+            DragLength = (std::max)(effectiveDim * 0.55, 1e-6);
+            DragRadius = (std::max)(effectiveDim * 0.015, 5e-7);
+            PickRadius = (std::max)(effectiveDim * 0.06, DragRadius * 3.5);
+            TipLength = (std::max)(effectiveDim * 0.16, 1e-6);
+            TipRadius = (std::max)(effectiveDim * 0.055, DragRadius * 2.0);
+            OriginLength = (std::max)(effectiveDim * 0.18, 1e-6);
+            OriginRadius = (std::max)(effectiveDim * 0.008, 2.5e-7);
         }
 
         for (int axis = 0; axis < 3; ++axis) {
@@ -521,7 +519,7 @@ double DistancePointToSegment2D(double px, double py,
     }
 
     double t = ((px - ax) * abx + (py - ay) * aby) / ab_len2;
-    t = std::max(0.0, std::min(1.0, t));
+    t = (std::max)(0.0, (std::min)(1.0, t));
     const double cx = ax + t * abx;
     const double cy = ay + t * aby;
     const double dx = px - cx;

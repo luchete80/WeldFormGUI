@@ -52,6 +52,7 @@
 %newobject create_active_model;
 %newobject create_empty_mesh_part;
 %newobject create_rectangle_part;
+%newobject create_cylinder_part;
 %newobject import_step_part;
 %newobject import_step_part_at;
 %newobject import_bdf_part;

@@ -43,7 +43,7 @@ public:
     _activeModel  = nullptr;
     _updateNeeded = false;}
   ~App(){}
-  int  getGraphicMeshCount(){return m_graphicmeshes.size();}
+  int  getGraphicMeshCount(){return static_cast<int>(m_graphicmeshes.size());}
   GraphicMesh * getGraphicMesh(int &i){return m_graphicmeshes[i];}
   
   Geom* addOrphanGeometry(Geom* g);

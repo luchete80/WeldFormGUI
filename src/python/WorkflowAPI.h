@@ -843,6 +843,13 @@ inline Part* create_rectangle_part(double dx,
   return new Part(geom);
 }
 
+inline Part* create_cylinder_part(double radius, double height)
+{
+  Geom* geom = new Geom();
+  geom->LoadCylinder(radius, height);
+  return new Part(geom);
+}
+
 inline Part* import_step_part(const std::string& step_path)
 {
   Geom* geom = new Geom();
@@ -1002,11 +1009,13 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
   if (is_2d_analysis && is_rigid_part) {
     gmsh::model::mesh::generate(1);
   } else {
-    gmsh::model::getEntities(entities);
-    for (const auto& entity : entities) {
-      if (entity.first == 2) {
-        gmsh::model::mesh::setTransfiniteSurface(entity.second);
-        gmsh::model::mesh::setRecombine(2, entity.second);
+    if (is_2d_analysis) {
+      gmsh::model::getEntities(entities);
+      for (const auto& entity : entities) {
+        if (entity.first == 2) {
+          gmsh::model::mesh::setTransfiniteSurface(entity.second);
+          gmsh::model::mesh::setRecombine(2, entity.second);
+        }
       }
     }
     if (gmsh_dim > -1)

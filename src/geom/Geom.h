@@ -5,8 +5,6 @@
 #include "double3.h"
 class TopoDS_Shape; //AVOID OCC (for python wrapping)
 
-class double3;
-
 //// SHOULD INHERIT FROM SOME SHAPEGEOM  
 class Geom{
 protected:

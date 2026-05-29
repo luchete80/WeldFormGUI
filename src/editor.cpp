@@ -3790,12 +3790,14 @@ void Editor::meshPart(Part* part){
     gmsh::model::getEntities(entities);
     applyMeshSizeToCurrentGmshModel(element_size);
     
-    for(auto &e : entities) {
-        if(e.first == 2) {
-            gmsh::model::mesh::setTransfiniteSurface(e.second);
-            gmsh::model::mesh::setRecombine(2, e.second);
-            cout << "Recombine in 2 dim"<<endl;
-        }
+    if (is_2d_analysis) {
+      for(auto &e : entities) {
+          if(e.first == 2) {
+              gmsh::model::mesh::setTransfiniteSurface(e.second);
+              gmsh::model::mesh::setRecombine(2, e.second);
+              cout << "Recombine in 2 dim"<<endl;
+          }
+      }
     }
     
     if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);

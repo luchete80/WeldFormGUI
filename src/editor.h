@@ -91,7 +91,6 @@ class InitialCondition;
       // // GROUND
   // };
   
-class ExampleAppLog;
 class Job;
 
 
