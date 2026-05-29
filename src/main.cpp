@@ -464,8 +464,17 @@ vtkSmartPointer<vtkActor> buildClipCapActor(vtkActor* sourceActor,
     capMapper->SetInputConnection(capOutput);
     if (preserveScalarColors && sourceMapper->GetScalarVisibility()) {
         capMapper->ScalarVisibilityOn();
+        capMapper->SetScalarMode(sourceMapper->GetScalarMode());
+        capMapper->SetColorMode(sourceMapper->GetColorMode());
+        capMapper->SetArrayAccessMode(sourceMapper->GetArrayAccessMode());
+        capMapper->SetArrayComponent(sourceMapper->GetArrayComponent());
         capMapper->SetLookupTable(sourceMapper->GetLookupTable());
         capMapper->SetScalarRange(sourceMapper->GetScalarRange());
+        if (sourceMapper->GetArrayName() != nullptr && sourceMapper->GetArrayName()[0] != '\0') {
+            capMapper->SelectColorArray(sourceMapper->GetArrayName());
+        } else {
+            capMapper->SelectColorArray(sourceMapper->GetArrayId());
+        }
     } else {
         capMapper->ScalarVisibilityOff();
     }
@@ -2489,6 +2498,9 @@ int main(int argc, char* argv[])
 	                      if (resultFrame)
 	                          applyActiveFieldSelection(*resultFrame);
 	                  }
+                      if (resultsToolState.clipEnabled && resultsToolState.is3DFrame) {
+                          applyResultsToolState(editor, vtkViewer_res, resultsToolState);
+                      }
 	              };
                 auto syncCurrentVectorFieldActor = [&](ResultFrame& resultFrame) {
                     if (currentVectorFieldActor != nullptr) {
