@@ -5646,6 +5646,8 @@ void Editor::drawGui() {
     
     if (ImGui::CollapsingHeader("New Domain", flags)){
       static int item_current = 0;
+      const bool is_3d_domain =
+          m_model->getDimension() == 3 || m_model->getAnalysisType() == Solid3D;
       {
           // Using the _simplified_ one-liner Combo() api here
           // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
@@ -5654,23 +5656,25 @@ void Editor::drawGui() {
           //ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
           std::vector<const char*> items;
 
-          switch (m_model->getAnalysisType()) {
-              case Solid3D:
-                  items = { "Box", "Cylinder", "Plane" };
-                  break;
-              case Axisymmetric2D:
-                  items = {"Profile"};
-                  break;
-              case PlaneStress2D:
-                  break;
-              case PlaneStrain2D:
-                  items = { "Rectangle", "Circle" };
-                  break;
-              default:
-                  items = { "Unknown" };
-                  break;
+          if (is_3d_domain) {
+              items = { "Box", "Cylinder", "Plane" };
+          } else {
+              switch (m_model->getAnalysisType()) {
+                  case Axisymmetric2D:
+                      items = {"Profile"};
+                      break;
+                  case PlaneStress2D:
+                  case PlaneStrain2D:
+                      items = { "Rectangle", "Circle" };
+                      break;
+                  default:
+                      items = { "Unknown" };
+                      break;
+              }
           }
 
+          if (item_current < 0 || item_current >= static_cast<int>(items.size()))
+              item_current = 0;
 
           ImGui::Combo("Geometry", &item_current, 
              items.data(), static_cast<int>(items.size()));
@@ -5678,8 +5682,13 @@ void Editor::drawGui() {
               "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
       }
         
-      if (ImGui::Button("Box")){
-      }
+	      if (is_3d_domain) {
+	          ImGui::RadioButton("Box", &item_current, 0);
+	          ImGui::SameLine();
+	          ImGui::RadioButton("Cylinder", &item_current, 1);
+	          ImGui::SameLine();
+	          ImGui::RadioButton("Plane", &item_current, 2);
+	      }
       
       
         ImGuiIO& io = ImGui::GetIO();
@@ -5696,34 +5705,27 @@ void Editor::drawGui() {
         ImGui::Text("Size");
         //Vec3_t size;
         static double size[] = {0.1,0.1,0.1};
-        static std::string label[] = {"x ", "y ", "z "};
+        std::string label[] = {"x ", "y ", "z "};
         bool show_size[] = {true,true,true};
         
-        switch (m_model->getAnalysisType()) {
-            case Solid3D:
-                if (item_current == 0){ //RECTANGLE
-                    
-                }else if (item_current == 1){ //CYLINDER
-                  label[0] = "radius ";
-                  show_size[1] = false;
-                  label[2] = "height ";
-                }//item cylinder
-                //else if (item_current == 2)
-                  //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
-                break;
-            case Axisymmetric2D:
-                label[0] = "radial ";
-                label[1] = "axial ";
-                label[2] = "out-of-plane ";
-                break;
-            case PlaneStress2D:
-                break;
-            case PlaneStrain2D:
-
-                break;
-            default:
-
-                break;
+        if (is_3d_domain) {
+            if (item_current == 1){ //CYLINDER
+              label[0] = "radius ";
+              show_size[1] = false;
+              label[2] = "height ";
+            }
+        } else {
+            switch (m_model->getAnalysisType()) {
+                case Axisymmetric2D:
+                    label[0] = "radial ";
+                    label[1] = "axial ";
+                    label[2] = "out-of-plane ";
+                    break;
+                case PlaneStress2D:
+                case PlaneStrain2D:
+                default:
+                    break;
+            }
         }
               
         ImGui::InputDouble(label[0].c_str(), &size[0], 0.01f, 1.0f, "%.4f");
@@ -5821,36 +5823,23 @@ void Editor::drawGui() {
                   // if (item_current == 0)
                     // geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);                
               // }
-              switch (m_model->getAnalysisType()) {
-                  case Solid3D:
-                      if (item_current == 0){ //RECTANGLE
-                          
-                      }else if (item_current == 1){ //CYLINDER
-                        if (size[2] > 0.0){
-                          cout << "Creating Cylinder "<<endl;
-                          geo->LoadCylinder(size[0],size[2]); //BOX, CYlinder, Plane
-                          created = true;
-                        } else {
-                          cout << "NULL Z DIMENSION VALUE"<<endl;
-                          }
-                      }//item cylinder
-                      //else if (item_current == 2)
-                        //geom->LoadCylinder(0.1,0.1); //BOX, CYlinder, Plane
-                      break;
-                  case Axisymmetric2D:
-
-                      break;
-                  case PlaneStress2D:
-                      break;
-                  case PlaneStrain2D:
-
-                      break;
-                  default:
-
-                      break;
+              if (is_3d_domain && item_current == 1) { // CYLINDER
+                if (size[0] > 0.0 && size[2] > 0.0){
+                  cout << "Creating Cylinder "<<endl;
+                  geo->LoadCylinder(size[0],size[2]); // radius, height
+                  if (std::abs(origin[0]) > 1.0e-12 ||
+                      std::abs(origin[1]) > 1.0e-12 ||
+                      std::abs(origin[2]) > 1.0e-12) {
+                    geo->Move(origin[0], origin[1], origin[2]);
+                  }
+                  geo->setOrigin(origin[0], origin[1], origin[2]);
+                  created = true;
+                } else {
+                  cout << "NULL OR NEGATIVE CYLINDER DIMENSION VALUE"<<endl;
+                }
               }
                   
-              if (size[2] == 0.0){ 
+              if (!created && size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 const bool has_x = std::abs(size[0]) > 1.0e-12;
                 const bool has_y = std::abs(size[1]) > 1.0e-12;

@@ -273,4 +273,6 @@
          - trying also to remove arrow from separate result & model viewew.
 20260529 - Added 3D Implicit Solver. 
          - Added transparency & cutplane.
+         - Fixed Sirface and fields at cutting plane.
+         - Added Cylinder in 3D model.
 
