@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <limits>
+#include <map>
 
 
 /////https://github.com/trlsmax/imgui-vtk/tree/master
@@ -41,6 +42,9 @@
 #include <vtkCamera.h>
 #include <vtkCell.h>
 #include <vtkCellPicker.h>
+#include <vtkContourTriangulator.h>
+#include <vtkCutter.h>
+#include <vtkDataSet.h>
 #include <vtkExtractCells.h>
 #include <vtkMapper.h>
 #include <vtkPlane.h>
@@ -163,6 +167,7 @@ struct ResultsViewportToolState {
     vtkSmartPointer<vtkPlane> clipPlane;
     vtkSmartPointer<TransformGizmo> gizmo;
     vtkSmartPointer<vtkInteractorStyleTrackballCamera> clipInteractorStyle;
+    std::map<vtkActor*, vtkSmartPointer<vtkActor>> clipCapActors;
     bool gizmoAddedToRenderer = false;
     bool customInteractorInstalled = false;
 };
@@ -410,13 +415,110 @@ void updateClipPlaneDefinition(ResultsViewportToolState& state)
     state.clipPlane->SetNormal(normal);
 }
 
-void applyResultsToolState(Editor* editor, ResultsViewportToolState& state)
+void removeClipCapActors(VtkViewer& viewer, ResultsViewportToolState& state)
+{
+    vtkRenderer* renderer = viewer.getRenderer();
+    if (renderer != nullptr) {
+        for (auto& entry : state.clipCapActors) {
+            if (entry.second != nullptr) {
+                renderer->RemoveActor(entry.second);
+            }
+        }
+    }
+    state.clipCapActors.clear();
+}
+
+vtkSmartPointer<vtkActor> buildClipCapActor(vtkActor* sourceActor,
+                                            const ResultsViewportToolState& state,
+                                            bool preserveScalarColors)
+{
+    if (sourceActor == nullptr || state.clipPlane == nullptr) {
+        return nullptr;
+    }
+
+    vtkMapper* sourceMapper = sourceActor->GetMapper();
+    if (sourceMapper == nullptr) {
+        return nullptr;
+    }
+
+    sourceMapper->Update();
+    vtkDataObject* input = sourceMapper->GetInputDataObject(0, 0);
+    if (input == nullptr) {
+        return nullptr;
+    }
+
+    vtkSmartPointer<vtkCutter> cutter = vtkSmartPointer<vtkCutter>::New();
+    cutter->SetCutFunction(state.clipPlane);
+    cutter->SetInputData(input);
+    cutter->GenerateCutScalarsOff();
+
+    vtkAlgorithmOutput* capOutput = cutter->GetOutputPort();
+    vtkSmartPointer<vtkContourTriangulator> triangulator;
+    if (vtkPolyData::SafeDownCast(input) != nullptr) {
+        triangulator = vtkSmartPointer<vtkContourTriangulator>::New();
+        triangulator->SetInputConnection(cutter->GetOutputPort());
+        capOutput = triangulator->GetOutputPort();
+    }
+
+    vtkSmartPointer<vtkPolyDataMapper> capMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    capMapper->SetInputConnection(capOutput);
+    if (preserveScalarColors && sourceMapper->GetScalarVisibility()) {
+        capMapper->ScalarVisibilityOn();
+        capMapper->SetLookupTable(sourceMapper->GetLookupTable());
+        capMapper->SetScalarRange(sourceMapper->GetScalarRange());
+    } else {
+        capMapper->ScalarVisibilityOff();
+    }
+
+    vtkSmartPointer<vtkActor> capActor = vtkSmartPointer<vtkActor>::New();
+    capActor->SetMapper(capMapper);
+    capActor->PickableOff();
+    if (sourceActor->GetProperty() != nullptr && capActor->GetProperty() != nullptr) {
+        capActor->GetProperty()->DeepCopy(sourceActor->GetProperty());
+        capActor->GetProperty()->SetRepresentationToSurface();
+    }
+    return capActor;
+}
+
+void syncClipCapActor(VtkViewer& viewer,
+                      ResultsViewportToolState& state,
+                      vtkActor* sourceActor,
+                      bool preserveScalarColors)
+{
+    if (!state.clipEnabled || !state.is3DFrame || sourceActor == nullptr || state.clipPlane == nullptr) {
+        return;
+    }
+
+    vtkRenderer* renderer = viewer.getRenderer();
+    if (renderer == nullptr) {
+        return;
+    }
+    if (!renderer->HasViewProp(sourceActor)) {
+        return;
+    }
+
+    vtkSmartPointer<vtkActor> capActor = buildClipCapActor(sourceActor, state, preserveScalarColors);
+    if (capActor == nullptr) {
+        return;
+    }
+
+    auto existing = state.clipCapActors.find(sourceActor);
+    if (existing != state.clipCapActors.end() && existing->second != nullptr) {
+        renderer->RemoveActor(existing->second);
+    }
+
+    state.clipCapActors[sourceActor] = capActor;
+    renderer->AddActor(capActor);
+}
+
+void applyResultsToolState(Editor* editor, VtkViewer& viewer, ResultsViewportToolState& state)
 {
     if (editor == nullptr || editor->getResults() == nullptr) {
         return;
     }
 
     updateClipPlaneDefinition(state);
+    removeClipCapActors(viewer, state);
 
     for (auto& frame : editor->getResults()->frames) {
         if (!frame) {
@@ -443,6 +545,10 @@ void applyResultsToolState(Editor* editor, ResultsViewportToolState& state)
             const double opacity = state.is3DFrame ? static_cast<double>(state.surfaceOpacity) : 1.0;
             frame->actor->GetProperty()->SetOpacity(opacity);
             frame->actor->Modified();
+        }
+
+        if (state.clipEnabled && state.is3DFrame) {
+            syncClipCapActor(viewer, state, frame->actor, true);
         }
     }
 }
@@ -561,9 +667,10 @@ void applyClipAndOpacityToActor(vtkActor* actor, const ResultsViewportToolState&
     }
 }
 
-void applyActiveModelToolState(ResultsViewportToolState& state)
+void applyActiveModelToolState(VtkViewer& viewer, ResultsViewportToolState& state)
 {
     updateClipPlaneDefinition(state);
+    removeClipCapActors(viewer, state);
 
     Model& model = getApp().getActiveModel();
     for (int partIndex = 0; partIndex < model.getPartCount(); ++partIndex) {
@@ -574,16 +681,19 @@ void applyActiveModelToolState(ResultsViewportToolState& state)
 
         if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
             applyClipAndOpacityToActor(graphicMesh->getActor(), state);
+            syncClipCapActor(viewer, state, graphicMesh->getActor(), false);
         }
 
         if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
             applyClipAndOpacityToActor(visual->actor, state);
+            syncClipCapActor(viewer, state, visual->actor, false);
         }
     }
 }
 
 void detachResultsClipTools(VtkViewer& viewer, ResultsViewportToolState& state)
 {
+    removeClipCapActors(viewer, state);
     if (state.gizmo && state.gizmoAddedToRenderer && viewer.getRenderer() != nullptr) {
         state.gizmo->Hide();
         state.gizmo->RemoveFromRenderer(viewer.getRenderer());
@@ -2235,7 +2345,7 @@ int main(int argc, char* argv[])
                           modelToolState.clipOriginInitialized = true;
                       }
                   }
-                  applyActiveModelToolState(modelToolState);
+                  applyActiveModelToolState(vtkViewer2, modelToolState);
                   syncModelClipTools(vtkViewer2, modelToolState);
               }
               // Render del viewer
@@ -2258,7 +2368,7 @@ int main(int argc, char* argv[])
                   if (modelToolState.clipEnabled != previousModelClipEnabled ||
                       modelToolState.clipAxis != previousModelClipAxis ||
                       std::abs(modelToolState.surfaceOpacity - previousModelOpacity) > 1.0e-6f) {
-                      applyActiveModelToolState(modelToolState);
+                      applyActiveModelToolState(vtkViewer2, modelToolState);
                       syncModelClipTools(vtkViewer2, modelToolState);
                   }
               }
@@ -2555,7 +2665,7 @@ int main(int argc, char* argv[])
                       resultsToolState.clipOriginInitialized = true;
                   }
 
-                  applyResultsToolState(editor, resultsToolState);
+                  applyResultsToolState(editor, vtkViewer_res, resultsToolState);
                   syncResultsClipTools(vtkViewer_res, resultsToolState, activeFrame);
               } else {
                   resultsToolState.is3DFrame = false;
@@ -2585,7 +2695,7 @@ int main(int argc, char* argv[])
                   if (resultsToolState.clipEnabled != previousClipEnabled ||
                       resultsToolState.clipAxis != previousClipAxis ||
                       std::abs(resultsToolState.surfaceOpacity - previousOpacity) > 1.0e-6f) {
-                      applyResultsToolState(editor, resultsToolState);
+                      applyResultsToolState(editor, vtkViewer_res, resultsToolState);
                       syncResultsClipTools(vtkViewer_res, resultsToolState, activeFrame);
                   }
               }
