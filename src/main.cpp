@@ -1411,7 +1411,7 @@ void drawViewportOverlay(VtkViewer& viewer,
                                   wireframeEnabled,
                                   false,
                                   "Wireframe")) {
-            state.displayMode = wireframeEnabled ? ModelDisplayMode::Wireframe : ModelDisplayMode::Surface;
+            state.displayMode = wireframeEnabled ? ModelDisplayMode::Surface : ModelDisplayMode::Wireframe;
         }
         ImGui::SameLine();
         if (drawMeshDisplayButton("edges_icon_button", state.showEdges, true, "Edges")) {
