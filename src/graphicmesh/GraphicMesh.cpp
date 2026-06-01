@@ -8,6 +8,7 @@
 #include <vtkPointData.h>
 #include <vtkCellData.h>
 #include <vtkPoints.h>
+#include <vtkDataSetMapper.h>
 #include <vtkLookupTable.h>
 #include <gmsh.h>
 #include <vtkLine.h>
@@ -131,7 +132,7 @@ int GraphicMesh::createVTKPolyData() {
             std::string elemName;
             int elemDim, order, numNodes, numPrimaryNodes;
             std::vector<double> param;
-            
+
             gmsh::model::mesh::getElementProperties(elemType, elemName, elemDim, order, 
                                                    numNodes, param, numPrimaryNodes);
             
@@ -200,9 +201,9 @@ int GraphicMesh::createVTKPolyData() {
     mesh_pdata->GetCellData()->SetScalars(cellScalars);
 
     // Configurar mapper y actor
-    mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mesh_Mapper->SetInputData(mesh_pdata);
-    mesh_Mapper->SetScalarModeToUseCellData();
+    vtkSmartPointer<vtkPolyDataMapper> polyDataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    polyDataMapper->SetInputData(mesh_pdata);
+    polyDataMapper->SetScalarModeToUseCellData();
 
     vtkNew<vtkLookupTable> lut;
     const vtkIdType tableSize = (cellScalars->GetNumberOfTuples() > 0)
@@ -217,8 +218,9 @@ int GraphicMesh::createVTKPolyData() {
             : 0.0;
         lut->SetTableValue(i, t, 0.3, 1.0 - t, 1.0);
     }
-    mesh_Mapper->SetLookupTable(lut);
-    mesh_Mapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
+    polyDataMapper->SetLookupTable(lut);
+    polyDataMapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
+    mesh_Mapper = polyDataMapper;
     
     mesh_actor = vtkSmartPointer<vtkActor>::New();
     mesh_actor->SetMapper(mesh_Mapper);
@@ -350,6 +352,7 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     m_needs_actor = true;
     mesh_actor = nullptr;
     mesh_pdata = nullptr;
+    mesh_ugrid = nullptr;
   
     mesh_pdata = vtkSmartPointer<vtkPolyData>::New();
     points = vtkSmartPointer<vtkPoints>::New();
@@ -429,25 +432,82 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
                 }
             }
 
+            const bool debugTargetTetra =
+                mesh.getDim() == 3 &&
+                nc == 4 &&
+                mesh.getElem(e)->getNodeId(0) == 63 &&
+                mesh.getElem(e)->getNodeId(1) == 64 &&
+                mesh.getElem(e)->getNodeId(2) == 489 &&
+                mesh.getElem(e)->getNodeId(3) == 348;
+            if (debugTargetTetra) {
+                std::cout << "[debug tetra 3801][vtk] element index " << e
+                          << " node ids="
+                          << mesh.getElem(e)->getNodeId(0) << ", "
+                          << mesh.getElem(e)->getNodeId(1) << ", "
+                          << mesh.getElem(e)->getNodeId(2) << ", "
+                          << mesh.getElem(e)->getNodeId(3) << std::endl;
+                for (int nn = 0; nn < nc; ++nn) {
+                    const int nodeId = mesh.getElem(e)->getNodeId(nn);
+                    const std::map<int, int>::const_iterator pointIt = nodeIdToPointIndex.find(nodeId);
+                    if (pointIt != nodeIdToPointIndex.end()) {
+                        std::cout << "[debug tetra 3801][vtk] node " << nodeId
+                                  << " -> vtk point " << pointIt->second << std::endl;
+                    }
+                }
+            }
+
             cells->InsertNextCell(cell);
             cellScalars->InsertNextTuple1(static_cast<float>(e + 1));
             
         }//Element loop
 
         // Configurar el polydata según los tipos de elementos presentes
-        mesh_pdata->SetPoints(points);
-        
-        if (has2DElements) {
-            mesh_pdata->SetPolys(cells);
-        } else if (has1DElements) {
-            mesh_pdata->SetLines(cells);
-            mesh_pdata->SetVerts(verts);
-        } else if (has3DElements) {
-            mesh_pdata->SetPolys(cells); // Para elementos 3D también usamos polys en VTK
-        }
+        if (has3DElements) {
+            mesh_ugrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+            mesh_ugrid->SetPoints(points);
 
-        mesh_pdata->GetPointData()->SetScalars(scalars);
-        mesh_pdata->GetCellData()->SetScalars(cellScalars);
+            for (int e = 0; e < mesh.getElemCount(); e++) {
+                Element* element = mesh.getElem(e);
+                if (element == nullptr || element->getNodeCount() != 4) {
+                    continue;
+                }
+
+                vtkNew<vtkTetra> tetra;
+                bool validTetra = true;
+                for (int nn = 0; nn < 4; ++nn) {
+                    const int nodeId = element->getNodeId(nn);
+                    std::map<int, int>::const_iterator pointIt = nodeIdToPointIndex.find(nodeId);
+                    if (pointIt == nodeIdToPointIndex.end()) {
+                        validTetra = false;
+                        std::cerr << "Error: Invalid node ID " << nodeId
+                                  << " in tetra element " << e << std::endl;
+                        break;
+                    }
+                    tetra->GetPointIds()->SetId(nn, pointIt->second);
+                }
+
+                if (!validTetra) {
+                    continue;
+                }
+
+                mesh_ugrid->InsertNextCell(tetra->GetCellType(), tetra->GetPointIds());
+            }
+
+            mesh_ugrid->GetPointData()->SetScalars(scalars);
+            mesh_ugrid->GetCellData()->SetScalars(cellScalars);
+        } else {
+            mesh_pdata->SetPoints(points);
+
+            if (has2DElements) {
+                mesh_pdata->SetPolys(cells);
+            } else if (has1DElements) {
+                mesh_pdata->SetLines(cells);
+                mesh_pdata->SetVerts(verts);
+            }
+
+            mesh_pdata->GetPointData()->SetScalars(scalars);
+            mesh_pdata->GetCellData()->SetScalars(cellScalars);
+        }
 
     } else if (mesh.getType() == SPH) {
         // Manejo para mallas SPH (partículas)
@@ -459,9 +519,13 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     }
 
     // Configurar mapper y actor
-    mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mesh_Mapper->SetInputData(mesh_pdata);
-    mesh_Mapper->SetScalarModeToUseCellData();
+    vtkSmartPointer<vtkDataSetMapper> dataSetMapper = vtkSmartPointer<vtkDataSetMapper>::New();
+    if (mesh_ugrid != nullptr) {
+        dataSetMapper->SetInputData(mesh_ugrid);
+    } else {
+        dataSetMapper->SetInputData(mesh_pdata);
+    }
+    dataSetMapper->SetScalarModeToUseCellData();
 
     vtkNew<vtkLookupTable> lut;
     const vtkIdType tableSize = (cellScalars->GetNumberOfTuples() > 0)
@@ -476,8 +540,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
             : 0.0;
         lut->SetTableValue(i, t, 0.3, 1.0 - t, 1.0);
     }
-    mesh_Mapper->SetLookupTable(lut);
-    mesh_Mapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
+    dataSetMapper->SetLookupTable(lut);
+    dataSetMapper->SetScalarRange(0.0, static_cast<double>(tableSize - 1));
+    mesh_Mapper = dataSetMapper;
 
     mesh_actor = vtkSmartPointer<vtkActor>::New();
     mesh_actor->SetMapper(mesh_Mapper);
@@ -487,9 +552,9 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
     mesh_actor->GetProperty()->EdgeVisibilityOn();
     mesh_actor->GetProperty()->SetEdgeColor(0.0, 0.0, 0.0);
     
-    // Mostrar wireframe para elementos 2D/3D
+    // Keep surfaces filled by default; the overlay controls wireframe mode.
     if (mesh.getType() == FEM && mesh.getDim() >= 2) {
-        mesh_actor->GetProperty()->SetRepresentationToWireframe();
+        mesh_actor->GetProperty()->SetRepresentationToSurface();
     } else if (mesh.getType() == FEM && mesh.getDim() == 1) {
         mesh_actor->GetProperty()->SetPointSize(6.0);
         mesh_actor->GetProperty()->RenderPointsAsSpheresOn();
@@ -543,12 +608,12 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   //TODO: REUSE THIS
   // Now we'll look at it.
   cout << "--Setting mapper "<<endl;
-  mesh_Mapper = vtkSmartPointer<vtkPolyDataMapper>::New(); 
-  
-  mesh_Mapper->SetInputData(mesh_pdata);
-  mesh_Mapper->SetScalarRange(mesh_pdata->GetScalarRange());
+  vtkSmartPointer<vtkPolyDataMapper> polyDataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
-  mesh_Mapper->SetInputConnection(m_glyph3D->GetOutputPort());
+  polyDataMapper->SetInputData(mesh_pdata);
+  polyDataMapper->SetScalarRange(mesh_pdata->GetScalarRange());
+  polyDataMapper->SetInputConnection(m_glyph3D->GetOutputPort());
+  mesh_Mapper = polyDataMapper;
 
   mesh_actor = vtkSmartPointer<vtkActor>::New();
   mesh_actor->SetMapper(mesh_Mapper);
@@ -558,9 +623,6 @@ int GraphicSPHMesh::createVTKPolyData(Mesh &mesh){
   mesh_actor->GetProperty()->EdgeVisibilityOn ();
   mesh_actor->GetProperty()->SetEdgeColor (0.0, 0.0, 0.0);
   mesh_actor->Modified ();
-  //// IF VTK later than 9.3?
-  //mesh_actor->GetProperty()->SetDepthTest(false);
-  mesh_actor->GetMapper()->SetResolveCoincidentTopology(VTK_RESOLVE_OFF);
   
   m_needs_actor = true; //To Show
 

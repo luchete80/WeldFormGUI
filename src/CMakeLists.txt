@@ -78,6 +78,7 @@ add_executable(${EXEC_NAME} main.cpp
                             job_dialog.cpp
                             interaction_props_dialog.cpp
                             step_dialog.cpp
+                            remesh_dialog.cpp
                             model_dialog.cpp
                             move_part_dialog.cpp
                             mesh_dialog.cpp

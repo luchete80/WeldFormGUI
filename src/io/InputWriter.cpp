@@ -522,9 +522,23 @@ void InputWriter::writeImplicitToFile(std::string fname) {
     m_json["Configuration"]["thermal"] = true;
   m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
 
-  m_json["Meshing"]["debug"] = step ? step->m_meshingDebug : true;
-  m_json["Meshing"]["maxElemAngle"] = step ? step->m_maxElemAngle : 150.0;
-  m_json["Meshing"]["minElemAngle"] = step ? step->m_minElemAngle : 30.0;
+  const RemeshingSettings &remeshing = m_model->remeshing();
+  m_json["Meshing"]["enabled"] = remeshing.enabled;
+  m_json["Meshing"]["minStrain"] = remeshing.minStrain;
+  m_json["Meshing"]["maxStrain"] = remeshing.maxStrain;
+  m_json["Meshing"]["mapVel"] = remeshing.mapVel;
+  m_json["Meshing"]["mapAcc"] = remeshing.mapAcc;
+  m_json["Meshing"]["maxCount"] = remeshing.maxCount;
+  m_json["Meshing"]["dampFactor"] = remeshing.dampFactor;
+  m_json["Meshing"]["minFrac"] = remeshing.minFrac;
+  m_json["Meshing"]["maxFrac"] = remeshing.maxFrac;
+  m_json["Meshing"]["epsRef"] = remeshing.epsRef;
+  m_json["Meshing"]["beta"] = remeshing.beta;
+  m_json["Meshing"]["type"] = remeshing.type;
+  m_json["Meshing"]["debug"] = remeshing.debug;
+  m_json["Meshing"]["minElemAngle"] = remeshing.minElemAngle;
+  m_json["Meshing"]["maxElemAngle"] = remeshing.maxElemAngle;
+  m_json["Meshing"]["transitionAngle"] = remeshing.transitionAngle;
 
   const ContactProperties &contact = m_model->contactProps();
   m_json["Contact"] = json::array();

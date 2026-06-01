@@ -32,10 +32,6 @@ public:
   bool m_axiSymmVol = false;
   double m_elemLengthFraction = 0.2;
 
-  bool m_meshingDebug = true;
-  double m_maxElemAngle = 150.0;
-  double m_minElemAngle = 30.0;
-
   std::string m_implicitType = "Picard";
   double m_velTol = 5e-2;
   double m_pressTol = 10.0;

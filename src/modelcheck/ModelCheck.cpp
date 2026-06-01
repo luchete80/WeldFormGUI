@@ -66,7 +66,27 @@ NodeSet* findNodeSetById(Model* model, int setId)
   return nullptr;
 }
 
-bool partHasBulkElements(Part* part)
+ElementUsage inferElementUsageForCheck(Model* model, Part* part, Mesh* mesh, Element* element)
+{
+  if (mesh == nullptr || element == nullptr) {
+    return ElementUsage::Unknown;
+  }
+
+  const ElementType type = inferElementType(mesh, element);
+  const AnalysisType analysisType = (model != nullptr) ? model->getAnalysisType() : Solid3D;
+
+  // In Solid3D, rigid tools are commonly imported as standalone shell meshes.
+  // Their mesh dimension stays 2 in the BDF, but their usage in the model is boundary contact.
+  if (analysisType == Solid3D && part != nullptr && part->getType() == Rigid) {
+    if (type == ElementType::Tria3 || type == ElementType::Quad4) {
+      return ElementUsage::Boundary;
+    }
+  }
+
+  return inferElementUsage(mesh, element);
+}
+
+bool partHasBulkElements(Model* model, Part* part)
 {
   if (part == nullptr || part->getMesh() == nullptr) {
     return false;
@@ -75,7 +95,8 @@ bool partHasBulkElements(Part* part)
   Mesh* mesh = part->getMesh();
   for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
     Element* element = mesh->getElem(elemIndex);
-    if (element != nullptr && inferElementUsage(mesh, element) == ElementUsage::Bulk) {
+    if (element != nullptr &&
+        inferElementUsageForCheck(model, part, mesh, element) == ElementUsage::Bulk) {
       return true;
     }
   }
@@ -224,6 +245,8 @@ void runGeneralChecks(const CheckContext& context, CheckReport& report)
     int bulkElementCount = 0;
     int boundaryElementCount = 0;
     int unknownElementCount = 0;
+    int firstBulkElementId = -1;
+    ElementType firstBulkElementType = ElementType::Unknown;
 
     std::set<int> referencedNodeIds;
     for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
@@ -239,9 +262,13 @@ void runGeneralChecks(const CheckContext& context, CheckReport& report)
       }
 
       const ElementType elementType = inferElementType(mesh, element);
-      const ElementUsage elementUsage = inferElementUsage(mesh, element);
+      const ElementUsage elementUsage = inferElementUsageForCheck(model, part, mesh, element);
       if (elementUsage == ElementUsage::Bulk) {
         ++bulkElementCount;
+        if (firstBulkElementId < 0) {
+          firstBulkElementId = element->getId();
+          firstBulkElementType = elementType;
+        }
       } else if (elementUsage == ElementUsage::Boundary) {
         ++boundaryElementCount;
       } else {
@@ -279,11 +306,22 @@ void runGeneralChecks(const CheckContext& context, CheckReport& report)
       }
     } else {
       if (bulkElementCount > 0) {
+        std::ostringstream detail;
+        detail << "Rigid part " << part->getId()
+               << " contains bulk elements."
+               << " meshDim=" << mesh->getDim()
+               << ", bulkCount=" << bulkElementCount
+               << ", boundaryCount=" << boundaryElementCount
+               << ", unknownCount=" << unknownElementCount;
+        if (firstBulkElementId >= 0) {
+          detail << ", firstBulkElementId=" << firstBulkElementId
+                 << ", firstBulkElementType=" << toString(firstBulkElementType);
+        }
         addIssue(report,
                  CheckSeverity::Error,
                  CheckCategory::Mesh,
                  "RIGID_CONTAINS_BULK_ELEMENTS",
-                 "Rigid part " + std::to_string(part->getId()) + " contains bulk elements.",
+                 detail.str(),
                  part->getId());
       }
     }
@@ -405,7 +443,7 @@ void runGeneralChecks(const CheckContext& context, CheckReport& report)
 
   for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
     Part* part = model->getPart(partIndex);
-    if (part == nullptr || part->getType() != Elastic || !partHasBulkElements(part)) {
+    if (part == nullptr || part->getType() != Elastic || !partHasBulkElements(model, part)) {
       continue;
     }
 
@@ -639,7 +677,7 @@ void runOpenRadiossChecks(const CheckContext& context, CheckReport& report)
         continue;
       }
 
-      const ElementUsage usage = inferElementUsage(mesh, element);
+      const ElementUsage usage = inferElementUsageForCheck(model, part, mesh, element);
       if (usage == ElementUsage::Boundary) {
         ++boundaryElementCount;
       } else if (usage == ElementUsage::Bulk) {

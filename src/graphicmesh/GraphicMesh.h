@@ -14,8 +14,10 @@
 
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
+#include <vtkMapper.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkUnstructuredGrid.h>
 
 
 // SPH
@@ -102,7 +104,8 @@ protected:
 
 
   vtkSmartPointer<vtkPolyData> mesh_pdata;
-  vtkSmartPointer<vtkPolyDataMapper> mesh_Mapper;
+  vtkSmartPointer<vtkUnstructuredGrid> mesh_ugrid;
+  vtkSmartPointer<vtkMapper> mesh_Mapper;
 
   
   //GENERAL FROM BASE CLASS

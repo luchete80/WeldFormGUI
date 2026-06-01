@@ -483,9 +483,6 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["fixedTS"] = step->m_fixedTS;
       jstep["axiSymmVol"] = step->m_axiSymmVol;
       jstep["elemLengthFraction"] = step->m_elemLengthFraction;
-      jstep["meshing"]["debug"] = step->m_meshingDebug;
-      jstep["meshing"]["maxElemAngle"] = step->m_maxElemAngle;
-      jstep["meshing"]["minElemAngle"] = step->m_minElemAngle;
       jstep["implicit"]["type"] = step->m_implicitType;
       jstep["implicit"]["velTol"] = step->m_velTol;
       jstep["implicit"]["pressTol"] = step->m_pressTol;
@@ -497,6 +494,26 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
       m_json["Steps"].push_back(jstep);
     }
+  }
+
+  {
+    const RemeshingSettings &remeshing = m_model.remeshing();
+    m_json["Remeshing"]["enabled"] = remeshing.enabled;
+    m_json["Remeshing"]["minStrain"] = remeshing.minStrain;
+    m_json["Remeshing"]["maxStrain"] = remeshing.maxStrain;
+    m_json["Remeshing"]["mapVel"] = remeshing.mapVel;
+    m_json["Remeshing"]["mapAcc"] = remeshing.mapAcc;
+    m_json["Remeshing"]["maxCount"] = remeshing.maxCount;
+    m_json["Remeshing"]["dampFactor"] = remeshing.dampFactor;
+    m_json["Remeshing"]["minFrac"] = remeshing.minFrac;
+    m_json["Remeshing"]["maxFrac"] = remeshing.maxFrac;
+    m_json["Remeshing"]["epsRef"] = remeshing.epsRef;
+    m_json["Remeshing"]["beta"] = remeshing.beta;
+    m_json["Remeshing"]["type"] = remeshing.type;
+    m_json["Remeshing"]["debug"] = remeshing.debug;
+    m_json["Remeshing"]["minElemAngle"] = remeshing.minElemAngle;
+    m_json["Remeshing"]["maxElemAngle"] = remeshing.maxElemAngle;
+    m_json["Remeshing"]["transitionAngle"] = remeshing.transitionAngle;
   }
 
   if (m_model.getBCCount() > 0) {

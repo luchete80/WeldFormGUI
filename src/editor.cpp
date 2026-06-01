@@ -28,6 +28,7 @@
 #include "io/ModelWriter.h"
 #include "io/ModelReader.h"
 #include "io/InputWriter.h"
+#include "io/InputReader.h"
 #include "modelcheck/ModelCheck.h"
 #include "LSDynaWriter.h"
 #include "action.h"
@@ -126,6 +127,10 @@ void applyMeshSizeToCurrentGmshModel(double elementSize) {
   for (const auto& entity : pointEntities) {
     gmsh::model::mesh::setSize({entity}, elementSize);
   }
+}
+
+void applyTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
+  if (elementSize <= 0.0) return;
 
   std::vector<std::pair<int, int>> curveEntities;
   gmsh::model::getEntities(curveEntities, 1);
@@ -141,10 +146,45 @@ bool isPartVisible(Part* part)
     return false;
   }
 
+  bool hasAnyVisual = false;
+  bool anyVisible = false;
+
+  if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+    if (vtkActor* actor = graphicMesh->getActor()) {
+      hasAnyVisual = true;
+      anyVisible = anyVisible || actor->GetVisibility() != 0;
+    }
+  }
+
+  if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+    if (visual->actor != nullptr) {
+      hasAnyVisual = true;
+      anyVisible = anyVisible || visual->actor->GetVisibility() != 0;
+    }
+  }
+
+  return hasAnyVisual ? anyVisible : true;
+}
+
+bool isPartMeshVisible(Part* part)
+{
+  if (part == nullptr) {
+    return false;
+  }
+
   if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
     if (vtkActor* actor = graphicMesh->getActor()) {
       return actor->GetVisibility() != 0;
     }
+  }
+
+  return false;
+}
+
+bool isPartGeometryVisible(Part* part)
+{
+  if (part == nullptr) {
+    return false;
   }
 
   if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
@@ -153,7 +193,7 @@ bool isPartVisible(Part* part)
     }
   }
 
-  return true;
+  return false;
 }
 
 void setPartVisible(Part* part, bool visible)
@@ -175,7 +215,33 @@ void setPartVisible(Part* part, bool visible)
   }
 }
 
-bool drawPartVisibilityButton(const char* id, bool visible)
+void setPartMeshVisible(Part* part, bool visible)
+{
+  if (part == nullptr) {
+    return;
+  }
+
+  if (GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part)) {
+    if (vtkActor* actor = graphicMesh->getActor()) {
+      actor->SetVisibility(visible ? 1 : 0);
+    }
+  }
+}
+
+void setPartGeometryVisible(Part* part, bool visible)
+{
+  if (part == nullptr) {
+    return;
+  }
+
+  if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
+    if (visual->actor != nullptr) {
+      visual->actor->SetVisibility(visible ? 1 : 0);
+    }
+  }
+}
+
+bool drawVisibilityButton(const char* id, bool visible, const char* visibleTooltip, const char* hiddenTooltip)
 {
   const ImVec2 size(24.0f, 20.0f);
   ImGui::PushID(id);
@@ -224,11 +290,16 @@ bool drawPartVisibilityButton(const char* id, bool visible)
   }
 
   if (hovered) {
-    ImGui::SetTooltip("%s", visible ? "Hide part" : "Show part");
+    ImGui::SetTooltip("%s", visible ? visibleTooltip : hiddenTooltip);
   }
 
   ImGui::PopID();
   return pressed;
+}
+
+bool drawPartVisibilityButton(const char* id, bool visible)
+{
+  return drawVisibilityButton(id, visible, "Hide part", "Show part");
 }
 
 std::string buildElementTypeSummary(Mesh* mesh)
@@ -2206,6 +2277,41 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   return true;
 }
 
+bool Editor::openInputFromPath(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
+  m_undo_stack.clear();
+  m_redo_stack.clear();
+
+  InputReader reader(m_model);
+  if (!reader.readFromFile(filePathName))
+    return false;
+
+  std::string model_name = fs::path(filePathName).stem().string();
+  if (model_name.empty())
+    model_name = fs::path(filePathName).filename().string();
+
+  m_model->setName(model_name);
+  m_model->setFilePath(filePathName);
+  m_model->setNoSaveAs();
+  is_model = true;
+  m_creating_model = false;
+  m_expand_model_tree_once = true;
+  getApp().addRecentFile(filePathName);
+  getApp().setActiveModel(m_model);
+
+#ifdef BUILD_PYTHON
+  PyRun_SimpleString("GetApplication().getActiveModel()");
+#else
+  getApp().getActiveModel();
+#endif
+  getApp().Update();
+
+  return true;
+}
+
 bool Editor::openScriptFromPath(const std::string& filePathName)
 {
   if (filePathName.empty())
@@ -2547,6 +2653,7 @@ bool Editor::hasBlockingDialogOpen() const
          m_show_prt_dlg_edit ||
          m_show_bc_dlg_edit ||
          m_show_step_dlg_edit ||
+         m_show_remesh_dlg_edit ||
          m_show_interaction_props_dlg ||
          m_show_msh_dlg ||
          m_jobdlg.m_show ||
@@ -3776,6 +3883,7 @@ void Editor::meshPart(Part* part){
     }
   } else if (is_2d_analysis && is_rigid_part) {
     applyMeshSizeToCurrentGmshModel(element_size);
+    applyTransfiniteConstraintsToCurrentGmshModel(element_size);
 
     gmsh::model::mesh::generate(1);
 
@@ -3791,6 +3899,7 @@ void Editor::meshPart(Part* part){
     applyMeshSizeToCurrentGmshModel(element_size);
     
     if (is_2d_analysis) {
+      applyTransfiniteConstraintsToCurrentGmshModel(element_size);
       for(auto &e : entities) {
           if(e.first == 2) {
               gmsh::model::mesh::setTransfiniteSurface(e.second);
@@ -4014,6 +4123,9 @@ void ShowExampleMenuFile(Editor *editor)
   // if (ImGui::Button("Open File Dialog"))
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".wfmodel", ".");
     }
+    if (ImGui::MenuItem("Open Input")) {
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenInput", "Choose Input", ".wfinput,.json", ".");
+    }
     if (ImGui::MenuItem("Open Script")) {
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenScript", "Choose Python Script", ".py", ".");
     }
@@ -4052,6 +4164,8 @@ void ShowExampleMenuFile(Editor *editor)
                         });
                         if (ext == ".wfmodel") {
                             editor->openModelFromPath(recentPath);
+                        } else if (ext == ".wfinput") {
+                            editor->openInputFromPath(recentPath);
                         } else if (ext == ".py") {
                             editor->openScriptFromPath(recentPath);
                         } else if (ext == ".wfresult" || ext == ".vtk" || ext == ".json") {
@@ -4639,6 +4753,51 @@ void Editor::drawGui() {
                   hovered_prt = treePart;
                 }
 
+                if (treePart->isGeom()) {
+                  if (expand_model_tree_once) {
+                    ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+                  }
+                  if (ImGui::TreeNode("Geometry")) {
+                    if (ImGui::IsItemHovered()) {
+                      part_branch_hovered = true;
+                      hovered_prt = treePart;
+                    }
+                    if (ImGui::IsItemClicked()) {
+                      model_tree_item_clicked = true;
+                    }
+
+                    ImGui::SameLine();
+                    const std::string geomVisibilityButtonId =
+                      "geom_visibility_" + std::to_string(treePart->getId()) + "_" + std::to_string(i);
+                    const bool geomVisible = isPartGeometryVisible(treePart);
+                    if (drawVisibilityButton(geomVisibilityButtonId.c_str(),
+                                             geomVisible,
+                                             "Hide geometry",
+                                             "Show geometry")) {
+                      setPartGeometryVisible(treePart, !geomVisible);
+                      if (viewer != nullptr && viewer->getRenderWindow() != nullptr) {
+                        viewer->getRenderWindow()->Render();
+                      }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                      part_branch_hovered = true;
+                      hovered_prt = treePart;
+                    }
+
+                    vtkOCCTGeom* visual = getApp().getVisualForPart(treePart);
+                    if (visual != nullptr && visual->getPolydata() != nullptr) {
+                      ImGui::Text("Points: %lld",
+                                  static_cast<long long>(visual->getPolydata()->GetNumberOfPoints()));
+                      ImGui::Text("Faces: %lld",
+                                  static_cast<long long>(visual->getPolydata()->GetNumberOfPolys()));
+                    } else {
+                      ImGui::TextDisabled("No geometry visual loaded");
+                    }
+
+                    ImGui::TreePop();
+                  }
+                }
+
 	            if (treePart->isMeshed()){
                   if (expand_model_tree_once) {
                     ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -4668,6 +4827,27 @@ void Editor::drawGui() {
 	                  if (meshDeleted || !treePart->isMeshed() || treePart->getMesh() == nullptr) {
 	                      ImGui::TreePop();
 	                      continue;
+                  }
+
+                  ImGui::SameLine();
+                  const std::string meshVisibilityButtonId =
+                    "mesh_visibility_" + std::to_string(treePart->getId()) + "_" + std::to_string(i);
+                  const bool meshVisible = isPartMeshVisible(treePart);
+                  if (drawVisibilityButton(meshVisibilityButtonId.c_str(),
+                                           meshVisible,
+                                           "Hide mesh",
+                                           "Show mesh")) {
+                    setPartMeshVisible(treePart, !meshVisible);
+                    if (!meshVisible && !isPartVisible(treePart)) {
+                      setPartVisible(treePart, true);
+                    }
+                    if (viewer != nullptr && viewer->getRenderWindow() != nullptr) {
+                      viewer->getRenderWindow()->Render();
+                    }
+                  }
+                  if (ImGui::IsItemHovered()) {
+                    part_branch_hovered = true;
+                    hovered_prt = treePart;
                   }
 
                   // Subramas internas
@@ -5130,6 +5310,26 @@ void Editor::drawGui() {
                m_show_interaction_props_dlg = true;
              }
              ImGui::TreePop();
+          }
+
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
+          open_ = ImGui::TreeNode("Remeshing");
+          if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Edit")) {
+              m_show_remesh_dlg_edit = true;
+            }
+            ImGui::EndPopup();
+          }
+          if (open_) {
+            RemeshingSettings &remeshing = m_model->remeshing();
+            ImGui::Text("Status: %s", remeshing.enabled ? "Enabled" : "Disabled");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("edit")) {
+              m_show_remesh_dlg_edit = true;
+            }
+            ImGui::TreePop();
           }
 
           //-----------------------------------------------------
@@ -6066,6 +6266,16 @@ void Editor::drawGui() {
     }
     ImGuiFileDialog::Instance()->Close();
   }
+
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenInput"))
+  {
+    if (ImGuiFileDialog::Instance()->IsOk())
+    {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      openInputFromPath(filePathName);
+    }
+    ImGuiFileDialog::Instance()->Close();
+  }
   
   // display
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgOpenRes")) 
@@ -6269,6 +6479,9 @@ void Editor::drawGui() {
         selected_step = nullptr;
       m_creating_step = false;
     }
+  }
+  if (m_show_remesh_dlg_edit) {
+    ShowEditRemeshDialog(&m_show_remesh_dlg_edit, &m_remeshdlg, m_model);
   }
   else if (m_show_set_dlg) {
     const std::vector<Node*> selectedNodesForSet = m_selector.getSelectedNodes();

@@ -275,4 +275,7 @@
          - Added transparency & cutplane.
          - Fixed Sirface and fields at cutting plane.
          - Added Cylinder in 3D model.
+20260601 - Changed polydata to Unstructured mesh
+         - Added transparency and selective showing of mesh and geometry.
+         - Fixed TRI elements treated as bulk and hence not running. 
 

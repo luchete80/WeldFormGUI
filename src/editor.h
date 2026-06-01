@@ -46,6 +46,7 @@
 #include "job_dialog.h"
 #include "interaction_props_dialog.h"
 #include "step_dialog.h"
+#include "remesh_dialog.h"
 #include "bc_dialog.h"
 #include "ini_dialog.h"
 #include "mesh_dialog.h"
@@ -129,6 +130,7 @@ public:
   void drawMeasurementOverlay() const;
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   bool openModelFromPath(const std::string& filePathName);
+  bool openInputFromPath(const std::string& filePathName);
   bool openScriptFromPath(const std::string& filePathName);
   bool importMeshPartFromPath(const std::string& filePathName);
   bool createJobFromActiveModel(bool runJob = false);
@@ -301,6 +303,7 @@ protected:
   JobShowDialog   m_jobshowdlg;
   InteractionPropsDialog m_interactionpropsdlg;
   StepDialog      m_stepdlg;
+  RemeshDialog    m_remeshdlg;
   CreateSetDialog m_setdlg;
   
   BCDialog        m_bcdlg;
@@ -315,6 +318,7 @@ protected:
   bool m_show_prt_dlg_edit = false;
   bool m_show_bc_dlg_edit = false;
   bool m_show_step_dlg_edit = false;
+  bool m_show_remesh_dlg_edit = false;
   bool m_show_interaction_props_dlg = false;
   bool create_new_mat;
   bool create_new_part;

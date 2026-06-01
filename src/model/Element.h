@@ -42,7 +42,7 @@ class Tria:
 public Element {
 public:
   void init(){
-        m_nodecount = 2;m_node.resize(2);
+        m_nodecount = 3;m_node.resize(3);
   }
   Tria(){
     init();}

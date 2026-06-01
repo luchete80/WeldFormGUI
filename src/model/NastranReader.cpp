@@ -35,6 +35,18 @@ inline bool startsWithCard(const std::string& line, const char* card) {
     return prefix == std::string(card);
 }
 
+inline bool isTriCard(const std::string& line) {
+    return startsWithCard(line, "CTRIA") || startsWithCard(line, "CTRIA3");
+}
+
+inline bool isQuadCard(const std::string& line) {
+    return startsWithCard(line, "CQUAD") || startsWithCard(line, "CQUAD4");
+}
+
+inline bool isBeamCard(const std::string& line) {
+    return startsWithCard(line, "CBEAM") || startsWithCard(line, "CBAR");
+}
+
 inline double parseNastranRealField(std::string field) {
     field = trimSpaces(field);
     if (field.empty()) {
@@ -57,6 +69,15 @@ inline double parseNastranRealField(std::string field) {
     }
 
     return strtod(field.c_str(), nullptr);
+}
+
+inline int parseNastranIntField(const std::string& line, int fieldIndex)
+{
+    const int pos = fieldIndex * FIELD_LENGTH;
+    if (pos < 0 || pos + FIELD_LENGTH > static_cast<int>(line.size())) {
+        return 0;
+    }
+    return atoi(line.substr(pos, FIELD_LENGTH).c_str());
 }
 
 void NastranReader::read(const char* fName){
@@ -98,11 +119,10 @@ void NastranReader::read(const char* fName){
           start_node = true;
           line_start_node = l;
         }
-      } else if (startsWithCard(line, "CTRIA") ||
-                 startsWithCard(line, "CQUAD") ||
+      } else if (isTriCard(line) ||
+                 isQuadCard(line) ||
                  startsWithCard(line, "CTETRA") ||
-                 startsWithCard(line, "CBEAM") ||
-                 startsWithCard(line, "CBAR") ){
+                 isBeamCard(line) ){
         if (startsWithCard(line, "CTETRA"))
           found_ctetra = true;
       }
@@ -137,23 +157,22 @@ void NastranReader::read(const char* fName){
       } else if (
           (found_ctetra && startsWithCard(line, "CTETRA")) ||
           (!found_ctetra && (
-              startsWithCard(line, "CTRIA") ||
-              startsWithCard(line, "CQUAD") ||
-              startsWithCard(line, "CBEAM") ||
-              startsWithCard(line, "CBAR")))) {
+              isTriCard(line) ||
+              isQuadCard(line) ||
+              isBeamCard(line)))) {
         if (!start_elem){
           start_elem = true;
 					line_start_elem = l;
 				}
-        if (startsWithCard(line, "CQUAD"))
+        if (isQuadCard(line))
           max_nodes_per_elem = 4;
         if (startsWithCard(line, "CTETRA")) {
           max_nodes_per_elem = 4;
           dim = 3;
         }
-        if (!found_ctetra && (startsWithCard(line, "CTRIA") || startsWithCard(line, "CQUAD")))
+        if (!found_ctetra && (isTriCard(line) || isQuadCard(line)))
           dim = 2;
-        if (!found_ctetra && (startsWithCard(line, "CBEAM") || startsWithCard(line, "CBAR")))
+        if (!found_ctetra && isBeamCard(line))
           dim = 2;
         elem_count++;
       }
@@ -221,18 +240,29 @@ void NastranReader::read(const char* fName){
   for (l = curr_line; l < line_count && ecount < elem_count; ++l) {
     if (!((found_ctetra && startsWithCard(rawData[l], "CTETRA")) ||
           (!found_ctetra && (
-              startsWithCard(rawData[l], "CTRIA") ||
-              startsWithCard(rawData[l], "CQUAD") ||
-              startsWithCard(rawData[l], "CBEAM") ||
-              startsWithCard(rawData[l], "CBAR"))))) {
+              isTriCard(rawData[l]) ||
+              isQuadCard(rawData[l]) ||
+              isBeamCard(rawData[l]))))) {
       continue;
     }
 
     int nodes_per_elem = 3;
-    if (startsWithCard(rawData[l], "CQUAD") || startsWithCard(rawData[l], "CTETRA"))
+    if (isQuadCard(rawData[l]) || startsWithCard(rawData[l], "CTETRA"))
       nodes_per_elem = 4;
-    else if (startsWithCard(rawData[l], "CBEAM") || startsWithCard(rawData[l], "CBAR"))
+    else if (isBeamCard(rawData[l]))
       nodes_per_elem = 2;
+
+    const bool debugTargetTetra =
+      startsWithCard(rawData[l], "CTETRA") && parseNastranIntField(rawData[l], 1) == 3801;
+    if (debugTargetTetra) {
+      cout << "[debug tetra 3801][reader] line " << l << ": " << rawData[l] << endl;
+      cout << "[debug tetra 3801][reader] pid=" << parseNastranIntField(rawData[l], 2)
+           << " node ids="
+           << parseNastranIntField(rawData[l], 3) << ", "
+           << parseNastranIntField(rawData[l], 4) << ", "
+           << parseNastranIntField(rawData[l], 5) << ", "
+           << parseNastranIntField(rawData[l], 6) << endl;
+    }
 
     for (int en=0;en<nodes_per_elem;en++){
 			int pos = 3*(FIELD_LENGTH)+ en*FIELD_LENGTH;
@@ -243,13 +273,31 @@ void NastranReader::read(const char* fName){
         cerr << "[E] Node id " << d << " referenced by element line " << l
              << " was not found in GRID table." << endl;
         elcon[max_nodes_per_elem*ecount+en] = -1;
+        if (debugTargetTetra) {
+          cerr << "[debug tetra 3801][reader] missing GRID for node id " << d << endl;
+        }
         continue;
       }
 			int nod = it_nod->second;
 			elcon[max_nodes_per_elem*ecount+en] = nod;
+      if (debugTargetTetra) {
+        cout << "[debug tetra 3801][reader] node " << d
+             << " -> internal index " << nod
+             << " coords=("
+             << node[3 * nod] << ", "
+             << node[3 * nod + 1] << ", "
+             << node[3 * nod + 2] << ")" << endl;
+      }
 		}
     for (int en=nodes_per_elem; en<max_nodes_per_elem; en++)
       elcon[max_nodes_per_elem*ecount+en] = -1;
+    if (debugTargetTetra) {
+      cout << "[debug tetra 3801][reader] stored connectivity indices="
+           << elcon[max_nodes_per_elem*ecount] << ", "
+           << elcon[max_nodes_per_elem*ecount + 1] << ", "
+           << elcon[max_nodes_per_elem*ecount + 2] << ", "
+           << elcon[max_nodes_per_elem*ecount + 3] << endl;
+    }
     ecount++;
 	}
 

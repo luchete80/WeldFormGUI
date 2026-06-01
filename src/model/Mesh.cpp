@@ -796,6 +796,27 @@ void Mesh::genFromNastranFile(const std::string& filename) {
             }
         }
 
+        const bool debugTargetTetra =
+            reader.dim == 3 &&
+            maxNodesPerElem == 4 &&
+            elementNodes.size() == 4 &&
+            elementNodes[0] != nullptr &&
+            elementNodes[1] != nullptr &&
+            elementNodes[2] != nullptr &&
+            elementNodes[3] != nullptr &&
+            elementNodes[0]->getId() == 63 &&
+            elementNodes[1]->getId() == 64 &&
+            elementNodes[2]->getId() == 489 &&
+            elementNodes[3]->getId() == 348;
+        if (debugTargetTetra) {
+            std::cout << "[debug tetra 3801][mesh] imported as element index " << e
+                      << " with node ids "
+                      << elementNodes[0]->getId() << ", "
+                      << elementNodes[1]->getId() << ", "
+                      << elementNodes[2]->getId() << ", "
+                      << elementNodes[3]->getId() << std::endl;
+        }
+
         if(elementNodes.size() == 2) {
             Line* line = new Line(elementNodes);
             line->m_id = static_cast<int>(m_elem.size()) + 1;
@@ -812,6 +833,10 @@ void Mesh::genFromNastranFile(const std::string& filename) {
             Element* element = new Element(elementNodes);
             element->m_id = static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(element);
+            if (debugTargetTetra) {
+                std::cout << "[debug tetra 3801][mesh] created generic 4-node solid with temp id "
+                          << element->getId() << std::endl;
+            }
         }
     }
 

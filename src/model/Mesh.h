@@ -128,6 +128,7 @@ public:
   }
   
   const int & getDim() const {return m_dim;}
+  void setDim(const int &dim){m_dim = dim;}
 
 
   bool exportToNASTRAN(const std::string& filename);

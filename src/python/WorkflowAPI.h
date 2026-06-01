@@ -385,6 +385,12 @@ inline void apply_mesh_size_to_current_gmsh_model(double element_size)
   for (const auto& entity : point_entities) {
     gmsh::model::mesh::setSize({entity}, element_size);
   }
+}
+
+inline void apply_transfinite_constraints_to_current_gmsh_model(double element_size)
+{
+  if (element_size <= 0.0)
+    return;
 
   std::vector<std::pair<int, int>> curve_entities;
   gmsh::model::getEntities(curve_entities, 1);
@@ -1007,9 +1013,11 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
   wfgui::workflow::apply_mesh_size_to_current_gmsh_model(resolved_element_size);
 
   if (is_2d_analysis && is_rigid_part) {
+    wfgui::workflow::apply_transfinite_constraints_to_current_gmsh_model(resolved_element_size);
     gmsh::model::mesh::generate(1);
   } else {
     if (is_2d_analysis) {
+      wfgui::workflow::apply_transfinite_constraints_to_current_gmsh_model(resolved_element_size);
       gmsh::model::getEntities(entities);
       for (const auto& entity : entities) {
         if (entity.first == 2) {

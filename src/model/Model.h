@@ -47,6 +47,25 @@ struct ContactProperties {
   double penaltyFactor = 5000.0;
   bool useGapPenalty = true;
 };
+
+struct RemeshingSettings {
+  bool enabled = true;
+  double minStrain = -1.0;
+  double maxStrain = 1.0e6;
+  bool mapVel = false;
+  bool mapAcc = false;
+  int maxCount = 100;
+  double dampFactor = 0.02;
+  double minFrac = 2.0;
+  double maxFrac = 2.0;
+  double epsRef = 1.0;
+  double beta = 4.0;
+  int type = 0;
+  bool debug = false;
+  double minElemAngle = 15.0;
+  double maxElemAngle = 165.0;
+  double transitionAngle = 15.0;
+};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
   friend Editor;
@@ -122,6 +141,8 @@ public:
   void addInitialCondition(InitialCondition *bc){m_ic.push_back(bc);}
   ContactProperties & contactProps(){return m_contact_props;}
   const ContactProperties & contactProps() const {return m_contact_props;}
+  RemeshingSettings & remeshing(){return m_remeshing;}
+  const RemeshingSettings & remeshing() const {return m_remeshing;}
 
 
   int part_count;
@@ -171,6 +192,7 @@ protected:
   AnalysisType m_analysisType = Solid3D;
   double m_element_size = 1.0;
   ContactProperties m_contact_props;
+  RemeshingSettings m_remeshing;
 
 
 };

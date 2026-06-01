@@ -871,6 +871,39 @@ void applyDisplayModeToActor(vtkActor* actor, ModelDisplayMode mode, bool showEd
     }
 }
 
+void applyDisplayModeToGeometryActor(vtkOCCTGeom* visual, ModelDisplayMode mode)
+{
+    if (visual == nullptr || visual->actor == nullptr || visual->actor->GetProperty() == nullptr) {
+        return;
+    }
+
+    vtkMapper* mapper = visual->actor->GetMapper();
+    if (mapper != nullptr) {
+        mapper->ScalarVisibilityOff();
+    }
+
+    vtkProperty* property = visual->actor->GetProperty();
+    if (visual->hasOnlyLineCells()) {
+        property->SetRepresentationToWireframe();
+        property->EdgeVisibilityOff();
+        property->SetOpacity(1.0);
+        property->SetLineWidth(4.0);
+        property->SetRenderLinesAsTubes(true);
+        property->SetColor(0.45, 0.45, 0.45);
+        return;
+    }
+
+    property->SetRenderLinesAsTubes(false);
+    property->SetLineWidth(1.0);
+    property->EdgeVisibilityOff();
+    property->SetColor(0.84, 0.84, 0.84);
+    if (mode == ModelDisplayMode::Wireframe) {
+        property->SetRepresentationToWireframe();
+    } else {
+        property->SetRepresentationToSurface();
+    }
+}
+
 void applyDisplayModeToActiveModel(ModelDisplayMode mode, bool showEdges)
 {
     Model& model = getApp().getActiveModel();
@@ -885,7 +918,7 @@ void applyDisplayModeToActiveModel(ModelDisplayMode mode, bool showEdges)
         }
 
         if (vtkOCCTGeom* visual = getApp().getVisualForPart(part)) {
-            applyDisplayModeToActor(visual->actor, mode, showEdges, false);
+            applyDisplayModeToGeometryActor(visual, mode);
         }
     }
 }
@@ -1238,22 +1271,28 @@ void drawViewportOverlay(VtkViewer& viewer,
         }
 
         drawOverlaySeparator();
-        if (drawToolbarButton("Ed", state.showEdges, "Element edges")) {
-            state.showEdges = !state.showEdges;
-        }
-        ImGui::SameLine();
-        if (drawToolbarButton("Wi", state.displayMode == ModelDisplayMode::Wireframe, "Wireframe")) {
-            state.displayMode = ModelDisplayMode::Wireframe;
-        }
-        ImGui::SameLine();
-        if (drawToolbarButton("Sf", state.displayMode == ModelDisplayMode::Surface, "Surface")) {
-            state.displayMode = ModelDisplayMode::Surface;
+        if (resultsTools != nullptr && resultsTools->is3DFrame) {
+            ImGui::TextUnformatted("Transparency");
+            float transparencyPercent = resultsTools->surfaceOpacity * 100.0f;
+            ImGui::SetNextItemWidth(150.0f);
+            if (ImGui::SliderFloat("##surface_opacity",
+                                   &transparencyPercent,
+                                   8.0f,
+                                   100.0f,
+                                   "%.0f%%",
+                                   ImGuiSliderFlags_AlwaysClamp)) {
+                resultsTools->surfaceOpacity = transparencyPercent / 100.0f;
+            }
         }
 
+        bool wireframeEnabled = state.displayMode == ModelDisplayMode::Wireframe;
+        if (ImGui::Checkbox("Wireframe", &wireframeEnabled)) {
+            state.displayMode = wireframeEnabled ? ModelDisplayMode::Wireframe : ModelDisplayMode::Surface;
+        }
+        ImGui::Checkbox("Edges", &state.showEdges);
+
         if (resultsTools != nullptr && resultsTools->is3DFrame) {
-            drawOverlaySeparator();
-            if (drawToolbarButton("Cp", resultsTools->clipEnabled, "Clip plane")) {
-                resultsTools->clipEnabled = !resultsTools->clipEnabled;
+            if (ImGui::Checkbox("Clip", &resultsTools->clipEnabled)) {
                 if (!resultsTools->clipEnabled) {
                     resultsTools->clipOriginInitialized = false;
                 }
@@ -1271,20 +1310,6 @@ void drawViewportOverlay(VtkViewer& viewer,
                 if (drawAxisButton("Z", ImVec4(0.24f, 0.40f, 0.76f, 1.0f))) {
                     resultsTools->clipAxis = 2;
                 }
-            }
-
-            ImGui::SameLine();
-            if (drawToolbarButton("Tp", resultsTools->transparencyControlsVisible, "Transparency")) {
-                resultsTools->transparencyControlsVisible = !resultsTools->transparencyControlsVisible;
-            }
-            if (resultsTools->transparencyControlsVisible) {
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(110.0f);
-                ImGui::SliderFloat("##results_opacity",
-                                   &resultsTools->surfaceOpacity,
-                                   0.08f,
-                                   1.0f,
-                                   "A %.2f");
             }
         }
 

@@ -116,6 +116,27 @@ bool ModelReader::readFromFile(const std::string& fname) {
         props.useGapPenalty = contact.value("useGapPenalty", props.useGapPenalty);
     }
 
+    if (j.contains("Remeshing") && j["Remeshing"].is_object()) {
+        const auto &remeshing = j["Remeshing"];
+        RemeshingSettings &settings = m_model->remeshing();
+        settings.enabled = remeshing.value("enabled", settings.enabled);
+        settings.minStrain = remeshing.value("minStrain", settings.minStrain);
+        settings.maxStrain = remeshing.value("maxStrain", settings.maxStrain);
+        settings.mapVel = remeshing.value("mapVel", settings.mapVel);
+        settings.mapAcc = remeshing.value("mapAcc", settings.mapAcc);
+        settings.maxCount = remeshing.value("maxCount", settings.maxCount);
+        settings.dampFactor = remeshing.value("dampFactor", settings.dampFactor);
+        settings.minFrac = remeshing.value("minFrac", settings.minFrac);
+        settings.maxFrac = remeshing.value("maxFrac", settings.maxFrac);
+        settings.epsRef = remeshing.value("epsRef", settings.epsRef);
+        settings.beta = remeshing.value("beta", settings.beta);
+        settings.type = remeshing.value("type", settings.type);
+        settings.debug = remeshing.value("debug", settings.debug);
+        settings.minElemAngle = remeshing.value("minElemAngle", settings.minElemAngle);
+        settings.maxElemAngle = remeshing.value("maxElemAngle", settings.maxElemAngle);
+        settings.transitionAngle = remeshing.value("transitionAngle", settings.transitionAngle);
+    }
+
     // =============================================================
     // Materials
     // =============================================================
@@ -573,11 +594,12 @@ bool ModelReader::readFromFile(const std::string& fname) {
             step->m_axiSymmVol = jstep.value("axiSymmVol", false);
             step->m_elemLengthFraction = jstep.value("elemLengthFraction", 0.2);
 
-            if (jstep.contains("meshing")) {
+            if (jstep.contains("meshing") && !j.contains("Remeshing")) {
                 const auto &meshing = jstep["meshing"];
-                step->m_meshingDebug = meshing.value("debug", true);
-                step->m_maxElemAngle = meshing.value("maxElemAngle", 150.0);
-                step->m_minElemAngle = meshing.value("minElemAngle", 30.0);
+                RemeshingSettings &settings = m_model->remeshing();
+                settings.debug = meshing.value("debug", settings.debug);
+                settings.maxElemAngle = meshing.value("maxElemAngle", settings.maxElemAngle);
+                settings.minElemAngle = meshing.value("minElemAngle", settings.minElemAngle);
             }
 
             if (jstep.contains("implicit")) {

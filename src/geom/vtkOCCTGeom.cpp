@@ -20,6 +20,18 @@
 #include <IFSelect_ReturnStatus.hxx>
 #include "Geom.h"
 
+bool vtkOCCTGeom::hasSurfaceCells() const
+{
+    return m_polydata != nullptr && m_polydata->GetNumberOfPolys() > 0;
+}
+
+bool vtkOCCTGeom::hasOnlyLineCells() const
+{
+    return m_polydata != nullptr &&
+           m_polydata->GetNumberOfLines() > 0 &&
+           m_polydata->GetNumberOfPolys() == 0;
+}
+
 // int argc, char* argv are required for vtkRegressionTestImage
 int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
 {
@@ -226,8 +238,7 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
 
         const bool isLineShape =
             shape.ShapeType() == TopAbs_EDGE || shape.ShapeType() == TopAbs_WIRE;
-        const bool hasOnlyLines =
-            m_polydata->GetNumberOfLines() > 0 && m_polydata->GetNumberOfPolys() == 0;
+        const bool hasOnlyLines = hasOnlyLineCells();
 
         if (isLineShape || hasOnlyLines) {
             actor->GetProperty()->SetOpacity(1.0);

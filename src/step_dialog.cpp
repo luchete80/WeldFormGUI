@@ -28,10 +28,6 @@ void StepDialog::InitFromStep(Step *step) {
   m_axiSymmVol = step->m_axiSymmVol;
   m_elemLengthFraction = step->m_elemLengthFraction;
 
-  m_meshingDebug = step->m_meshingDebug;
-  m_maxElemAngle = step->m_maxElemAngle;
-  m_minElemAngle = step->m_minElemAngle;
-
   std::strncpy(m_implicit_type, step->m_implicitType.c_str(), sizeof(m_implicit_type) - 1);
   m_implicit_type[sizeof(m_implicit_type) - 1] = '\0';
   m_velTol = step->m_velTol;
@@ -80,12 +76,6 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
   ImGui::Checkbox("Auto TS Y", &m_autoTS[1]);
   ImGui::Checkbox("Auto TS Z", &m_autoTS[2]);
 
-  if (ImGui::CollapsingHeader("Meshing", ImGuiTreeNodeFlags_DefaultOpen)) {
-    ImGui::Checkbox("Debug", &m_meshingDebug);
-    ImGui::InputDouble("Max Elem Angle", &m_maxElemAngle, 0.0, 1.0, "%.2f");
-    ImGui::InputDouble("Min Elem Angle", &m_minElemAngle, 0.0, 1.0, "%.2f");
-  }
-
   if (m_step_type == ImplicitStep && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::InputText("Type", m_implicit_type, IM_ARRAYSIZE(m_implicit_type));
     ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
@@ -114,9 +104,6 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_fixedTS = m_fixedTS;
       step->m_axiSymmVol = m_axiSymmVol;
       step->m_elemLengthFraction = m_elemLengthFraction;
-      step->m_meshingDebug = m_meshingDebug;
-      step->m_maxElemAngle = m_maxElemAngle;
-      step->m_minElemAngle = m_minElemAngle;
       step->m_implicitType = m_implicit_type;
       step->m_velTol = m_velTol;
       step->m_pressTol = m_pressTol;

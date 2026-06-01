@@ -42,6 +42,8 @@ public:
   int readFile(int argc, char* argv[]);
   
   vtkSmartPointer<vtkPolyData> getPolydata(){return m_polydata;}
+  bool hasSurfaceCells() const;
+  bool hasOnlyLineCells() const;
 
   int TestReader(const std::string& path, unsigned int format);
   void LoadCylinder(double radius, double height);
