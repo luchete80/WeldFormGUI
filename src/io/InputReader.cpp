@@ -180,12 +180,22 @@ void readMaterials(const json& root, Model* model)
       material->e_min = material->strRange[0];
       material->e_max = material->strRange[1];
     }
+    if (mat.contains("strdotRange") && mat["strdotRange"].is_array() && mat["strdotRange"].size() >= 2) {
+      material->er_min = mat["strdotRange"][0].get<double>();
+      material->er_max = mat["strdotRange"][1].get<double>();
+    }
+    if (mat.contains("tempRange") && mat["tempRange"].is_array() && mat["tempRange"].size() >= 2) {
+      material->T_min = mat["tempRange"][0].get<double>();
+      material->T_max = mat["tempRange"][1].get<double>();
+    }
 
     const std::string type = mat.value("type", std::string("Elastic"));
     if (type == "Hollomon" && mat.contains("const") && mat["const"].is_array() && mat["const"].size() >= 2) {
       const double K = mat["const"][0].get<double>();
       const double n = mat["const"][1].get<double>();
       material->InitHollomon(elastic, material->yieldStress0, K, n);
+      material->m_plastic = new Hollomon(K, n);
+      material->m_isplastic = true;
     } else if (type == "Bilinear" && mat.contains("const") && mat["const"].is_array() && mat["const"].size() >= 1) {
       material->m_plastic = new Bilinear(material->yieldStress0, mat["const"][0].get<double>());
       material->m_isplastic = true;
