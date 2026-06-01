@@ -1,0 +1,2 @@
+[Job::Run] Solver binary not found: weldform_imp_3d_std
+[Job::Run] Searched: D:\Luciano\Numerico\WeldFormGUI_bin\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\WeldFormGUI_bin\solvers\weldform_imp_3d_std; D:\Luciano\Numerico\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\solvers\weldform_imp_3d_std; D:\Luciano\Numerico\WeldFormGUI\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\WeldFormGUI\solvers\weldform_imp_3d_std; examples\demo\compression_tetra_qt\solvers\weldform_imp_3d_std.exe; examples\demo\compression_tetra_qt\solvers\weldform_imp_3d_std

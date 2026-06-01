@@ -8,7 +8,7 @@
                 true,
                 true
             ],
-            "targetId": 2,
+            "targetId": 5,
             "type": "VelocityBC",
             "value": [
                 0.0,
@@ -130,40 +130,6 @@
             {
                 "geometry": {
                     "origin": [
-                        -0.025,
-                        -0.025,
-                        0.0
-                    ],
-                    "source": "demo_part_1.step"
-                },
-                "id": 1,
-                "isRigid": true,
-                "mesh": {
-                    "source": "demo_part_1.bdf"
-                },
-                "name": "",
-                "sectionId": -1
-            },
-            {
-                "geometry": {
-                    "origin": [
-                        -0.025,
-                        -0.025,
-                        0.03
-                    ],
-                    "source": "demo_part_2.step"
-                },
-                "id": 2,
-                "isRigid": true,
-                "mesh": {
-                    "source": "demo_part_2.bdf"
-                },
-                "name": "",
-                "sectionId": -1
-            },
-            {
-                "geometry": {
-                    "origin": [
                         0.0,
                         0.0,
                         0.0
@@ -174,6 +140,40 @@
                 "isRigid": false,
                 "mesh": {
                     "source": "demo_part_3.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_4.step"
+                },
+                "id": 4,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_4.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.03
+                    ],
+                    "source": "demo_part_5.step"
+                },
+                "id": 5,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_5.bdf"
                 },
                 "name": "",
                 "sectionId": -1
