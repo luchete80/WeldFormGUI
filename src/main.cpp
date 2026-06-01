@@ -996,6 +996,117 @@ void drawOverlaySeparator()
     ImGui::SameLine(0.0f, 8.0f);
 }
 
+template <typename DrawFn>
+bool drawOverlayIconButton(const char* id,
+                           bool active,
+                           const char* tooltip,
+                           DrawFn&& drawFn)
+{
+    const ImVec2 size(24.0f, 24.0f);
+    ImGui::PushID(id);
+    const bool pressed = ImGui::InvisibleButton("##icon", size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImU32 bgColor = active ? IM_COL32(61, 122, 219, 235) : IM_COL32(28, 34, 44, 110);
+    if (held) {
+        bgColor = active ? IM_COL32(53, 106, 191, 255) : IM_COL32(46, 74, 122, 220);
+    } else if (hovered) {
+        bgColor = active ? IM_COL32(70, 132, 232, 245) : IM_COL32(54, 64, 80, 180);
+    }
+
+    const ImU32 strokeColor = hovered || held
+        ? IM_COL32(255, 255, 255, 255)
+        : IM_COL32(220, 224, 230, 255);
+
+    drawList->AddRectFilled(min, max, bgColor, 6.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 18), 6.0f, 0, 1.0f);
+    drawFn(drawList, min, max, strokeColor);
+
+    if (tooltip != nullptr && hovered) {
+        ImGui::SetTooltip("%s", tooltip);
+    }
+
+    ImGui::PopID();
+    return pressed;
+}
+
+bool drawClipIconButton(bool active, const char* tooltip = nullptr)
+{
+    return drawOverlayIconButton("clip_icon_button", active, tooltip,
+        [](ImDrawList* drawList, const ImVec2& min, const ImVec2& max, ImU32 strokeColor) {
+            const float left = min.x + 6.0f;
+            const float right = max.x - 6.0f;
+            const float top = min.y + 6.0f;
+            const float bottom = max.y - 6.0f;
+            const float thickness = 1.5f;
+            drawList->AddRect(ImVec2(left, top), ImVec2(right, bottom), strokeColor, 2.0f, 0, thickness);
+            const float lineX0 = left + 3.0f;
+            const float lineY0 = bottom + 1.5f;
+            const float lineX1 = right - 1.5f;
+            const float lineY1 = top - 2.5f;
+            drawList->AddLine(ImVec2(lineX0, lineY0),
+                              ImVec2(lineX1, lineY1),
+                              strokeColor,
+                              1.7f);
+        });
+}
+
+bool drawMeshDisplayButton(const char* id, bool active, bool filled, const char* tooltip = nullptr)
+{
+    return drawOverlayIconButton(id, active, tooltip,
+        [filled](ImDrawList* drawList, const ImVec2& min, const ImVec2& max, ImU32 strokeColor) {
+            const float left = min.x + 5.5f;
+            const float right = max.x - 5.5f;
+            const float top = min.y + 5.5f;
+            const float bottom = max.y - 5.5f;
+            const float midX = (left + right) * 0.5f;
+            const float midY = (top + bottom) * 0.5f;
+            const float thickness = 1.35f;
+
+            if (filled) {
+                drawList->AddRectFilled(ImVec2(left, top),
+                                        ImVec2(right, bottom),
+                                        IM_COL32(170, 176, 186, 130),
+                                        2.0f);
+            }
+
+            drawList->AddRect(ImVec2(left, top), ImVec2(right, bottom), strokeColor, 2.0f, 0, thickness);
+            drawList->AddLine(ImVec2(midX, top), ImVec2(midX, bottom), strokeColor, thickness);
+            drawList->AddLine(ImVec2(left, midY), ImVec2(right, midY), strokeColor, thickness);
+        });
+}
+
+bool drawOpacityIconButton(bool active, const char* tooltip = nullptr)
+{
+    return drawOverlayIconButton("opacity_icon_button", active, tooltip,
+        [](ImDrawList* drawList, const ImVec2& min, const ImVec2& max, ImU32 strokeColor) {
+            const ImVec2 center((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
+            const float eyeHalfWidth = 7.0f;
+            const float eyeHalfHeight = 4.2f;
+            const float pupilRadius = 2.2f;
+            const float thickness = 1.45f;
+
+            drawList->AddBezierCubic(ImVec2(center.x - eyeHalfWidth, center.y),
+                                     ImVec2(center.x - 3.8f, center.y - eyeHalfHeight),
+                                     ImVec2(center.x + 3.8f, center.y - eyeHalfHeight),
+                                     ImVec2(center.x + eyeHalfWidth, center.y),
+                                     strokeColor,
+                                     thickness);
+            drawList->AddBezierCubic(ImVec2(center.x - eyeHalfWidth, center.y),
+                                     ImVec2(center.x - 3.8f, center.y + eyeHalfHeight),
+                                     ImVec2(center.x + 3.8f, center.y + eyeHalfHeight),
+                                     ImVec2(center.x + eyeHalfWidth, center.y),
+                                     strokeColor,
+                                     thickness);
+            drawList->AddCircleFilled(center, pupilRadius, strokeColor);
+        });
+}
+
 bool drawProjectionButton(const char* id, bool orthographic, bool active, const char* tooltip)
 {
     const ImVec2 size(24.0f, 24.0f);
@@ -1220,6 +1331,9 @@ void drawViewportOverlay(VtkViewer& viewer,
     }
 
     ImGui::SetNextWindowPos(ImVec2(viewportMin.x + 12.0f, viewportMin.y + 12.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f),
+                                        ImVec2((viewportMax.x - viewportMin.x) - 24.0f,
+                                               (std::numeric_limits<float>::max)()));
     ImGui::SetNextWindowBgAlpha(0.18f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 6.0f));
@@ -1272,27 +1386,42 @@ void drawViewportOverlay(VtkViewer& viewer,
 
         drawOverlaySeparator();
         if (resultsTools != nullptr && resultsTools->is3DFrame) {
-            ImGui::TextUnformatted("Transparency");
-            float transparencyPercent = resultsTools->surfaceOpacity * 100.0f;
-            ImGui::SetNextItemWidth(150.0f);
-            if (ImGui::SliderFloat("##surface_opacity",
-                                   &transparencyPercent,
-                                   8.0f,
-                                   100.0f,
-                                   "%.0f%%",
-                                   ImGuiSliderFlags_AlwaysClamp)) {
-                resultsTools->surfaceOpacity = transparencyPercent / 100.0f;
+            if (drawOpacityIconButton(resultsTools->transparencyControlsVisible, "Transparency")) {
+                resultsTools->transparencyControlsVisible = !resultsTools->transparencyControlsVisible;
             }
+
+            if (resultsTools->transparencyControlsVisible) {
+                ImGui::SameLine();
+                float transparencyPercent = resultsTools->surfaceOpacity * 100.0f;
+                ImGui::SetNextItemWidth(96.0f);
+                if (ImGui::SliderFloat("##surface_opacity",
+                                       &transparencyPercent,
+                                       8.0f,
+                                       100.0f,
+                                       "%.0f%%",
+                                       ImGuiSliderFlags_AlwaysClamp)) {
+                    resultsTools->surfaceOpacity = transparencyPercent / 100.0f;
+                }
+            }
+            ImGui::SameLine();
         }
 
         bool wireframeEnabled = state.displayMode == ModelDisplayMode::Wireframe;
-        if (ImGui::Checkbox("Wireframe", &wireframeEnabled)) {
+        if (drawMeshDisplayButton("wireframe_icon_button",
+                                  wireframeEnabled,
+                                  false,
+                                  "Wireframe")) {
             state.displayMode = wireframeEnabled ? ModelDisplayMode::Wireframe : ModelDisplayMode::Surface;
         }
-        ImGui::Checkbox("Edges", &state.showEdges);
+        ImGui::SameLine();
+        if (drawMeshDisplayButton("edges_icon_button", state.showEdges, true, "Edges")) {
+            state.showEdges = !state.showEdges;
+        }
 
         if (resultsTools != nullptr && resultsTools->is3DFrame) {
-            if (ImGui::Checkbox("Clip", &resultsTools->clipEnabled)) {
+            ImGui::SameLine();
+            if (drawClipIconButton(resultsTools->clipEnabled, "Clip plane")) {
+                resultsTools->clipEnabled = !resultsTools->clipEnabled;
                 if (!resultsTools->clipEnabled) {
                     resultsTools->clipOriginInitialized = false;
                 }
