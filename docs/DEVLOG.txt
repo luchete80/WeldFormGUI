@@ -278,4 +278,5 @@
 20260601 - Changed polydata to Unstructured mesh
          - Added transparency and selective showing of mesh and geometry.
          - Fixed TRI elements treated as bulk and hence not running. 
-
+         - Added tree with model parts to hide/show in result.
+         - Added Symmetry Plane condition.

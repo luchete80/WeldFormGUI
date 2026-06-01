@@ -516,6 +516,17 @@ void ModelWriter::writeToFile(std::string fname){
     m_json["Remeshing"]["transitionAngle"] = remeshing.transitionAngle;
   }
 
+  if (!m_model.symmetryPlanes().empty()) {
+    m_json["SymmetryPlanes"] = json::array();
+    for (const SymmetryPlane &plane : m_model.symmetryPlanes()) {
+      m_json["SymmetryPlanes"].push_back({
+        {"enabled", plane.enabled},
+        {"axis", plane.axis},
+        {"value", plane.value}
+      });
+    }
+  }
+
   if (m_model.getBCCount() > 0) {
       std::cout << "Writing Boundary Conditions..." << std::endl;
 

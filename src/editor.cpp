@@ -331,6 +331,26 @@ std::string buildElementTypeSummary(Mesh* mesh)
   return oss.str();
 }
 
+const char* symmetryAxisName(int axis)
+{
+  switch (axis) {
+    case 0: return "YZ";
+    case 1: return "XZ";
+    case 2: return "XY";
+    default: return "?";
+  }
+}
+
+const char* symmetryAxisCoordinateName(int axis)
+{
+  switch (axis) {
+    case 0: return "x";
+    case 1: return "y";
+    case 2: return "z";
+    default: return "?";
+  }
+}
+
 int nextAvailableSectionId(Model* model)
 {
   if (model == nullptr) {
@@ -894,6 +914,21 @@ Mesh* findMeshForResultActor(Model* model, MultiResult* results, vtkActor* actor
   }
 
   return fallback;
+}
+
+ResultFrame* findResultFrameForActor(MultiResult* results, vtkActor* actor)
+{
+  if (results == nullptr || actor == nullptr) {
+    return nullptr;
+  }
+
+  for (auto& frame : results->frames) {
+    if (frame && frame->actor == actor) {
+      return frame.get();
+    }
+  }
+
+  return nullptr;
 }
 
 std::vector<std::vector<int>> getElementBoundarySides(const Mesh* mesh, const Element* element)
@@ -2436,12 +2471,54 @@ void Editor::closeCurrentResults()
     m_results = nullptr;
   }
 
+  m_results_part_visibility.clear();
+
   if (m_pending_results_load.active) {
     m_pending_results_load = PendingResultsLoad{};
     m_close_results_load_popup = true;
   }
 
   m_pending_results_frame_index = -1;
+}
+
+ResultFrame* Editor::getActiveResultFrame() const
+{
+  if (m_results == nullptr || res_viewer == nullptr) {
+    return nullptr;
+  }
+  return findResultFrameForActor(m_results, res_viewer->getCurrentActor());
+}
+
+void Editor::rebuildResultsPartVisibility()
+{
+  ResultFrame* activeFrame = getActiveResultFrame();
+  if (activeFrame == nullptr && m_results != nullptr && !m_results->frames.empty()) {
+    activeFrame = m_results->frames.front().get();
+  }
+  if (activeFrame == nullptr) {
+    m_results_part_visibility.clear();
+    return;
+  }
+
+  const std::vector<int> partIds = activeFrame->getAvailablePartIdsFromPointPartId();
+  for (int partId : partIds) {
+    if (m_results_part_visibility.find(partId) == m_results_part_visibility.end()) {
+      m_results_part_visibility[partId] = true;
+    }
+  }
+}
+
+void Editor::applyResultsPartVisibility()
+{
+  if (m_results == nullptr) {
+    return;
+  }
+
+  for (auto& frame : m_results->frames) {
+    if (frame) {
+      frame->applyPointPartIdVisibility(m_results_part_visibility);
+    }
+  }
 }
 
 bool Editor::createJobFromActiveModel(bool runJob)
@@ -3597,6 +3674,8 @@ void Editor::finishResultsLoad()
     m_pending_results_frame_index = 0;
   }
   m_activate_results_viewer = true;
+  rebuildResultsPartVisibility();
+  applyResultsPartVisibility();
   getApp().Update();
 
   cout << "Loaded " << m_pending_results_load.loadedFrames
@@ -5498,6 +5577,74 @@ void Editor::drawGui() {
              ImGui::TreePop();
           }
 
+          if (expand_model_tree_once) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+          }
+          open_ = ImGui::TreeNode("Symmetry");
+          if (open_) {
+            const AnalysisType analysisType = m_model->getAnalysisType();
+            const bool supportsSymmetryPlanes =
+              (analysisType == Solid3D || analysisType == PlaneStrain2D);
+
+            if (!supportsSymmetryPlanes) {
+              ImGui::TextDisabled("Available for Solid3D and PlaneStrain2D.");
+            } else {
+              const bool allowZPlane = (analysisType == Solid3D);
+
+              if (m_model->findSymmetryPlaneByAxis(0) == nullptr) {
+                if (ImGui::SmallButton("Add YZ")) {
+                  m_model->upsertSymmetryPlane({true, 0, 0.0});
+                }
+              }
+              ImGui::SameLine();
+              if (m_model->findSymmetryPlaneByAxis(1) == nullptr) {
+                if (ImGui::SmallButton("Add XZ")) {
+                  m_model->upsertSymmetryPlane({true, 1, 0.0});
+                }
+              }
+              if (allowZPlane) {
+                ImGui::SameLine();
+                if (m_model->findSymmetryPlaneByAxis(2) == nullptr) {
+                  if (ImGui::SmallButton("Add XY")) {
+                    m_model->upsertSymmetryPlane({true, 2, 0.0});
+                  }
+                }
+              }
+
+              std::vector<int> axesToShow = {0, 1};
+              if (allowZPlane) {
+                axesToShow.push_back(2);
+              }
+
+              for (int axis : axesToShow) {
+                SymmetryPlane* plane = m_model->findSymmetryPlaneByAxis(axis);
+                if (plane == nullptr) {
+                  continue;
+                }
+
+                const std::string label =
+                  std::string(symmetryAxisName(axis)) + " @ " +
+                  symmetryAxisCoordinateName(axis) + "=" + to_string_scientific(plane->value, 3);
+                if (ImGui::TreeNode((void*)(intptr_t)(10000 + axis), "%s", label.c_str())) {
+                  ImGui::Checkbox(("Enabled##symmetry_enabled_" + std::to_string(axis)).c_str(), &plane->enabled);
+                  ImGui::InputDouble(("Plane##symmetry_value_" + std::to_string(axis)).c_str(),
+                                     &plane->value, 0.0, 0.0, "%.6f");
+                  if (ImGui::Button(("Delete##symmetry_delete_" + std::to_string(axis)).c_str())) {
+                    m_model->removeSymmetryPlaneByAxis(axis);
+                    ImGui::TreePop();
+                    break;
+                  }
+                  ImGui::TreePop();
+                }
+              }
+
+              if (m_model->symmetryPlanes().empty()) {
+                ImGui::TextDisabled("No symmetry planes defined.");
+              }
+            }
+            ImGui::TreePop();
+          }
+
           //-----------------------------------------------------
             if (expand_model_tree_once) {
               ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -5707,6 +5854,50 @@ void Editor::drawGui() {
              ImGui::TextWrapped("Directory: %s", m_results->sourceDirectory.string().c_str());
 
            ImGui::Text("Frames: %zu", m_results->frames.size());
+
+           rebuildResultsPartVisibility();
+           ResultFrame* activeResultsFrame = getActiveResultFrame();
+           if (activeResultsFrame == nullptr && !m_results->frames.empty()) {
+             activeResultsFrame = m_results->frames.front().get();
+           }
+           const std::vector<int> activePartIds = activeResultsFrame
+             ? activeResultsFrame->getAvailablePartIdsFromPointPartId()
+             : std::vector<int>();
+           if (!activePartIds.empty()) {
+             if (ImGui::TreeNode("Parts")) {
+               for (int partId : activePartIds) {
+                 bool visible = true;
+                 std::map<int, bool>::iterator visibilityIt = m_results_part_visibility.find(partId);
+                 if (visibilityIt != m_results_part_visibility.end()) {
+                   visible = visibilityIt->second;
+                 }
+                 std::string label = "Part " + std::to_string(partId);
+                 for (int p = 0; p < m_model->getPartCount(); ++p) {
+                   Part* part = m_model->getPart(p);
+                   if (part != nullptr && part->getId() == partId) {
+                     const char* partName = part->getName();
+                     if (partName != nullptr && partName[0] != '\0') {
+                       label += " - ";
+                       label += partName;
+                     }
+                     break;
+                   }
+                 }
+
+                 ImGui::BulletText("%s", label.c_str());
+                 ImGui::SameLine();
+                 const std::string buttonId = "results_part_visibility_" + std::to_string(partId);
+                 if (drawVisibilityButton(buttonId.c_str(), visible, "Hide result part", "Show result part")) {
+                   m_results_part_visibility[partId] = !visible;
+                   applyResultsPartVisibility();
+                   if (res_viewer != nullptr && res_viewer->getRenderWindow() != nullptr) {
+                     res_viewer->getRenderWindow()->Render();
+                   }
+                 }
+               }
+               ImGui::TreePop();
+             }
+           }
          } else {
            ImGui::TextUnformatted("No results loaded.");
          }

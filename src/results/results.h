@@ -20,6 +20,9 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkDataObject.h>
 #include <vtkDataArray.h>
+#include <vtkDataSetAttributes.h>
+#include <vtkUnsignedCharArray.h>
+#include <vtkCell.h>
 
 // Includes estándar de C++
 #include <cmath>
@@ -32,6 +35,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <vector>
 #include <memory> // para std::unique_ptr
 
@@ -132,7 +137,91 @@ public:
 
         return names;
     }
+
+    std::vector<int> getAvailablePartIdsFromPointPartId() {
+        ensurePartIdCache();
+        return m_cachedPartIds;
+    }
+
+    void applyPointPartIdVisibility(const std::map<int, bool>& partVisibility) {
+        ensurePartIdCache();
+        if (!mesh || m_cachedCellPartIds.empty() || !mesh->GetCellData()) {
+            return;
+        }
+
+        vtkCellData* cellData = mesh->GetCellData();
+        vtkUnsignedCharArray* ghosts = vtkUnsignedCharArray::SafeDownCast(
+            cellData->GetArray(vtkDataSetAttributes::GhostArrayName()));
+        if (!ghosts) {
+            vtkSmartPointer<vtkUnsignedCharArray> ghostArray = vtkSmartPointer<vtkUnsignedCharArray>::New();
+            ghostArray->SetName(vtkDataSetAttributes::GhostArrayName());
+            ghostArray->SetNumberOfComponents(1);
+            ghostArray->SetNumberOfTuples(mesh->GetNumberOfCells());
+            ghostArray->FillValue(0);
+            cellData->AddArray(ghostArray);
+            ghosts = ghostArray;
+        } else {
+            ghosts->SetNumberOfTuples(mesh->GetNumberOfCells());
+        }
+
+        for (vtkIdType cellId = 0; cellId < mesh->GetNumberOfCells(); ++cellId) {
+            const int partId = (cellId < static_cast<vtkIdType>(m_cachedCellPartIds.size()))
+                ? m_cachedCellPartIds[static_cast<std::size_t>(cellId)]
+                : -1;
+            bool visible = true;
+            const std::map<int, bool>::const_iterator it = partVisibility.find(partId);
+            if (it != partVisibility.end()) {
+                visible = it->second;
+            }
+            ghosts->SetValue(cellId, visible ? 0 : vtkDataSetAttributes::HIDDENCELL);
+        }
+
+        if (contourFilter) contourFilter->Update();
+        if (mapper) mapper->Update();
+        mesh->Modified();
+        if (actor) actor->Modified();
+    }
 private:
+    std::vector<int> m_cachedPartIds;
+    std::vector<int> m_cachedCellPartIds;
+    bool m_partIdCacheValid = false;
+
+    void ensurePartIdCache() {
+        if (m_partIdCacheValid) {
+            return;
+        }
+
+        m_partIdCacheValid = true;
+        m_cachedPartIds.clear();
+        m_cachedCellPartIds.clear();
+
+        if (!mesh || !mesh->GetPointData()) {
+            return;
+        }
+
+        vtkDataArray* partIdArray = mesh->GetPointData()->GetArray("Part_ID");
+        if (!partIdArray) {
+            return;
+        }
+
+        std::set<int> uniquePartIds;
+        m_cachedCellPartIds.reserve(static_cast<std::size_t>(mesh->GetNumberOfCells()));
+        for (vtkIdType cellId = 0; cellId < mesh->GetNumberOfCells(); ++cellId) {
+            vtkCell* cell = mesh->GetCell(cellId);
+            if (!cell || cell->GetNumberOfPoints() == 0) {
+                m_cachedCellPartIds.push_back(-1);
+                continue;
+            }
+
+            const vtkIdType pointId = cell->GetPointId(0);
+            const int partId = static_cast<int>(std::lround(partIdArray->GetTuple1(pointId)));
+            m_cachedCellPartIds.push_back(partId);
+            uniquePartIds.insert(partId);
+        }
+
+        m_cachedPartIds.assign(uniquePartIds.begin(), uniquePartIds.end());
+    }
+
 	    /////// THIS WOIRKS BADSLY
     //~ void loadVTKFile(const std::string& filename) {
         //~ auto reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();

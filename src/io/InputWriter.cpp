@@ -63,6 +63,36 @@ std::string domTypeFromAnalysis(Model *model) {
   }
 }
 
+void appendSymmetryPlanesToConfiguration(json &configuration, Model *model)
+{
+  if (model == nullptr)
+    return;
+
+  bool xSymm = false;
+  bool ySymm = false;
+  bool zSymm = false;
+
+  for (const SymmetryPlane &plane : model->symmetryPlanes()) {
+    if (!plane.enabled)
+      continue;
+
+    if (plane.axis == 0) {
+      xSymm = true;
+      configuration["xSymmPlane"] = plane.value;
+    } else if (plane.axis == 1) {
+      ySymm = true;
+      configuration["ySymmPlane"] = plane.value;
+    } else if (plane.axis == 2) {
+      zSymm = true;
+      configuration["zSymmPlane"] = plane.value;
+    }
+  }
+
+  if (xSymm) configuration["xSymm"] = true;
+  if (ySymm) configuration["ySymm"] = true;
+  if (zSymm) configuration["zSymm"] = true;
+}
+
 Step *activeStep(Model *model) {
   if (model == nullptr || model->getStepCount() == 0)
     return nullptr;
@@ -366,6 +396,7 @@ void InputWriter::writeToFile(std::string fname) {
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
+  appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 
   const ContactProperties &contact = m_model->contactProps();
   json cont;
@@ -521,6 +552,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
   m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
+  appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 
   const RemeshingSettings &remeshing = m_model->remeshing();
   m_json["Meshing"]["enabled"] = remeshing.enabled;

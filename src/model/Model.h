@@ -66,6 +66,12 @@ struct RemeshingSettings {
   double maxElemAngle = 165.0;
   double transitionAngle = 15.0;
 };
+
+struct SymmetryPlane {
+  bool enabled = true;
+  int axis = 0;
+  double value = 0.0;
+};
 //HERE WE COULD SE IF SPH IS IN THE PART INSTANCE 
 class Model {
   friend Editor;
@@ -143,6 +149,39 @@ public:
   const ContactProperties & contactProps() const {return m_contact_props;}
   RemeshingSettings & remeshing(){return m_remeshing;}
   const RemeshingSettings & remeshing() const {return m_remeshing;}
+  std::vector<SymmetryPlane> & symmetryPlanes(){return m_symmetry_planes;}
+  const std::vector<SymmetryPlane> & symmetryPlanes() const {return m_symmetry_planes;}
+  SymmetryPlane* findSymmetryPlaneByAxis(int axis) {
+    for (std::size_t i = 0; i < m_symmetry_planes.size(); ++i) {
+      if (m_symmetry_planes[i].axis == axis) return &m_symmetry_planes[i];
+    }
+    return nullptr;
+  }
+  const SymmetryPlane* findSymmetryPlaneByAxis(int axis) const {
+    for (std::size_t i = 0; i < m_symmetry_planes.size(); ++i) {
+      if (m_symmetry_planes[i].axis == axis) return &m_symmetry_planes[i];
+    }
+    return nullptr;
+  }
+  void upsertSymmetryPlane(const SymmetryPlane &plane) {
+    for (std::size_t i = 0; i < m_symmetry_planes.size(); ++i) {
+      if (m_symmetry_planes[i].axis == plane.axis) {
+        m_symmetry_planes[i] = plane;
+        return;
+      }
+    }
+    m_symmetry_planes.push_back(plane);
+  }
+  bool removeSymmetryPlaneByAxis(int axis) {
+    for (std::vector<SymmetryPlane>::iterator it = m_symmetry_planes.begin();
+         it != m_symmetry_planes.end(); ++it) {
+      if (it->axis == axis) {
+        m_symmetry_planes.erase(it);
+        return true;
+      }
+    }
+    return false;
+  }
 
 
   int part_count;
@@ -193,6 +232,7 @@ protected:
   double m_element_size = 1.0;
   ContactProperties m_contact_props;
   RemeshingSettings m_remeshing;
+  std::vector<SymmetryPlane> m_symmetry_planes;
 
 
 };

@@ -117,6 +117,23 @@ void readStep(const json& root, Model* model)
   model->addStep(step);
 }
 
+void readSymmetryPlanes(const json& root, Model* model)
+{
+  if (model == nullptr || !root.contains("Configuration") || !root["Configuration"].is_object())
+    return;
+
+  const json& conf = root["Configuration"];
+  if (conf.value("xSymm", false)) {
+    model->upsertSymmetryPlane({true, 0, conf.value("xSymmPlane", 0.0)});
+  }
+  if (conf.value("ySymm", false)) {
+    model->upsertSymmetryPlane({true, 1, conf.value("ySymmPlane", 0.0)});
+  }
+  if (conf.value("zSymm", false)) {
+    model->upsertSymmetryPlane({true, 2, conf.value("zSymmPlane", 0.0)});
+  }
+}
+
 void readContact(const json& root, Model* model)
 {
   if (model == nullptr || !root.contains("Contact") || !root["Contact"].is_array() || root["Contact"].empty())
@@ -424,6 +441,7 @@ bool InputReader::readFromFile(const std::string& fname)
   }
 
   readStep(root, m_model);
+  readSymmetryPlanes(root, m_model);
   readContact(root, m_model);
   readMeshing(root, m_model);
   readMaterials(root, m_model);

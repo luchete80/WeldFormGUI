@@ -63,6 +63,7 @@
 
 
 #include "results.h"
+#include <map>
 #include <memory>
 
 class TransformGizmo;
@@ -212,6 +213,9 @@ protected:
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   bool projectElementCentroidToViewport(Element* element, double& x, double& y) const;
   Mesh* findResultViewerTargetMesh() const;
+  ResultFrame* getActiveResultFrame() const;
+  void rebuildResultsPartVisibility();
+  void applyResultsPartVisibility();
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
   Element* pickClosestElementAt(double x, double y, double maxDistancePixels = 16.0) const;
   void selectNodesInBox(double x0, double y0, double x1, double y1);
@@ -393,6 +397,7 @@ protected:
   vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
   
   MultiResult *m_results = nullptr;
+  std::map<int, bool> m_results_part_visibility;
   std::unique_ptr<MeasurementTool> m_measurement_tool;
   bool m_activate_results_viewer = false;
   bool m_selection_enabled = false;

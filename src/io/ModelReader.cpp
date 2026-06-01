@@ -137,6 +137,16 @@ bool ModelReader::readFromFile(const std::string& fname) {
         settings.transitionAngle = remeshing.value("transitionAngle", settings.transitionAngle);
     }
 
+    if (j.contains("SymmetryPlanes") && j["SymmetryPlanes"].is_array()) {
+        for (const auto& jplane : j["SymmetryPlanes"]) {
+            SymmetryPlane plane;
+            plane.enabled = jplane.value("enabled", true);
+            plane.axis = jplane.value("axis", 0);
+            plane.value = jplane.value("value", 0.0);
+            m_model->upsertSymmetryPlane(plane);
+        }
+    }
+
     // =============================================================
     // Materials
     // =============================================================
