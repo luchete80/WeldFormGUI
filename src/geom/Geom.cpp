@@ -19,6 +19,8 @@
 #include <STEPControl_Reader.hxx>
 #include <BRepTools.hxx>
 #include <IFSelect_ReturnStatus.hxx>
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <BRepBuilderAPI_Transform.hxx> // Necesario para transformaciones
@@ -30,6 +32,10 @@
 
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
+
+namespace {
+constexpr double kPi = 3.14159265358979323846;
+}
 
 void Geom::Move(const double &dx, const double &dy, const double &dz){
 
@@ -133,12 +139,18 @@ bool Geom::Scale(const double &factor){
     m_shape = new TopoDS_Shape (face);
   }
 
-void Geom::LoadCylinder(double radius, double height) {
-    // Crear cilindro con eje en Z
-    BRepPrimAPI_MakeCylinder mkCyl(radius, height);
-    TopoDS_Shape cyl = mkCyl.Shape();
+void Geom::LoadCylinder(double radius, double height, double angleDeg) {
+    const double clampedAngleDeg = std::max(0.0, std::min(angleDeg, 360.0));
+    const bool isFullCylinder = std::abs(clampedAngleDeg - 360.0) <= 1.0e-9;
 
-    // Guardar en m_shape
+    TopoDS_Shape cyl;
+    if (isFullCylinder) {
+        cyl = BRepPrimAPI_MakeCylinder(radius, height).Shape();
+    } else {
+        const double angleRad = clampedAngleDeg * kPi / 180.0;
+        cyl = BRepPrimAPI_MakeCylinder(radius, height, angleRad).Shape();
+    }
+
     m_shape = new TopoDS_Shape(cyl);
 }
 

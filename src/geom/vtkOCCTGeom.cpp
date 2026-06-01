@@ -18,7 +18,13 @@
 #include <TopAbs_ShapeEnum.hxx>
 #include <STEPControl_Writer.hxx>
 #include <IFSelect_ReturnStatus.hxx>
+#include <algorithm>
+#include <cmath>
 #include "Geom.h"
+
+namespace {
+constexpr double kPi = 3.14159265358979323846;
+}
 
 bool vtkOCCTGeom::hasSurfaceCells() const
 {
@@ -149,11 +155,19 @@ void WriteSTEP(const TopoDS_Shape& shape, const std::string& filename)
 }
 
 
-void vtkOCCTGeom::LoadCylinder(double radius, double height)
+void vtkOCCTGeom::LoadCylinder(double radius, double height, double angleDeg)
 {
     try {
-        // Create OCC cylinder
-        TopoDS_Shape shape = BRepPrimAPI_MakeCylinder(radius, height).Shape();
+        const double clampedAngleDeg = std::max(0.0, std::min(angleDeg, 360.0));
+        const bool isFullCylinder = std::abs(clampedAngleDeg - 360.0) <= 1.0e-9;
+
+        TopoDS_Shape shape;
+        if (isFullCylinder) {
+            shape = BRepPrimAPI_MakeCylinder(radius, height).Shape();
+        } else {
+            const double angleRad = clampedAngleDeg * kPi / 180.0;
+            shape = BRepPrimAPI_MakeCylinder(radius, height, angleRad).Shape();
+        }
         
         // Convert to VTK polydata with reasonable deflection
         const double deflection = radius / 20.0;

@@ -35,7 +35,7 @@ public:
   void Move(const double &x, const double &y, const double &z);
   bool Scale(const double &factor);
   
-  void LoadCylinder(double radius, double height);
+  void LoadCylinder(double radius, double height, double angleDeg = 360.0);
   
   const double3 & getOrigin()const{return m_origin;}
   void setOrigin(const double3 &origin){m_origin = origin;}

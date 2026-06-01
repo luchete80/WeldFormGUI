@@ -6096,6 +6096,7 @@ void Editor::drawGui() {
         ImGui::Text("Size");
         //Vec3_t size;
         static double size[] = {0.1,0.1,0.1};
+        static double cylinder_angle_deg = 360.0;
         std::string label[] = {"x ", "y ", "z "};
         bool show_size[] = {true,true,true};
         
@@ -6125,6 +6126,10 @@ void Editor::drawGui() {
         
         
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
+        if (is_3d_domain && item_current == 1) {
+            ImGui::InputDouble("angle deg ", &cylinder_angle_deg, 1.0f, 10.0f, "%.1f");
+            cylinder_angle_deg = std::max(1.0, std::min(cylinder_angle_deg, 360.0));
+        }
 
         static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
         //ImGui::InputFloat3("input float3", vec4a);
@@ -6217,7 +6222,7 @@ void Editor::drawGui() {
               if (is_3d_domain && item_current == 1) { // CYLINDER
                 if (size[0] > 0.0 && size[2] > 0.0){
                   cout << "Creating Cylinder "<<endl;
-                  geo->LoadCylinder(size[0],size[2]); // radius, height
+                  geo->LoadCylinder(size[0], size[2], cylinder_angle_deg); // radius, height, angle
                   if (std::abs(origin[0]) > 1.0e-12 ||
                       std::abs(origin[1]) > 1.0e-12 ||
                       std::abs(origin[2]) > 1.0e-12) {

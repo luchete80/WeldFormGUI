@@ -46,7 +46,7 @@ public:
   bool hasOnlyLineCells() const;
 
   int TestReader(const std::string& path, unsigned int format);
-  void LoadCylinder(double radius, double height);
+  void LoadCylinder(double radius, double height, double angleDeg = 360.0);
 
   void SetGeometry(Geom* g);
 

@@ -849,10 +849,12 @@ inline Part* create_rectangle_part(double dx,
   return new Part(geom);
 }
 
-inline Part* create_cylinder_part(double radius, double height)
+inline Part* create_cylinder_part(double radius,
+                                  double height,
+                                  double angle_deg = 360.0)
 {
   Geom* geom = new Geom();
-  geom->LoadCylinder(radius, height);
+  geom->LoadCylinder(radius, height, angle_deg);
   return new Part(geom);
 }
 

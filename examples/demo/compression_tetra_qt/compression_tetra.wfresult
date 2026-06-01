@@ -1,0 +1,6 @@
+{
+  "vtk_files": [
+    { "file": "compression_tetra_00000.vtk", "time": 0 },
+    { "file": "compression_tetra_00001.vtk", "time": 1e-05 }
+  ]
+}
