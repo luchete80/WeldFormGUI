@@ -28,7 +28,7 @@
     },
     "Contact": [
         {
-            "fricCoeffStatic": 0.0,
+            "fricCoeffStatic": 0.3,
             "gapPenaltyScale": 2.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
@@ -95,8 +95,8 @@
             "fixedTS": false,
             "id": 0,
             "implicit": {
-                "divTol": 1.0,
-                "forceTol": 10.0,
+                "divTol": 100.0,
+                "forceTol": 100.0,
                 "maxIter": 200,
                 "omegaP": 0.1,
                 "omegaV": 0.4,
