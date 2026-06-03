@@ -1306,8 +1306,9 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
 
 //        if (elemType == "BAR" || numNodes == 2) {
 
-        //DIMENSION SHOULD BE 1 TO WRITE THIS 
-        if ( numNodes == 2 && m_dim == 1) {
+        // Line elements are used by rigid 2D contact meshes and must be exported
+        // even when the parent mesh dimension is 2.
+        if ( numNodes == 2 && (m_dim == 1 || m_dim == 2)) {
             // Elemento barra CBAR
             outfile << "CBAR    " << std::setw(8) << elem->getId()  // EID
                     << std::setw(8) << 1          // PID
