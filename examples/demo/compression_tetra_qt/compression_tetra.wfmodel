@@ -40,8 +40,8 @@
     ],
     "Materials": {
         "const": [
-            650000000.0,
-            0.22
+            386.796e6,
+            0.154
         ],
         "density0": 1.0,
         "poissonsRatio": 0.3,

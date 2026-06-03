@@ -44,7 +44,7 @@
   },
 
   "Meshing": {
-    "enabled": true,
+    "enabled": false,
     "minStrain": -1.0,
     "maxStrain": 1.0e6,
     "mapVel": false,

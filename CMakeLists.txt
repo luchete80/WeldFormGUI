@@ -32,6 +32,15 @@ set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAIL
 add_subdirectory("libs")
 add_subdirectory("src")
 
+add_custom_target(copy_demos
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_BINARY_DIR}/examples
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/examples
+        ${CMAKE_BINARY_DIR}/examples
+    COMMENT "Copying examples folder to build directory"
+)
+
 
 if (WIN32)
 include_directories ("${GMSH_DIR}/include")
