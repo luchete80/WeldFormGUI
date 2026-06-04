@@ -1,4 +1,5 @@
 // Standard Library
+#include <algorithm>
 #include <iostream>
 #include <array>
 #include <filesystem>
@@ -170,6 +171,15 @@ struct ResultsViewportToolState {
     std::map<vtkActor*, vtkSmartPointer<vtkActor>> clipCapActors;
     bool gizmoAddedToRenderer = false;
     bool customInteractorInstalled = false;
+};
+
+struct ResultsPlaybackOverlayState {
+    bool visible = true;
+    bool minimized = false;
+    float scalarBarHeightPx = 150.0f;
+    float scalarBarWidthPx = 80.0f;
+    ImVec2 lastMin = ImVec2(0.0f, 0.0f);
+    ImVec2 lastMax = ImVec2(0.0f, 0.0f);
 };
 
 double distancePointToSegment2D(double px, double py,
@@ -1481,6 +1491,7 @@ void drawViewportOverlay(VtkViewer& viewer,
 }
 
 void drawResultsPlaybackOverlay(VtkViewer& viewer,
+                                ResultsPlaybackOverlayState& overlayState,
                                 int currentFrame,
                                 int totalFrames,
                                 double currentTime,
@@ -1507,23 +1518,72 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
         return;
     }
 
-    ImGui::SetNextWindowPos(ImVec2(viewportMax.x - 12.0f, viewportMin.y + 12.0f),
-                            ImGuiCond_Always,
-                            ImVec2(1.0f, 0.0f));
-    ImGui::SetNextWindowBgAlpha(0.22f);
+    const ImVec2 defaultPos(viewportMin.x + 12.0f, viewportMin.y + 56.0f);
+    if (!overlayState.visible) {
+        ImGui::SetNextWindowPos(defaultPos, ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.24f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 6.0f));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.04f, 0.05f, 0.07f, 0.24f));
+        const ImGuiWindowFlags restoreFlags =
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_NoNavFocus |
+            ImGuiWindowFlags_NoMove;
+        if (ImGui::Begin("##ResultsPlaybackOverlayRestore", nullptr, restoreFlags)) {
+            overlayState.lastMin = ImGui::GetWindowPos();
+            overlayState.lastMax = ImVec2(overlayState.lastMin.x + ImGui::GetWindowSize().x,
+                                          overlayState.lastMin.y + ImGui::GetWindowSize().y);
+            if (ImGui::Button("Results")) {
+                overlayState.visible = true;
+                overlayState.minimized = false;
+            }
+        }
+        ImGui::End();
+        ImGui::PopStyleColor(1);
+        ImGui::PopStyleVar(2);
+        return;
+    }
+
+    ImGui::SetNextWindowPos(defaultPos, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(255.0f, overlayState.minimized ? 48.0f : 305.0f),
+                             overlayState.minimized ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(210.0f, 42.0f),
+                                        ImVec2(std::max(230.0f, viewportMax.x - viewportMin.x - 24.0f),
+                                               std::max(120.0f, viewportMax.y - viewportMin.y - 70.0f)));
+    ImGui::SetNextWindowBgAlpha(0.24f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 6.0f));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.04f, 0.05f, 0.07f, 0.22f));
 
     const ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_AlwaysAutoResize |
-        ImGuiWindowFlags_NoNavFocus |
-        ImGuiWindowFlags_NoMove;
+        ImGuiWindowFlags_NoNavFocus;
 
-    if (ImGui::Begin("##ResultsPlaybackOverlay", nullptr, flags)) {
+    if (ImGui::Begin("Results", nullptr, flags)) {
+        overlayState.lastMin = ImGui::GetWindowPos();
+        overlayState.lastMax = ImVec2(overlayState.lastMin.x + ImGui::GetWindowSize().x,
+                                      overlayState.lastMin.y + ImGui::GetWindowSize().y);
+        const float headerButtonWidth = 24.0f;
+        const float headerButtonStart = ImGui::GetWindowContentRegionMax().x - 2.0f * headerButtonWidth - 4.0f;
+        ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), headerButtonStart));
+        if (ImGui::SmallButton(overlayState.minimized ? "+" : "-")) {
+            overlayState.minimized = !overlayState.minimized;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("x")) {
+            overlayState.visible = false;
+        }
+
+        if (overlayState.minimized) {
+            ImGui::End();
+            ImGui::PopStyleColor(1);
+            ImGui::PopStyleVar(3);
+            return;
+        }
+
         if (ImGui::Button(isPlaying ? "Pause" : "Play")) {
             isPlaying = !isPlaying;
         }
@@ -1611,6 +1671,13 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                 if (manualMax < manualMin)
                     manualMax = manualMin;
             }
+
+            if (ImGui::CollapsingHeader("Colorbar")) {
+                ImGui::SetNextItemWidth(168.0f);
+                ImGui::SliderFloat("Height", &overlayState.scalarBarHeightPx, 60.0f, 260.0f, "%.0f px");
+                ImGui::SetNextItemWidth(168.0f);
+                ImGui::SliderFloat("Width", &overlayState.scalarBarWidthPx, 45.0f, 140.0f, "%.0f px");
+            }
         } else {
             ImGui::TextDisabled("No fields available");
         }
@@ -1619,6 +1686,40 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
 
     ImGui::PopStyleColor(1);
     ImGui::PopStyleVar(3);
+}
+
+void positionResultsScalarBar(VtkViewer& viewer,
+                              vtkScalarBarActor* scalarBar,
+                              const ResultsPlaybackOverlayState& overlayState)
+{
+    if (scalarBar == nullptr) {
+        return;
+    }
+
+    const ImVec2 viewportMin = viewer.getViewportScreenMin();
+    const ImVec2 viewportMax = viewer.getViewportScreenMax();
+    const float viewportWidth = viewportMax.x - viewportMin.x;
+    const float viewportHeight = viewportMax.y - viewportMin.y;
+    if (viewportWidth <= 1.0f || viewportHeight <= 1.0f) {
+        return;
+    }
+
+    const float barHeightPx = std::min(overlayState.scalarBarHeightPx,
+                                       std::max(45.0f, viewportHeight - 24.0f));
+    const float barWidthPx = std::min(overlayState.scalarBarWidthPx,
+                                      std::max(30.0f, viewportWidth * 0.28f));
+    const bool hasOverlayRect =
+        overlayState.lastMax.x > overlayState.lastMin.x &&
+        overlayState.lastMax.y > overlayState.lastMin.y;
+    const float topPx = hasOverlayRect ? overlayState.lastMax.y + 12.0f : viewportMin.y + 115.0f;
+    const float clampedTopPx = std::min(topPx, viewportMax.y - barHeightPx - 12.0f);
+    const float normalizedY = (viewportMax.y - (clampedTopPx + barHeightPx)) / viewportHeight;
+
+    scalarBar->SetMaximumWidthInPixels(static_cast<int>(barWidthPx));
+    scalarBar->SetMaximumHeightInPixels(static_cast<int>(barHeightPx));
+    scalarBar->SetPosition(0.02, std::max(0.02f, normalizedY));
+    scalarBar->SetWidth(barWidthPx / viewportWidth);
+    scalarBar->SetHeight(barHeightPx / viewportHeight);
 }
 
 struct ResultProbeInfo {
@@ -2395,6 +2496,7 @@ int main(int argc, char* argv[])
           bool results_viewer_active = false;
           static ModelViewportOverlayState resultsOverlayState;
           static ResultsViewportToolState resultsToolState;
+          static ResultsPlaybackOverlayState resultsPlaybackOverlayState;
           static int currentFrame = 0;
           static int lastFrame = -1;
           static double globalMin = 0.0;
@@ -2738,6 +2840,7 @@ int main(int argc, char* argv[])
 	                      if (currentScalarBar)
 	                          renderer->RemoveActor2D(currentScalarBar);
 	                      currentScalarBar = frame.getScalarBarActor();
+	                      positionResultsScalarBar(vtkViewer_res, currentScalarBar, resultsPlaybackOverlayState);
 	                      renderer->AddActor2D(currentScalarBar);
 	                  }
 
@@ -2883,6 +2986,7 @@ int main(int argc, char* argv[])
                   const bool vectorFieldAvailable = (overlayActiveArray != nullptr &&
                                                      overlayActiveArray->GetNumberOfComponents() == 3);
                   drawResultsPlaybackOverlay(vtkViewer_res,
+                                             resultsPlaybackOverlayState,
                                              safeFrame,
                                              (int)editor->getResults()->frames.size(),
                                              editor->getResults()->frames[safeFrame]->time,
@@ -2902,6 +3006,7 @@ int main(int argc, char* argv[])
                                              manualMin,
                                              manualMax,
                                              manualRangeChanged);
+                  positionResultsScalarBar(vtkViewer_res, currentScalarBar, resultsPlaybackOverlayState);
 
                   if (fieldSelectionChanged &&
                       selectedField >= 0 &&
@@ -2990,12 +3095,6 @@ int main(int argc, char* argv[])
           }
           if (was_results_viewer_active && !results_viewer_active) {
               editor->setActiveViewer(nullptr);
-              clearResultsViewerTransientProps();
-              editor->clearBoundaryConditionOverlay();
-              detachResultsClipTools(vtkViewer_res, resultsToolState);
-              resultsToolState = ResultsViewportToolState{};
-              vtkViewer_res.setActor(nullptr);
-              vtkViewer_res.render();
           }
           was_results_viewer_active = results_viewer_active;
           

@@ -323,10 +323,10 @@ void loadVTKFile(const std::string& filename) {
         scalarBar->SetNumberOfLabels(5);
         scalarBar->SetUnconstrainedFontSize(true);
         scalarBar->SetMaximumWidthInPixels(80);
-        scalarBar->SetMaximumHeightInPixels(300);
-        scalarBar->SetPosition(0.88, 0.1);
+        scalarBar->SetMaximumHeightInPixels(150);
+        scalarBar->SetPosition(0.02, 0.44);
         scalarBar->SetWidth(0.1);
-        scalarBar->SetHeight(0.8);
+        scalarBar->SetHeight(0.38);
         scalarBar->SetVisibility(false);
 
         scalarBar->GetTitleTextProperty()->SetColor(1.0, 1.0, 1.0);

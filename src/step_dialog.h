@@ -33,6 +33,10 @@ struct StepDialog {
   double m_omegaP = 0.1;
   int m_maxIter = 200;
   double m_timeStepGrowthFactor = 1.2;
+  bool m_useWeakSprings = false;
+  double m_springFactor = 1.0e-7;
+  double m_springStiffness = 0.0;
+  int m_springMode = 1;
 
   void InitFromStep(Step *step);
   void Draw(const char* title, bool* p_open = nullptr, Step* step = nullptr);

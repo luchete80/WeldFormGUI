@@ -14,8 +14,10 @@ protected:
   
   
 public:
-  Geom(){}
+  Geom() : m_shape(nullptr), m_origin(make_double3(0.0, 0.0, 0.0)) {}
   Geom(std::string fname){
+    m_shape = nullptr;
+    m_origin = make_double3(0.0, 0.0, 0.0);
     m_fileName = fname;
     LoadSTEP(fname);}
   void readFile(std::string file){}  
@@ -35,7 +37,16 @@ public:
   void Move(const double &x, const double &y, const double &z);
   bool Scale(const double &factor);
   
+  void LoadBox(double dx, double dy, double dz);
   void LoadCylinder(double radius, double height, double angleDeg = 360.0);
+  bool LoadRevolvedSTEPProfile(const std::string& fname,
+                               double axisOriginX,
+                               double axisOriginY,
+                               double axisOriginZ,
+                               double axisDirectionX,
+                               double axisDirectionY,
+                               double axisDirectionZ,
+                               double angleDeg = 360.0);
   
   const double3 & getOrigin()const{return m_origin;}
   void setOrigin(const double3 &origin){m_origin = origin;}

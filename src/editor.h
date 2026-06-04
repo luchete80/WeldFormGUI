@@ -460,7 +460,8 @@ protected:
   void clearBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,
                                               std::vector<vtkSmartPointer<vtkProp>>& overlayActors);
   void updateBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,
-                                               std::vector<vtkSmartPointer<vtkProp>>& overlayActors);
+                                               std::vector<vtkSmartPointer<vtkProp>>& overlayActors,
+                                               bool includeHoverHighlight = true);
   void updateBoundaryConditionOverlay();
   void clearPartOverlay();
   void updatePartOverlay();

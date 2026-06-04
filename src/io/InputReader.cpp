@@ -95,6 +95,10 @@ void readStep(const json& root, Model* model)
     step->m_omegaP = implicit.value("omegaP", step->m_omegaP);
     step->m_maxIter = implicit.value("maxIter", step->m_maxIter);
     step->m_timeStepGrowthFactor = implicit.value("timeStepGrowthFactor", step->m_timeStepGrowthFactor);
+    step->m_useWeakSprings = implicit.value("useSprings", step->m_useWeakSprings);
+    step->m_springFactor = implicit.value("springFactor", step->m_springFactor);
+    step->m_springStiffness = implicit.value("springStiffness", step->m_springStiffness);
+    step->m_springMode = implicit.value("springMode", step->m_springMode);
   }
 
   step->m_nproc = conf.value("Nproc", step->m_nproc);

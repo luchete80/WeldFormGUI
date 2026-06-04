@@ -492,6 +492,10 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["omegaP"] = step->m_omegaP;
       jstep["implicit"]["maxIter"] = step->m_maxIter;
       jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
+      jstep["implicit"]["useSprings"] = step->m_useWeakSprings;
+      jstep["implicit"]["springFactor"] = step->m_springFactor;
+      jstep["implicit"]["springStiffness"] = step->m_springStiffness;
+      jstep["implicit"]["springMode"] = step->m_springMode;
       m_json["Steps"].push_back(jstep);
     }
   }

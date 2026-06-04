@@ -29,7 +29,10 @@
 #include <Bnd_Box.hxx>
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
 
+#include <gp_Ax1.hxx>
+#include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 
@@ -152,6 +155,80 @@ void Geom::LoadCylinder(double radius, double height, double angleDeg) {
     }
 
     m_shape = new TopoDS_Shape(cyl);
+}
+
+void Geom::LoadBox(double dx, double dy, double dz)
+{
+    TopoDS_Shape box = BRepPrimAPI_MakeBox(dx, dy, dz).Shape();
+    delete m_shape;
+    m_shape = new TopoDS_Shape(box);
+    m_origin = make_double3(0.0, 0.0, 0.0);
+}
+
+bool Geom::LoadRevolvedSTEPProfile(const std::string& fname,
+                                   double axisOriginX,
+                                   double axisOriginY,
+                                   double axisOriginZ,
+                                   double axisDirectionX,
+                                   double axisDirectionY,
+                                   double axisDirectionZ,
+                                   double angleDeg)
+{
+    STEPControl_Reader reader;
+    IFSelect_ReturnStatus stat = reader.ReadFile(fname.c_str());
+
+    if (stat != IFSelect_RetDone) {
+        std::cerr << "Error: no se pudo leer el perfil STEP " << fname << std::endl;
+        return false;
+    }
+
+    bool ok = false;
+    const int nRoots = reader.NbRootsForTransfer();
+    for (int i = 1; i <= nRoots; ++i) {
+        ok = reader.TransferRoot(i) || ok;
+    }
+
+    if (!ok) {
+        std::cerr << "Error: no se pudo transferir el perfil STEP." << std::endl;
+        return false;
+    }
+
+    TopoDS_Shape profileShape = reader.OneShape();
+    if (profileShape.IsNull()) {
+        std::cerr << "Error: perfil STEP vacío." << std::endl;
+        return false;
+    }
+
+    const double directionNorm = std::sqrt(axisDirectionX * axisDirectionX +
+                                           axisDirectionY * axisDirectionY +
+                                           axisDirectionZ * axisDirectionZ);
+    if (directionNorm <= 1.0e-12) {
+        std::cerr << "Error: eje de revolución inválido." << std::endl;
+        return false;
+    }
+
+    const double clampedAngleDeg = std::max(1.0e-6, std::min(angleDeg, 360.0));
+    const double angleRad = clampedAngleDeg * kPi / 180.0;
+    gp_Ax1 axis(gp_Pnt(axisOriginX, axisOriginY, axisOriginZ),
+                gp_Dir(axisDirectionX, axisDirectionY, axisDirectionZ));
+
+    BRepPrimAPI_MakeRevol revol(profileShape, axis, angleRad);
+    revol.Build();
+    if (!revol.IsDone()) {
+        std::cerr << "Error: falló la revolución del perfil STEP." << std::endl;
+        return false;
+    }
+
+    TopoDS_Shape revolvedShape = revol.Shape();
+    if (revolvedShape.IsNull()) {
+        std::cerr << "Error: la revolución generó una shape vacía." << std::endl;
+        return false;
+    }
+
+    delete m_shape;
+    m_shape = new TopoDS_Shape(revolvedShape);
+    m_origin = make_double3(axisOriginX, axisOriginY, axisOriginZ);
+    return true;
 }
 
 

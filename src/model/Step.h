@@ -41,6 +41,10 @@ public:
   double m_omegaP = 0.1;
   int m_maxIter = 200;
   double m_timeStepGrowthFactor = 1.2;
+  bool m_useWeakSprings = false;
+  double m_springFactor = 1.0e-7;
+  double m_springStiffness = 0.0;
+  int m_springMode = 1;
 
 protected:
   StepType m_step_type = ExplicitStep;

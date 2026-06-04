@@ -281,3 +281,7 @@
          - Added tree with model parts to hide/show in result.
          - Added Symmetry Plane condition.
          - Created cylinder at certain angle in 3D. 
+20260604 - Added Weak Springs settings in 3D.
+         - Results windows modified. Colormap & vars
+         - Fixed sets always showing on model & results.  
+         - Added Revolve Line as a new Geometry Domain creation. 

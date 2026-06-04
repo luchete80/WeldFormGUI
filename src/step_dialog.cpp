@@ -6,6 +6,16 @@
 
 #include <cstring>
 
+namespace {
+int springModeComboIndex(int spring_mode) {
+  return spring_mode == 321 ? 1 : 0;
+}
+
+int springModeFromComboIndex(int combo_index) {
+  return combo_index == 1 ? 321 : 1;
+}
+}
+
 void StepDialog::InitFromStep(Step *step) {
   if (!step) {
     return;
@@ -38,6 +48,10 @@ void StepDialog::InitFromStep(Step *step) {
   m_omegaP = step->m_omegaP;
   m_maxIter = step->m_maxIter;
   m_timeStepGrowthFactor = step->m_timeStepGrowthFactor;
+  m_useWeakSprings = step->m_useWeakSprings;
+  m_springFactor = step->m_springFactor;
+  m_springStiffness = step->m_springStiffness;
+  m_springMode = step->m_springMode;
 }
 
 void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
@@ -77,6 +91,9 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
   ImGui::Checkbox("Auto TS Z", &m_autoTS[2]);
 
   if (m_step_type == ImplicitStep && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
+    static const char* spring_mode_items[] = {"1 node", "3-2-1"};
+    int spring_mode_index = springModeComboIndex(m_springMode);
+
     ImGui::InputText("Type", m_implicit_type, IM_ARRAYSIZE(m_implicit_type));
     ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
@@ -86,6 +103,17 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
+
+    ImGui::Separator();
+    ImGui::Checkbox("Use weak springs", &m_useWeakSprings);
+    ImGui::InputDouble("Spring factor", &m_springFactor, 0.0, 0.0, "%.4g");
+    if (ImGui::Combo("Spring mode", &spring_mode_index, spring_mode_items, IM_ARRAYSIZE(spring_mode_items)))
+      m_springMode = springModeFromComboIndex(spring_mode_index);
+
+    if (ImGui::TreeNode("Advanced")) {
+      ImGui::InputDouble("Spring stiffness override", &m_springStiffness, 0.0, 0.0, "%.4g");
+      ImGui::TreePop();
+    }
   }
 
   if (ImGui::Button("Ok")) {
@@ -113,6 +141,10 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_omegaP = m_omegaP;
       step->m_maxIter = m_maxIter;
       step->m_timeStepGrowthFactor = m_timeStepGrowthFactor;
+      step->m_useWeakSprings = m_useWeakSprings;
+      step->m_springFactor = m_springFactor;
+      step->m_springStiffness = m_springStiffness;
+      step->m_springMode = m_springMode;
     }
     m_saved = true;
     m_initialized = false;

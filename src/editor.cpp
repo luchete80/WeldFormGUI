@@ -51,8 +51,15 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <set>
 #include <unordered_set>
 #include <utility>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <gmsh.h>
 
@@ -104,6 +111,78 @@ using namespace std;
 namespace fs = std::filesystem;
 
 namespace {
+fs::path executableDirectory()
+{
+#ifdef _WIN32
+  std::vector<char> buffer(MAX_PATH, '\0');
+  DWORD length = 0;
+  while (true) {
+    length = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length == 0)
+      return {};
+    if (length < buffer.size() - 1)
+      break;
+    buffer.resize(buffer.size() * 2, '\0');
+  }
+  return fs::path(std::string(buffer.data(), length)).parent_path();
+#else
+  std::vector<char> buffer(1024, '\0');
+  while (true) {
+    const ssize_t length = ::readlink("/proc/self/exe", buffer.data(), buffer.size() - 1);
+    if (length < 0)
+      return {};
+    if (length < static_cast<ssize_t>(buffer.size() - 1))
+      return fs::path(std::string(buffer.data(), static_cast<std::size_t>(length))).parent_path();
+    buffer.resize(buffer.size() * 2, '\0');
+  }
+#endif
+}
+
+std::vector<fs::path> runtimeSearchDirectories()
+{
+  std::vector<fs::path> dirs;
+  const fs::path exe_dir = executableDirectory();
+  const fs::path cwd = fs::current_path();
+
+  if (!exe_dir.empty()) {
+    dirs.push_back(exe_dir);
+    dirs.push_back(exe_dir / "solvers");
+    dirs.push_back(exe_dir.parent_path());
+    dirs.push_back(exe_dir.parent_path() / "solvers");
+  }
+
+  dirs.push_back(cwd);
+  dirs.push_back(cwd / "solvers");
+
+  std::vector<fs::path> unique_dirs;
+  std::set<std::string> seen;
+  for (const fs::path& dir : dirs) {
+    const std::string key = dir.lexically_normal().string();
+    if (seen.insert(key).second)
+      unique_dirs.push_back(dir.lexically_normal());
+  }
+
+  return unique_dirs;
+}
+
+fs::path resolveRuntimeExecutablePath(const std::vector<std::string>& candidates)
+{
+  for (const fs::path& dir : runtimeSearchDirectories()) {
+    for (const std::string& candidate_name : candidates) {
+#ifdef _WIN32
+      fs::path candidate_exe = dir / (candidate_name + ".exe");
+      if (fs::exists(candidate_exe))
+        return candidate_exe;
+#endif
+      fs::path candidate = dir / candidate_name;
+      if (fs::exists(candidate))
+        return candidate;
+    }
+  }
+
+  return {};
+}
+
 int curveNodeCountFromElementSize(int curveTag, double elementSize) {
   if (elementSize <= 0.0) return 2;
 
@@ -3341,13 +3420,14 @@ void Editor::updateBoundaryConditionOverlay()
     updateBoundaryConditionOverlayForViewer(model_viewer, m_model_bc_overlay_actors);
   }
   if (m_results != nullptr) {
-    updateBoundaryConditionOverlayForViewer(res_viewer, m_results_bc_overlay_actors);
+    updateBoundaryConditionOverlayForViewer(res_viewer, m_results_bc_overlay_actors, false);
   }
 }
 
 void Editor::updateBoundaryConditionOverlayForViewer(
     VtkViewer* targetViewer,
-    std::vector<vtkSmartPointer<vtkProp>>& overlayActors)
+    std::vector<vtkSmartPointer<vtkProp>>& overlayActors,
+    bool includeHoverHighlight)
 {
   if (targetViewer == nullptr || targetViewer->getRenderer() == nullptr || m_model == nullptr) {
     return;
@@ -3449,7 +3529,7 @@ void Editor::updateBoundaryConditionOverlayForViewer(
       overlayActors.push_back(arrowActor);
     }
 
-    if (selected_bc == condition || hovered_bc == condition) {
+    if (selected_bc == condition || (includeHoverHighlight && hovered_bc == condition)) {
       vtkNew<vtkPolyDataMapper> surfaceMapper;
       surfaceMapper->SetInputData(targetPolyData);
 
@@ -3927,30 +4007,51 @@ void Editor::meshPart(Part* part){
 
   bool mesh_ready = false;
   if (is_2d_analysis && !is_rigid_part){
-    fs::path bdf_name = "output_smoothed.bdf";
-    fs::path bdf_export_path = activeModelOutputPath(*m_model,
-                                                     activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf");
-    fs::path remesh_log_path = activeModelOutputPath(*m_model,
-                                                     activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp");
-    std::string remesh_cmd = "mesh-adapt \"" + step_path.string() + "\" " +
+    const fs::path step_path_abs = fs::absolute(step_path);
+    const fs::path step_dir = step_path_abs.has_parent_path() ? step_path_abs.parent_path() : fs::current_path();
+    const fs::path output_bdf_path = step_dir / "output_smoothed.bdf";
+    const fs::path bdf_export_path = fs::absolute(activeModelOutputPath(
+      *m_model, activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".bdf"));
+    const fs::path remesh_log_path = fs::absolute(activeModelOutputPath(
+      *m_model, activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp"));
+    const fs::path remesher_path = resolveRuntimeExecutablePath({"mesh-adapt", "mesh-adapt_std"});
+    const std::string remesher = remesher_path.empty() ? std::string("mesh-adapt") : remesher_path.string();
+
+    std::error_code ec;
+    fs::remove(output_bdf_path, ec);
+
+    const fs::path previous_cwd = fs::current_path();
+    fs::current_path(step_dir, ec);
+    if (ec) {
+      cerr << "Error switching to remesher working directory: " << ec.message() << endl;
+      appendToAppConsole("Error switching to remesher working directory: " + ec.message() + "\n");
+      return;
+    }
+
+    std::string remesh_cmd = "\"" + remesher + "\" \"" + step_path_abs.filename().string() + "\" " +
                              std::to_string(element_size) + " > \"" +
                              remesh_log_path.string() + "\" 2>&1";
+    const std::string mesher_log = "Meshing 2D part with mesh-adapt: " + remesher + "\n";
+    cout << mesher_log;
+    appendToAppConsole(mesher_log);
     cout << "Running 2D remesher: " << remesh_cmd << endl;
     appendToAppConsole("Running 2D remesher: " + remesh_cmd + "\n");
 
     int remesh_status = std::system(remesh_cmd.c_str());
+    fs::current_path(previous_cwd, ec);
     appendFileToAppConsole(remesh_log_path.string());
     std::error_code remesh_log_ec;
     std::filesystem::remove(remesh_log_path, remesh_log_ec);
     if (remesh_status != 0){
       cerr << "Error running mesh-adapt. Exit code: " << remesh_status << endl;
-      appendToAppConsole("Error running mesh-adapt_std. Exit code: " + std::to_string(remesh_status) + "\n");
-    } else if (!std::filesystem::exists(bdf_name)){
-      cerr << "mesh-adapt finished but BDF file was not found: " << bdf_name.string() << endl;
-      appendToAppConsole("mesh-adapt_std finished but BDF file was not found: " + bdf_name.string() + "\n");
+      appendToAppConsole("Error running mesh-adapt. Exit code: " + std::to_string(remesh_status) + "\n");
+    } else if (!std::filesystem::exists(output_bdf_path)){
+      cerr << "mesh-adapt finished but BDF file was not found: " << output_bdf_path.string() << endl;
+      appendToAppConsole("mesh-adapt finished but BDF file was not found: " + output_bdf_path.string() + "\n");
     } else {
-      std::error_code ec;
-      std::filesystem::copy_file(bdf_name, bdf_export_path,
+      cout << "mesh-adapt wrote BDF: " << output_bdf_path.string() << endl;
+      appendToAppConsole("mesh-adapt wrote BDF: " + output_bdf_path.string() + "\n");
+      std::filesystem::copy_file(output_bdf_path, bdf_export_path,
                                  std::filesystem::copy_options::overwrite_existing, ec);
       if (ec) {
         cerr << "Error copying remeshed BDF to part file: " << ec.message() << endl;
@@ -6033,6 +6134,11 @@ void Editor::drawGui() {
     // En tu función de renderizado
     bool shouldShow = m_showNewDomain;
     ImGuiTreeNodeFlags flags = shouldShow ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;    
+    static std::string revolve_profile_path;
+    static int revolve_axis = 2;
+    static double revolve_axis_origin[] = {0.0, 0.0, 0.0};
+    static double revolve_axis_direction[] = {0.0, 0.0, 1.0};
+    static double revolve_angle_deg = 360.0;
     
     
     if (ImGui::CollapsingHeader("New Domain", flags)){
@@ -6219,6 +6325,22 @@ void Editor::drawGui() {
                   // if (item_current == 0)
                     // geo->LoadRectangle(size[0],size[1],origin[0],origin[1]);                
               // }
+              if (is_3d_domain && item_current == 0) { // BOX
+                if (size[0] > 0.0 && size[1] > 0.0 && size[2] > 0.0){
+                  cout << "Creating Box "<<endl;
+                  geo->LoadBox(size[0], size[1], size[2]);
+                  if (std::abs(origin[0]) > 1.0e-12 ||
+                      std::abs(origin[1]) > 1.0e-12 ||
+                      std::abs(origin[2]) > 1.0e-12) {
+                    geo->Move(origin[0], origin[1], origin[2]);
+                  }
+                  geo->setOrigin(origin[0], origin[1], origin[2]);
+                  created = true;
+                } else {
+                  cout << "NULL OR NEGATIVE BOX DIMENSION VALUE"<<endl;
+                }
+              }
+
               if (is_3d_domain && item_current == 1) { // CYLINDER
                 if (size[0] > 0.0 && size[2] > 0.0){
                   cout << "Creating Cylinder "<<endl;
@@ -6315,11 +6437,110 @@ void Editor::drawGui() {
                   
 
           }//Created = true
-          else {
-            cout <<"Not geometry created"<<endl;
-            }
-            }////CREATE GEO
+	          else {
+	            cout <<"Not geometry created"<<endl;
+	            }
+	            }////CREATE GEO
 
+            ImGui::Separator();
+            ImGui::TextUnformatted("Revolve");
+            if (ImGui::Button("Select profile STEP")) {
+              ImGuiFileDialog::Instance()->OpenDialog(
+                  "ChooseFileDlgRevolveProfile",
+                  "Choose profile STEP",
+                  ".step,.STEP,.stp,.STP",
+                  ".");
+            }
+            if (!revolve_profile_path.empty()) {
+              ImGui::TextWrapped("Profile: %s", revolve_profile_path.c_str());
+            } else {
+              ImGui::TextDisabled("No profile selected");
+            }
+
+            const char* axis_items[] = {"X", "Y", "Z", "Custom"};
+            if (ImGui::Combo("Axis", &revolve_axis, axis_items, IM_ARRAYSIZE(axis_items))) {
+              if (revolve_axis == 0) {
+                revolve_axis_direction[0] = 1.0;
+                revolve_axis_direction[1] = 0.0;
+                revolve_axis_direction[2] = 0.0;
+              } else if (revolve_axis == 1) {
+                revolve_axis_direction[0] = 0.0;
+                revolve_axis_direction[1] = 1.0;
+                revolve_axis_direction[2] = 0.0;
+              } else if (revolve_axis == 2) {
+                revolve_axis_direction[0] = 0.0;
+                revolve_axis_direction[1] = 0.0;
+                revolve_axis_direction[2] = 1.0;
+              }
+            }
+            ImGui::InputDouble("axis ox", &revolve_axis_origin[0], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("axis oy", &revolve_axis_origin[1], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("axis oz", &revolve_axis_origin[2], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("axis dx", &revolve_axis_direction[0], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("axis dy", &revolve_axis_direction[1], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("axis dz", &revolve_axis_direction[2], 0.01f, 1.0f, "%.4f");
+            if (ImGui::InputDouble("revolve angle deg", &revolve_angle_deg, 1.0f, 10.0f, "%.1f")) {
+              revolve_angle_deg = std::max(1.0e-6, std::min(revolve_angle_deg, 360.0));
+            }
+
+            const bool can_create_revolve = !revolve_profile_path.empty();
+            if (!can_create_revolve) {
+              ImGui::BeginDisabled();
+            }
+            if (ImGui::Button("Create Revolve")) {
+              const int pc = m_model->getPartCount();
+              fs::path step_path = activeModelOutputPath(
+                  *m_model,
+                  activeModelStem(*m_model) + "_part_" + std::to_string(pc) + "_revolve.step");
+
+              Geom* geo = new Geom;
+              geo->setFileName(step_path.string());
+              const bool created = geo->LoadRevolvedSTEPProfile(
+                  revolve_profile_path,
+                  revolve_axis_origin[0],
+                  revolve_axis_origin[1],
+                  revolve_axis_origin[2],
+                  revolve_axis_direction[0],
+                  revolve_axis_direction[1],
+                  revolve_axis_direction[2],
+                  revolve_angle_deg);
+
+              if (created) {
+                vtkOCCTGeom* geom = new vtkOCCTGeom;
+                geom->LoadFromShape(geo->getShape(), 0.01);
+                viewer->addActor(geom->actor);
+                geo->ExportSTEP();
+                m_model->addPart(geo);
+                create_new_part = true;
+
+                Part* newPart = m_model->getPart(m_model->getPartCount() - 1);
+                getApp().setActiveModel(m_model);
+                getApp().registerGeometry(geo, geom);
+                getApp().registerPartVisual(newPart, geom);
+                getApp().Update();
+
+                cout << "Created revolve geometry from " << revolve_profile_path << endl;
+                appendToAppConsole("Created revolve geometry from " + revolve_profile_path + "\n");
+              } else {
+                delete geo;
+                cout << "Failed to create revolve geometry" << endl;
+                appendToAppConsole("Failed to create revolve geometry\n");
+              }
+            }
+            if (!can_create_revolve) {
+              ImGui::EndDisabled();
+            }
+
+	    }
+
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgRevolveProfile"))
+    {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        revolve_profile_path = ImGuiFileDialog::Instance()->GetFilePathName();
+        cout << "Selected revolve profile: " << revolve_profile_path << endl;
+        appendToAppConsole("Selected revolve profile: " + revolve_profile_path + "\n");
+      }
+      ImGuiFileDialog::Instance()->Close();
     }
 
 

@@ -22,9 +22,7 @@ public:
   const char* getName(){return m_name.c_str();}
   const int & getID()const{return m_id;}
   void setName(const char *name){m_name = name;}
-  void setId(int &i){
-    m_id=i;
-    cout <<"Id set to "<<m_id<<endl;}
+  void setId(int &i){ m_id = i; }
 protected:
   int m_id;
   std::string m_name = "";
