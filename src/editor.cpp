@@ -1,3 +1,5 @@
+#include "common/platform/WindowsHeaders.h"
+
 #include <GLFW/glfw3.h>
 
 #include "imgui.h"
@@ -55,9 +57,7 @@
 #include <unordered_set>
 #include <utility>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 

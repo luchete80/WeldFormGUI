@@ -15,7 +15,7 @@
 #include <utility>
 
 #ifdef _WIN32
-#include <windows.h>
+#include "common/platform/WindowsHeaders.h"
 #else
 #include <unistd.h>
 #endif

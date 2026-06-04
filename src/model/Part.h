@@ -12,7 +12,7 @@ class Section;
 
 enum Part_Type {Elastic=0, Rigid};
 
-class PartDialog;
+struct PartDialog;
 
 class Part :
 public Entity{

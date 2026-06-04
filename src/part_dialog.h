@@ -6,7 +6,7 @@
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
-struct PartDialog{
+struct PartDialog {
   
    PartDialog() {
      m_v = make_double3(0,0,0);}
