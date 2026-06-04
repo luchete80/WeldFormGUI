@@ -199,6 +199,30 @@ bool Geom::LoadRevolvedSTEPProfile(const std::string& fname,
         return false;
     }
 
+    return LoadRevolvedShape(profileShape,
+                             axisOriginX,
+                             axisOriginY,
+                             axisOriginZ,
+                             axisDirectionX,
+                             axisDirectionY,
+                             axisDirectionZ,
+                             angleDeg);
+}
+
+bool Geom::LoadRevolvedShape(const TopoDS_Shape& profileShape,
+                             double axisOriginX,
+                             double axisOriginY,
+                             double axisOriginZ,
+                             double axisDirectionX,
+                             double axisDirectionY,
+                             double axisDirectionZ,
+                             double angleDeg)
+{
+    if (profileShape.IsNull()) {
+        std::cerr << "Error: perfil vacío para revolución." << std::endl;
+        return false;
+    }
+
     const double directionNorm = std::sqrt(axisDirectionX * axisDirectionX +
                                            axisDirectionY * axisDirectionY +
                                            axisDirectionZ * axisDirectionZ);
@@ -215,7 +239,7 @@ bool Geom::LoadRevolvedSTEPProfile(const std::string& fname,
     BRepPrimAPI_MakeRevol revol(profileShape, axis, angleRad);
     revol.Build();
     if (!revol.IsDone()) {
-        std::cerr << "Error: falló la revolución del perfil STEP." << std::endl;
+        std::cerr << "Error: falló la revolución del perfil." << std::endl;
         return false;
     }
 

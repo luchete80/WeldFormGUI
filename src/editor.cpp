@@ -6135,6 +6135,9 @@ void Editor::drawGui() {
     bool shouldShow = m_showNewDomain;
     ImGuiTreeNodeFlags flags = shouldShow ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;    
     static std::string revolve_profile_path;
+    static char revolve_profile_path_buffer[1024] = "";
+    static Part* revolve_profile_part = nullptr;
+    static bool revolve_pick_profile_from_viewer = false;
     static int revolve_axis = 2;
     static double revolve_axis_origin[] = {0.0, 0.0, 0.0};
     static double revolve_axis_direction[] = {0.0, 0.0, 1.0};
@@ -6451,8 +6454,25 @@ void Editor::drawGui() {
                   ".step,.STEP,.stp,.STP",
                   ".");
             }
-            if (!revolve_profile_path.empty()) {
+            ImGui::SameLine();
+            if (ImGui::Button(revolve_pick_profile_from_viewer ? "Picking..." : "Pick visible profile")) {
+              revolve_pick_profile_from_viewer = !revolve_pick_profile_from_viewer;
+            }
+            if (ImGui::InputText("profile STEP path",
+                                 revolve_profile_path_buffer,
+                                 IM_ARRAYSIZE(revolve_profile_path_buffer))) {
+              revolve_profile_path = revolve_profile_path_buffer;
+              revolve_profile_part = nullptr;
+            }
+            if (revolve_profile_part != nullptr && revolve_profile_part->getGeom() != nullptr) {
+              ImGui::TextWrapped("Profile: Part %d, %s",
+                                 revolve_profile_part->getId(),
+                                 revolve_profile_part->getName());
+            } else if (!revolve_profile_path.empty()) {
               ImGui::TextWrapped("Profile: %s", revolve_profile_path.c_str());
+              if (!fs::exists(revolve_profile_path)) {
+                ImGui::TextDisabled("Profile file not found");
+              }
             } else {
               ImGui::TextDisabled("No profile selected");
             }
@@ -6483,7 +6503,55 @@ void Editor::drawGui() {
               revolve_angle_deg = std::max(1.0e-6, std::min(revolve_angle_deg, 360.0));
             }
 
-            const bool can_create_revolve = !revolve_profile_path.empty();
+            if (revolve_pick_profile_from_viewer) {
+              ImGui::TextDisabled("Click a visible geometry in the model viewer");
+              if (viewer != nullptr && viewer->isViewportHovered() &&
+                  ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                const ImVec2 viewportMin = viewer->getViewportScreenMin();
+                ImGuiIO& io = ImGui::GetIO();
+                const double localX = io.MousePos.x - viewportMin.x;
+                const double localY = io.MousePos.y - viewportMin.y;
+                const double pickY = static_cast<double>(viewer->getViewportHeight()) - localY;
+
+                vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
+                picker->SetTolerance(0.0008);
+                if (picker->Pick(localX, pickY, 0.0, viewer->getRenderer())) {
+                  vtkActor* pickedActor = picker->GetActor();
+                  Part* pickedPart = nullptr;
+                  if (m_model != nullptr && pickedActor != nullptr) {
+                    for (int p = 0; p < m_model->getPartCount(); ++p) {
+                      Part* candidate = m_model->getPart(p);
+                      if (candidate == nullptr || !candidate->isGeom()) {
+                        continue;
+                      }
+                      vtkOCCTGeom* visual = getApp().getVisualForPart(candidate);
+                      if (visual != nullptr && visual->actor.GetPointer() == pickedActor) {
+                        pickedPart = candidate;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (pickedPart != nullptr && pickedPart->getGeom() != nullptr) {
+                    revolve_profile_part = pickedPart;
+                    revolve_profile_path.clear();
+                    revolve_profile_path_buffer[0] = '\0';
+                    revolve_pick_profile_from_viewer = false;
+                    cout << "Selected revolve profile from visible part "
+                         << pickedPart->getId() << endl;
+                    appendToAppConsole("Selected revolve profile from visible part " +
+                                       std::to_string(pickedPart->getId()) + "\n");
+                  } else {
+                    cout << "No visible geometry picked for revolve profile" << endl;
+                    appendToAppConsole("No visible geometry picked for revolve profile\n");
+                  }
+                }
+              }
+            }
+
+            const bool can_create_revolve =
+                (revolve_profile_part != nullptr && revolve_profile_part->getGeom() != nullptr) ||
+                (!revolve_profile_path.empty() && fs::exists(revolve_profile_path));
             if (!can_create_revolve) {
               ImGui::BeginDisabled();
             }
@@ -6495,15 +6563,28 @@ void Editor::drawGui() {
 
               Geom* geo = new Geom;
               geo->setFileName(step_path.string());
-              const bool created = geo->LoadRevolvedSTEPProfile(
-                  revolve_profile_path,
-                  revolve_axis_origin[0],
-                  revolve_axis_origin[1],
-                  revolve_axis_origin[2],
-                  revolve_axis_direction[0],
-                  revolve_axis_direction[1],
-                  revolve_axis_direction[2],
-                  revolve_angle_deg);
+              bool created = false;
+              if (revolve_profile_part != nullptr && revolve_profile_part->getGeom() != nullptr) {
+                created = geo->LoadRevolvedShape(
+                    revolve_profile_part->getGeom()->getShape(),
+                    revolve_axis_origin[0],
+                    revolve_axis_origin[1],
+                    revolve_axis_origin[2],
+                    revolve_axis_direction[0],
+                    revolve_axis_direction[1],
+                    revolve_axis_direction[2],
+                    revolve_angle_deg);
+              } else {
+                created = geo->LoadRevolvedSTEPProfile(
+                    revolve_profile_path,
+                    revolve_axis_origin[0],
+                    revolve_axis_origin[1],
+                    revolve_axis_origin[2],
+                    revolve_axis_direction[0],
+                    revolve_axis_direction[1],
+                    revolve_axis_direction[2],
+                    revolve_angle_deg);
+              }
 
               if (created) {
                 vtkOCCTGeom* geom = new vtkOCCTGeom;
@@ -6519,8 +6600,15 @@ void Editor::drawGui() {
                 getApp().registerPartVisual(newPart, geom);
                 getApp().Update();
 
-                cout << "Created revolve geometry from " << revolve_profile_path << endl;
-                appendToAppConsole("Created revolve geometry from " + revolve_profile_path + "\n");
+                if (revolve_profile_part != nullptr) {
+                  cout << "Created revolve geometry from visible part "
+                       << revolve_profile_part->getId() << endl;
+                  appendToAppConsole("Created revolve geometry from visible part " +
+                                     std::to_string(revolve_profile_part->getId()) + "\n");
+                } else {
+                  cout << "Created revolve geometry from " << revolve_profile_path << endl;
+                  appendToAppConsole("Created revolve geometry from " + revolve_profile_path + "\n");
+                }
               } else {
                 delete geo;
                 cout << "Failed to create revolve geometry" << endl;
@@ -6536,7 +6624,19 @@ void Editor::drawGui() {
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgRevolveProfile"))
     {
       if (ImGuiFileDialog::Instance()->IsOk()) {
-        revolve_profile_path = ImGuiFileDialog::Instance()->GetFilePathName();
+        const std::map<std::string, std::string> selection =
+            ImGuiFileDialog::Instance()->GetSelection();
+        if (!selection.empty()) {
+          revolve_profile_path = selection.begin()->second;
+        } else {
+          revolve_profile_path = ImGuiFileDialog::Instance()->GetFilePathName();
+        }
+        std::snprintf(revolve_profile_path_buffer,
+                      sizeof(revolve_profile_path_buffer),
+                      "%s",
+                      revolve_profile_path.c_str());
+        revolve_profile_part = nullptr;
+        revolve_pick_profile_from_viewer = false;
         cout << "Selected revolve profile: " << revolve_profile_path << endl;
         appendToAppConsole("Selected revolve profile: " + revolve_profile_path + "\n");
       }

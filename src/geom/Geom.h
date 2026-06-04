@@ -39,6 +39,14 @@ public:
   
   void LoadBox(double dx, double dy, double dz);
   void LoadCylinder(double radius, double height, double angleDeg = 360.0);
+  bool LoadRevolvedShape(const TopoDS_Shape& profileShape,
+                         double axisOriginX,
+                         double axisOriginY,
+                         double axisOriginZ,
+                         double axisDirectionX,
+                         double axisDirectionY,
+                         double axisDirectionZ,
+                         double angleDeg = 360.0);
   bool LoadRevolvedSTEPProfile(const std::string& fname,
                                double axisOriginX,
                                double axisOriginY,
