@@ -30,12 +30,12 @@
     "Contact": [
         {
             "fricCoeffStatic": 0.01,
-            "gapPenaltyScale": 5.0,
+            "gapPenaltyScale": 1.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 50.0,
+            "penaltyFactor": 0.1,
             "useGapPenalty": true
         }
     ],
