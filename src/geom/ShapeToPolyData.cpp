@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
+#include <cmath>
 
 // OpenCASCADE includes
 #include <TopoDS.hxx>          // Essential for TopoDS::Face()
@@ -11,9 +13,12 @@
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <TopLoc_Location.hxx>
 #include <Poly_Triangulation.hxx>
 #include <Geom_Curve.hxx>
+#include <gp_Circ.hxx>
 #include <gp_Pnt.hxx>
 #include <GeomAbs_CurveType.hxx>
 #include <GCPnts_QuasiUniformDeflection.hxx>
@@ -28,6 +33,21 @@
 
 vtkSmartPointer<vtkPolyData> ShapeToPolyData(const TopoDS_Shape& shape, double deflection)
 {
+    Bnd_Box bbox;
+    BRepBndLib::Add(shape, bbox);
+    double xMin = 0.0, yMin = 0.0, zMin = 0.0;
+    double xMax = 0.0, yMax = 0.0, zMax = 0.0;
+    bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    const double dx = xMax - xMin;
+    const double dy = yMax - yMin;
+    const double dz = zMax - zMin;
+    const double bboxDiagonal = std::sqrt(dx * dx + dy * dy + dz * dz);
+    const double baseCurveDeflection =
+        bboxDiagonal > 0.0
+            ? std::min(deflection > 0.0 ? deflection : bboxDiagonal * 0.002,
+                       std::max(bboxDiagonal * 0.002, 1.0e-7))
+            : (deflection > 0.0 ? deflection : 0.01);
+
     // Mesh shape with OCC
     BRepMesh_IncrementalMesh mesher(shape, deflection);
     
@@ -93,7 +113,14 @@ vtkSmartPointer<vtkPolyData> ShapeToPolyData(const TopoDS_Shape& shape, double d
         }
         else
         {
-            const double sampledDeflection = deflection > 0.0 ? deflection : 0.01;
+            double sampledDeflection = baseCurveDeflection;
+            if (adaptor.GetType() == GeomAbs_Circle) {
+                const double radius = adaptor.Circle().Radius();
+                if (radius > 0.0) {
+                    sampledDeflection = std::min(sampledDeflection,
+                                                 std::max(radius * 0.05, 1.0e-8));
+                }
+            }
             GCPnts_QuasiUniformDeflection discretizer(adaptor, sampledDeflection);
 
             if (discretizer.IsDone() && discretizer.NbPoints() >= 2)

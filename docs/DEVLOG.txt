@@ -285,3 +285,5 @@
          - Results windows modified. Colormap & vars
          - Fixed sets always showing on model & results.  
          - Added Revolve Line as a new Geometry Domain creation. 
+         - Fixed radio show in vtkoccgeom.
+         

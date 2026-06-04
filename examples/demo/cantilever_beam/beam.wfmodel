@@ -98,7 +98,7 @@
         "beta": 4.0,
         "dampFactor": 0.02,
         "debug": false,
-        "enabled": true,
+        "enabled": false,
         "epsRef": 1.0,
         "mapAcc": false,
         "mapVel": false,
