@@ -1,0 +1,136 @@
+{
+    "Configuration": {
+        "SPH": {
+            "hFactor": 1.2
+        },
+        "analysisType": "Solid3D",
+        "modelType": "SPH",
+        "solver": "WeldForm"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 5000.0,
+            "useGapPenalty": true
+        }
+    ],
+    "Materials": {
+        "density0": 270000.0,
+        "poissonsRatio": 0.3,
+        "strRange": [
+            0.0,
+            0.65
+        ],
+        "type": "Elastic",
+        "yieldStress0": 190000000.0,
+        "youngsModulus": 70000000000.0
+    },
+    "NodeSets": [
+        {
+            "id": 0,
+            "label": "set_0",
+            "nodeIds": [
+                1,
+                2,
+                3,
+                4,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211
+            ],
+            "partId": 0
+        }
+    ],
+    "Remeshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": false,
+        "enabled": true,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 165.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "model": {
+        "parts": [
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "beam_part_0.step"
+                },
+                "id": 0,
+                "isRigid": false,
+                "mesh": {
+                    "source": "beam_part_0.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            }
+        ]
+    }
+}
