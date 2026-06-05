@@ -2749,17 +2749,19 @@ bool Editor::scalePartGeometry(Part* part, double factor)
 
   vtkOCCTGeom* visual = getApp().getVisualForPart(part);
   if (visual != nullptr) {
-    visual->SetGeometry(geom);
-    visual->ReloadFromGeometry();
-  } else {
-    vtkOCCTGeom* newVisual = new vtkOCCTGeom();
-    newVisual->SetGeometry(geom);
-    newVisual->BuildVTKData();
-    getApp().registerGeometry(geom, newVisual);
-    getApp().registerPartVisual(part, newVisual);
-    if (viewer != nullptr && newVisual->actor != nullptr) {
-      viewer->addActor(newVisual->actor);
+    if (viewer != nullptr && visual->actor != nullptr) {
+      viewer->removeActor(visual->actor);
     }
+    getApp().removeVisualForPart(part);
+  }
+
+  vtkOCCTGeom* newVisual = new vtkOCCTGeom();
+  newVisual->SetGeometry(geom);
+  newVisual->BuildVTKData();
+  getApp().registerGeometry(geom, newVisual);
+  getApp().registerPartVisual(part, newVisual);
+  if (viewer != nullptr && newVisual->actor != nullptr) {
+    viewer->addActor(newVisual->actor);
   }
 
   if (part->isMeshed()) {
