@@ -1,0 +1,117 @@
+{
+    "Amplitudes": [],
+    "BoundaryConditions": [
+        {
+            "value": [
+                0.0,
+                -0.0012,
+                0.0
+            ],
+            "valueType": 0,
+            "zoneId": 2
+        }
+    ],
+    "Configuration": {
+        "AxiSymmVol": false,
+        "Nproc": 1,
+        "artifViscAlpha": 1.0,
+        "artifViscBeta": 0.0,
+        "autoTS": [
+            false,
+            false,
+            false
+        ],
+        "cflFactor": 0.3,
+        "domType": "AxiSymm",
+        "elemLentghFraction": 0.2,
+        "fixedTS": false,
+        "kernelGradCorr": false,
+        "outTime": 1.0,
+        "simTime": 20.0,
+        "solver": {
+            "implicit": {
+                "divTol": 1.0,
+                "forceTol": 10.0,
+                "maxIter": 200,
+                "omegaP": 0.1,
+                "omegaV": 0.4,
+                "pressTol": 10.0,
+                "timeStepGrowthFactor": 1.2,
+                "type": "Picard",
+                "velTol": 0.005
+            }
+        }
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.2,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 30.0,
+            "useGapPenalty": true
+        }
+    ],
+    "DomainBlocks": [
+        {
+            "fileName": "demo_part_0.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "Materials": [
+        {
+            "const": [
+                387000000.0,
+                0.154
+            ],
+            "density0": 7850.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "strRange": [
+                0.0,
+                0.65
+            ],
+            "thermalCond": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "yieldStress0": 190000000.0,
+            "youngsModulus": 210000000000.0
+        }
+    ],
+    "Meshing": {
+        "debug": true,
+        "maxElemAngle": 150.0,
+        "minElemAngle": 30.0
+    },
+    "RigidBodies": [
+        {
+            "fileName": "demo_part_1.bdf",
+            "orientNormals": true,
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 1
+        },
+        {
+            "fileName": "demo_part_2.bdf",
+            "orientNormals": true,
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 2
+        }
+    ]
+}
