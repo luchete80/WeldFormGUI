@@ -1,0 +1,6 @@
+{
+  "vtk_files": [
+    { "file": "demo_00000.vtk", "time": 0 },
+    { "file": "demo_00001.vtk", "time": 1.04053e-05 }
+  ]
+}

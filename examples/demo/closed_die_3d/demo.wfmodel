@@ -19,6 +19,21 @@
             "useGapPenalty": true
         }
     ],
+    "Materials": {
+        "const": [
+            387000000.0,
+            0.154
+        ],
+        "density0": 2700.0,
+        "poissonsRatio": 0.3,
+        "strRange": [
+            0.0,
+            0.65
+        ],
+        "type": "Hollomon",
+        "yieldStress0": 190000000.0,
+        "youngsModulus": 210000000000.0
+    },
     "Remeshing": {
         "beta": 4.0,
         "dampFactor": 0.02,
@@ -46,10 +61,13 @@
                         0.0,
                         0.0
                     ],
-                    "source": "demo_part_0.step"
+                    "source": "demo_part_1.step"
                 },
-                "id": 0,
-                "isRigid": false,
+                "id": 1,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_1.bdf"
+                },
                 "name": "",
                 "sectionId": -1
             }

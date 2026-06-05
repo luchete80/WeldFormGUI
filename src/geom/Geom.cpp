@@ -32,12 +32,23 @@
 #include <BRepPrimAPI_MakeRevol.hxx>
 
 #include <gp_Ax1.hxx>
+#include <gp_Ax2.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 
 namespace {
 constexpr double kPi = 3.14159265358979323846;
+
+gp_Dir makeDirectionOrDefault(double x, double y, double z)
+{
+    const double norm = std::sqrt(x * x + y * y + z * z);
+    if (norm <= 1.0e-12) {
+        return gp_Dir(0.0, 0.0, 1.0);
+    }
+
+    return gp_Dir(x, y, z);
+}
 }
 
 void Geom::Move(const double &dx, const double &dy, const double &dz){
@@ -111,6 +122,40 @@ bool Geom::Scale(const double &factor){
     return true;
 }
 
+bool Geom::Rotate(double angleDeg,
+                  double axisDirX,
+                  double axisDirY,
+                  double axisDirZ){
+    if (!m_shape) {
+        std::cerr << "Error: No Shape to rotate." << std::endl;
+        return false;
+    }
+
+    const double directionNorm = std::sqrt(axisDirX * axisDirX +
+                                           axisDirY * axisDirY +
+                                           axisDirZ * axisDirZ);
+    if (directionNorm <= 1.0e-12) {
+        std::cerr << "Error: rotation axis must be non-zero." << std::endl;
+        return false;
+    }
+
+    const double angleRad = angleDeg * kPi / 180.0;
+    gp_Trsf tr;
+    tr.SetRotation(gp_Ax1(gp_Pnt(m_origin.x, m_origin.y, m_origin.z),
+                          gp_Dir(axisDirX, axisDirY, axisDirZ)),
+                   angleRad);
+
+    BRepBuilderAPI_Transform transformer(*m_shape, tr, true);
+    TopoDS_Shape rotatedShape = transformer.Shape();
+    if (rotatedShape.IsNull()) {
+        std::cerr << "Error: rotation transformation failed." << std::endl;
+        return false;
+    }
+
+    *m_shape = rotatedShape;
+    return true;
+}
+
 // Geom::Geom(std::string fname){
   
   // scale = 1.0;
@@ -142,19 +187,28 @@ bool Geom::Scale(const double &factor){
     m_shape = new TopoDS_Shape (face);
   }
 
-void Geom::LoadCylinder(double radius, double height, double angleDeg) {
+void Geom::LoadCylinder(double radius,
+                        double height,
+                        double angleDeg,
+                        double axisDirX,
+                        double axisDirY,
+                        double axisDirZ) {
     const double clampedAngleDeg = std::max(0.0, std::min(angleDeg, 360.0));
     const bool isFullCylinder = std::abs(clampedAngleDeg - 360.0) <= 1.0e-9;
+    const gp_Ax2 axis(gp_Pnt(0.0, 0.0, 0.0),
+                      makeDirectionOrDefault(axisDirX, axisDirY, axisDirZ));
 
     TopoDS_Shape cyl;
     if (isFullCylinder) {
-        cyl = BRepPrimAPI_MakeCylinder(radius, height).Shape();
+        cyl = BRepPrimAPI_MakeCylinder(axis, radius, height).Shape();
     } else {
         const double angleRad = clampedAngleDeg * kPi / 180.0;
-        cyl = BRepPrimAPI_MakeCylinder(radius, height, angleRad).Shape();
+        cyl = BRepPrimAPI_MakeCylinder(axis, radius, height, angleRad).Shape();
     }
 
+    delete m_shape;
     m_shape = new TopoDS_Shape(cyl);
+    m_origin = make_double3(0.0, 0.0, 0.0);
 }
 
 void Geom::LoadBox(double dx, double dy, double dz)

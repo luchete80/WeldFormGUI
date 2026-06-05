@@ -2746,6 +2746,48 @@ bool Editor::scalePartGeometry(Part* part, double factor)
   return true;
 }
 
+bool Editor::rotatePartGeometry(Part* part,
+                                double angleDeg,
+                                double axisDirX,
+                                double axisDirY,
+                                double axisDirZ)
+{
+  if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
+    cout << "Rotate is only available for geometry parts." << endl;
+    return false;
+  }
+
+  Geom* geom = part->getGeom();
+  if (!geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ)) {
+    return false;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+  if (visual != nullptr) {
+    visual->SetGeometry(geom);
+    visual->ReloadFromGeometry();
+  } else {
+    vtkOCCTGeom* newVisual = new vtkOCCTGeom();
+    newVisual->SetGeometry(geom);
+    newVisual->BuildVTKData();
+    getApp().registerGeometry(geom, newVisual);
+    getApp().registerPartVisual(part, newVisual);
+    if (viewer != nullptr && newVisual->actor != nullptr) {
+      viewer->addActor(newVisual->actor);
+    }
+  }
+
+  if (part->isMeshed()) {
+    clearStateForDeletedMesh(part->getMesh());
+    getApp().removeGraphicMeshForPart(part);
+    part->deleteMesh();
+    cout << "Deleted mesh after rotating geometry because it became outdated." << endl;
+  }
+
+  getApp().Update();
+  return true;
+}
+
 bool Editor::openResultsForModel()
 {
   const std::string& modelFilePath = m_model->getFilePath();
@@ -4723,6 +4765,10 @@ void Editor::drawGui() {
         static bool show_scale_popup = false;
         static double scale_factor = 1.0;
         static Part* scale_part = nullptr;
+        static bool show_rotate_popup = false;
+        static double rotate_angle_deg = 0.0;
+        static int rotate_axis = 4;
+        static Part* rotate_part = nullptr;
                 
         /////////////////////// PART TREE
         if (open_){ 
@@ -4872,6 +4918,12 @@ void Editor::drawGui() {
 	                show_scale_popup = true;
 	                scale_factor = 1.0;
 	                scale_part = treePart;
+              }
+	              else if (treePart->isGeom() && ImGui::MenuItem("Rotate")) {
+	                show_rotate_popup = true;
+	                rotate_angle_deg = 0.0;
+	                rotate_axis = 4;
+	                rotate_part = treePart;
               }
                
               ImGui::EndPopup();
@@ -5158,6 +5210,57 @@ void Editor::drawGui() {
             ImGui::SameLine();
             if (ImGui::Button("Cancel", ImVec2(120, 0))) {
                 scale_part = nullptr;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (show_rotate_popup) {
+            ImGui::OpenPopup("Rotate Geometry");
+            show_rotate_popup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Rotate Geometry", NULL,
+                                   ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            static const char* rotate_axis_items[] = {
+                "+X", "-X", "+Y", "-Y", "+Z", "-Z"
+            };
+            ImGui::InputDouble("Angle deg", &rotate_angle_deg, 1.0, 10.0, "%.6f");
+            ImGui::Combo("Axis", &rotate_axis,
+                         rotate_axis_items,
+                         IM_ARRAYSIZE(rotate_axis_items));
+            ImGui::TextDisabled("Pivot: geometry origin");
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                bool close_popup = true;
+                if (rotate_part != nullptr) {
+                    double axis_dir_x = 0.0;
+                    double axis_dir_y = 0.0;
+                    double axis_dir_z = 1.0;
+                    switch (rotate_axis) {
+                      case 0: axis_dir_x = 1.0; break;
+                      case 1: axis_dir_x = -1.0; break;
+                      case 2: axis_dir_y = 1.0; break;
+                      case 3: axis_dir_y = -1.0; break;
+                      case 4: axis_dir_z = 1.0; break;
+                      case 5: axis_dir_z = -1.0; break;
+                      default: break;
+                    }
+                    close_popup = rotatePartGeometry(rotate_part,
+                                                     rotate_angle_deg,
+                                                     axis_dir_x,
+                                                     axis_dir_y,
+                                                     axis_dir_z);
+                }
+                if (close_popup) {
+                    rotate_part = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                rotate_part = nullptr;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -6227,6 +6330,8 @@ void Editor::drawGui() {
         //Vec3_t size;
         static double size[] = {0.1,0.1,0.1};
         static double cylinder_angle_deg = 360.0;
+        static int cylinder_direction = 4;
+        static int plane_direction = 4;
         std::string label[] = {"x ", "y ", "z "};
         bool show_size[] = {true,true,true};
         
@@ -6235,6 +6340,8 @@ void Editor::drawGui() {
               label[0] = "radius ";
               show_size[1] = false;
               label[2] = "height ";
+            } else if (item_current == 2) { // PLANE
+              show_size[2] = false;
             }
         } else {
             switch (m_model->getAnalysisType()) {
@@ -6255,10 +6362,24 @@ void Editor::drawGui() {
         ImGui::InputDouble(label[1].c_str(), &size[1], 0.01f, 1.0f, "%.4f");
         
         
+        if (show_size[2])
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
         if (is_3d_domain && item_current == 1) {
-            ImGui::InputDouble("angle deg ", &cylinder_angle_deg, 1.0f, 10.0f, "%.1f");
+            static const char* cylinder_direction_items[] = {
+                "+X", "-X", "+Y", "-Y", "+Z", "-Z"
+            };
+            ImGui::Combo("direction", &cylinder_direction,
+                         cylinder_direction_items,
+                         IM_ARRAYSIZE(cylinder_direction_items));
+            ImGui::InputDouble("sweep deg ", &cylinder_angle_deg, 1.0f, 10.0f, "%.1f");
             cylinder_angle_deg = std::max(1.0, std::min(cylinder_angle_deg, 360.0));
+        } else if (is_3d_domain && item_current == 2) {
+            static const char* plane_direction_items[] = {
+                "+X", "-X", "+Y", "-Y", "+Z", "-Z"
+            };
+            ImGui::Combo("normal", &plane_direction,
+                         plane_direction_items,
+                         IM_ARRAYSIZE(plane_direction_items));
         }
 
         static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
@@ -6369,7 +6490,24 @@ void Editor::drawGui() {
               if (is_3d_domain && item_current == 1) { // CYLINDER
                 if (size[0] > 0.0 && size[2] > 0.0){
                   cout << "Creating Cylinder "<<endl;
-                  geo->LoadCylinder(size[0], size[2], cylinder_angle_deg); // radius, height, angle
+                  double axis_dir_x = 0.0;
+                  double axis_dir_y = 0.0;
+                  double axis_dir_z = 1.0;
+                  switch (cylinder_direction) {
+                    case 0: axis_dir_x = 1.0; break;
+                    case 1: axis_dir_x = -1.0; break;
+                    case 2: axis_dir_y = 1.0; break;
+                    case 3: axis_dir_y = -1.0; break;
+                    case 4: axis_dir_z = 1.0; break;
+                    case 5: axis_dir_z = -1.0; break;
+                    default: break;
+                  }
+                  geo->LoadCylinder(size[0],
+                                    size[2],
+                                    cylinder_angle_deg,
+                                    axis_dir_x,
+                                    axis_dir_y,
+                                    axis_dir_z);
                   geo->setPreferHexaTransfinite(false);
                   if (std::abs(origin[0]) > 1.0e-12 ||
                       std::abs(origin[1]) > 1.0e-12 ||
@@ -6380,6 +6518,37 @@ void Editor::drawGui() {
                   created = true;
                 } else {
                   cout << "NULL OR NEGATIVE CYLINDER DIMENSION VALUE"<<endl;
+                }
+              }
+
+              if (is_3d_domain && item_current == 2) { // PLANE
+                if (size[0] > 0.0 && size[1] > 0.0){
+                  geo->LoadRectangle(size[0], size[1], origin[0], origin[1], origin[2]);
+                  switch (plane_direction) {
+                    case 0:
+                      geo->Rotate(-90.0, 0.0, 1.0, 0.0);
+                      break;
+                    case 1:
+                      geo->Rotate(90.0, 0.0, 1.0, 0.0);
+                      break;
+                    case 2:
+                      geo->Rotate(90.0, 1.0, 0.0, 0.0);
+                      break;
+                    case 3:
+                      geo->Rotate(-90.0, 1.0, 0.0, 0.0);
+                      break;
+                    case 4:
+                      break;
+                    case 5:
+                      geo->Rotate(180.0, 1.0, 0.0, 0.0);
+                      break;
+                    default:
+                      break;
+                  }
+                  geo->setPreferHexaTransfinite(false);
+                  created = true;
+                } else {
+                  cout << "NULL OR NEGATIVE PLANE DIMENSION VALUE"<<endl;
                 }
               }
                   

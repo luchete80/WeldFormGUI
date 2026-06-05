@@ -37,9 +37,18 @@ public:
   
   void Move(const double &x, const double &y, const double &z);
   bool Scale(const double &factor);
+  bool Rotate(double angleDeg,
+              double axisDirX,
+              double axisDirY,
+              double axisDirZ);
   
   void LoadBox(double dx, double dy, double dz);
-  void LoadCylinder(double radius, double height, double angleDeg = 360.0);
+  void LoadCylinder(double radius,
+                    double height,
+                    double angleDeg = 360.0,
+                    double axisDirX = 0.0,
+                    double axisDirY = 0.0,
+                    double axisDirZ = 1.0);
   bool LoadRevolvedShape(const TopoDS_Shape& profileShape,
                          double axisOriginX,
                          double axisOriginY,

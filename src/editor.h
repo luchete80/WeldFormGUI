@@ -142,6 +142,11 @@ public:
   bool refreshOpenResults(int preferredFrameIndex = -1);
   int consumePendingResultsFrameIndex();
   bool scalePartGeometry(Part* part, double factor);
+  bool rotatePartGeometry(Part* part,
+                          double angleDeg,
+                          double axisDirX,
+                          double axisDirY,
+                          double axisDirZ);
   void adoptModelFromScript(Model* model);
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
