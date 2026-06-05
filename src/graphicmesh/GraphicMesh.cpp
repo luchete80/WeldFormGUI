@@ -16,6 +16,7 @@
 #include <vtkQuad.h>
 #include <vtkProperty.h>
 #include <vtkTetra.h>
+#include <vtkHexahedron.h>
 
 #include <array>
 #include <array>
@@ -412,9 +413,8 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
                     has3DElements = true;
                 }
             } else if (nc == 8) {
-                // Hexaedro 3D
-                //cell = vtkSmartPointer<vtkHexahedron>::New();
-                //has3DElements = true;
+                cell = vtkSmartPointer<vtkHexahedron>::New();
+                has3DElements = true;
             } else {
                 std::cout << "Unsupported element with " << nc << " nodes" << std::endl;
                 continue;
@@ -465,36 +465,47 @@ int GraphicMesh::createVTKPolyData(Mesh &mesh) {
         if (has3DElements) {
             mesh_ugrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
             mesh_ugrid->SetPoints(points);
+            vtkNew<vtkFloatArray> volumeCellScalars;
 
             for (int e = 0; e < mesh.getElemCount(); e++) {
                 Element* element = mesh.getElem(e);
-                if (element == nullptr || element->getNodeCount() != 4) {
+                if (element == nullptr) {
                     continue;
                 }
 
-                vtkNew<vtkTetra> tetra;
-                bool validTetra = true;
-                for (int nn = 0; nn < 4; ++nn) {
+                const int nc = element->getNodeCount();
+                vtkSmartPointer<vtkCell> volumeCell;
+                if (nc == 4) {
+                    volumeCell = vtkSmartPointer<vtkTetra>::New();
+                } else if (nc == 8) {
+                    volumeCell = vtkSmartPointer<vtkHexahedron>::New();
+                } else {
+                    continue;
+                }
+
+                bool validCell = true;
+                for (int nn = 0; nn < nc; ++nn) {
                     const int nodeId = element->getNodeId(nn);
                     std::map<int, int>::const_iterator pointIt = nodeIdToPointIndex.find(nodeId);
                     if (pointIt == nodeIdToPointIndex.end()) {
-                        validTetra = false;
+                        validCell = false;
                         std::cerr << "Error: Invalid node ID " << nodeId
-                                  << " in tetra element " << e << std::endl;
+                                  << " in volume element " << e << std::endl;
                         break;
                     }
-                    tetra->GetPointIds()->SetId(nn, pointIt->second);
+                    volumeCell->GetPointIds()->SetId(nn, pointIt->second);
                 }
 
-                if (!validTetra) {
+                if (!validCell) {
                     continue;
                 }
 
-                mesh_ugrid->InsertNextCell(tetra->GetCellType(), tetra->GetPointIds());
+                mesh_ugrid->InsertNextCell(volumeCell->GetCellType(), volumeCell->GetPointIds());
+                volumeCellScalars->InsertNextTuple1(static_cast<float>(e + 1));
             }
 
             mesh_ugrid->GetPointData()->SetScalars(scalars);
-            mesh_ugrid->GetCellData()->SetScalars(cellScalars);
+            mesh_ugrid->GetCellData()->SetScalars(volumeCellScalars);
         } else {
             mesh_pdata->SetPoints(points);
 

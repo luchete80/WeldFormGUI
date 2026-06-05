@@ -219,6 +219,23 @@ void applyTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
   }
 }
 
+void applyHexaTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
+  applyTransfiniteConstraintsToCurrentGmshModel(elementSize);
+
+  std::vector<std::pair<int, int>> surfaceEntities;
+  gmsh::model::getEntities(surfaceEntities, 2);
+  for (const auto& entity : surfaceEntities) {
+    gmsh::model::mesh::setTransfiniteSurface(entity.second);
+    gmsh::model::mesh::setRecombine(2, entity.second);
+  }
+
+  std::vector<std::pair<int, int>> volumeEntities;
+  gmsh::model::getEntities(volumeEntities, 3);
+  for (const auto& entity : volumeEntities) {
+    gmsh::model::mesh::setTransfiniteVolume(entity.second);
+  }
+}
+
 bool isPartVisible(Part* part)
 {
   if (part == nullptr) {
@@ -4077,6 +4094,8 @@ void Editor::meshPart(Part* part){
     std::vector<std::pair<int, int>> entities;
     gmsh::model::getEntities(entities);
     applyMeshSizeToCurrentGmshModel(element_size);
+    const bool prefer_hexa_transfinite =
+        gmsh_dim == 3 && geo->prefersHexaTransfinite();
     
     if (is_2d_analysis) {
       applyTransfiniteConstraintsToCurrentGmshModel(element_size);
@@ -4087,6 +4106,8 @@ void Editor::meshPart(Part* part){
               cout << "Recombine in 2 dim"<<endl;
           }
       }
+    } else if (prefer_hexa_transfinite) {
+      applyHexaTransfiniteConstraintsToCurrentGmshModel(element_size);
     }
     
     if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);
@@ -6332,6 +6353,7 @@ void Editor::drawGui() {
                 if (size[0] > 0.0 && size[1] > 0.0 && size[2] > 0.0){
                   cout << "Creating Box "<<endl;
                   geo->LoadBox(size[0], size[1], size[2]);
+                  geo->setPreferHexaTransfinite(true);
                   if (std::abs(origin[0]) > 1.0e-12 ||
                       std::abs(origin[1]) > 1.0e-12 ||
                       std::abs(origin[2]) > 1.0e-12) {
@@ -6348,6 +6370,7 @@ void Editor::drawGui() {
                 if (size[0] > 0.0 && size[2] > 0.0){
                   cout << "Creating Cylinder "<<endl;
                   geo->LoadCylinder(size[0], size[2], cylinder_angle_deg); // radius, height, angle
+                  geo->setPreferHexaTransfinite(false);
                   if (std::abs(origin[0]) > 1.0e-12 ||
                       std::abs(origin[1]) > 1.0e-12 ||
                       std::abs(origin[2]) > 1.0e-12) {
@@ -6367,10 +6390,12 @@ void Editor::drawGui() {
 
                 if (has_x && has_y) {
                   geo->LoadRectangle(size[0],size[1],origin[0],origin[1],origin[2]);
+                  geo->setPreferHexaTransfinite(false);
                   cout << "Loading rectangle "<<endl;
                   created = true;
                 } else if (has_x || has_y) {
                   geo->LoadLine(size[0],size[1],origin[0],origin[1]);
+                  geo->setPreferHexaTransfinite(false);
                   cout << "Loading line "<<endl;
                   created = true;
                 } else {

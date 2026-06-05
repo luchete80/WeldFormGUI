@@ -49,7 +49,7 @@ struct ContactProperties {
 };
 
 struct RemeshingSettings {
-  bool enabled = true;
+  bool enabled = false;
   double minStrain = -1.0;
   double maxStrain = 1.0e6;
   bool mapVel = false;

@@ -35,6 +35,20 @@ inline bool startsWithCard(const std::string& line, const char* card) {
     return prefix == std::string(card);
 }
 
+inline std::string trimWhitespace(const std::string& s) {
+    const size_t first = s.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        return "";
+    }
+    const size_t last = s.find_last_not_of(" \t\r\n");
+    return s.substr(first, last - first + 1);
+}
+
+inline bool startsWithCardPrefix(const std::string& line, const char* card_prefix) {
+    const std::string prefix = trimSpaces(line.substr(0, 8));
+    return prefix.rfind(std::string(card_prefix), 0) == 0;
+}
+
 inline bool isTriCard(const std::string& line) {
     return startsWithCard(line, "CTRIA") || startsWithCard(line, "CTRIA3");
 }
@@ -80,6 +94,36 @@ inline int parseNastranIntField(const std::string& line, int fieldIndex)
     return atoi(line.substr(pos, FIELD_LENGTH).c_str());
 }
 
+inline bool isContinuationLine(const std::string& raw_line) {
+    const std::string first = trimWhitespace(raw_line.substr(0, FIELD_LENGTH));
+    return first.empty() || first == "+" || first == "*";
+}
+
+inline std::vector<int> readChexaNodeIds(const std::vector<std::string>& rawData,
+                                         int line_index,
+                                         int line_count) {
+    std::vector<int> node_ids;
+    for (int field = 3; field <= 8 && node_ids.size() < 6; ++field) {
+        const int id = parseNastranIntField(rawData[line_index], field);
+        if (id != 0) {
+            node_ids.push_back(id);
+        }
+    }
+
+    for (int next = line_index + 1;
+         next < line_count && node_ids.size() < 8 && isContinuationLine(rawData[next]);
+         ++next) {
+        for (int field = 1; field <= 8 && node_ids.size() < 8; ++field) {
+            const int id = parseNastranIntField(rawData[next], field);
+            if (id != 0) {
+                node_ids.push_back(id);
+            }
+        }
+    }
+
+    return node_ids;
+}
+
 void NastranReader::read(const char* fName){
 	string fileName = fName;
   string line;
@@ -96,13 +140,18 @@ void NastranReader::read(const char* fName){
 		//cerr << "[E] Input file " << fileName << " could not be found!!" << endl;
 	}
 	
-	int l=0;
+  int l=0;
   node_count = 0;
   elem_count = 0;
   
   dim = 3;
   max_nodes_per_elem = 3;
   bool found_ctetra = false;
+  bool found_chexa = false;
+  bool found_shell = false;
+  bool found_ctria = false;
+  bool found_cquad = false;
+  bool found_beam = false;
   
   bool start_node = false;
   bool start_elem = false;
@@ -119,12 +168,23 @@ void NastranReader::read(const char* fName){
           start_node = true;
           line_start_node = l;
         }
-      } else if (isTriCard(line) ||
-                 isQuadCard(line) ||
+      } else if (startsWithCardPrefix(line, "CTRIA") ||
+                 startsWithCardPrefix(line, "CQUAD") ||
                  startsWithCard(line, "CTETRA") ||
-                 isBeamCard(line) ){
-        if (startsWithCard(line, "CTETRA"))
+                 startsWithCardPrefix(line, "CHEXA") ||
+                 startsWithCardPrefix(line, "CBEAM") ||
+                 startsWithCardPrefix(line, "CBAR") ){
+        if (startsWithCardPrefix(line, "CHEXA"))
+          found_chexa = true;
+        else if (startsWithCard(line, "CTETRA"))
           found_ctetra = true;
+        else if (startsWithCardPrefix(line, "CTRIA") || startsWithCardPrefix(line, "CQUAD")) {
+          found_shell = true;
+          if (startsWithCardPrefix(line, "CTRIA")) found_ctria = true;
+          if (startsWithCardPrefix(line, "CQUAD")) found_cquad = true;
+        } else if (startsWithCardPrefix(line, "CBEAM") || startsWithCardPrefix(line, "CBAR")) {
+          found_beam = true;
+        }
       }
       l++;
     }
@@ -143,8 +203,19 @@ void NastranReader::read(const char* fName){
     start_elem = false;
     node_count = 0;
     elem_count = 0;
-    dim = found_ctetra ? 3 : 3;
-    max_nodes_per_elem = found_ctetra ? 4 : 3;
+    if (found_chexa) {
+      dim = 3;
+      max_nodes_per_elem = 8;
+    } else if (found_ctetra) {
+      dim = 3;
+      max_nodes_per_elem = 4;
+    } else if (found_shell) {
+      dim = 2;
+      max_nodes_per_elem = found_cquad ? 4 : 3;
+    } else {
+      dim = 2;
+      max_nodes_per_elem = 2;
+    }
 
 		while(getline(file, line)) {
       rawData.push_back(line);
@@ -154,25 +225,38 @@ void NastranReader::read(const char* fName){
           start_node = true;
           line_start_node = l;
         }
-      } else if (
-          (found_ctetra && startsWithCard(line, "CTETRA")) ||
-          (!found_ctetra && (
-              isTriCard(line) ||
-              isQuadCard(line) ||
-              isBeamCard(line)))) {
+      } else {
+        const bool is_selected_elem =
+            (found_chexa && startsWithCardPrefix(line, "CHEXA")) ||
+            (!found_chexa && found_ctetra && startsWithCard(line, "CTETRA")) ||
+            (!found_chexa && !found_ctetra &&
+             (startsWithCardPrefix(line, "CTRIA") ||
+              startsWithCardPrefix(line, "CQUAD") ||
+              (!found_shell && startsWithCardPrefix(line, "CBEAM")) ||
+              (!found_shell && startsWithCardPrefix(line, "CBAR"))));
+        if (!is_selected_elem) {
+          l++;
+          continue;
+        }
         if (!start_elem){
           start_elem = true;
 					line_start_elem = l;
 				}
-        if (isQuadCard(line))
+        if (startsWithCardPrefix(line, "CQUAD"))
           max_nodes_per_elem = 4;
+        if (startsWithCardPrefix(line, "CHEXA")) {
+          max_nodes_per_elem = 8;
+          dim = 3;
+        }
         if (startsWithCard(line, "CTETRA")) {
           max_nodes_per_elem = 4;
           dim = 3;
         }
-        if (!found_ctetra && (isTriCard(line) || isQuadCard(line)))
+        if (!found_chexa && !found_ctetra &&
+            (startsWithCardPrefix(line, "CTRIA") || startsWithCardPrefix(line, "CQUAD")))
           dim = 2;
-        if (!found_ctetra && isBeamCard(line))
+        if (!found_chexa && !found_ctetra && !found_shell &&
+            (startsWithCardPrefix(line, "CBEAM") || startsWithCardPrefix(line, "CBAR")))
           dim = 2;
         elem_count++;
       }
@@ -181,7 +265,9 @@ void NastranReader::read(const char* fName){
 		file.close();
     
     cout << node_count <<" nodes and "<<elem_count<< " elements found."<<endl;
-    if (found_ctetra) {
+    if (found_chexa) {
+      cout << "[Nastran] CHEXA detected. Tetra/shell/beam elements are ignored for solid import." << endl;
+    } else if (found_ctetra) {
       cout << "[Nastran] CTETRA detected. Shell/beam elements are ignored for solid import." << endl;
     }
 
@@ -238,16 +324,22 @@ void NastranReader::read(const char* fName){
 	l = curr_line;
   int ecount = 0;
   for (l = curr_line; l < line_count && ecount < elem_count; ++l) {
-    if (!((found_ctetra && startsWithCard(rawData[l], "CTETRA")) ||
-          (!found_ctetra && (
-              isTriCard(rawData[l]) ||
-              isQuadCard(rawData[l]) ||
-              isBeamCard(rawData[l]))))) {
+    const bool is_selected_elem =
+        (found_chexa && startsWithCardPrefix(rawData[l], "CHEXA")) ||
+        (!found_chexa && found_ctetra && startsWithCard(rawData[l], "CTETRA")) ||
+        (!found_chexa && !found_ctetra &&
+         (startsWithCardPrefix(rawData[l], "CTRIA") ||
+          startsWithCardPrefix(rawData[l], "CQUAD") ||
+          (!found_shell && startsWithCardPrefix(rawData[l], "CBEAM")) ||
+          (!found_shell && startsWithCardPrefix(rawData[l], "CBAR"))));
+    if (!is_selected_elem) {
       continue;
     }
 
     int nodes_per_elem = 3;
-    if (isQuadCard(rawData[l]) || startsWithCard(rawData[l], "CTETRA"))
+    if (startsWithCardPrefix(rawData[l], "CHEXA"))
+      nodes_per_elem = 8;
+    else if (isQuadCard(rawData[l]) || startsWithCard(rawData[l], "CTETRA"))
       nodes_per_elem = 4;
     else if (isBeamCard(rawData[l]))
       nodes_per_elem = 2;
@@ -264,10 +356,30 @@ void NastranReader::read(const char* fName){
            << parseNastranIntField(rawData[l], 6) << endl;
     }
 
+    std::vector<int> node_ids(nodes_per_elem, 0);
+    if (startsWithCardPrefix(rawData[l], "CHEXA")) {
+      const std::vector<int> chexa_nodes = readChexaNodeIds(rawData, l, line_count);
+      if (chexa_nodes.size() != 8) {
+        cerr << "[E] Invalid CHEXA connectivity at Nastran line " << l + 1
+             << ": expected 8 node ids, parsed " << chexa_nodes.size() << endl;
+        if (l + 1 < line_count && isContinuationLine(rawData[l + 1])) {
+          cerr << "    " << rawData[l] << endl;
+          cerr << "    " << rawData[l + 1] << endl;
+        }
+        continue;
+      }
+      for (int en = 0; en < 8; ++en)
+        node_ids[en] = chexa_nodes[en];
+    } else {
+      for (int en = 0; en < nodes_per_elem; ++en) {
+        const int pos = 3 * FIELD_LENGTH + en * FIELD_LENGTH;
+        const std::string temp = rawData[l].substr(pos, FIELD_LENGTH);
+        node_ids[en] = atoi(temp.c_str());
+      }
+    }
+
     for (int en=0;en<nodes_per_elem;en++){
-			int pos = 3*(FIELD_LENGTH)+ en*FIELD_LENGTH;
-			string temp = rawData[l].substr(pos,FIELD_LENGTH);
-			int d = atoi(temp.c_str());
+			int d = node_ids[en];
       auto it_nod = nodepos.find(d);
       if (it_nod == nodepos.end()) {
         cerr << "[E] Node id " << d << " referenced by element line " << l

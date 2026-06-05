@@ -9,6 +9,7 @@
 #include "Step.h"
 
 #include <cmath>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -99,9 +100,24 @@ Step *activeStep(Model *model) {
   return model->getStep(0);
 }
 
+std::string normalizeImplicitSolverType(const std::string& type) {
+  if (type.empty())
+    return "picard";
+
+  std::string normalized = type;
+  for (char& c : normalized)
+    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+
+  if (normalized == "picard" || normalized == "hybrid" ||
+      normalized == "newton" || normalized == "nr") {
+    return normalized;
+  }
+
+  return "picard";
+}
+
 json makeImplicitSolverJson(const Step *step) {
   json implicit;
-  implicit["type"] = step ? step->m_implicitType : "Picard";
   implicit["velTol"] = step ? step->m_velTol : 5e-2;
   implicit["pressTol"] = step ? step->m_pressTol : 10.0;
   implicit["forceTol"] = step ? step->m_forceTol : 10.0;
@@ -402,6 +418,24 @@ void InputWriter::writeToFile(std::string fname) {
     m_json["Configuration"]["thermal"] = true;
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 
+  const RemeshingSettings &remeshing = m_model->remeshing();
+  m_json["Meshing"]["enabled"] = remeshing.enabled;
+  m_json["Meshing"]["minStrain"] = remeshing.minStrain;
+  m_json["Meshing"]["maxStrain"] = remeshing.maxStrain;
+  m_json["Meshing"]["mapVel"] = remeshing.mapVel;
+  m_json["Meshing"]["mapAcc"] = remeshing.mapAcc;
+  m_json["Meshing"]["maxCount"] = remeshing.maxCount;
+  m_json["Meshing"]["dampFactor"] = remeshing.dampFactor;
+  m_json["Meshing"]["minFrac"] = remeshing.minFrac;
+  m_json["Meshing"]["maxFrac"] = remeshing.maxFrac;
+  m_json["Meshing"]["epsRef"] = remeshing.epsRef;
+  m_json["Meshing"]["beta"] = remeshing.beta;
+  m_json["Meshing"]["type"] = remeshing.type;
+  m_json["Meshing"]["debug"] = remeshing.debug;
+  m_json["Meshing"]["minElemAngle"] = remeshing.minElemAngle;
+  m_json["Meshing"]["maxElemAngle"] = remeshing.maxElemAngle;
+  m_json["Meshing"]["transitionAngle"] = remeshing.transitionAngle;
+
   const ContactProperties &contact = m_model->contactProps();
   json cont;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
@@ -555,7 +589,13 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Configuration"]["elemLentghFraction"] = step ? step->m_elemLengthFraction : 0.2;
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
-  m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
+  if (step != nullptr && step->isImplicit()) {
+    m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
+    if (m_model->getAnalysisType() != Solid3D) {
+      m_json["Configuration"]["solver"]["type"] =
+          normalizeImplicitSolverType(step->m_implicitType);
+    }
+  }
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 
   const RemeshingSettings &remeshing = m_model->remeshing();

@@ -1,0 +1,703 @@
+Log initialized: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/log.txt
+alpha_free 0
+alpha_contact 0
+hg_coeff_free 0
+hg_coeff_contact 0
+av_coeff_div 0
+av_coeff_bulk 0
+log_factor     0
+pspg_scale     0
+p_pspg_bulkfac 0
+J_min          0
+hg_visc        0.1
+hg_stiff       0.1
+--- Version: ------------------
+------------- Commit:  e1cd33e-------------------
+------------- Build:   2026-06-05 10:36:28------------
+Opening JSON format file
+Model Name: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo
+[WARNING] 'Stabilization' block not found in JSON, using defaults.
+Max strain rate 'maxStrRate' in Stress Calc: 1e+06
+Min strain rate 'minStrRate' in Stress Calc: 1e+06
+Plastic Heat Fraction Coeff: 0.9
+STRESS UPDATE IF UPDATED AT WARMUP FROM MAPPING
+BLEND STRESSES AT WARMUP IS ON 
+MESH INTERVAL: 0
+MIN & MAX ELEMENT ANGLES: 15, 150
+REMESH PARAMETERS: 
+m_remesh_min_pl_strain-1
+m_remesh_max_pl_strain1e+06
+Element Map Method is CLOSEST ELEMENT
+PRESSURE ALGORITHM IS Hybrid-FBAR
+Number of threads used: 1np 1
+Thread 
+Threads used: 1, np parameter (via [Config]{Nproc})
+Reading Domain type
+Domain type: File
+Reading Domain from Input file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo_part_0.bdf
+Extension bdf
+Creating domain from Nastran file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo_part_0.bdf
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo_part_0.bdf
+755 nodes and 2951 elements found.
+[Nastran] CTETRA detected. Shell/beam elements are ignored for solid import.
+[I] 3710 lines readed ...
+Allocating 755 nodes
+Allocating 2951 Elements...
+Done.
+Setting explicit dimensions for 755nodes and 3dim
+setting deriv allocation size of 35412
+mdim3 4 2951 1
+Allocating 755 nodes 
+Allocating 2951 elements, node x element: 4
+Setting elements per node 
+Node 12 found in element 2316
+Node 12 found in element 2343
+Node 12 found in element 2706
+Node 12 found in element 2752
+Allocating 2951 and 4nodes x elem
+COPYING 11804 element nodes 
+Done
+Size of Nodal shared Elements vector 11804
+Total orphan nodes: 0
+Node Elemets set. 
+[Nastran] Orphan nodes: 0
+[Nastran] Tetra stats: tiny=0 inverted_or_zero=0 repeated_nodes=0 duplicates=0 min|det|=1.8141e-09 max|det|=1.10407e-07
+[Nastran] Bounding box: xmin=-0.0127 xmax=0.0127 ymin=-0.0127 ymax=0.0127 zmin=0 zmax=0.03
+Node Size: 755
+Element Size: 2951
+Executable variant: full
+Node limit: none
+Density..
+Setting density
+Done.
+Creating Material..:
+Type: Hollomon
+eps_0, 9.05e-04 eps_1 3.73e-03
+Hollomon Material Constants, K: 6.5e+08, n: 0.22
+eps_0, 9.05e-04 eps_1 3.73e-03
+Done.
+Reading Boundary Conditions ...
+done. Face count: 6403
+Total External Nodal Area: 3.3918e-03, external nodes: 503
+Searching external nodes
+Creating plane mesh...
+Mesh start: 0,0, 0
+Mesh dim: 0,0, 0
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo_part_1.bdf
+145 nodes and 248 elements found.
+[I] 398 lines readed ...
+Allocating 145 nodes
+Allocating 248 Elements...
+Done.
+Mesh0 Start: 0, 0, 0
+Nastran Mesh NodeCount: 145
+Copying 145 nodes 
+Centroid of matrix: -0.000207251, 0.000353454, 0
+endl
+Element count: 248done. Creating elements... Global Centroid:0.00241558, 9.13896e-05, 0.0150948
+Writing elements...
+Done. 
+Reorienting normals...
+2D polyline coherence detection failed. Falling back to legacy point-based reorientation.
+2D fallback finished using orient_pt.
+Element 0 normal 0.439678, 0.898155, 0
+Element 1 normal -0.531249, -0.847216, 0
+Element 2 normal -0.862861, 0.505442, 0
+Element 3 normal -0.473804, 0.88063, -0
+Element 4 normal -0.999992, 0.00402411, 0
+Element 5 normal 0.719558, 0.694433, 0
+Element 6 normal -0.993351, 0.115127, -0
+Element 7 normal -0.925488, -0.378778, 0
+Element 8 normal -0.999896, 0.0144129, -0
+Element 9 normal -0.555207, -0.831713, 0
+Element 10 normal 0.800955, 0.598724, -0
+Element 11 normal 0.666095, 0.745867, -0
+Element 12 normal 0.199249, -0.979949, -0
+Element 13 normal 0.34822, 0.937413, -0
+Element 14 normal -0.985092, -0.172027, -0
+Element 15 normal 0.364149, 0.931341, 0
+Element 16 normal 0.7731, -0.634284, 0
+Element 17 normal 0.606889, 0.794787, 0
+Element 18 normal 0.872863, -0.487965, 0
+Element 19 normal -0.998408, 0.0564072, -0
+Element 20 normal -0.197827, 0.980237, -0
+Element 21 normal 0.747861, 0.663855, 0
+Element 22 normal -0.975263, 0.221049, 0
+Element 23 normal 0.0634707, -0.997984, -0
+Element 24 normal -0.651671, 0.758502, 0
+Element 25 normal -0.500768, 0.865581, -0
+Element 26 normal 0.0292102, -0.999573, 0
+Element 27 normal 0.864016, 0.503464, 0
+Element 28 normal 0.631271, -0.775562, 0
+Element 29 normal 0.836761, -0.547569, 0
+Element 30 normal -0.711405, 0.702782, 0
+Element 31 normal 0.299404, 0.954126, 0
+Element 32 normal 0.827609, -0.561306, -0
+Element 33 normal -0.962226, -0.272251, -0
+Element 34 normal 0.872921, 0.487861, -0
+Element 35 normal 0.502292, -0.864698, 0
+Element 36 normal -0.00805877, 0.999968, -0
+Element 37 normal 0.503055, 0.864254, -0
+Element 38 normal -0, 1, 0
+Element 39 normal 0.890811, 0.454374, -0
+Element 40 normal 0.506233, -0.862397, 0
+Element 41 normal 0.871797, 0.489867, 0
+Element 42 normal 0.501748, -0.865014, -0
+Element 43 normal 0.999929, -0.0118945, 0
+Element 44 normal -0.865932, 0.500161, -0
+Element 45 normal 0.838764, 0.544496, -0
+Element 46 normal 0.498434, -0.866928, -0
+Element 47 normal 0.865705, 0.500554, 0
+Element 48 normal 0, 1, -0
+Element 49 normal 0.878879, 0.477044, -0
+Element 50 normal -0.999546, 0.0301189, 0
+Element 51 normal 0.0343602, -0.99941, -0
+Element 52 normal -0.856688, 0.515835, 0
+Element 53 normal 0, 1, -0
+Element 54 normal -0.493061, 0.869995, -0
+Element 55 normal -0.487583, -0.873077, 0
+Element 56 normal -0.865823, -0.50035, -0
+Element 57 normal 0.866019, -0.500011, 0
+Element 58 normal 0.469155, -0.883116, -0
+Element 59 normal 0.509929, 0.860217, 0
+Element 60 normal 0.999967, 0.00812486, -0
+Element 61 normal 0.0122791, -0.999925, 0
+Element 62 normal -0.890083, -0.455798, -0
+Element 63 normal 0.866019, 0.500011, -0
+Element 64 normal 0.865932, 0.500161, -0
+Element 65 normal -0.500011, 0.866019, -0
+Element 66 normal -0.866019, -0.500011, -0
+Element 67 normal 0.500011, -0.866019, -0
+Element 68 normal 0.557418, 0.830232, 0
+Element 69 normal -0.514496, 0.857493, 0
+Element 70 normal -0.875117, 0.483912, 0
+Element 71 normal 0.870496, -0.492175, -0
+Element 72 normal -0.847617, 0.530608, -0
+Element 73 normal 0.865067, 0.501657, -0
+Element 74 normal -0.854272, 0.519826, 0
+Element 75 normal -0.495336, 0.868701, -0
+Element 76 normal -0.497222, -0.867623, 0
+Element 77 normal -0.866019, -0.500011, -0
+Element 78 normal 0.846637, -0.532172, 0
+Element 79 normal 0.495203, -0.868777, -0
+Element 80 normal 0.501748, 0.865014, 0
+Element 81 normal 0.00585791, 0.999983, -0
+Element 82 normal 0.00204457, 0.999998, -0
+Element 83 normal 0.00423042, 0.999991, -0
+Element 84 normal -0.872151, -0.489236, 0
+Element 85 normal 0.867985, 0.496591, -0
+Element 86 normal -0.000200087, -1, -0
+Element 87 normal -0.869705, -0.493571, -0
+Element 88 normal -0.876451, -0.481492, -0
+Element 89 normal 0.549773, 0.835314, 0
+Element 90 normal 0.866019, 0.500011, -0
+Element 91 normal -0.500011, 0.866019, -0
+Element 92 normal -0.865123, -0.50156, -0
+Element 93 normal 0.500011, -0.866019, -0
+Element 94 normal 0.845992, 0.533195, -0
+Element 95 normal 0.0164519, 0.999865, -0
+Element 96 normal 0.877659, 0.479286, -0
+Element 97 normal -0.819163, 0.573561, 0
+Element 98 normal 0.868206, 0.496204, -0
+Element 99 normal 0.87022, 0.492664, -0
+Element 100 normal -0.000720927, -1, 0
+Element 101 normal 0.866896, 0.498488, -0
+Element 102 normal 0.879322, -0.476227, 0
+Element 103 normal 0.947481, 0.319811, 0
+Element 104 normal 0.865758, -0.500463, -0
+Element 105 normal 0.00343224, -0.999994, -0
+Element 106 normal -0.865731, -0.50051, 0
+Element 107 normal 0.866107, -0.499859, -0
+Element 108 normal 0, -1, -0
+Element 109 normal 0.860942, -0.508702, 0
+Element 110 normal 0.996438, -0.0843276, 0
+Element 111 normal 0.0372412, 0.999306, -0
+Element 112 normal -0.509949, -0.860205, 0
+Element 113 normal -0.999554, -0.0298553, -0
+Element 114 normal -0.999488, 0.0319836, -0
+Element 115 normal 0.858573, -0.512691, 0
+Element 116 normal -0.0195466, -0.999809, -0
+Element 117 normal 0.00619823, -0.999981, -0
+Element 118 normal 0.51183, 0.859086, 0
+Element 119 normal 0.999927, 0.0121057, -0
+Element 120 normal 0.999871, -0.0160622, -0
+Element 121 normal -0.491537, 0.870857, -0
+Element 122 normal 0.895112, -0.445842, 0
+Element 123 normal 0.865632, -0.500681, 0
+Element 124 normal -0.103225, 0.994658, -0
+Element 125 normal 0.00179461, -0.999998, 0
+Element 126 normal 0.82322, 0.567723, -0
+Element 127 normal 0.0890176, -0.99603, 0
+Element 128 normal 0.494127, 0.86939, 0
+Element 129 normal -0.450069, 0.892994, -0
+Element 130 normal -0.866106, 0.499861, 0
+Element 131 normal 0.866797, 0.498661, -0
+Element 132 normal -0.503532, -0.863976, 0
+Element 133 normal -0.867048, 0.498225, -0
+Element 134 normal 0.575959, -0.817478, -0
+Element 135 normal -0.868368, -0.495921, 0
+Element 136 normal 0.520534, -0.853841, 0
+Element 137 normal 0.859102, 0.511805, 0
+Element 138 normal -0.511805, 0.859102, 0
+Element 139 normal 0.463393, -0.886153, -0
+Element 140 normal 0.432291, -0.901734, -0
+Element 141 normal 0.870478, 0.492207, 0
+Element 142 normal -0.874428, 0.485156, -0
+Element 143 normal -0.0112123, -0.999937, 0
+Element 144 normal 0.865969, -0.500098, -0
+Element 145 normal -0.870817, 0.491607, 0
+Element 146 normal -0.0201857, 0.999796, -0
+Element 147 normal -0.516603, 0.856225, -0
+Element 148 normal -0.860012, -0.510274, -0
+Element 149 normal 0.498586, -0.866841, -0
+Element 150 normal 0.878165, 0.478357, 0
+Element 151 normal -0.999802, 0.0198926, -0
+Element 152 normal 0, -1, -0
+Element 153 normal 0.999982, 0.00605927, -0
+Element 154 normal 0.994518, -0.104562, -0
+Element 155 normal 0.00143767, 0.999999, 0
+Element 156 normal -0.80907, -0.587712, 0
+Element 157 normal -0.908374, 0.418159, 0
+Element 158 normal -0.0617289, 0.998093, -0
+Element 159 normal 0.914051, 0.405598, -0
+Element 160 normal -0.498588, 0.866839, -0
+Element 161 normal -0.905343, -0.424681, -0
+Element 162 normal 0.427232, -0.904142, -0
+Element 163 normal -0.0653195, 0.997864, -0
+Element 164 normal -0.821373, -0.570392, 0
+Element 165 normal 0.626108, -0.779737, -0
+Element 166 normal -0.875849, 0.482586, 0
+Element 167 normal -0.886272, -0.463165, -0
+Element 168 normal -0.457228, -0.88935, 0
+Element 169 normal -0.182441, -0.983217, -0
+Element 170 normal 0.884097, -0.467303, 0
+Element 171 normal -0.042086, -0.999114, 0
+Element 172 normal 0.126291, 0.991993, -0
+Element 173 normal -0.996907, -0.0785943, -0
+Element 174 normal -0.1434, -0.989665, -0
+Element 175 normal 0.996898, -0.0787025, -0
+Element 176 normal 0.980358, 0.197226, -0
+Element 177 normal 0.874368, 0.485263, 0
+Element 178 normal 0.889768, 0.456414, -0
+Element 179 normal 0.74351, -0.668725, 0
+Element 180 normal 0.0673233, 0.997731, 0
+Element 181 normal 0.752213, -0.65892, -0
+Element 182 normal 0.939042, 0.343802, -0
+Element 183 normal 0.707107, -0.707107, -0
+Element 184 normal 0.707107, 0.707107, -0
+Element 185 normal -0.343802, 0.939042, -0
+Element 186 normal 0.707107, -0.707107, 0
+Element 187 normal -0.939042, -0.343802, -0
+Element 188 normal 0.707107, 0.707107, 0
+Element 189 normal 0.343802, -0.939042, -0
+Element 190 normal 0.988543, -0.150937, 0
+Element 191 normal 0.937482, 0.348033, -0
+Element 192 normal 0.994747, 0.102365, -0
+Element 193 normal 0.163211, 0.986591, -0
+Element 194 normal 0.530192, -0.847878, 0
+Element 195 normal 0.0629186, -0.998019, -0
+Element 196 normal -0.642801, 0.766033, -0
+Element 197 normal -0.580493, 0.814266, -0
+Element 198 normal 0.89267, -0.450711, 0
+Element 199 normal 0.334856, -0.942269, -0
+Element 200 normal 0.555887, 0.831258, 0
+Element 201 normal 0.940985, 0.338447, -0
+Element 202 normal -0.0123702, -0.999923, -0
+Element 203 normal 0, -1, -0
+Element 204 normal 0.801433, -0.598084, -0
+Element 205 normal -0.801433, -0.598084, -0
+Element 206 normal -0.801433, -0.598084, 0
+Element 207 normal 0.801433, -0.598084, -0
+Element 208 normal 0.0175617, -0.999846, 0
+Element 209 normal -0.801433, -0.598084, 0
+Element 210 normal -0.779, -0.627024, 0
+Element 211 normal 0, -1, -0
+Element 212 normal -0.811269, -0.584673, -0
+Element 213 normal -0.82657, -0.562834, -0
+Element 214 normal -0.801433, -0.598084, -0
+Element 215 normal 0.80662, -0.59107, 0
+Element 216 normal -0.816636, -0.577153, 0
+Element 217 normal 0.952401, -0.304848, 0
+Element 218 normal -0.962588, -0.27097, -0
+Element 219 normal -0.92331, -0.384055, -0
+Element 220 normal -0.910921, 0.41258, 0
+Element 221 normal -0.47892, -0.877858, 0
+Element 222 normal -0.239847, 0.970811, -0
+Element 223 normal -0.991029, -0.13365, -0
+Element 224 normal 0.241432, -0.970418, -0
+Element 225 normal 0.978177, 0.207775, -0
+Element 226 normal 0.816337, 0.577576, 0
+Element 227 normal -0.939042, 0.343802, 0
+Element 228 normal -0.343802, -0.939042, 0
+Element 229 normal 0.939042, -0.343802, 0
+Element 230 normal 0.343802, 0.939042, 0
+Element 231 normal 0.562488, -0.826805, -0
+Element 232 normal 0.92812, -0.372282, 0
+Element 233 normal 0.117121, -0.993118, -0
+Element 234 normal 0.95605, 0.293205, -0
+Element 235 normal 0.163977, 0.986464, 0
+Element 236 normal -0.992079, 0.125612, 0
+Element 237 normal -0.146084, -0.989272, 0
+Element 238 normal 0.989272, -0.146084, 0
+Element 239 normal -0.965015, 0.262195, 0
+Element 240 normal -0.17859, 0.983924, -0
+Element 241 normal -0.139023, 0.990289, -0
+Element 242 normal 0.656659, 0.754188, 0
+Element 243 normal -0.0315869, -0.999501, 0
+Element 244 normal 0.87702, -0.480454, 0
+Element 245 normal -0.624392, -0.781111, 0
+Element 246 normal 0.0504675, -0.998726, -0
+Element 247 normal -0.936329, 0.351123, 0
+Done.
+Allocation success.
+MESH ID 1
+Searching bcs for ZoneID 1..
+NODE COUNT 145
+CONTACT MAX PENETRATION RATIO (For Max Load): 0.05
+FRICTION COEFFS 0.000e+00 5.090e-310
+-------------------
+Done
+More than one Rigid Bodies found.
+Start: 0, 0, 0
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_exp/demo_part_2.bdf
+145 nodes and 248 elements found.
+[I] 398 lines readed ...
+Allocating 145 nodes
+Allocating 248 Elements...
+Done.
+Contact Mesh 1. Oriented normals is set to true
+Mesh 1 Start: 0, 0, 0
+Nastran Mesh NodeCount: 145
+Copying 145 nodes 
+Centroid of matrix: -0.000207251, 0.000353454, 0.03
+endl
+Element count: 248done. Creating elements... Global Centroid:0.00241558, 9.13896e-05, 0.0150948
+Writing elements...
+Done. 
+Reorienting normals...
+2D polyline coherence detection failed. Falling back to legacy point-based reorientation.
+2D fallback finished using orient_pt.
+Element 0 normal 0.439678, 0.898155, 0
+Element 1 normal -0.531249, -0.847216, 0
+Element 2 normal -0.862861, 0.505442, 0
+Element 3 normal -0.473804, 0.88063, -0
+Element 4 normal -0.999992, 0.00402411, 0
+Element 5 normal 0.719558, 0.694433, 0
+Element 6 normal -0.993351, 0.115127, -0
+Element 7 normal -0.925488, -0.378778, 0
+Element 8 normal -0.999896, 0.0144129, -0
+Element 9 normal -0.555207, -0.831713, 0
+Element 10 normal 0.800955, 0.598724, -0
+Element 11 normal 0.666095, 0.745867, -0
+Element 12 normal 0.199249, -0.979949, -0
+Element 13 normal 0.34822, 0.937413, -0
+Element 14 normal -0.985092, -0.172027, -0
+Element 15 normal 0.364149, 0.931341, 0
+Element 16 normal 0.7731, -0.634284, 0
+Element 17 normal 0.606889, 0.794787, 0
+Element 18 normal 0.872863, -0.487965, 0
+Element 19 normal -0.998408, 0.0564072, -0
+Element 20 normal -0.197827, 0.980237, -0
+Element 21 normal 0.747861, 0.663855, 0
+Element 22 normal -0.975263, 0.221049, 0
+Element 23 normal 0.0634707, -0.997984, -0
+Element 24 normal -0.651671, 0.758502, 0
+Element 25 normal -0.500768, 0.865581, -0
+Element 26 normal 0.0292102, -0.999573, 0
+Element 27 normal 0.864016, 0.503464, 0
+Element 28 normal 0.631271, -0.775562, 0
+Element 29 normal 0.836761, -0.547569, 0
+Element 30 normal -0.711405, 0.702782, 0
+Element 31 normal 0.299404, 0.954126, 0
+Element 32 normal 0.827609, -0.561306, -0
+Element 33 normal -0.962226, -0.272251, -0
+Element 34 normal 0.872921, 0.487861, -0
+Element 35 normal 0.502292, -0.864698, 0
+Element 36 normal -0.00805877, 0.999968, -0
+Element 37 normal 0.503055, 0.864254, -0
+Element 38 normal -0, 1, 0
+Element 39 normal 0.890811, 0.454374, -0
+Element 40 normal 0.506233, -0.862397, 0
+Element 41 normal 0.871797, 0.489867, 0
+Element 42 normal 0.501748, -0.865014, -0
+Element 43 normal 0.999929, -0.0118945, 0
+Element 44 normal -0.865932, 0.500161, -0
+Element 45 normal 0.838764, 0.544496, -0
+Element 46 normal 0.498434, -0.866928, -0
+Element 47 normal 0.865705, 0.500554, 0
+Element 48 normal 0, 1, -0
+Element 49 normal 0.878879, 0.477044, -0
+Element 50 normal -0.999546, 0.0301189, 0
+Element 51 normal 0.0343602, -0.99941, -0
+Element 52 normal -0.856688, 0.515835, 0
+Element 53 normal 0, 1, -0
+Element 54 normal -0.493061, 0.869995, -0
+Element 55 normal -0.487583, -0.873077, 0
+Element 56 normal -0.865823, -0.50035, -0
+Element 57 normal 0.866019, -0.500011, 0
+Element 58 normal 0.469155, -0.883116, -0
+Element 59 normal 0.509929, 0.860217, 0
+Element 60 normal 0.999967, 0.00812486, -0
+Element 61 normal 0.0122791, -0.999925, 0
+Element 62 normal -0.890083, -0.455798, -0
+Element 63 normal 0.866019, 0.500011, -0
+Element 64 normal 0.865932, 0.500161, -0
+Element 65 normal -0.500011, 0.866019, -0
+Element 66 normal -0.866019, -0.500011, -0
+Element 67 normal 0.500011, -0.866019, -0
+Element 68 normal 0.557418, 0.830232, 0
+Element 69 normal -0.514496, 0.857493, 0
+Element 70 normal -0.875117, 0.483912, 0
+Element 71 normal 0.870496, -0.492175, -0
+Element 72 normal -0.847617, 0.530608, -0
+Element 73 normal 0.865067, 0.501657, -0
+Element 74 normal -0.854272, 0.519826, 0
+Element 75 normal -0.495336, 0.868701, -0
+Element 76 normal -0.497222, -0.867623, 0
+Element 77 normal -0.866019, -0.500011, -0
+Element 78 normal 0.846637, -0.532172, 0
+Element 79 normal 0.495203, -0.868777, -0
+Element 80 normal 0.501748, 0.865014, 0
+Element 81 normal 0.00585791, 0.999983, -0
+Element 82 normal 0.00204457, 0.999998, -0
+Element 83 normal 0.00423042, 0.999991, -0
+Element 84 normal -0.872151, -0.489236, 0
+Element 85 normal 0.867985, 0.496591, -0
+Element 86 normal -0.000200087, -1, -0
+Element 87 normal -0.869705, -0.493571, -0
+Element 88 normal -0.876451, -0.481492, -0
+Element 89 normal 0.549773, 0.835314, 0
+Element 90 normal 0.866019, 0.500011, -0
+Element 91 normal -0.500011, 0.866019, -0
+Element 92 normal -0.865123, -0.50156, -0
+Element 93 normal 0.500011, -0.866019, -0
+Element 94 normal 0.845992, 0.533195, -0
+Element 95 normal 0.0164519, 0.999865, -0
+Element 96 normal 0.877659, 0.479286, -0
+Element 97 normal -0.819163, 0.573561, 0
+Element 98 normal 0.868206, 0.496204, -0
+Element 99 normal 0.87022, 0.492664, -0
+Element 100 normal -0.000720927, -1, 0
+Element 101 normal 0.866896, 0.498488, -0
+Element 102 normal 0.879322, -0.476227, 0
+Element 103 normal 0.947481, 0.319811, 0
+Element 104 normal 0.865758, -0.500463, -0
+Element 105 normal 0.00343224, -0.999994, -0
+Element 106 normal -0.865731, -0.50051, 0
+Element 107 normal 0.866107, -0.499859, -0
+Element 108 normal 0, -1, -0
+Element 109 normal 0.860942, -0.508702, 0
+Element 110 normal 0.996438, -0.0843276, 0
+Element 111 normal 0.0372412, 0.999306, -0
+Element 112 normal -0.509949, -0.860205, 0
+Element 113 normal -0.999554, -0.0298553, -0
+Element 114 normal -0.999488, 0.0319836, -0
+Element 115 normal 0.858573, -0.512691, 0
+Element 116 normal -0.0195466, -0.999809, -0
+Element 117 normal 0.00619823, -0.999981, -0
+Element 118 normal 0.51183, 0.859086, 0
+Element 119 normal 0.999927, 0.0121057, -0
+Element 120 normal 0.999871, -0.0160622, -0
+Element 121 normal -0.491537, 0.870857, -0
+Element 122 normal 0.895112, -0.445842, 0
+Element 123 normal 0.865632, -0.500681, 0
+Element 124 normal -0.103225, 0.994658, -0
+Element 125 normal 0.00179461, -0.999998, 0
+Element 126 normal 0.82322, 0.567723, -0
+Element 127 normal 0.0890176, -0.99603, 0
+Element 128 normal 0.494127, 0.86939, 0
+Element 129 normal -0.450069, 0.892994, -0
+Element 130 normal -0.866106, 0.499861, 0
+Element 131 normal 0.866797, 0.498661, -0
+Element 132 normal -0.503532, -0.863976, 0
+Element 133 normal -0.867048, 0.498225, -0
+Element 134 normal 0.575959, -0.817478, -0
+Element 135 normal -0.868368, -0.495921, 0
+Element 136 normal 0.520534, -0.853841, 0
+Element 137 normal 0.859102, 0.511805, 0
+Element 138 normal -0.511805, 0.859102, 0
+Element 139 normal 0.463393, -0.886153, -0
+Element 140 normal 0.432291, -0.901734, -0
+Element 141 normal 0.870478, 0.492207, 0
+Element 142 normal -0.874428, 0.485156, -0
+Element 143 normal -0.0112123, -0.999937, 0
+Element 144 normal 0.865969, -0.500098, -0
+Element 145 normal -0.870817, 0.491607, 0
+Element 146 normal -0.0201857, 0.999796, -0
+Element 147 normal -0.516603, 0.856225, -0
+Element 148 normal -0.860012, -0.510274, -0
+Element 149 normal 0.498586, -0.866841, -0
+Element 150 normal 0.878165, 0.478357, 0
+Element 151 normal -0.999802, 0.0198926, -0
+Element 152 normal 0, -1, -0
+Element 153 normal 0.999982, 0.00605927, -0
+Element 154 normal 0.994518, -0.104562, -0
+Element 155 normal 0.00143767, 0.999999, 0
+Element 156 normal -0.80907, -0.587712, 0
+Element 157 normal -0.908374, 0.418159, 0
+Element 158 normal -0.0617289, 0.998093, -0
+Element 159 normal 0.914051, 0.405598, -0
+Element 160 normal -0.498588, 0.866839, -0
+Element 161 normal -0.905343, -0.424681, -0
+Element 162 normal 0.427232, -0.904142, -0
+Element 163 normal -0.0653195, 0.997864, -0
+Element 164 normal -0.821373, -0.570392, 0
+Element 165 normal 0.626108, -0.779737, -0
+Element 166 normal -0.875849, 0.482586, 0
+Element 167 normal -0.886272, -0.463165, -0
+Element 168 normal -0.457228, -0.88935, 0
+Element 169 normal -0.182441, -0.983217, -0
+Element 170 normal 0.884097, -0.467303, 0
+Element 171 normal -0.042086, -0.999114, 0
+Element 172 normal 0.126291, 0.991993, -0
+Element 173 normal -0.996907, -0.0785943, -0
+Element 174 normal -0.1434, -0.989665, -0
+Element 175 normal 0.996898, -0.0787025, -0
+Element 176 normal 0.980358, 0.197226, -0
+Element 177 normal 0.874368, 0.485263, 0
+Element 178 normal 0.889768, 0.456414, -0
+Element 179 normal 0.74351, -0.668725, 0
+Element 180 normal 0.0673233, 0.997731, 0
+Element 181 normal 0.752213, -0.65892, -0
+Element 182 normal 0.939042, 0.343802, -0
+Element 183 normal 0.707107, -0.707107, -0
+Element 184 normal 0.707107, 0.707107, -0
+Element 185 normal -0.343802, 0.939042, -0
+Element 186 normal 0.707107, -0.707107, 0
+Element 187 normal -0.939042, -0.343802, -0
+Element 188 normal 0.707107, 0.707107, 0
+Element 189 normal 0.343802, -0.939042, -0
+Element 190 normal 0.988543, -0.150937, 0
+Element 191 normal 0.937482, 0.348033, -0
+Element 192 normal 0.994747, 0.102365, -0
+Element 193 normal 0.163211, 0.986591, -0
+Element 194 normal 0.530192, -0.847878, 0
+Element 195 normal 0.0629186, -0.998019, -0
+Element 196 normal -0.642801, 0.766033, -0
+Element 197 normal -0.580493, 0.814266, -0
+Element 198 normal 0.89267, -0.450711, 0
+Element 199 normal 0.334856, -0.942269, -0
+Element 200 normal 0.555887, 0.831258, 0
+Element 201 normal 0.940985, 0.338447, -0
+Element 202 normal -0.0123702, -0.999923, -0
+Element 203 normal 0, -1, -0
+Element 204 normal 0.801433, -0.598084, -0
+Element 205 normal -0.801433, -0.598084, -0
+Element 206 normal -0.801433, -0.598084, 0
+Element 207 normal 0.801433, -0.598084, -0
+Element 208 normal 0.0175617, -0.999846, 0
+Element 209 normal -0.801433, -0.598084, 0
+Element 210 normal -0.779, -0.627024, 0
+Element 211 normal 0, -1, -0
+Element 212 normal -0.811269, -0.584673, -0
+Element 213 normal -0.82657, -0.562834, -0
+Element 214 normal -0.801433, -0.598084, -0
+Element 215 normal 0.80662, -0.59107, 0
+Element 216 normal -0.816636, -0.577153, 0
+Element 217 normal 0.952401, -0.304848, 0
+Element 218 normal -0.962588, -0.27097, -0
+Element 219 normal -0.92331, -0.384055, -0
+Element 220 normal -0.910921, 0.41258, 0
+Element 221 normal -0.47892, -0.877858, 0
+Element 222 normal -0.239847, 0.970811, -0
+Element 223 normal -0.991029, -0.13365, -0
+Element 224 normal 0.241432, -0.970418, -0
+Element 225 normal 0.978177, 0.207775, -0
+Element 226 normal 0.816337, 0.577576, 0
+Element 227 normal -0.939042, 0.343802, 0
+Element 228 normal -0.343802, -0.939042, 0
+Element 229 normal 0.939042, -0.343802, 0
+Element 230 normal 0.343802, 0.939042, 0
+Element 231 normal 0.562488, -0.826805, -0
+Element 232 normal 0.92812, -0.372282, 0
+Element 233 normal 0.117121, -0.993118, -0
+Element 234 normal 0.95605, 0.293205, -0
+Element 235 normal 0.163977, 0.986464, 0
+Element 236 normal -0.992079, 0.125612, 0
+Element 237 normal -0.146084, -0.989272, 0
+Element 238 normal 0.989272, -0.146084, 0
+Element 239 normal -0.965015, 0.262195, 0
+Element 240 normal -0.17859, 0.983924, -0
+Element 241 normal -0.139023, 0.990289, -0
+Element 242 normal 0.656659, 0.754188, 0
+Element 243 normal -0.0315869, -0.999501, 0
+Element 244 normal 0.87702, -0.480454, 0
+Element 245 normal -0.624392, -0.781111, 0
+Element 246 normal 0.0504675, -0.998726, -0
+Element 247 normal -0.936329, 0.351123, 0
+Done.
+Allocation success.
+MESH ID 2
+Searching bcs for ZoneID 2..
+BC Found for Zone ID: 2
+Applying Velocity 0.000e+00 0.000e+00 -1.000e+00
+-------------------
+new mesh nodecount 1
+Resizing storage
+Allocated meshes: 1
+assigning 
+done 
+New Mesh capacity: 2
+Resizing Node Data
+Old Node count 145, New node count 290, current_node_capacity 0
+New capacity 290
+copying 145 nodes 
+assigning 
+Resizing Element Data
+Copying memory
+Copying 248 elements to offset 248
+Setting vel
+new_nodes_start 145, new_nodes_end 290
+new_elem_start 145, new_elem_end 290
+Updating metadata..
+Done.
+MESH NODE COUNT 290
+Setting contact...
+Mesh Dimension 2
+Done.
+Calulating min element size ...
+Setting remesh size at MIN ELEM SIZE:0.00111115
+Min length: 0.00111115
+Time Step 7.96848e-10
+End Time: 0.01
+FIXED 0 NODES
+VEL  0 NODES
+Allocated BCS: 
+X 0
+Y 0
+Z 0
+Reading contact 
+Element Count 2951
+done
+Imposing BCS
+done
+alpha 3.5001649984e-01
+beta 6.5152149311e-01
+gamma 1.1499835002e+00
+alpha_free 0
+alpha_contact 0
+hg_coeff_free 0
+hg_coeff_contact 0
+av_coeff_div 0
+av_coeff_bulk 0
+log_factor     0
+pspg_scale     0
+p_pspg_bulkfac 0
+J_min          0
+hg_visc        0.1
+hg_stiff       0.1
+Initial Vol: 1.5092e-05
+calc dens
+TOTAL MASS: 1.50923e-05
+TOTAL VOL: 1.50923e-05
+Ckecking
+Inititalizing original bcs
+MAX Contact Surfaces 2
+INITIAL YIELD STRESS: 1.9e+08
+K_pen 9.5e+09; Bulk Modulus: 1.75e+11
+Elem_min_angle20.2454, Elem_max_angle170.902Elem Min Jnorm 0.0091477
+Step 0, Time 0.000000, End Time: 1.0000e-02, Step Time 7.9685e-10
+Ekin: 0, Eint 0Etot 0
+Max V0
+Overall Time0.000851737 seconds
+Elem_min_angle20.2454, Elem_max_angle170.902Elem Min Jnorm 0.0091477

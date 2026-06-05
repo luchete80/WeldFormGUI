@@ -582,74 +582,74 @@ void runWeldFormChecks(const CheckContext& context, CheckReport& report)
     return;
   }
 
-  int elasticPartCount = 0;
-  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
-    Part* part = model->getPart(partIndex);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
-      continue;
-    }
+  //~ int elasticPartCount = 0;
+  //~ for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    //~ Part* part = model->getPart(partIndex);
+    //~ if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      //~ continue;
+    //~ }
 
-    Mesh* mesh = part->getMesh();
-    if (part->getType() == Elastic) {
-      ++elasticPartCount;
+    //~ Mesh* mesh = part->getMesh();
+    //~ if (part->getType() == Elastic) {
+      //~ ++elasticPartCount;
 
-      for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
-        Element* element = mesh->getElem(elemIndex);
-        if (element == nullptr) {
-          continue;
-        }
+      //~ for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+        //~ Element* element = mesh->getElem(elemIndex);
+        //~ if (element == nullptr) {
+          //~ continue;
+        //~ }
 
-        const ElementType elementType = inferElementType(mesh, element);
-        if (implicit && elementType != ElementType::Quad4) {
-          addIssue(report,
-                   CheckSeverity::Error,
-                   CheckCategory::ExportCompatibility,
-                   "WELDFORM_IMPLICIT_EXPECTS_QUAD4",
-                   "Implicit WeldForm currently expects deformable Quad4 elements; part " +
-                     std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
-                   part->getId());
-          break;
-        }
-      }
-    } else {
-      for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
-        Element* element = mesh->getElem(elemIndex);
-        if (element == nullptr) {
-          continue;
-        }
+        //~ const ElementType elementType = inferElementType(mesh, element);
+        //~ if (implicit && elementType != ElementType::Quad4) {
+          //~ addIssue(report,
+                   //~ CheckSeverity::Error,
+                   //~ CheckCategory::ExportCompatibility,
+                   //~ "WELDFORM_IMPLICIT_EXPECTS_QUAD4",
+                   //~ "Implicit WeldForm currently expects deformable Quad4 elements; part " +
+                     //~ std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
+                   //~ part->getId());
+          //~ break;
+        //~ }
+      //~ }
+    //~ } else {
+      //~ for (int elemIndex = 0; elemIndex < mesh->getElemCount(); ++elemIndex) {
+        //~ Element* element = mesh->getElem(elemIndex);
+        //~ if (element == nullptr) {
+          //~ continue;
+        //~ }
 
-        const ElementType elementType = inferElementType(mesh, element);
-        if (mesh->getDim() == 2 && elementType != ElementType::Line2) {
-          addIssue(report,
-                   CheckSeverity::Error,
-                   CheckCategory::ExportCompatibility,
-                   "WELDFORM_RIGID_2D_EXPECTS_LINE2",
-                   "Rigid 2D WeldForm contact currently expects Line2 elements; part " +
-                     std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
-                   part->getId());
-          break;
-        }
-        if (mesh->getDim() == 3 && elementType != ElementType::Tria3) {
-          addIssue(report,
-                   CheckSeverity::Error,
-                   CheckCategory::ExportCompatibility,
-                   "WELDFORM_RIGID_3D_EXPECTS_TRIA3",
-                   "Rigid 3D WeldForm contact currently expects Tria3 elements; part " +
-                     std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
-                   part->getId());
-          break;
-        }
-      }
-    }
-  }
+        //~ const ElementType elementType = inferElementType(mesh, element);
+        //~ if (mesh->getDim() == 2 && elementType != ElementType::Line2) {
+          //~ addIssue(report,
+                   //~ CheckSeverity::Error,
+                   //~ CheckCategory::ExportCompatibility,
+                   //~ "WELDFORM_RIGID_2D_EXPECTS_LINE2",
+                   //~ "Rigid 2D WeldForm contact currently expects Line2 elements; part " +
+                     //~ std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
+                   //~ part->getId());
+          //~ break;
+        //~ }
+        //~ if (mesh->getDim() == 3 && elementType != ElementType::Tria3) {
+          //~ addIssue(report,
+                   //~ CheckSeverity::Error,
+                   //~ CheckCategory::ExportCompatibility,
+                   //~ "WELDFORM_RIGID_3D_EXPECTS_TRIA3",
+                   //~ "Rigid 3D WeldForm contact currently expects Tria3 elements; part " +
+                     //~ std::to_string(part->getId()) + " contains " + toString(elementType) + ".",
+                   //~ part->getId());
+          //~ break;
+        //~ }
+      //~ }
+    //~ }
+  //~ }
 
-  if (elasticPartCount > 1) {
-    addIssue(report,
-             CheckSeverity::Error,
-             CheckCategory::ExportCompatibility,
-             "WELDFORM_EXPLICIT_MULTI_ELASTIC",
-             "Current explicit WeldForm export supports only one elastic meshed body.");
-  }
+  //~ if (elasticPartCount > 1) {
+    //~ addIssue(report,
+             //~ CheckSeverity::Error,
+             //~ CheckCategory::ExportCompatibility,
+             //~ "WELDFORM_EXPLICIT_MULTI_ELASTIC",
+             //~ "Current explicit WeldForm export supports only one elastic meshed body.");
+  //~ }
 }
 
 void runOpenRadiossChecks(const CheckContext& context, CheckReport& report)

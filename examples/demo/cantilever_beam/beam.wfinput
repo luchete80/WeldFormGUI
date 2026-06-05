@@ -1,15 +1,9 @@
 {
+    "Amplitudes": null,
     "BoundaryConditions": [
         {
-            "amplitudeFactor": 1.0,
-            "applyTo": "NodeSet",
-            "dofMask": [
-                true,
-                true,
-                true
-            ],
-            "targetId": 0,
-            "type": "VelocityBC",
+            "id": 1,
+            "setId": 0,
             "value": [
                 0.0,
                 0.0,
@@ -18,15 +12,9 @@
             "valueType": 0
         },
         {
-            "amplitudeFactor": 1.0,
-            "applyTo": "NodeSet",
-            "dofMask": [
-                false,
-                false,
-                true
-            ],
-            "targetId": 1,
-            "type": "VelocityBC",
+            "direction": 2,
+            "id": 2,
+            "setId": 1,
             "value": [
                 0.0,
                 0.0,
@@ -36,11 +24,11 @@
         }
     ],
     "Configuration": {
-        "SPH": {
-            "hFactor": 1.2
-        },
-        "analysisType": "Solid3D",
-        "modelType": "SPH",
+        "cflFactor": 0.3,
+        "domType": "3D",
+        "fixedTS": false,
+        "outTime": 0.0001,
+        "simTime": 0.01,
         "solver": "WeldForm"
     },
     "Contact": [
@@ -55,26 +43,69 @@
             "useGapPenalty": true
         }
     ],
-    "Materials": {
-        "const": [
-            387000000.0,
-            0.154
-        ],
-        "density0": 270000.0,
-        "poissonsRatio": 0.3,
-        "strRange": [
-            0.0,
-            0.65
-        ],
-        "type": "Hollomon",
-        "yieldStress0": 190000000.0,
-        "youngsModulus": 70000000000.0
+    "DomainBlocks": [
+        {
+            "fileName": "beam_part_0.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "InitialConditions": [],
+    "Materials": [
+        {
+            "const": [
+                387000000.0,
+                0.154
+            ],
+            "density0": 270000.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "strRange": [
+                0.0,
+                0.65
+            ],
+            "strdotRange": [
+                0.0,
+                10000000000.0
+            ],
+            "tempRange": [
+                0.0,
+                10000000000.0
+            ],
+            "thermalCond": 0.0,
+            "thermalExp": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "yieldStress0": 190000000.0,
+            "youngsModulus": 70000000000.0
+        }
+    ],
+    "Meshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": false,
+        "enabled": false,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 165.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
     },
-    "NodeSets": [
+    "Sets": [
         {
             "id": 0,
-            "label": "set_0",
-            "nodeIds": [
+            "nodes": [
                 1,
                 2,
                 3,
@@ -187,13 +218,11 @@
                 350,
                 351,
                 352
-            ],
-            "partId": 0
+            ]
         },
         {
             "id": 1,
-            "label": "set_1",
-            "nodeIds": [
+            "nodes": [
                 6,
                 8,
                 75,
@@ -202,84 +231,7 @@
                 78,
                 79,
                 80
-            ],
-            "partId": 0
+            ]
         }
-    ],
-    "Remeshing": {
-        "beta": 4.0,
-        "dampFactor": 0.02,
-        "debug": false,
-        "enabled": false,
-        "epsRef": 1.0,
-        "mapAcc": false,
-        "mapVel": false,
-        "maxCount": 100,
-        "maxElemAngle": 165.0,
-        "maxFrac": 2.0,
-        "maxStrain": 1000000.0,
-        "minElemAngle": 15.0,
-        "minFrac": 2.0,
-        "minStrain": -1.0,
-        "transitionAngle": 15.0,
-        "type": 0
-    },
-    "Steps": [
-        {
-            "artifViscAlpha": 1.0,
-            "artifViscBeta": 0.0,
-            "autoTS": [
-                false,
-                false,
-                false
-            ],
-            "axiSymmVol": false,
-            "cflFactor": 0.3,
-            "elemLengthFraction": 0.2,
-            "fixedTS": false,
-            "id": 0,
-            "implicit": {
-                "divTol": 1.0,
-                "forceTol": 10.0,
-                "maxIter": 200,
-                "omegaP": 0.1,
-                "omegaV": 0.4,
-                "pressTol": 10.0,
-                "springFactor": 1e-07,
-                "springMode": 1,
-                "springStiffness": 0.0,
-                "timeStepGrowthFactor": 1.2,
-                "type": "Picard",
-                "useSprings": false,
-                "velTol": 0.05
-            },
-            "kernelGradCorr": false,
-            "name": "Step-1",
-            "nproc": 1,
-            "outTime": 0.0001,
-            "simTime": 0.01,
-            "type": "Explicit"
-        }
-    ],
-    "model": {
-        "parts": [
-            {
-                "geometry": {
-                    "origin": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "source": "beam_part_0.step"
-                },
-                "id": 0,
-                "isRigid": false,
-                "mesh": {
-                    "source": "beam_part_0.bdf"
-                },
-                "name": "",
-                "sectionId": -1
-            }
-        ]
-    }
+    ]
 }

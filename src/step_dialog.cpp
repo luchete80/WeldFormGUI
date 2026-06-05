@@ -14,6 +14,30 @@ int springModeComboIndex(int spring_mode) {
 int springModeFromComboIndex(int combo_index) {
   return combo_index == 1 ? 321 : 1;
 }
+
+int implicitSolverTypeComboIndex(const std::string& implicit_type) {
+  if (implicit_type == "hybrid")
+    return 1;
+  if (implicit_type == "newton")
+    return 2;
+  if (implicit_type == "nr")
+    return 3;
+  return 0;
+}
+
+const char* implicitSolverTypeFromComboIndex(int combo_index) {
+  switch (combo_index) {
+    case 1:
+      return "hybrid";
+    case 2:
+      return "newton";
+    case 3:
+      return "nr";
+    case 0:
+    default:
+      return "picard";
+  }
+}
 }
 
 void StepDialog::InitFromStep(Step *step) {
@@ -92,9 +116,16 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
 
   if (m_step_type == ImplicitStep && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
     static const char* spring_mode_items[] = {"1 node", "3-2-1"};
+    static const char* implicit_solver_items[] = {"Picard", "Hybrid", "Newton", "NR"};
     int spring_mode_index = springModeComboIndex(m_springMode);
+    int implicit_solver_index = implicitSolverTypeComboIndex(m_implicit_type);
 
-    ImGui::InputText("Type", m_implicit_type, IM_ARRAYSIZE(m_implicit_type));
+    if (ImGui::Combo("Type", &implicit_solver_index, implicit_solver_items, IM_ARRAYSIZE(implicit_solver_items))) {
+      std::strncpy(m_implicit_type,
+                   implicitSolverTypeFromComboIndex(implicit_solver_index),
+                   IM_ARRAYSIZE(m_implicit_type) - 1);
+      m_implicit_type[IM_ARRAYSIZE(m_implicit_type) - 1] = '\0';
+    }
     ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
@@ -103,6 +134,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
+    ImGui::TextDisabled("Type is exported as Configuration.solver.type for implicit inputs.");
 
     ImGui::Separator();
     ImGui::Checkbox("Use weak springs", &m_useWeakSprings);

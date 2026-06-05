@@ -11,6 +11,7 @@ protected:
   TopoDS_Shape *m_shape;       // Lógica CAD
   std::string m_fileName;   // el STEP/IGES original
   double3 m_origin;
+  bool m_preferHexaTransfinite = false;
   
   
 public:
@@ -61,6 +62,8 @@ public:
   void setOrigin(double x, double y, double z){m_origin = make_double3(x, y, z);}
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
+  bool prefersHexaTransfinite() const { return m_preferHexaTransfinite; }
+  void setPreferHexaTransfinite(bool prefer) { m_preferHexaTransfinite = prefer; }
   
   void genPlane(const double &edgelength);
   //bool ExportSTEP(const std::string& filename);

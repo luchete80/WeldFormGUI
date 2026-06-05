@@ -688,6 +688,8 @@ void Mesh::genFromGmshModel() {
             for(std::size_t j = 0; j < elemTags[i].size(); j++) {
                 if (elemDim == 0)
                     continue;
+                if (max_dim == 3 && elemDim < 3)
+                    continue;
 
                 std::vector<int> connectivity;
                 
@@ -1370,7 +1372,10 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << std::setw(8) << elem->getNodeId(4)
                     << std::setw(8) << elem->getNodeId(5)
                     << std::endl;
-            // Continuación para nodos 7 y 8 si es necesario
+            outfile << std::setw(8) << ""
+                    << std::setw(8) << elem->getNodeId(6)
+                    << std::setw(8) << elem->getNodeId(7)
+                    << std::endl;
             chexaCount++;
         }
     }

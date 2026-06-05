@@ -1,0 +1,327 @@
+Log initialized: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/log.txt
+alpha_free 0
+alpha_contact 0
+hg_coeff_free 0
+hg_coeff_contact 0
+av_coeff_div 0
+av_coeff_bulk 0
+log_factor     0
+pspg_scale     0
+p_pspg_bulkfac 0
+J_min          0
+hg_visc        0.1
+hg_stiff       0.1
+Step Time0.00569242 seconds
+CPU Overall Time0.00730619 seconds
+Plastic Strain energy 0
+Step Time0.117648 seconds
+CPU Overall Time0.691067 seconds
+Plastic Strain energy 0
+Step Time0.404557 seconds
+CPU Overall Time1.5926 seconds
+Plastic Strain energy 0
+Step Time0.232251 seconds
+CPU Overall Time2.5555 seconds
+Plastic Strain energy 0
+Rate' in Stress Calc: 1e+06
+Min strain rate 'minStrRate' in Stress Calc: 1e+06
+Plastic Heat Fraction Coeff: 0.9
+STRESS UPDATE IF UPDATED AT WARMUP FROM MAPPING
+BLEND STRESSES AT WARMUP IS ON 
+MESH INTERVAL: 0
+REMESH ENABLED: false
+MIN & MAX ELEMENT ANGLES: 15, 165
+REMESH PARAMETERS: 
+m_remesh_min_pl_strain-1
+m_remesh_max_pl_strain1e+06
+Element Map Method is CLOSEST ELEMENT
+PRESSURE ALGORITHM IS Hybrid-FBAR
+Number of threads used: 1np 1
+Thread 
+Threads used: 1, np parameter (via [Config]{Nproc})
+Reading Domain type
+Domain type: File
+Reading Domain from Input file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_part_0.bdf
+Extension bdf
+Creating domain from Nastran file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_part_0.bdf
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_part_0.bdf
+5824 nodes and 4641 elements found.
+[Nastran] CHEXA detected. Tetra/shell/beam elements are ignored for solid import.
+[I] 15110 lines readed ...
+Allocating 5824 nodes
+Allocating 4641 Elements...
+Done.
+Setting explicit dimensions for 5824nodes and 3dim
+setting deriv allocation size of 111384
+mdim3 8 4641 1
+ ALLOCATING HOURGLASS 111384
+Allocating 5824 nodes 
+Allocating 4641 elements, node x element: 8
+Setting elements per node 
+Node 12 found in element 1428
+Node 12 found in element 1785
+Allocating 4641 and 8nodes x elem
+COPYING 37128 element nodes 
+Done
+Size of Nodal shared Elements vector 37128
+Total orphan nodes: 0
+Node Elemets set. 
+[Nastran] Orphan nodes: 0
+[Nastran] Bounding box: xmin=0 xmax=0.1 ymin=0 ymax=0.012 zmin=0 zmax=0.024
+Node Size: 5824
+Element Size: 4641
+Executable variant: full
+Node limit: none
+Density..
+Setting density
+Done.
+Creating Material..:
+Type: Hollomon
+eps_0, 2.71e-03 eps_1 9.86e-03
+Hollomon Material Constants, K: 3.87e+08, n: 0.154
+eps_0, 2.71e-03 eps_1 9.86e-03
+Done.
+Node set 0 has 112 nodes (input convention: bdf): 0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351
+  bbox min = (0, 0, 0), max = (0, 0.012, 0.024), centroid = (0, 0.0060005, 0.0120001)
+  input node 1 -> internal 0 -> (0, 0, 0)
+  input node 2 -> internal 1 -> (0, 0, 0.024)
+  input node 3 -> internal 2 -> (0, 0.012, 0)
+  input node 4 -> internal 3 -> (0, 0.012, 0.024)
+  input node 9 -> internal 8 -> (0, 0, 0.001846)
+  input node 10 -> internal 9 -> (0, 0, 0.003692)
+  input node 11 -> internal 10 -> (0, 0, 0.005538)
+  input node 12 -> internal 11 -> (0, 0, 0.007385)
+  input node 13 -> internal 12 -> (0, 0, 0.009231)
+  input node 14 -> internal 13 -> (0, 0, 0.01108)
+  input node 15 -> internal 14 -> (0, 0, 0.01292)
+  input node 16 -> internal 15 -> (0, 0, 0.01477)
+  input node 17 -> internal 16 -> (0, 0, 0.01662)
+  input node 18 -> internal 17 -> (0, 0, 0.01846)
+  input node 19 -> internal 18 -> (0, 0, 0.02031)
+  input node 20 -> internal 19 -> (0, 0, 0.02215)
+  input node 21 -> internal 20 -> (0, 0.001714, 0)
+  input node 22 -> internal 21 -> (0, 0.003429, 0)
+  input node 23 -> internal 22 -> (0, 0.005143, 0)
+  input node 24 -> internal 23 -> (0, 0.006857, 0)
+  input node 25 -> internal 24 -> (0, 0.008571, 0)
+  input node 26 -> internal 25 -> (0, 0.01029, 0)
+  input node 27 -> internal 26 -> (0, 0.012, 0.001846)
+  input node 28 -> internal 27 -> (0, 0.012, 0.003692)
+  input node 29 -> internal 28 -> (0, 0.012, 0.005538)
+  input node 30 -> internal 29 -> (0, 0.012, 0.007385)
+  input node 31 -> internal 30 -> (0, 0.012, 0.009231)
+  input node 32 -> internal 31 -> (0, 0.012, 0.01108)
+  input node 33 -> internal 32 -> (0, 0.012, 0.01292)
+  input node 34 -> internal 33 -> (0, 0.012, 0.01477)
+  input node 35 -> internal 34 -> (0, 0.012, 0.01662)
+  input node 36 -> internal 35 -> (0, 0.012, 0.01846)
+  input node 37 -> internal 36 -> (0, 0.012, 0.02031)
+  input node 38 -> internal 37 -> (0, 0.012, 0.02215)
+  input node 39 -> internal 38 -> (0, 0.001714, 0.024)
+  input node 40 -> internal 39 -> (0, 0.003429, 0.024)
+  input node 41 -> internal 40 -> (0, 0.005143, 0.024)
+  input node 42 -> internal 41 -> (0, 0.006857, 0.024)
+  input node 43 -> internal 42 -> (0, 0.008571, 0.024)
+  input node 44 -> internal 43 -> (0, 0.01029, 0.024)
+  input node 281 -> internal 280 -> (0, 0.001714, 0.001846)
+  input node 282 -> internal 281 -> (0, 0.003429, 0.001846)
+  input node 283 -> internal 282 -> (0, 0.005143, 0.001846)
+  input node 284 -> internal 283 -> (0, 0.006857, 0.001846)
+  input node 285 -> internal 284 -> (0, 0.008571, 0.001846)
+  input node 286 -> internal 285 -> (0, 0.01029, 0.001846)
+  input node 287 -> internal 286 -> (0, 0.001714, 0.003692)
+  input node 288 -> internal 287 -> (0, 0.003429, 0.003692)
+  input node 289 -> internal 288 -> (0, 0.005143, 0.003692)
+  input node 290 -> internal 289 -> (0, 0.006857, 0.003692)
+  input node 291 -> internal 290 -> (0, 0.008571, 0.003692)
+  input node 292 -> internal 291 -> (0, 0.01029, 0.003692)
+  input node 293 -> internal 292 -> (0, 0.001714, 0.005538)
+  input node 294 -> internal 293 -> (0, 0.003429, 0.005538)
+  input node 295 -> internal 294 -> (0, 0.005143, 0.005538)
+  input node 296 -> internal 295 -> (0, 0.006857, 0.005538)
+  input node 297 -> internal 296 -> (0, 0.008571, 0.005538)
+  input node 298 -> internal 297 -> (0, 0.01029, 0.005538)
+  input node 299 -> internal 298 -> (0, 0.001714, 0.007385)
+  input node 300 -> internal 299 -> (0, 0.003429, 0.007385)
+  input node 301 -> internal 300 -> (0, 0.005143, 0.007385)
+  input node 302 -> internal 301 -> (0, 0.006857, 0.007385)
+  input node 303 -> internal 302 -> (0, 0.008571, 0.007385)
+  input node 304 -> internal 303 -> (0, 0.01029, 0.007385)
+  input node 305 -> internal 304 -> (0, 0.001714, 0.009231)
+  input node 306 -> internal 305 -> (0, 0.003429, 0.009231)
+  input node 307 -> internal 306 -> (0, 0.005143, 0.009231)
+  input node 308 -> internal 307 -> (0, 0.006857, 0.009231)
+  input node 309 -> internal 308 -> (0, 0.008571, 0.009231)
+  input node 310 -> internal 309 -> (0, 0.01029, 0.009231)
+  input node 311 -> internal 310 -> (0, 0.001714, 0.01108)
+  input node 312 -> internal 311 -> (0, 0.003429, 0.01108)
+  input node 313 -> internal 312 -> (0, 0.005143, 0.01108)
+  input node 314 -> internal 313 -> (0, 0.006857, 0.01108)
+  input node 315 -> internal 314 -> (0, 0.008571, 0.01108)
+  input node 316 -> internal 315 -> (0, 0.01029, 0.01108)
+  input node 317 -> internal 316 -> (0, 0.001714, 0.01292)
+  input node 318 -> internal 317 -> (0, 0.003429, 0.01292)
+  input node 319 -> internal 318 -> (0, 0.005143, 0.01292)
+  input node 320 -> internal 319 -> (0, 0.006857, 0.01292)
+  input node 321 -> internal 320 -> (0, 0.008571, 0.01292)
+  input node 322 -> internal 321 -> (0, 0.01029, 0.01292)
+  input node 323 -> internal 322 -> (0, 0.001714, 0.01477)
+  input node 324 -> internal 323 -> (0, 0.003429, 0.01477)
+  input node 325 -> internal 324 -> (0, 0.005143, 0.01477)
+  input node 326 -> internal 325 -> (0, 0.006857, 0.01477)
+  input node 327 -> internal 326 -> (0, 0.008571, 0.01477)
+  input node 328 -> internal 327 -> (0, 0.01029, 0.01477)
+  input node 329 -> internal 328 -> (0, 0.001714, 0.01662)
+  input node 330 -> internal 329 -> (0, 0.003429, 0.01662)
+  input node 331 -> internal 330 -> (0, 0.005143, 0.01662)
+  input node 332 -> internal 331 -> (0, 0.006857, 0.01662)
+  input node 333 -> internal 332 -> (0, 0.008571, 0.01662)
+  input node 334 -> internal 333 -> (0, 0.01029, 0.01662)
+  input node 335 -> internal 334 -> (0, 0.001714, 0.01846)
+  input node 336 -> internal 335 -> (0, 0.003429, 0.01846)
+  input node 337 -> internal 336 -> (0, 0.005143, 0.01846)
+  input node 338 -> internal 337 -> (0, 0.006857, 0.01846)
+  input node 339 -> internal 338 -> (0, 0.008571, 0.01846)
+  input node 340 -> internal 339 -> (0, 0.01029, 0.01846)
+  input node 341 -> internal 340 -> (0, 0.001714, 0.02031)
+  input node 342 -> internal 341 -> (0, 0.003429, 0.02031)
+  input node 343 -> internal 342 -> (0, 0.005143, 0.02031)
+  input node 344 -> internal 343 -> (0, 0.006857, 0.02031)
+  input node 345 -> internal 344 -> (0, 0.008571, 0.02031)
+  input node 346 -> internal 345 -> (0, 0.01029, 0.02031)
+  input node 347 -> internal 346 -> (0, 0.001714, 0.02215)
+  input node 348 -> internal 347 -> (0, 0.003429, 0.02215)
+  input node 349 -> internal 348 -> (0, 0.005143, 0.02215)
+  input node 350 -> internal 349 -> (0, 0.006857, 0.02215)
+  input node 351 -> internal 350 -> (0, 0.008571, 0.02215)
+  input node 352 -> internal 351 -> (0, 0.01029, 0.02215)
+Node set 1 has 8 nodes (input convention: bdf): 5, 7, 74, 75, 76, 77, 78, 79
+  bbox min = (0.1, 0, 0.024), max = (0.1, 0.012, 0.024), centroid = (0.1, 0.0060005, 0.024)
+  input node 6 -> internal 5 -> (0.1, 0, 0.024)
+  input node 8 -> internal 7 -> (0.1, 0.012, 0.024)
+  input node 75 -> internal 74 -> (0.1, 0.001714, 0.024)
+  input node 76 -> internal 75 -> (0.1, 0.003429, 0.024)
+  input node 77 -> internal 76 -> (0.1, 0.005143, 0.024)
+  input node 78 -> internal 77 -> (0.1, 0.006857, 0.024)
+  input node 79 -> internal 78 -> (0.1, 0.008571, 0.024)
+  input node 80 -> internal 79 -> (0.1, 0.01029, 0.024)
+Reading Boundary Conditions ...
+Boundary condition id 1 resolved to node set 0
+Boundary condition id 2 resolved to node set 1
+done. Face count: 15034
+Total External Nodal Area: 7.7760e-03, external nodes: 2224
+Done
+Setting contact...
+Calulating min element size ...
+Setting remesh size at MIN ELEM SIZE:0.00171
+Min length: 0.00171
+Time Step 1.10367e-06
+End Time: 0.01
+Applying BC from setId 0 to nodes: 0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351
+336 nodal BC entries applied from setId 0
+Applying BC from setId 1 to nodes: 5, 7, 74, 75, 76, 77, 78, 79
+8 nodal BC entries applied from setId 1
+FIXED 0 NODES
+VEL  0 NODES
+Allocated BCS: 
+X 112
+Y 112
+Z 120
+Reading contact 
+Element Count 4641
+Starting explicit Chung-Hulbert solver
+[Solve] begin: elems=4641, nodes=5824, dim=3, nodxelem=8
+[Solve] AssignMatAddress
+[Solve] material addresses done
+Imposing BCS
+[Solve] InitValues
+[InitValues] zeroing element history, elems=4641
+[InitValues] assigning yield stress
+[InitValues] done
+[Solve] InitValues done
+[Solve] ImposeBCV dim 0 count=112
+[Solve] ImposeBCV dim 1 count=112
+[Solve] ImposeBCV dim 2 count=120
+[Solve] initial BCs done
+alpha 3.5001649984e-01
+beta 6.5152149311e-01
+gamma 1.1499835002e+00
+alpha_free 0
+alpha_contact 0
+hg_coeff_free 0
+hg_coeff_contact 0
+av_coeff_div 0
+av_coeff_bulk 0
+log_factor     0
+pspg_scale     0
+p_pspg_bulkfac 0
+J_min          0
+hg_visc        0.1
+hg_stiff       0.1
+Initial Vol: 2.8800e-05
+calc dens
+TOTAL MASS: 7.776
+TOTAL VOL: 2.88e-05
+Ckecking
+Inititalizing original bcs
+MAX Contact Surfaces -1
+INITIAL YIELD STRESS: 1.9e+08
+K_pen 9.5e+09; Bulk Modulus: 5.83333e+10
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+Step 0, Time 0.000000, End Time: 1.0000e-02, Step Time 1.1037e-06
+Ekin: 0, Eint 0Etot 0
+Max V0
+Overall Time0.00161377 seconds
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+step time 
+WRITING 
+MAX DISP 0.000110785 0.00016754 0.00101286
+Step Time0.00569242 seconds
+CPU Overall Time0.00730619 seconds
+Plastic Strain energy 0
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_00000.vtk
+DONE writing VTK.
+Step 100, Time 0.000086, End Time: 1.0000e-02, Step Time 6.8124e-07
+Ekin: 133.694, Eint 2988.34Etot 3122.03
+Max V18.7734
+Overall Time0.57342 seconds
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+step time 
+WRITING 
+MAX DISP 0.016259 0.0211256 0.00480143
+Step Time0.117648 seconds
+CPU Overall Time0.691067 seconds
+Plastic Strain energy 0
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_00001.vtk
+DONE writing VTK.
+Step 200, Time 0.000151, End Time: 1.0000e-02, Step Time 6.7646e-07
+Ekin: 144.712, Eint 4314.38Etot 4459.09
+Max V18.7138
+Overall Time1.18805 seconds
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+step time 
+WRITING 
+MAX DISP 0.0243723 0.0227841 0.00800415
+Step Time0.404557 seconds
+CPU Overall Time1.5926 seconds
+Plastic Strain energy 0
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_00002.vtk
+DONE writing VTK.
+Step 300, Time 0.000213, End Time: 1.0000e-02, Step Time 5.4007e-07
+Ekin: 135.133, Eint 6009.47Etot 6144.6
+Max V17.2553
+Overall Time1.80675 seconds
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+Step 400, Time 0.000273, End Time: 1.0000e-02, Step Time 6.7564e-07
+Ekin: 149.515, Eint 7605.68Etot 7755.2
+Max V17.994
+Overall Time2.32325 seconds
+Elem_min_angle0, Elem_max_angle180Elem Min Jnorm 0
+step time 
+WRITING 
+MAX DISP 0.0232008 0.0240439 0.00757912
+Step Time0.232251 seconds
+CPU Overall Time2.5555 seconds
+Plastic Strain energy 0
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/cantilever_beam/beam_00003.vtk
+DONE writing VTK.
