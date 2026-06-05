@@ -447,6 +447,33 @@ const char* symmetryAxisCoordinateName(int axis)
   }
 }
 
+void rotateGeometryFromPositiveZ(Geom* geom, double dirX, double dirY, double dirZ)
+{
+  if (geom == nullptr) {
+    return;
+  }
+
+  double direction[3] = {dirX, dirY, dirZ};
+  if (vtkMath::Norm(direction) <= 1.0e-12) {
+    return;
+  }
+  vtkMath::Normalize(direction);
+
+  const double zAxis[3] = {0.0, 0.0, 1.0};
+  double rotationAxis[3] = {0.0, 0.0, 0.0};
+  vtkMath::Cross(zAxis, direction, rotationAxis);
+  const double dotValue = std::max(-1.0, std::min(1.0, vtkMath::Dot(zAxis, direction)));
+  const double axisNorm = vtkMath::Norm(rotationAxis);
+
+  if (axisNorm > 1.0e-12) {
+    vtkMath::Normalize(rotationAxis);
+    geom->Rotate(vtkMath::DegreesFromRadians(std::acos(dotValue)),
+                 rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+  } else if (dotValue < 0.0) {
+    geom->Rotate(180.0, 1.0, 0.0, 0.0);
+  }
+}
+
 int nextAvailableSectionId(Model* model)
 {
   if (model == nullptr) {
@@ -2758,7 +2785,25 @@ bool Editor::rotatePartGeometry(Part* part,
   }
 
   Geom* geom = part->getGeom();
-  if (!geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ)) {
+  double rotationCenter[3] = {0.0, 0.0, 0.0};
+  bool hasRotationCenter = geom->getMassCenter(rotationCenter[0],
+                                               rotationCenter[1],
+                                               rotationCenter[2]);
+  if (!hasRotationCenter) {
+    hasRotationCenter = geom->getBoundingBoxCenter(rotationCenter[0],
+                                                   rotationCenter[1],
+                                                   rotationCenter[2]);
+  }
+  const bool rotated = hasRotationCenter
+    ? geom->RotateAroundPoint(angleDeg,
+                              axisDirX,
+                              axisDirY,
+                              axisDirZ,
+                              rotationCenter[0],
+                              rotationCenter[1],
+                              rotationCenter[2])
+    : geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ);
+  if (!rotated) {
     return false;
   }
 
@@ -5230,7 +5275,7 @@ void Editor::drawGui() {
             ImGui::Combo("Axis", &rotate_axis,
                          rotate_axis_items,
                          IM_ARRAYSIZE(rotate_axis_items));
-            ImGui::TextDisabled("Pivot: geometry origin");
+            ImGui::TextDisabled("Pivot: part center");
 
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 bool close_popup = true;
@@ -6332,6 +6377,8 @@ void Editor::drawGui() {
         static double cylinder_angle_deg = 360.0;
         static int cylinder_direction = 4;
         static int plane_direction = 4;
+        static bool plane_use_custom_normal = false;
+        static double plane_custom_normal[] = {0.0, 0.0, 1.0};
         std::string label[] = {"x ", "y ", "z "};
         bool show_size[] = {true,true,true};
         
@@ -6374,12 +6421,19 @@ void Editor::drawGui() {
             ImGui::InputDouble("sweep deg ", &cylinder_angle_deg, 1.0f, 10.0f, "%.1f");
             cylinder_angle_deg = std::max(1.0, std::min(cylinder_angle_deg, 360.0));
         } else if (is_3d_domain && item_current == 2) {
+            ImGui::Checkbox("custom normal", &plane_use_custom_normal);
+            if (!plane_use_custom_normal) {
             static const char* plane_direction_items[] = {
                 "+X", "-X", "+Y", "-Y", "+Z", "-Z"
             };
             ImGui::Combo("normal", &plane_direction,
                          plane_direction_items,
                          IM_ARRAYSIZE(plane_direction_items));
+            } else {
+              ImGui::InputDouble("nx ", &plane_custom_normal[0], 0.01f, 1.0f, "%.4f");
+              ImGui::InputDouble("ny ", &plane_custom_normal[1], 0.01f, 1.0f, "%.4f");
+              ImGui::InputDouble("nz ", &plane_custom_normal[2], 0.01f, 1.0f, "%.4f");
+            }
         }
 
         static float vec4a[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
@@ -6504,10 +6558,18 @@ void Editor::drawGui() {
                   }
                   geo->LoadCylinder(size[0],
                                     size[2],
-                                    cylinder_angle_deg,
-                                    axis_dir_x,
-                                    axis_dir_y,
-                                    axis_dir_z);
+                                    cylinder_angle_deg);
+                  if (axis_dir_x > 0.5) {
+                    geo->Rotate(90.0, 0.0, 1.0, 0.0);
+                  } else if (axis_dir_x < -0.5) {
+                    geo->Rotate(-90.0, 0.0, 1.0, 0.0);
+                  } else if (axis_dir_y > 0.5) {
+                    geo->Rotate(-90.0, 1.0, 0.0, 0.0);
+                  } else if (axis_dir_y < -0.5) {
+                    geo->Rotate(90.0, 1.0, 0.0, 0.0);
+                  } else if (axis_dir_z < -0.5) {
+                    geo->Rotate(180.0, 1.0, 0.0, 0.0);
+                  }
                   geo->setPreferHexaTransfinite(false);
                   if (std::abs(origin[0]) > 1.0e-12 ||
                       std::abs(origin[1]) > 1.0e-12 ||
@@ -6524,26 +6586,33 @@ void Editor::drawGui() {
               if (is_3d_domain && item_current == 2) { // PLANE
                 if (size[0] > 0.0 && size[1] > 0.0){
                   geo->LoadRectangle(size[0], size[1], origin[0], origin[1], origin[2]);
-                  switch (plane_direction) {
-                    case 0:
-                      geo->Rotate(-90.0, 0.0, 1.0, 0.0);
-                      break;
-                    case 1:
-                      geo->Rotate(90.0, 0.0, 1.0, 0.0);
-                      break;
-                    case 2:
-                      geo->Rotate(90.0, 1.0, 0.0, 0.0);
-                      break;
-                    case 3:
-                      geo->Rotate(-90.0, 1.0, 0.0, 0.0);
-                      break;
-                    case 4:
-                      break;
-                    case 5:
-                      geo->Rotate(180.0, 1.0, 0.0, 0.0);
-                      break;
-                    default:
-                      break;
+                  if (plane_use_custom_normal) {
+                    rotateGeometryFromPositiveZ(geo,
+                                                plane_custom_normal[0],
+                                                plane_custom_normal[1],
+                                                plane_custom_normal[2]);
+                  } else {
+                    switch (plane_direction) {
+                      case 0:
+                        geo->Rotate(-90.0, 0.0, 1.0, 0.0);
+                        break;
+                      case 1:
+                        geo->Rotate(90.0, 0.0, 1.0, 0.0);
+                        break;
+                      case 2:
+                        geo->Rotate(90.0, 1.0, 0.0, 0.0);
+                        break;
+                      case 3:
+                        geo->Rotate(-90.0, 1.0, 0.0, 0.0);
+                        break;
+                      case 4:
+                        break;
+                      case 5:
+                        geo->Rotate(180.0, 1.0, 0.0, 0.0);
+                        break;
+                      default:
+                        break;
+                    }
                   }
                   geo->setPreferHexaTransfinite(false);
                   created = true;

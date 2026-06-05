@@ -26,7 +26,9 @@
 #include <BRepBuilderAPI_Transform.hxx> // Necesario para transformaciones
 #include <gp_Trsf.hxx>                 // Necesario para definición de transformaciones
 #include <BRepBndLib.hxx>
+#include <BRepGProp.hxx>
 #include <Bnd_Box.hxx>
+#include <GProp_GProps.hxx>
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
@@ -156,6 +158,96 @@ bool Geom::Rotate(double angleDeg,
     return true;
 }
 
+bool Geom::RotateAroundPoint(double angleDeg,
+                             double axisDirX,
+                             double axisDirY,
+                             double axisDirZ,
+                             double pivotX,
+                             double pivotY,
+                             double pivotZ){
+    if (!m_shape) {
+        std::cerr << "Error: No Shape to rotate." << std::endl;
+        return false;
+    }
+
+    const double directionNorm = std::sqrt(axisDirX * axisDirX +
+                                           axisDirY * axisDirY +
+                                           axisDirZ * axisDirZ);
+    if (directionNorm <= 1.0e-12) {
+        std::cerr << "Error: rotation axis must be non-zero." << std::endl;
+        return false;
+    }
+
+    const double angleRad = angleDeg * kPi / 180.0;
+    gp_Trsf tr;
+    tr.SetRotation(gp_Ax1(gp_Pnt(pivotX, pivotY, pivotZ),
+                          gp_Dir(axisDirX, axisDirY, axisDirZ)),
+                   angleRad);
+
+    BRepBuilderAPI_Transform transformer(*m_shape, tr, true);
+    TopoDS_Shape rotatedShape = transformer.Shape();
+    if (rotatedShape.IsNull()) {
+        std::cerr << "Error: rotation transformation failed." << std::endl;
+        return false;
+    }
+
+    *m_shape = rotatedShape;
+
+    gp_Pnt originPoint(m_origin.x, m_origin.y, m_origin.z);
+    originPoint.Transform(tr);
+    m_origin.x = originPoint.X();
+    m_origin.y = originPoint.Y();
+    m_origin.z = originPoint.Z();
+    return true;
+}
+
+bool Geom::getBoundingBoxCenter(double& centerX, double& centerY, double& centerZ) const
+{
+    if (!m_shape || m_shape->IsNull()) {
+        return false;
+    }
+
+    Bnd_Box bbox;
+    BRepBndLib::Add(*m_shape, bbox);
+
+    double xMin = 0.0, yMin = 0.0, zMin = 0.0;
+    double xMax = 0.0, yMax = 0.0, zMax = 0.0;
+    bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+
+    centerX = 0.5 * (xMin + xMax);
+    centerY = 0.5 * (yMin + yMax);
+    centerZ = 0.5 * (zMin + zMax);
+    return true;
+}
+
+bool Geom::getMassCenter(double& centerX, double& centerY, double& centerZ) const
+{
+    if (!m_shape || m_shape->IsNull()) {
+        return false;
+    }
+
+    GProp_GProps props;
+    const TopAbs_ShapeEnum shapeType = m_shape->ShapeType();
+
+    if (shapeType == TopAbs_SOLID || shapeType == TopAbs_COMPSOLID) {
+        BRepGProp::VolumeProperties(*m_shape, props);
+    } else if (shapeType == TopAbs_FACE || shapeType == TopAbs_SHELL) {
+        BRepGProp::SurfaceProperties(*m_shape, props);
+    } else {
+        BRepGProp::LinearProperties(*m_shape, props);
+    }
+
+    if (props.Mass() <= 1.0e-12) {
+        return false;
+    }
+
+    const gp_Pnt center = props.CentreOfMass();
+    centerX = center.X();
+    centerY = center.Y();
+    centerZ = center.Z();
+    return true;
+}
+
 // Geom::Geom(std::string fname){
   
   // scale = 1.0;
@@ -195,15 +287,12 @@ void Geom::LoadCylinder(double radius,
                         double axisDirZ) {
     const double clampedAngleDeg = std::max(0.0, std::min(angleDeg, 360.0));
     const bool isFullCylinder = std::abs(clampedAngleDeg - 360.0) <= 1.0e-9;
-    const gp_Ax2 axis(gp_Pnt(0.0, 0.0, 0.0),
-                      makeDirectionOrDefault(axisDirX, axisDirY, axisDirZ));
-
     TopoDS_Shape cyl;
     if (isFullCylinder) {
-        cyl = BRepPrimAPI_MakeCylinder(axis, radius, height).Shape();
+        cyl = BRepPrimAPI_MakeCylinder(radius, height).Shape();
     } else {
         const double angleRad = clampedAngleDeg * kPi / 180.0;
-        cyl = BRepPrimAPI_MakeCylinder(axis, radius, height, angleRad).Shape();
+        cyl = BRepPrimAPI_MakeCylinder(radius, height, angleRad).Shape();
     }
 
     delete m_shape;

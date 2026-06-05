@@ -41,6 +41,13 @@ public:
               double axisDirX,
               double axisDirY,
               double axisDirZ);
+  bool RotateAroundPoint(double angleDeg,
+                         double axisDirX,
+                         double axisDirY,
+                         double axisDirZ,
+                         double pivotX,
+                         double pivotY,
+                         double pivotZ);
   
   void LoadBox(double dx, double dy, double dz);
   void LoadCylinder(double radius,
@@ -69,6 +76,8 @@ public:
   const double3 & getOrigin()const{return m_origin;}
   void setOrigin(const double3 &origin){m_origin = origin;}
   void setOrigin(double x, double y, double z){m_origin = make_double3(x, y, z);}
+  bool getMassCenter(double& centerX, double& centerY, double& centerZ) const;
+  bool getBoundingBoxCenter(double& centerX, double& centerY, double& centerZ) const;
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
   bool prefersHexaTransfinite() const { return m_preferHexaTransfinite; }

@@ -19,26 +19,11 @@
             "useGapPenalty": true
         }
     ],
-    "Materials": {
-        "const": [
-            387000000.0,
-            0.154
-        ],
-        "density0": 2700.0,
-        "poissonsRatio": 0.3,
-        "strRange": [
-            0.0,
-            0.65
-        ],
-        "type": "Hollomon",
-        "yieldStress0": 190000000.0,
-        "youngsModulus": 210000000000.0
-    },
     "Remeshing": {
         "beta": 4.0,
         "dampFactor": 0.02,
         "debug": false,
-        "enabled": true,
+        "enabled": false,
         "epsRef": 1.0,
         "mapAcc": false,
         "mapVel": false,
@@ -64,10 +49,24 @@
                     "source": "demo_part_1.step"
                 },
                 "id": 1,
-                "isRigid": true,
+                "isRigid": false,
                 "mesh": {
                     "source": "demo_part_1.bdf"
                 },
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.033825556142372315,
+                        0.0
+                    ],
+                    "source": "demo_part_2.step"
+                },
+                "id": 2,
+                "isRigid": false,
                 "name": "",
                 "sectionId": -1
             }

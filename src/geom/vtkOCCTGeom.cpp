@@ -245,6 +245,12 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
             actor->SetMapper(m_mapper);
         }
 
+        // Keep the actor transform clean: OCC geometry already contains the real transform.
+        actor->SetUserTransform(nullptr);
+        actor->SetPosition(0.0, 0.0, 0.0);
+        actor->SetOrientation(0.0, 0.0, 0.0);
+        actor->SetScale(1.0, 1.0, 1.0);
+
         actor->GetProperty()->SetRenderLinesAsTubes(false);
         actor->GetProperty()->SetOpacity(0.5);
         actor->GetProperty()->SetLineWidth(1.0);
