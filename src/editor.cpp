@@ -47,6 +47,7 @@
 #include <thread>
 #include <cstdlib>
 #include <cstdio>
+#include <exception>
 #include <filesystem>
 #include <system_error>
 #include <chrono>
@@ -4425,7 +4426,7 @@ void ShowExampleMenuFile(Editor *editor)
       }
     }
     if (ImGui::MenuItem("Import Geometry", "Ctrl+I")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.iges",".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.iges,.IGES,.igs,.IGS,.geo,.GEO",".");
     }
     if (ImGui::MenuItem("Import Mesh", "Ctrl+M")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
@@ -6944,77 +6945,90 @@ void Editor::drawGui() {
     if (ImGuiFileDialog::Instance()->IsOk())
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      
       cout << "file path name "<<filePathName<<endl;
-      //m_model = new Model(filePathName);
       cout << "Adding part "<<endl;
-      Geom *geo = new Geom(filePathName);
-      m_model->addGeom(geo);
-      m_model->addPart(m_model->getLastGeom());
-      if (m_model->isAnyMesh()){
-      //m_renderer.addMesh(m_model->getPartMesh(0));
-      //is_fem_mesh = true;
-      }
-      // action
-      // action
-      create_new_part = true;
-      
-      //test 
-      bool errorIfMissing;
-      gmsh::model::add("t20");
 
+      fs::path source_path(filePathName);
+      std::string ext = source_path.has_extension() ? source_path.extension().string() : "";
+      std::transform(ext.begin(), ext.end(), ext.begin(),
+                     [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+
+      fs::path occ_input_path = source_path;
+      vtkOCCTReader::Format fmt = vtkOCCTReader::Format::STEP;
+
+      if (ext == ".GEO") {
+        occ_input_path = activeModelOutputPath(
+            *m_model,
+            activeModelStem(*m_model) + "_part_" + std::to_string(m_model->getPartCount()) + "_import.step");
+
+        std::error_code ec;
+        if (occ_input_path.has_parent_path())
+          fs::create_directories(occ_input_path.parent_path(), ec);
+
+        try {
+          gmsh::clear();
+          gmsh::open(filePathName);
+          gmsh::write(occ_input_path.string());
+          gmsh::clear();
+        } catch (const std::exception& e) {
+          gmsh::clear();
+          std::cerr << "Failed to import GEO with Gmsh: " << e.what() << std::endl;
+          appendToAppConsole(std::string("Failed to import GEO with Gmsh: ") + e.what() + "\n");
+          ImGuiFileDialog::Instance()->Close();
+          return;
+        }
+
+        if (!fs::exists(occ_input_path)) {
+          std::cerr << "Failed to convert GEO to STEP: " << occ_input_path << std::endl;
+          appendToAppConsole("Failed to convert GEO to STEP for OCC display\n");
+          ImGuiFileDialog::Instance()->Close();
+          return;
+        }
+      } else if (ext == ".STEP" || ext == ".STP") {
+        fmt = vtkOCCTReader::Format::STEP;
+      } else if (ext == ".IGES" || ext == ".IGS") {
+        fmt = vtkOCCTReader::Format::IGES;
+      } else {
+        std::cerr << "Unsupported geometry format: " << ext << std::endl;
+        appendToAppConsole("Unsupported geometry format: " + ext + "\n");
+        ImGuiFileDialog::Instance()->Close();
+        return;
+      }
+
+      Geom *geo = new Geom();
+      geo->setFileName(occ_input_path.string());
+      if (!geo->LoadSTEP(occ_input_path.string())) {
+        delete geo;
+        std::cerr << "Failed to load geometry into OCC: " << occ_input_path << std::endl;
+        appendToAppConsole("Failed to load geometry into OCC: " + occ_input_path.string() + "\n");
+        ImGuiFileDialog::Instance()->Close();
+        return;
+      }
 
       vtkOCCTGeom *geom = new vtkOCCTGeom;
-
-      vtkOCCTReader::Format fmt;
-
-      std::string ext = filePathName.substr(filePathName.find_last_of('.') + 1);
-      for(auto & c : ext) c = toupper(c);
-
-      if(ext == "STEP" || ext == "STP")
-          fmt = vtkOCCTReader::Format::STEP;
-      else if(ext == "IGES" || ext == "IGS")
-          fmt = vtkOCCTReader::Format::IGES;
-      else {
-          std::cerr << "Unsupported geometry format: " << ext << std::endl;
-          fmt = vtkOCCTReader::Format::STEP; // fallback
+      if (!geom->TestReader(occ_input_path.string(), fmt)) {
+        delete geom;
+        delete geo;
+        std::cerr << "Failed to create vtkOCCTGeom from: " << occ_input_path << std::endl;
+        appendToAppConsole("Failed to create vtkOCCTGeom from: " + occ_input_path.string() + "\n");
+        ImGuiFileDialog::Instance()->Close();
+        return;
       }
 
-      geom->TestReader(filePathName, fmt);
-      //geom->TestReader(filePathName, vtkOCCTReader::Format::STEP);
-      
-      //m_model->addPart(geo);
-      
-      //widget->SetInteractor(renderWindowInteractor);
+      m_model->addGeom(geo);
+      m_model->addPart(m_model->getLastGeom());
+      create_new_part = true;
+
+      Part* importedPart = m_model->getLastPart();
+      if (importedPart != nullptr)
+        importedPart->setName(source_path.stem().string().c_str());
+
       viewer->addActor(geom->actor);
-      //RELATE TO THE PART VIA APP!
-      
 
-        // Load a STEP file (using `importShapes' instead of `merge' allows to
-      // directly retrieve the tags of the highest dimensional imported entities):
-      std::vector<std::pair<int, int> > v;
-     //try {
-        cout << "Loading file "<<filePathName<<endl;
-        gmsh::model::occ::importShapes(filePathName, v);
-        gmsh::model::occ::synchronize();  // Critical for dimension detection
-        int model_dim = gmsh::model::getDimension();
-        
-        cout << "Dimension: "<<model_dim<<endl;
-      //} catch(...) {
-      //  gmsh::logger::write("Could not load STEP file: bye!");
-      //  gmsh::finalize();
-        //return 0;
-      //}
-      if (model_dim > -1) gmsh::model::mesh::generate(model_dim);       
-
-      gmsh::merge(filePathName);
-
-      
       getApp().setActiveModel(m_model);
       getApp().registerGeometry(geo, geom);
-      getApp().registerPartVisual(m_model->getLastPart(), geom);
-      
+      getApp().registerPartVisual(importedPart, geom);
+
       #ifdef BUILD_PYTHON
       PyRun_SimpleString("GetApplication().getActiveModel()");
       #else
