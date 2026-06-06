@@ -50,9 +50,6 @@
                 },
                 "id": 1,
                 "isRigid": false,
-                "mesh": {
-                    "source": "demo_part_1.bdf"
-                },
                 "name": "",
                 "sectionId": -1
             },
@@ -60,12 +57,26 @@
                 "geometry": {
                     "origin": [
                         0.0,
-                        0.033825556142372315,
+                        0.15181558354275454,
                         0.0
                     ],
                     "source": "demo_part_2.step"
                 },
                 "id": 2,
+                "isRigid": false,
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.15187295338973972,
+                        0.0
+                    ],
+                    "source": "demo_part_3.step"
+                },
+                "id": 3,
                 "isRigid": false,
                 "name": "",
                 "sectionId": -1
