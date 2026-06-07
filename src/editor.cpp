@@ -26,6 +26,7 @@
 //#include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
+#include <array>
 
 #include "io/ModelWriter.h"
 #include "io/ModelReader.h"
@@ -235,6 +236,102 @@ void applyHexaTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
   for (const auto& entity : volumeEntities) {
     gmsh::model::mesh::setTransfiniteVolume(entity.second);
   }
+}
+
+double signedArea2D(const std::vector<std::array<double, 2>>& points)
+{
+  if (points.size() < 3)
+    return 0.0;
+
+  double area = 0.0;
+  for (std::size_t i = 0; i < points.size(); ++i) {
+    const std::array<double, 2>& a = points[i];
+    const std::array<double, 2>& b = points[(i + 1) % points.size()];
+    area += a[0] * b[1] - b[0] * a[1];
+  }
+
+  return 0.5 * area;
+}
+
+bool hasDuplicateConsecutiveProfilePoints(const std::vector<std::array<double, 2>>& points,
+                                          double tol = 1.0e-9)
+{
+  if (points.size() < 2)
+    return false;
+
+  for (std::size_t i = 0; i < points.size(); ++i) {
+    const std::array<double, 2>& a = points[i];
+    const std::array<double, 2>& b = points[(i + 1) % points.size()];
+    if (std::abs(a[0] - b[0]) <= tol && std::abs(a[1] - b[1]) <= tol)
+      return true;
+  }
+
+  return false;
+}
+
+double orient2D(const std::array<double, 2>& a,
+                const std::array<double, 2>& b,
+                const std::array<double, 2>& c)
+{
+  return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+}
+
+bool onSegment2D(const std::array<double, 2>& a,
+                 const std::array<double, 2>& b,
+                 const std::array<double, 2>& p,
+                 double tol = 1.0e-9)
+{
+  return p[0] <= std::max(a[0], b[0]) + tol &&
+         p[0] + tol >= std::min(a[0], b[0]) &&
+         p[1] <= std::max(a[1], b[1]) + tol &&
+         p[1] + tol >= std::min(a[1], b[1]);
+}
+
+bool segmentsIntersect2D(const std::array<double, 2>& p1,
+                         const std::array<double, 2>& q1,
+                         const std::array<double, 2>& p2,
+                         const std::array<double, 2>& q2,
+                         double tol = 1.0e-9)
+{
+  const double o1 = orient2D(p1, q1, p2);
+  const double o2 = orient2D(p1, q1, q2);
+  const double o3 = orient2D(p2, q2, p1);
+  const double o4 = orient2D(p2, q2, q1);
+
+  const bool generalCase =
+      ((o1 > tol && o2 < -tol) || (o1 < -tol && o2 > tol)) &&
+      ((o3 > tol && o4 < -tol) || (o3 < -tol && o4 > tol));
+  if (generalCase)
+    return true;
+
+  if (std::abs(o1) <= tol && onSegment2D(p1, q1, p2, tol)) return true;
+  if (std::abs(o2) <= tol && onSegment2D(p1, q1, q2, tol)) return true;
+  if (std::abs(o3) <= tol && onSegment2D(p2, q2, p1, tol)) return true;
+  if (std::abs(o4) <= tol && onSegment2D(p2, q2, q1, tol)) return true;
+  return false;
+}
+
+bool closedProfileHasSelfIntersection(const std::vector<std::array<double, 2>>& points)
+{
+  if (points.size() < 4)
+    return false;
+
+  const std::size_t count = points.size();
+  for (std::size_t i = 0; i < count; ++i) {
+    const std::size_t iNext = (i + 1) % count;
+    for (std::size_t j = i + 1; j < count; ++j) {
+      const std::size_t jNext = (j + 1) % count;
+      if (i == j || iNext == j || jNext == i)
+        continue;
+      if (i == 0 && jNext == 0)
+        continue;
+
+      if (segmentsIntersect2D(points[i], points[iNext], points[j], points[jNext]))
+        return true;
+    }
+  }
+
+  return false;
 }
 
 bool isPartVisible(Part* part)
@@ -6314,6 +6411,13 @@ void Editor::drawGui() {
     static double revolve_axis_origin[] = {0.0, 0.0, 0.0};
     static double revolve_axis_direction[] = {0.0, 0.0, 1.0};
     static double revolve_angle_deg = 360.0;
+    static std::vector<std::array<double, 2>> closed_profile_points = {
+      {0.0, 0.0},
+      {1.0, 0.0},
+      {1.0, 1.0},
+      {0.0, 1.0}
+    };
+    static std::string closed_profile_status;
     
     
     if (ImGui::CollapsingHeader("New Domain", flags)){
@@ -6333,11 +6437,11 @@ void Editor::drawGui() {
           } else {
               switch (m_model->getAnalysisType()) {
                   case Axisymmetric2D:
-                      items = {"Profile"};
+                      items = {"Profile", "Closed Profile"};
                       break;
                   case PlaneStress2D:
                   case PlaneStrain2D:
-                      items = { "Rectangle", "Circle" };
+                      items = { "Rectangle", "Closed Profile" };
                       break;
                   default:
                       items = { "Unknown" };
@@ -6414,6 +6518,7 @@ void Editor::drawGui() {
         
         if (show_size[2])
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
+        const bool is_closed_profile_geometry = !is_3d_domain && item_current == 1;
         if (is_3d_domain && item_current == 1) {
             static const char* cylinder_direction_items[] = {
                 "+X", "-X", "+Y", "-Y", "+Z", "-Z"
@@ -6436,6 +6541,59 @@ void Editor::drawGui() {
               ImGui::InputDouble("nx ", &plane_custom_normal[0], 0.01f, 1.0f, "%.4f");
               ImGui::InputDouble("ny ", &plane_custom_normal[1], 0.01f, 1.0f, "%.4f");
               ImGui::InputDouble("nz ", &plane_custom_normal[2], 0.01f, 1.0f, "%.4f");
+            }
+        } else if (is_closed_profile_geometry) {
+            ImGui::Separator();
+            ImGui::TextUnformatted("Closed 2D Profile");
+            if (ImGui::Button("Seed rectangle")) {
+              const double width = std::abs(size[0]) > 1.0e-12 ? size[0] : 1.0;
+              const double height = std::abs(size[1]) > 1.0e-12 ? size[1] : 1.0;
+              closed_profile_points = {
+                {origin[0], origin[1]},
+                {origin[0] + width, origin[1]},
+                {origin[0] + width, origin[1] + height},
+                {origin[0], origin[1] + height}
+              };
+              closed_profile_status.clear();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Add point")) {
+              if (closed_profile_points.empty()) {
+                closed_profile_points.push_back({origin[0], origin[1]});
+              } else {
+                const std::array<double, 2>& last = closed_profile_points.back();
+                closed_profile_points.push_back({last[0] + 0.1, last[1] + 0.1});
+              }
+              closed_profile_status.clear();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Remove last") && !closed_profile_points.empty()) {
+              closed_profile_points.pop_back();
+              closed_profile_status.clear();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Clear")) {
+              closed_profile_points.clear();
+              closed_profile_status.clear();
+            }
+
+            ImGui::Text("Points: %d", static_cast<int>(closed_profile_points.size()));
+            for (std::size_t point_index = 0; point_index < closed_profile_points.size(); ++point_index) {
+              ImGui::PushID(static_cast<int>(point_index));
+              double point[2] = {
+                closed_profile_points[point_index][0],
+                closed_profile_points[point_index][1]
+              };
+              if (ImGui::InputDouble2("xy", point, "%.4f")) {
+                closed_profile_points[point_index][0] = point[0];
+                closed_profile_points[point_index][1] = point[1];
+                closed_profile_status.clear();
+              }
+              ImGui::PopID();
+            }
+
+            if (!closed_profile_status.empty()) {
+              ImGui::TextWrapped("%s", closed_profile_status.c_str());
             }
         }
 
@@ -6623,8 +6781,36 @@ void Editor::drawGui() {
                   cout << "NULL OR NEGATIVE PLANE DIMENSION VALUE"<<endl;
                 }
               }
+              if (!created && is_closed_profile_geometry) {
+                if (closed_profile_points.size() < 3) {
+                  closed_profile_status = "Closed profile needs at least 3 points.";
+                } else if (hasDuplicateConsecutiveProfilePoints(closed_profile_points)) {
+                  closed_profile_status = "Closed profile has duplicate consecutive points.";
+                } else if (std::abs(signedArea2D(closed_profile_points)) <= 1.0e-12) {
+                  closed_profile_status = "Closed profile area is zero.";
+                } else if (closedProfileHasSelfIntersection(closed_profile_points)) {
+                  closed_profile_status = "Closed profile has self-intersections.";
+                } else {
+                  std::vector<double3> profile_points;
+                  profile_points.reserve(closed_profile_points.size());
+                  for (std::size_t i = 0; i < closed_profile_points.size(); ++i) {
+                    profile_points.push_back(
+                      make_double3(closed_profile_points[i][0],
+                                   closed_profile_points[i][1],
+                                   origin[2]));
+                  }
+
+                  created = geo->LoadClosedPolylineFace(profile_points);
+                  if (created) {
+                    geo->setPreferHexaTransfinite(false);
+                    closed_profile_status = "Closed profile created.";
+                  } else {
+                    closed_profile_status = "Failed to build OCC face from closed profile.";
+                  }
+                }
+              }
                   
-              if (!created && size[2] == 0.0){ 
+              if (!created && !is_closed_profile_geometry && size[2] == 0.0){ 
                 cout << "Dimension is 2 "<<endl;
                 const bool has_x = std::abs(size[0]) > 1.0e-12;
                 const bool has_y = std::abs(size[1]) > 1.0e-12;

@@ -8,6 +8,7 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
 
 
 //Export STEP
@@ -410,6 +411,44 @@ void Geom::LoadLine(double dx, double dy, double ox, double oy) {
 
     // Guardar como shape
     m_shape = new TopoDS_Shape(edge.Shape());
+}
+
+bool Geom::LoadClosedPolylineFace(const std::vector<double3>& points)
+{
+    if (points.size() < 3) {
+        std::cerr << "Error: closed profile requires at least 3 points." << std::endl;
+        return false;
+    }
+
+    BRepBuilderAPI_MakePolygon polygon;
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        const double3& point = points[i];
+        polygon.Add(gp_Pnt(point.x, point.y, point.z));
+    }
+    polygon.Close();
+    polygon.Build();
+    if (!polygon.IsDone()) {
+        std::cerr << "Error: failed to build polygon wire." << std::endl;
+        return false;
+    }
+
+    BRepBuilderAPI_MakeFace faceBuilder(polygon.Wire());
+    faceBuilder.Build();
+    if (!faceBuilder.IsDone()) {
+        std::cerr << "Error: failed to build face from closed profile." << std::endl;
+        return false;
+    }
+
+    TopoDS_Shape face = faceBuilder.Shape();
+    if (face.IsNull()) {
+        std::cerr << "Error: closed profile produced a null face." << std::endl;
+        return false;
+    }
+
+    delete m_shape;
+    m_shape = new TopoDS_Shape(face);
+    m_origin = points.front();
+    return true;
 }
 
 bool Geom::ExportSTEP() {

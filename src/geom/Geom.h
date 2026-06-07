@@ -2,6 +2,7 @@
 #define _GEOM_H_
 
 #include <string>
+#include <vector>
 #include "double3.h"
 class TopoDS_Shape; //AVOID OCC (for python wrapping)
 
@@ -32,6 +33,7 @@ public:
 
   void LoadRectangle(double dx, double dy, double ox = 0.0, double oy = 0.0, double oz = 0.0);
   void LoadLine(double dx, double dy, double ox = 0.0, double oy = 0.0);
+  bool LoadClosedPolylineFace(const std::vector<double3>& points);
   bool LoadSTEP(const std::string& fname);
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
   

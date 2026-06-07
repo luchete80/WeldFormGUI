@@ -289,3 +289,5 @@
 20260605 - Added Cylinder Orient in any edge
          - Fixed contact explicit solver.
          - Added part rotate.
+20260606 - Created import .geo gmsh files
+         - Added create surf from closed loop. 
