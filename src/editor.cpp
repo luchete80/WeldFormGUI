@@ -4313,6 +4313,30 @@ void Editor::meshPart(Part* part){
     return;
   }
 
+  if (is_2d_analysis && part->getMesh() != nullptr &&
+      m_model->getTwoDMeshGenerator() == MeshGeneratorGmsh) {
+    int triangle_count = 0;
+    int quad_count = 0;
+    Mesh* generated_mesh = part->getMesh();
+    for (int elem_index = 0; elem_index < generated_mesh->getElemCount(); ++elem_index) {
+      Element* element = generated_mesh->getElem(elem_index);
+      const ElementType element_type = inferElementType(generated_mesh, element);
+      if (element_type == ElementType::Tria3) {
+        ++triangle_count;
+      } else if (element_type == ElementType::Quad4) {
+        ++quad_count;
+      }
+    }
+
+    if (triangle_count > 0) {
+      const std::string warning =
+        "Warning: 2D gmsh meshing generated " + std::to_string(triangle_count) +
+        " triangle(s) and " + std::to_string(quad_count) + " quad(s).\n";
+      cerr << warning;
+      appendToAppConsole(warning);
+    }
+  }
+
   getApp().setActiveModel(m_model);
   getApp().Update();
   getApp().checkUpdate();

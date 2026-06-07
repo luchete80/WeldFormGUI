@@ -3,8 +3,7 @@ SetFactory("OpenCASCADE");
 // -------------------------
 // Geometry parameters [mm]
 // -------------------------
-L  = 100.0;
-W  = 40.0;
+A  = 40.0;   // square side
 R  = 5.0;
 lc = 2.0;
 
@@ -13,39 +12,32 @@ nRadial = 12;
 nCirc   = 24;
 nOuter  = 24;
 
+h = A/2;
+r45 = R/Sqrt(2);
+
 // -------------------------
-// Points
+// Outer square points
 // -------------------------
-Point(1) = {-L/2, -W/2, 0, lc};
-Point(2) = { L/2, -W/2, 0, lc};
-Point(3) = { L/2,  W/2, 0, lc};
-Point(4) = {-L/2,  W/2, 0, lc};
+Point(1) = {-h, -h, 0, lc};
+Point(2) = { h, -h, 0, lc};
+Point(3) = { h,  h, 0, lc};
+Point(4) = {-h,  h, 0, lc};
 
 Point(10) = {0, 0, 0, lc};
 
-// Hole quadrant points
-Point(11) = { R, 0, 0, lc};
-Point(12) = { 0, R, 0, lc};
-Point(13) = {-R, 0, 0, lc};
-Point(14) = { 0,-R, 0, lc};
-
-// Outer mid-side points
-Point(21) = { L/2, 0, 0, lc};
-Point(22) = { 0, W/2, 0, lc};
-Point(23) = {-L/2, 0, 0, lc};
-Point(24) = { 0,-W/2, 0, lc};
+// Hole points at 45 degrees
+Point(11) = { r45,  r45, 0, lc};
+Point(12) = {-r45,  r45, 0, lc};
+Point(13) = {-r45, -r45, 0, lc};
+Point(14) = { r45, -r45, 0, lc};
 
 // -------------------------
-// Outer boundary split
+// Outer boundary
 // -------------------------
-Line(1) = {24, 2};
-Line(2) = {2, 21};
-Line(3) = {21, 3};
-Line(4) = {3, 22};
-Line(5) = {22, 4};
-Line(6) = {4, 23};
-Line(7) = {23, 1};
-Line(8) = {1, 24};
+Line(1) = {1, 2}; // bottom
+Line(2) = {2, 3}; // right
+Line(3) = {3, 4}; // top
+Line(4) = {4, 1}; // left
 
 // Hole arcs
 Circle(11) = {11, 10, 12};
@@ -53,45 +45,42 @@ Circle(12) = {12, 10, 13};
 Circle(13) = {13, 10, 14};
 Circle(14) = {14, 10, 11};
 
-// Diagonal/radial partition lines
-Line(21) = {11, 21};
-Line(22) = {12, 22};
-Line(23) = {13, 23};
-Line(24) = {14, 24};
+// Diagonal partition lines to square vertices
+Line(21) = {11, 3};
+Line(22) = {12, 4};
+Line(23) = {13, 1};
+Line(24) = {14, 2};
 
 // -------------------------
-// Four subdomains
+// Four 4-sided subdomains
 // -------------------------
 
-// Right-top
-Curve Loop(101) = {21, 3, 4, -22, -11};
+// Top
+Curve Loop(101) = {3, -22, -11, 21};
 Plane Surface(101) = {101};
 
-// Left-top
-Curve Loop(102) = {22, 5, 6, -23, -12};
+// Left
+Curve Loop(102) = {4, -23, -12, 22};
 Plane Surface(102) = {102};
 
-// Left-bottom
-Curve Loop(103) = {23, 7, 8, -24, -13};
+// Bottom
+Curve Loop(103) = {1, -24, -13, 23};
 Plane Surface(103) = {103};
 
-// Right-bottom
-Curve Loop(104) = {24, 1, 2, -21, -14};
+// Right
+Curve Loop(104) = {2, -21, -14, 24};
 Plane Surface(104) = {104};
 
 // -------------------------
 // Transfinite mesh
 // -------------------------
 Transfinite Curve {21,22,23,24} = nRadial + 1;
-
 Transfinite Curve {11,12,13,14} = nCirc/4 + 1;
-
-Transfinite Curve {3,4,5,6,7,8,1,2} = nOuter/2 + 1;
+Transfinite Curve {1,2,3,4} = nOuter/4 + 1;
 
 Transfinite Surface {101,102,103,104};
 Recombine Surface {101,102,103,104};
 
-// Optional smoothing
 Mesh.Smoothing = 20;
 
 // -------------------------
@@ -99,8 +88,8 @@ Mesh.Smoothing = 20;
 // -------------------------
 Physical Surface("PLATE") = {101,102,103,104};
 
-Physical Curve("LEFT")   = {6,7};
-Physical Curve("RIGHT")  = {2,3};
-Physical Curve("TOP")    = {4,5};
-Physical Curve("BOTTOM") = {8,1};
+Physical Curve("LEFT")   = {4};
+Physical Curve("RIGHT")  = {2};
+Physical Curve("TOP")    = {3};
+Physical Curve("BOTTOM") = {1};
 Physical Curve("HOLE")   = {11,12,13,14};
