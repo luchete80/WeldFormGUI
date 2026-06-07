@@ -26,6 +26,7 @@ struct MeshDialog{
   bool cancel_action;
   bool create_part;
   float m_element_size;
+  int m_2d_mesh_generator = 0;
   bool m_apply_mesh;
   Part* m_mesh_part;
 

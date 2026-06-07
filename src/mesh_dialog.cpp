@@ -21,6 +21,10 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
         m_element_size = model->getElementSize();
       else
         m_element_size = 1.0f;
+      if (model != nullptr)
+        m_2d_mesh_generator = static_cast<int>(model->getTwoDMeshGenerator());
+      else
+        m_2d_mesh_generator = 0;
       
       if (part->getType() == Elastic)
         part_type = 0;
@@ -77,6 +81,11 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
       m_element_size = 1.0f; // Valor por defecto
   }
 
+  if (model != nullptr && model->getDimension() == 2 && part->getType() == Elastic) {
+      const char* mesher_items[] = {"mesh-adapt", "gmsh"};
+      ImGui::Combo("2D mesher", &m_2d_mesh_generator, mesher_items, IM_ARRAYSIZE(mesher_items));
+  }
+
   // Botones Ok/Cancel
   ImGui::Spacing();
   ImGui::Separator();
@@ -87,6 +96,8 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
     part->setType(part_type);
     if (model != nullptr)
       model->setElementSize(m_element_size);
+    if (model != nullptr)
+      model->setTwoDMeshGenerator(static_cast<TwoDMeshGenerator>(m_2d_mesh_generator));
     m_apply_mesh = true;
     m_mesh_part = part;
     

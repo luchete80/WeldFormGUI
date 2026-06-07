@@ -1,5 +1,6 @@
 #include "Geom.h"
 #include <TopoDS_Shape.hxx> // OpenCascade shape
+#include <TopoDS_Compound.hxx>
 
 #include <TopoDS_Shape.hxx>
 
@@ -9,6 +10,7 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRep_Builder.hxx>
 
 
 //Export STEP
@@ -51,6 +53,30 @@ gp_Dir makeDirectionOrDefault(double x, double y, double z)
     }
 
     return gp_Dir(x, y, z);
+}
+
+TopoDS_Shape buildTransferredShape(STEPControl_Reader& reader)
+{
+    const int shapeCount = reader.NbShapes();
+    if (shapeCount <= 0) {
+        return TopoDS_Shape();
+    }
+    if (shapeCount == 1) {
+        return reader.Shape(1);
+    }
+
+    TopoDS_Compound compound;
+    BRep_Builder builder;
+    builder.MakeCompound(compound);
+
+    for (int i = 1; i <= shapeCount; ++i) {
+        const TopoDS_Shape shape = reader.Shape(i);
+        if (!shape.IsNull()) {
+            builder.Add(compound, shape);
+        }
+    }
+
+    return compound;
 }
 }
 
@@ -493,7 +519,7 @@ bool Geom::LoadSTEP(const std::string& fname) {
     int nRoots = reader.NbRootsForTransfer();
     bool ok = false;
     for (int i = 1; i <= nRoots; i++) {
-        ok = reader.TransferRoot(i);
+        ok = reader.TransferRoot(i) || ok;
     }
 
     if (!ok) {
@@ -502,13 +528,14 @@ bool Geom::LoadSTEP(const std::string& fname) {
     }
 
     // Obtenemos la shape transferida
-    TopoDS_Shape shape = reader.OneShape();
+    TopoDS_Shape shape = buildTransferredShape(reader);
     if (shape.IsNull()) {
         std::cerr << "Error: shape vacía al leer STEP." << std::endl;
         return false;
     }
-
+    
     // Guardamos en el miembro
+    delete m_shape;
     m_shape = new TopoDS_Shape(shape);
     m_fileName = fname;
     m_origin = make_double3(0.0, 0.0, 0.0);
@@ -532,7 +559,7 @@ bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targe
     int nRoots = reader.NbRootsForTransfer();
     bool ok = false;
     for (int i = 1; i <= nRoots; i++) {
-        ok = reader.TransferRoot(i);
+        ok = reader.TransferRoot(i) || ok;
     }
 
     if (!ok) {
@@ -541,7 +568,7 @@ bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targe
     }
 
     // Obtenemos la shape transferida
-    TopoDS_Shape shape = reader.OneShape();
+    TopoDS_Shape shape = buildTransferredShape(reader);
     if (shape.IsNull()) {
         std::cerr << "Error: shape vacía al leer STEP." << std::endl;
         return false;

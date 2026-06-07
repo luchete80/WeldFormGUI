@@ -36,6 +36,10 @@ enum AnalysisType {
 };
 
 enum model_type {FEM_Model=1, SPH_Model};
+enum TwoDMeshGenerator {
+  MeshGeneratorMeshAdapt = 0,
+  MeshGeneratorGmsh = 1
+};
 
 struct ContactProperties {
   double fricCoeffStatic = 0.0;
@@ -143,6 +147,8 @@ public:
   }
   void setElementSize(const double &element_size){m_element_size = element_size;}
   const double & getElementSize() const {return m_element_size;}
+  void setTwoDMeshGenerator(TwoDMeshGenerator generator) { m_2d_mesh_generator = generator; }
+  TwoDMeshGenerator getTwoDMeshGenerator() const { return m_2d_mesh_generator; }
   void addBoundaryCondition(BoundaryCondition *make_double2bc);
   void addInitialCondition(InitialCondition *bc){m_ic.push_back(bc);}
   ContactProperties & contactProps(){return m_contact_props;}
@@ -230,6 +236,7 @@ protected:
   string m_file_path;
   AnalysisType m_analysisType = Solid3D;
   double m_element_size = 1.0;
+  TwoDMeshGenerator m_2d_mesh_generator = MeshGeneratorMeshAdapt;
   ContactProperties m_contact_props;
   RemeshingSettings m_remeshing;
   std::vector<SymmetryPlane> m_symmetry_planes;

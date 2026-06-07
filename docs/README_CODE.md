@@ -150,6 +150,26 @@ It is better treated as old or auxiliary viewport code until we decide to clean 
 - `src/main.cpp`
   Result viewport rendering and visual overlay application.
 
+## New Geometry
+
+- `src/editor.cpp`
+  The `New Domain` / `New Geometry` UI lives here.
+- `src/geom/Geom.h`
+- `src/geom/Geom.cpp`
+  OCC geometry construction helpers live here.
+- Current 2D geometry behavior:
+  - `Line` creates an open edge through `Geom::LoadLine(...)`
+  - `Rectangle` or axisymmetric `Profile` creates a simple face through `Geom::LoadRectangle(...)`
+  - `Closed Profile` builds a polygonal closed contour and turns it into an OCC face through `Geom::LoadClosedPolylineFace(...)`
+- Current `Closed Profile` scope:
+  - polygonal 2D contours only
+  - no arcs or sketch constraints
+  - validation currently checks:
+    - minimum point count
+    - zero-area contours
+    - duplicate consecutive points
+    - simple self-intersections
+
 ## Model Check
 
 - `src/modelcheck/ModelCheck.h`

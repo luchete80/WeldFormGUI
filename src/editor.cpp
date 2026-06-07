@@ -4210,7 +4210,10 @@ void Editor::meshPart(Part* part){
   cout << "Analysis type: "<<analysis_type<<endl;
 
   bool mesh_ready = false;
-  if (is_2d_analysis && !is_rigid_part){
+  const bool use_mesh_adapt_for_2d =
+    is_2d_analysis && !is_rigid_part &&
+    m_model->getTwoDMeshGenerator() == MeshGeneratorMeshAdapt;
+  if (use_mesh_adapt_for_2d){
     const fs::path step_path_abs = fs::absolute(step_path);
     const fs::path step_dir = step_path_abs.has_parent_path() ? step_path_abs.parent_path() : fs::current_path();
     const fs::path output_bdf_path = step_dir / "output_smoothed.bdf";
@@ -4288,7 +4291,6 @@ void Editor::meshPart(Part* part){
       applyTransfiniteConstraintsToCurrentGmshModel(element_size);
       for(auto &e : entities) {
           if(e.first == 2) {
-              gmsh::model::mesh::setTransfiniteSurface(e.second);
               gmsh::model::mesh::setRecombine(2, e.second);
               cout << "Recombine in 2 dim"<<endl;
           }
@@ -6437,11 +6439,11 @@ void Editor::drawGui() {
           } else {
               switch (m_model->getAnalysisType()) {
                   case Axisymmetric2D:
-                      items = {"Profile", "Closed Profile"};
+                      items = {"Line", "Profile", "Closed Profile"};
                       break;
                   case PlaneStress2D:
                   case PlaneStrain2D:
-                      items = { "Rectangle", "Closed Profile" };
+                      items = { "Line", "Rectangle", "Closed Profile" };
                       break;
                   default:
                       items = { "Unknown" };
@@ -6452,7 +6454,7 @@ void Editor::drawGui() {
           if (item_current < 0 || item_current >= static_cast<int>(items.size()))
               item_current = 0;
 
-          ImGui::Combo("Geometry", &item_current, 
+          ImGui::Combo("Geometry Type##new_geometry_type", &item_current, 
              items.data(), static_cast<int>(items.size()));
           ImGui::SameLine(); HelpMarker(
               "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
@@ -6464,7 +6466,10 @@ void Editor::drawGui() {
 	          ImGui::RadioButton("Cylinder", &item_current, 1);
 	          ImGui::SameLine();
 	          ImGui::RadioButton("Plane", &item_current, 2);
-	      }
+            ImGui::TextDisabled("Switch the model to a 2D analysis mode to use Closed Profile.");
+	      } else {
+          ImGui::TextDisabled("2D mode: Line, Rectangle/Profile and Closed Profile are available.");
+        }
       
       
         ImGuiIO& io = ImGui::GetIO();
@@ -6518,7 +6523,11 @@ void Editor::drawGui() {
         
         if (show_size[2])
         ImGui::InputDouble(label[2].c_str(), &size[2], 0.01f, 1.0f, "%.4f");
-        const bool is_closed_profile_geometry = !is_3d_domain && item_current == 1;
+        const bool is_closed_profile_geometry =
+            !is_3d_domain &&
+            ((m_model->getAnalysisType() == Axisymmetric2D && item_current == 2) ||
+             ((m_model->getAnalysisType() == PlaneStress2D ||
+               m_model->getAnalysisType() == PlaneStrain2D) && item_current == 2));
         if (is_3d_domain && item_current == 1) {
             static const char* cylinder_direction_items[] = {
                 "+X", "-X", "+Y", "-Y", "+Z", "-Z"
@@ -6815,11 +6824,25 @@ void Editor::drawGui() {
                 cout << "Dimension is 2 "<<endl;
                 const bool has_x = std::abs(size[0]) > 1.0e-12;
                 const bool has_y = std::abs(size[1]) > 1.0e-12;
+                const bool is_axisymmetric_profile =
+                    (m_model->getAnalysisType() == Axisymmetric2D && item_current == 1);
+                const bool is_explicit_line =
+                    (m_model->getAnalysisType() == Axisymmetric2D && item_current == 0) ||
+                    ((m_model->getAnalysisType() == PlaneStress2D ||
+                      m_model->getAnalysisType() == PlaneStrain2D) && item_current == 0);
+                const bool is_explicit_rectangle =
+                    (m_model->getAnalysisType() == PlaneStress2D ||
+                     m_model->getAnalysisType() == PlaneStrain2D) && item_current == 1;
 
-                if (has_x && has_y) {
+                if (is_explicit_line && (has_x || has_y)) {
+                  geo->LoadLine(size[0],size[1],origin[0],origin[1]);
+                  geo->setPreferHexaTransfinite(false);
+                  cout << "Loading line "<<endl;
+                  created = true;
+                } else if ((is_explicit_rectangle || is_axisymmetric_profile) && has_x && has_y) {
                   geo->LoadRectangle(size[0],size[1],origin[0],origin[1],origin[2]);
                   geo->setPreferHexaTransfinite(false);
-                  cout << "Loading rectangle "<<endl;
+                  cout << "Loading profile/rectangle "<<endl;
                   created = true;
                 } else if (has_x || has_y) {
                   geo->LoadLine(size[0],size[1],origin[0],origin[1]);
@@ -7142,6 +7165,7 @@ void Editor::drawGui() {
 
       fs::path occ_input_path = source_path;
       vtkOCCTReader::Format fmt = vtkOCCTReader::Format::STEP;
+      bool use_occ_shape_display = false;
 
       if (ext == ".GEO") {
         occ_input_path = activeModelOutputPath(
@@ -7171,6 +7195,7 @@ void Editor::drawGui() {
           ImGuiFileDialog::Instance()->Close();
           return;
         }
+        use_occ_shape_display = true;
       } else if (ext == ".STEP" || ext == ".STP") {
         fmt = vtkOCCTReader::Format::STEP;
       } else if (ext == ".IGES" || ext == ".IGS") {
@@ -7193,13 +7218,25 @@ void Editor::drawGui() {
       }
 
       vtkOCCTGeom *geom = new vtkOCCTGeom;
-      if (!geom->TestReader(occ_input_path.string(), fmt)) {
-        delete geom;
-        delete geo;
-        std::cerr << "Failed to create vtkOCCTGeom from: " << occ_input_path << std::endl;
-        appendToAppConsole("Failed to create vtkOCCTGeom from: " + occ_input_path.string() + "\n");
-        ImGuiFileDialog::Instance()->Close();
-        return;
+      if (use_occ_shape_display) {
+        geom->LoadFromShape(geo->getShape(), 0.01);
+        if (geom->getPolydata() == nullptr || geom->getPolydata()->GetNumberOfPoints() == 0) {
+          delete geom;
+          delete geo;
+          std::cerr << "Failed to create vtkOCCTGeom from OCC shape: " << occ_input_path << std::endl;
+          appendToAppConsole("Failed to create vtkOCCTGeom from OCC shape: " + occ_input_path.string() + "\n");
+          ImGuiFileDialog::Instance()->Close();
+          return;
+        }
+      } else {
+        if (!geom->TestReader(occ_input_path.string(), fmt)) {
+          delete geom;
+          delete geo;
+          std::cerr << "Failed to create vtkOCCTGeom from: " << occ_input_path << std::endl;
+          appendToAppConsole("Failed to create vtkOCCTGeom from: " + occ_input_path.string() + "\n");
+          ImGuiFileDialog::Instance()->Close();
+          return;
+        }
       }
 
       m_model->addGeom(geo);

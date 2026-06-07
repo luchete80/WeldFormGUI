@@ -291,3 +291,5 @@
          - Added part rotate.
 20260606 - Created import .geo gmsh files
          - Added create surf from closed loop. 
+         - Fixed Some Line/Rectangle profile selection not allowed (imgui ID)
+         - Option for 2D meshing using own mesher & gmsh.

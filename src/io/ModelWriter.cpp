@@ -118,6 +118,8 @@ void ModelWriter::writeToFile(std::string fname){
       m_json["Configuration"]["analysisType"] = "Solid3D";
       break;
   }
+  m_json["Configuration"]["twoDMeshGenerator"] =
+    (m_model.getTwoDMeshGenerator() == MeshGeneratorGmsh) ? "gmsh" : "mesh-adapt";
   
   if (m_model.m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true; 

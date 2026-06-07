@@ -61,6 +61,7 @@ vtkSmartPointer<vtkPolyData> ShapeToPolyData(const TopoDS_Shape& shape, double d
         TopoDS_Face face = TopoDS::Face(exp.Current());
         TopLoc_Location loc;
         Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+        std::unordered_map<int, vtkIdType> pointMap;
         
         if (tri.IsNull())
             continue;

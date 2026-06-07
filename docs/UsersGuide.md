@@ -14,6 +14,36 @@ You can right click on the model tree and there you can right over "3D" and clic
 Up until now, you can draw only simple shapes and load external STEP geometry files. 
 So, you can right click on a part and select "New Geometry from file" or, in case you want to generate a simple geometry, you can go to 
 
+### New Geometry
+`New Geometry` changes depending on the current analysis type.
+
+For 3D analysis:
+- `Box`
+- `Cylinder`
+- `Plane`
+
+For 2D analysis:
+- `Line`
+- `Rectangle` or `Profile`
+- `Closed Profile`
+
+Use `Closed Profile` when you want to create a 2D surface from a closed contour and mesh it later.
+
+Current `Closed Profile` workflow:
+- switch the model to a 2D analysis type first
+- open `New Geometry`
+- choose `Closed Profile` in the `Geometry` combo
+- use `Seed rectangle` to create an initial contour or `Add point` to build one manually
+- edit the `x` and `y` coordinates of each point
+- click `Create GEO`
+
+Current limitations:
+- the contour must contain at least 3 points
+- the contour area must be non-zero
+- consecutive duplicate points are rejected
+- self-intersecting contours are rejected
+- this is intended for simple polygonal closed contours
+
 ### Meshing a Part
 By right clicking a part, you select mesh and
 
