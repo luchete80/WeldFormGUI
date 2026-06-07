@@ -4437,7 +4437,7 @@ void getCurrentModelInfo(){
               << type << "\n";
 
     // * Number of mesh nodes and elements:
-    int numElem = 0;
+    std::size_t numElem = 0;
     for(auto &tags : elemTags) numElem += tags.size();
     std::cout << " - Mesh has " << nodeTags.size() << " nodes and " << numElem
               << " elements\n";
@@ -6580,13 +6580,14 @@ void Editor::drawGui() {
             ImGui::Text("Points: %d", static_cast<int>(closed_profile_points.size()));
             for (std::size_t point_index = 0; point_index < closed_profile_points.size(); ++point_index) {
               ImGui::PushID(static_cast<int>(point_index));
-              double point[2] = {
-                closed_profile_points[point_index][0],
-                closed_profile_points[point_index][1]
-              };
-              if (ImGui::InputDouble2("xy", point, "%.4f")) {
-                closed_profile_points[point_index][0] = point[0];
-                closed_profile_points[point_index][1] = point[1];
+              double point_x = closed_profile_points[point_index][0];
+              double point_y = closed_profile_points[point_index][1];
+              bool changed = false;
+              changed = ImGui::InputDouble("x", &point_x, 0.01f, 1.0f, "%.4f") || changed;
+              changed = ImGui::InputDouble("y", &point_y, 0.01f, 1.0f, "%.4f") || changed;
+              if (changed) {
+                closed_profile_points[point_index][0] = point_x;
+                closed_profile_points[point_index][1] = point_y;
                 closed_profile_status.clear();
               }
               ImGui::PopID();
