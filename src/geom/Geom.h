@@ -74,6 +74,16 @@ public:
                                double axisDirectionY,
                                double axisDirectionZ,
                                double angleDeg = 360.0);
+  bool LoadExtrudedShape(const TopoDS_Shape& profileShape,
+                         double directionX,
+                         double directionY,
+                         double directionZ,
+                         double distance);
+  bool LoadExtrudedSTEPProfile(const std::string& fname,
+                               double directionX,
+                               double directionY,
+                               double directionZ,
+                               double distance);
   
   const double3 & getOrigin()const{return m_origin;}
   void setOrigin(const double3 &origin){m_origin = origin;}

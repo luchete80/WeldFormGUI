@@ -34,6 +34,7 @@
 #include <GProp_GProps.hxx>
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
 
 #include <gp_Ax1.hxx>
@@ -379,6 +380,44 @@ bool Geom::LoadRevolvedSTEPProfile(const std::string& fname,
                              angleDeg);
 }
 
+bool Geom::LoadExtrudedSTEPProfile(const std::string& fname,
+                                   double directionX,
+                                   double directionY,
+                                   double directionZ,
+                                   double distance)
+{
+    STEPControl_Reader reader;
+    IFSelect_ReturnStatus stat = reader.ReadFile(fname.c_str());
+
+    if (stat != IFSelect_RetDone) {
+        std::cerr << "Error: no se pudo leer el perfil STEP " << fname << std::endl;
+        return false;
+    }
+
+    bool ok = false;
+    const int nRoots = reader.NbRootsForTransfer();
+    for (int i = 1; i <= nRoots; ++i) {
+        ok = reader.TransferRoot(i) || ok;
+    }
+
+    if (!ok) {
+        std::cerr << "Error: no se pudo transferir el perfil STEP." << std::endl;
+        return false;
+    }
+
+    TopoDS_Shape profileShape = reader.OneShape();
+    if (profileShape.IsNull()) {
+        std::cerr << "Error: perfil STEP vacío." << std::endl;
+        return false;
+    }
+
+    return LoadExtrudedShape(profileShape,
+                             directionX,
+                             directionY,
+                             directionZ,
+                             distance);
+}
+
 bool Geom::LoadRevolvedShape(const TopoDS_Shape& profileShape,
                              double axisOriginX,
                              double axisOriginY,
@@ -422,6 +461,54 @@ bool Geom::LoadRevolvedShape(const TopoDS_Shape& profileShape,
     delete m_shape;
     m_shape = new TopoDS_Shape(revolvedShape);
     m_origin = make_double3(axisOriginX, axisOriginY, axisOriginZ);
+    return true;
+}
+
+bool Geom::LoadExtrudedShape(const TopoDS_Shape& profileShape,
+                             double directionX,
+                             double directionY,
+                             double directionZ,
+                             double distance)
+{
+    if (profileShape.IsNull()) {
+        std::cerr << "Error: perfil vacío para extrusión." << std::endl;
+        return false;
+    }
+
+    const double directionNorm = std::sqrt(directionX * directionX +
+                                           directionY * directionY +
+                                           directionZ * directionZ);
+    if (directionNorm <= 1.0e-12) {
+        std::cerr << "Error: dirección de extrusión inválida." << std::endl;
+        return false;
+    }
+
+    if (std::abs(distance) <= 1.0e-12) {
+        std::cerr << "Error: distancia de extrusión inválida." << std::endl;
+        return false;
+    }
+
+    const double scale = distance / directionNorm;
+    gp_Vec extrusionVec(directionX * scale,
+                        directionY * scale,
+                        directionZ * scale);
+
+    BRepPrimAPI_MakePrism prism(profileShape, extrusionVec, true, true);
+    prism.Build();
+    if (!prism.IsDone()) {
+        std::cerr << "Error: falló la extrusión del perfil." << std::endl;
+        return false;
+    }
+
+    TopoDS_Shape extrudedShape = prism.Shape();
+    if (extrudedShape.IsNull()) {
+        std::cerr << "Error: la extrusión generó una shape vacía." << std::endl;
+        return false;
+    }
+
+    delete m_shape;
+    m_shape = new TopoDS_Shape(extrudedShape);
+    m_origin = make_double3(0.0, 0.0, 0.0);
     return true;
 }
 

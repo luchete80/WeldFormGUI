@@ -6637,6 +6637,13 @@ void Editor::drawGui() {
     static double revolve_axis_origin[] = {0.0, 0.0, 0.0};
     static double revolve_axis_direction[] = {0.0, 0.0, 1.0};
     static double revolve_angle_deg = 360.0;
+    static std::string extrude_profile_path;
+    static char extrude_profile_path_buffer[1024] = "";
+    static Part* extrude_profile_part = nullptr;
+    static bool extrude_pick_profile_from_viewer = false;
+    static int extrude_direction = 2;
+    static double extrude_direction_vector[] = {0.0, 0.0, 1.0};
+    static double extrude_distance = 1.0;
     static std::vector<std::array<double, 2>> closed_profile_points = {
       {0.0, 0.0},
       {1.0, 0.0},
@@ -7319,6 +7326,169 @@ void Editor::drawGui() {
               ImGui::EndDisabled();
             }
 
+            ImGui::Separator();
+            ImGui::TextUnformatted("Extrude");
+            if (ImGui::Button("Select profile STEP##extrude")) {
+              ImGuiFileDialog::Instance()->OpenDialog(
+                  "ChooseFileDlgExtrudeProfile",
+                  "Choose profile STEP",
+                  ".step,.STEP,.stp,.STP",
+                  ".");
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(extrude_pick_profile_from_viewer ? "Picking...##extrude" : "Pick visible profile##extrude")) {
+              extrude_pick_profile_from_viewer = !extrude_pick_profile_from_viewer;
+            }
+            if (ImGui::InputText("profile STEP path##extrude",
+                                 extrude_profile_path_buffer,
+                                 IM_ARRAYSIZE(extrude_profile_path_buffer))) {
+              extrude_profile_path = extrude_profile_path_buffer;
+              extrude_profile_part = nullptr;
+            }
+            if (extrude_profile_part != nullptr && extrude_profile_part->getGeom() != nullptr) {
+              ImGui::TextWrapped("Profile: Part %d, %s",
+                                 extrude_profile_part->getId(),
+                                 extrude_profile_part->getName());
+            } else if (!extrude_profile_path.empty()) {
+              ImGui::TextWrapped("Profile: %s", extrude_profile_path.c_str());
+              if (!fs::exists(extrude_profile_path)) {
+                ImGui::TextDisabled("Profile file not found");
+              }
+            } else {
+              ImGui::TextDisabled("No profile selected");
+            }
+
+            const char* extrude_direction_items[] = {"X", "Y", "Z", "Custom"};
+            if (ImGui::Combo("Direction##extrude", &extrude_direction, extrude_direction_items, IM_ARRAYSIZE(extrude_direction_items))) {
+              if (extrude_direction == 0) {
+                extrude_direction_vector[0] = 1.0;
+                extrude_direction_vector[1] = 0.0;
+                extrude_direction_vector[2] = 0.0;
+              } else if (extrude_direction == 1) {
+                extrude_direction_vector[0] = 0.0;
+                extrude_direction_vector[1] = 1.0;
+                extrude_direction_vector[2] = 0.0;
+              } else if (extrude_direction == 2) {
+                extrude_direction_vector[0] = 0.0;
+                extrude_direction_vector[1] = 0.0;
+                extrude_direction_vector[2] = 1.0;
+              }
+            }
+            ImGui::InputDouble("dir dx##extrude", &extrude_direction_vector[0], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("dir dy##extrude", &extrude_direction_vector[1], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("dir dz##extrude", &extrude_direction_vector[2], 0.01f, 1.0f, "%.4f");
+            ImGui::InputDouble("distance##extrude", &extrude_distance, 0.01f, 1.0f, "%.4f");
+
+            if (extrude_pick_profile_from_viewer) {
+              ImGui::TextDisabled("Click a visible geometry in the model viewer");
+              if (viewer != nullptr && viewer->isViewportHovered() &&
+                  ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                const ImVec2 viewportMin = viewer->getViewportScreenMin();
+                ImGuiIO& io = ImGui::GetIO();
+                const double localX = io.MousePos.x - viewportMin.x;
+                const double localY = io.MousePos.y - viewportMin.y;
+                const double pickY = static_cast<double>(viewer->getViewportHeight()) - localY;
+
+                vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
+                picker->SetTolerance(0.0008);
+                if (picker->Pick(localX, pickY, 0.0, viewer->getRenderer())) {
+                  vtkActor* pickedActor = picker->GetActor();
+                  Part* pickedPart = nullptr;
+                  if (m_model != nullptr && pickedActor != nullptr) {
+                    for (int p = 0; p < m_model->getPartCount(); ++p) {
+                      Part* candidate = m_model->getPart(p);
+                      if (candidate == nullptr || !candidate->isGeom()) {
+                        continue;
+                      }
+                      vtkOCCTGeom* visual = getApp().getVisualForPart(candidate);
+                      if (visual != nullptr && visual->actor.GetPointer() == pickedActor) {
+                        pickedPart = candidate;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (pickedPart != nullptr && pickedPart->getGeom() != nullptr) {
+                    extrude_profile_part = pickedPart;
+                    extrude_profile_path.clear();
+                    extrude_profile_path_buffer[0] = '\0';
+                    extrude_pick_profile_from_viewer = false;
+                    cout << "Selected extrude profile from visible part "
+                         << pickedPart->getId() << endl;
+                    appendToAppConsole("Selected extrude profile from visible part " +
+                                       std::to_string(pickedPart->getId()) + "\n");
+                  } else {
+                    cout << "No visible geometry picked for extrude profile" << endl;
+                    appendToAppConsole("No visible geometry picked for extrude profile\n");
+                  }
+                }
+              }
+            }
+
+            const bool can_create_extrude =
+                (extrude_profile_part != nullptr && extrude_profile_part->getGeom() != nullptr) ||
+                (!extrude_profile_path.empty() && fs::exists(extrude_profile_path));
+            if (!can_create_extrude) {
+              ImGui::BeginDisabled();
+            }
+            if (ImGui::Button("Create Extrude")) {
+              const int pc = m_model->getPartCount();
+              fs::path step_path = activeModelOutputPath(
+                  *m_model,
+                  activeModelStem(*m_model) + "_part_" + std::to_string(pc) + "_extrude.step");
+
+              Geom* geo = new Geom;
+              geo->setFileName(step_path.string());
+              bool created = false;
+              if (extrude_profile_part != nullptr && extrude_profile_part->getGeom() != nullptr) {
+                created = geo->LoadExtrudedShape(
+                    extrude_profile_part->getGeom()->getShape(),
+                    extrude_direction_vector[0],
+                    extrude_direction_vector[1],
+                    extrude_direction_vector[2],
+                    extrude_distance);
+              } else {
+                created = geo->LoadExtrudedSTEPProfile(
+                    extrude_profile_path,
+                    extrude_direction_vector[0],
+                    extrude_direction_vector[1],
+                    extrude_direction_vector[2],
+                    extrude_distance);
+              }
+
+              if (created) {
+                vtkOCCTGeom* geom = new vtkOCCTGeom;
+                geom->LoadFromShape(geo->getShape(), 0.01);
+                viewer->addActor(geom->actor);
+                geo->ExportSTEP();
+                m_model->addPart(geo);
+                create_new_part = true;
+
+                Part* newPart = m_model->getPart(m_model->getPartCount() - 1);
+                getApp().setActiveModel(m_model);
+                getApp().registerGeometry(geo, geom);
+                getApp().registerPartVisual(newPart, geom);
+                getApp().Update();
+
+                if (extrude_profile_part != nullptr) {
+                  cout << "Created extrude geometry from visible part "
+                       << extrude_profile_part->getId() << endl;
+                  appendToAppConsole("Created extrude geometry from visible part " +
+                                     std::to_string(extrude_profile_part->getId()) + "\n");
+                } else {
+                  cout << "Created extrude geometry from " << extrude_profile_path << endl;
+                  appendToAppConsole("Created extrude geometry from " + extrude_profile_path + "\n");
+                }
+              } else {
+                delete geo;
+                cout << "Failed to create extrude geometry" << endl;
+                appendToAppConsole("Failed to create extrude geometry\n");
+              }
+            }
+            if (!can_create_extrude) {
+              ImGui::EndDisabled();
+            }
+
 	    }
 
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgRevolveProfile"))
@@ -7339,6 +7509,28 @@ void Editor::drawGui() {
         revolve_pick_profile_from_viewer = false;
         cout << "Selected revolve profile: " << revolve_profile_path << endl;
         appendToAppConsole("Selected revolve profile: " + revolve_profile_path + "\n");
+      }
+      ImGuiFileDialog::Instance()->Close();
+    }
+
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgExtrudeProfile"))
+    {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        const std::map<std::string, std::string> selection =
+            ImGuiFileDialog::Instance()->GetSelection();
+        if (!selection.empty()) {
+          extrude_profile_path = selection.begin()->second;
+        } else {
+          extrude_profile_path = ImGuiFileDialog::Instance()->GetFilePathName();
+        }
+        std::snprintf(extrude_profile_path_buffer,
+                      sizeof(extrude_profile_path_buffer),
+                      "%s",
+                      extrude_profile_path.c_str());
+        extrude_profile_part = nullptr;
+        extrude_pick_profile_from_viewer = false;
+        cout << "Selected extrude profile: " << extrude_profile_path << endl;
+        appendToAppConsole("Selected extrude profile: " + extrude_profile_path + "\n");
       }
       ImGuiFileDialog::Instance()->Close();
     }

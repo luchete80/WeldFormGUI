@@ -295,3 +295,4 @@
          - Option for 2D meshing using own mesher & gmsh.
 20260608 - Added seeing and editing seed line subdivisions and transfinite mesh control.
          - Added Friction Energy.
+         - Added "Extrude" to New Geometry. 
