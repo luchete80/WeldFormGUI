@@ -4876,11 +4876,10 @@ void Editor::drawGui() {
       }
 
       if (has_loaded_model) {
-	        std::string modelTreeLabel = "Model (" + des + ")";
           if (expand_model_tree_once) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
           }
-	        bool model_tree_open = ImGui::TreeNode(modelTreeLabel.c_str());
+	        bool model_tree_open = ImGui::TreeNode("##active_model_tree", "Model (%s)", des.c_str());
 	        if (ImGui::IsItemClicked()) {
 	          model_tree_item_clicked = true;
 	        }
