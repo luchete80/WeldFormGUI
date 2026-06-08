@@ -289,7 +289,9 @@
 20260605 - Added Cylinder Orient in any edge
          - Fixed contact explicit solver.
          - Added part rotate.
-20260606 - Created import .geo gmsh files
+20260607 - Created import .geo gmsh files
          - Added create surf from closed loop. 
          - Fixed Some Line/Rectangle profile selection not allowed (imgui ID)
          - Option for 2D meshing using own mesher & gmsh.
+20260608 - Added seeing and editing seed line subdivisions and transfinite mesh control.
+         - Added Friction Energy.

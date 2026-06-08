@@ -70,7 +70,11 @@ bool IsDefaultVisibleEnergySeries(const std::string& name) {
          normalized == "ekin" ||
          normalized == "wext" ||
          normalized == "etot" ||
-         normalized == "ebal";
+         normalized == "ebal" ||
+         normalized == "wnormal" ||
+         normalized == "wfric" ||
+         normalized == "wext_normal" ||
+         normalized == "wext_tangent";
 }
 
 }  // namespace

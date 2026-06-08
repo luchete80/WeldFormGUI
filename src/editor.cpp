@@ -221,6 +221,24 @@ void applyTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
   }
 }
 
+void applyTransfiniteConstraintsToCurrentGmshModel(double elementSize,
+                                                   const MeshDialog* meshDialog) {
+  if (elementSize <= 0.0) return;
+
+  std::vector<std::pair<int, int>> curveEntities;
+  gmsh::model::getEntities(curveEntities, 1);
+  for (const auto& entity : curveEntities) {
+    int nodeCount = curveNodeCountFromElementSize(entity.second, elementSize);
+    if (meshDialog != nullptr) {
+      const int overriddenNodeCount = meshDialog->getCurveNodeCountOverride(entity.second);
+      if (overriddenNodeCount > 0) {
+        nodeCount = overriddenNodeCount;
+      }
+    }
+    gmsh::model::mesh::setTransfiniteCurve(entity.second, nodeCount);
+  }
+}
+
 void applyHexaTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
   applyTransfiniteConstraintsToCurrentGmshModel(elementSize);
 
@@ -236,6 +254,58 @@ void applyHexaTransfiniteConstraintsToCurrentGmshModel(double elementSize) {
   for (const auto& entity : volumeEntities) {
     gmsh::model::mesh::setTransfiniteVolume(entity.second);
   }
+}
+
+void applyHexaTransfiniteConstraintsToCurrentGmshModel(double elementSize,
+                                                       const MeshDialog* meshDialog) {
+  applyTransfiniteConstraintsToCurrentGmshModel(elementSize, meshDialog);
+
+  std::vector<std::pair<int, int>> surfaceEntities;
+  gmsh::model::getEntities(surfaceEntities, 2);
+  for (const auto& entity : surfaceEntities) {
+    gmsh::model::mesh::setTransfiniteSurface(entity.second);
+    gmsh::model::mesh::setRecombine(2, entity.second);
+  }
+
+  std::vector<std::pair<int, int>> volumeEntities;
+  gmsh::model::getEntities(volumeEntities, 3);
+  for (const auto& entity : volumeEntities) {
+    gmsh::model::mesh::setTransfiniteVolume(entity.second);
+  }
+}
+
+bool canApplyTransfiniteSurfaceToCurrentGmshSurface(int surfaceTag,
+                                                    double elementSize,
+                                                    const MeshDialog* meshDialog) {
+  gmsh::vectorpair boundary;
+  gmsh::model::getBoundary({{2, surfaceTag}}, boundary, false, false, false);
+
+  std::vector<int> curveTags;
+  curveTags.reserve(boundary.size());
+  for (const auto& entity : boundary) {
+    if (entity.first == 1) {
+      curveTags.push_back(entity.second);
+    }
+  }
+
+  if (curveTags.size() != 4) {
+    return false;
+  }
+
+  std::vector<int> nodeCounts;
+  nodeCounts.reserve(curveTags.size());
+  for (int curveTag : curveTags) {
+    int nodeCount = curveNodeCountFromElementSize(curveTag, elementSize);
+    if (meshDialog != nullptr) {
+      const int overriddenNodeCount = meshDialog->getCurveNodeCountOverride(curveTag);
+      if (overriddenNodeCount > 0) {
+        nodeCount = overriddenNodeCount;
+      }
+    }
+    nodeCounts.push_back(nodeCount);
+  }
+
+  return nodeCounts[0] == nodeCounts[2] && nodeCounts[1] == nodeCounts[3];
 }
 
 double signedArea2D(const std::vector<std::array<double, 2>>& points)
@@ -2015,6 +2085,13 @@ void Editor::handleSelectionInteraction()
     return;
   }
 
+  if (handleMeshSeedInteraction()) {
+    if (m_selector.isBoxSelecting()) {
+      m_selector.finishBoxSelection();
+    }
+    return;
+  }
+
   if (!isSelectorInteractionEnabled() || m_moving_mode) {
     if (m_selector.isBoxSelecting()) {
       m_selector.finishBoxSelection();
@@ -2106,6 +2183,62 @@ void Editor::handleSelectionInteraction()
     }
     m_selector.finishBoxSelection();
   }
+}
+
+bool Editor::handleMeshSeedInteraction()
+{
+  if (!m_show_msh_dlg || !m_mshdlg.isSeedPickModeActive() || viewer == nullptr || selected_prt == nullptr) {
+    return false;
+  }
+
+  const ImVec2 viewportMin = viewer->getViewportScreenMin();
+  const ImVec2 viewportMax = viewer->getViewportScreenMax();
+  if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
+    return false;
+  }
+
+  if (!viewer->isViewportHovered() || !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    return true;
+  }
+
+  vtkOCCTGeom* visual = getApp().getVisualForPart(selected_prt);
+  if (visual == nullptr || visual->actor == nullptr) {
+    return true;
+  }
+
+  ImGuiIO& io = ImGui::GetIO();
+  const double localX = io.MousePos.x - viewportMin.x;
+  const double localY = io.MousePos.y - viewportMin.y;
+  const double pickY = static_cast<double>(viewer->getViewportHeight()) - localY;
+
+  vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
+  picker->SetTolerance(0.0008);
+  if (!picker->Pick(localX, pickY, 0.0, viewer->getRenderer()) ||
+      picker->GetActor() != visual->actor.GetPointer()) {
+    return true;
+  }
+
+  double pickPos[3] = {0.0, 0.0, 0.0};
+  picker->GetPickPosition(pickPos);
+
+  int bestTag = -1;
+  double bestDistance2 = std::numeric_limits<double>::max();
+  for (const MeshDialog::CurveDivisionPreview &entry : m_mshdlg.getCurvePreview()) {
+    const double dx = entry.center_x - pickPos[0];
+    const double dy = entry.center_y - pickPos[1];
+    const double dz = entry.center_z - pickPos[2];
+    const double distance2 = dx * dx + dy * dy + dz * dz;
+    if (distance2 < bestDistance2) {
+      bestDistance2 = distance2;
+      bestTag = entry.tag;
+    }
+  }
+
+  if (bestTag >= 0 && m_mshdlg.selectCurveByTag(bestTag)) {
+    updatePartOverlay();
+  }
+
+  return true;
 }
 
 void Editor::drawSelectionOverlay() const
@@ -3801,59 +3934,106 @@ void Editor::updatePartOverlay()
 {
   clearPartOverlay();
 
-  if (viewer == nullptr || viewer->getRenderer() == nullptr || highlighted_prt == nullptr) {
-    return;
-  }
-
-  vtkSmartPointer<vtkActor> sourceActor = getPartVisualActor(highlighted_prt);
-  vtkSmartPointer<vtkPolyData> targetPolyData = getBoundaryConditionTargetPolyData(highlighted_prt);
-  if (sourceActor == nullptr || targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0) {
+  if (viewer == nullptr || viewer->getRenderer() == nullptr) {
     return;
   }
 
   vtkSmartPointer<vtkRenderer> renderer = viewer->getRenderer();
-  const bool hasFaces = targetPolyData->GetNumberOfPolys() > 0;
-  const bool hasLines = targetPolyData->GetNumberOfLines() > 0;
-  const bool hasVerts = targetPolyData->GetNumberOfVerts() > 0;
+  if (highlighted_prt != nullptr) {
+    vtkSmartPointer<vtkActor> sourceActor = getPartVisualActor(highlighted_prt);
+    vtkSmartPointer<vtkPolyData> targetPolyData = getBoundaryConditionTargetPolyData(highlighted_prt);
+    if (sourceActor != nullptr && targetPolyData != nullptr && targetPolyData->GetNumberOfPoints() > 0) {
+      const bool hasFaces = targetPolyData->GetNumberOfPolys() > 0;
+      const bool hasLines = targetPolyData->GetNumberOfLines() > 0;
+      const bool hasVerts = targetPolyData->GetNumberOfVerts() > 0;
 
-  if (hasFaces) {
-    vtkNew<vtkPolyDataMapper> surfaceMapper;
-    surfaceMapper->SetInputData(targetPolyData);
+      if (hasFaces) {
+        vtkNew<vtkPolyDataMapper> surfaceMapper;
+        surfaceMapper->SetInputData(targetPolyData);
 
-    vtkSmartPointer<vtkActor> surfaceActor = vtkSmartPointer<vtkActor>::New();
-    surfaceActor->SetMapper(surfaceMapper);
-    surfaceActor->PickableOff();
-    surfaceActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
-    surfaceActor->GetProperty()->SetOpacity(0.18);
-    surfaceActor->GetProperty()->LightingOff();
-    renderer->AddActor(surfaceActor);
-    m_part_overlay_actors.push_back(surfaceActor);
+        vtkSmartPointer<vtkActor> surfaceActor = vtkSmartPointer<vtkActor>::New();
+        surfaceActor->SetMapper(surfaceMapper);
+        surfaceActor->PickableOff();
+        surfaceActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
+        surfaceActor->GetProperty()->SetOpacity(0.18);
+        surfaceActor->GetProperty()->LightingOff();
+        renderer->AddActor(surfaceActor);
+        m_part_overlay_actors.push_back(surfaceActor);
+      }
+
+      vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
+      edgeActor->SetMapper(sourceActor->GetMapper());
+      edgeActor->SetUserTransform(sourceActor->GetUserTransform());
+      if (sourceActor->GetTexture() != nullptr) {
+        edgeActor->SetTexture(sourceActor->GetTexture());
+      }
+      vtkSmartPointer<vtkProperty> overlayProperty = vtkSmartPointer<vtkProperty>::New();
+      overlayProperty->DeepCopy(sourceActor->GetProperty());
+      edgeActor->SetProperty(overlayProperty);
+      edgeActor->PickableOff();
+      edgeActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
+      edgeActor->GetProperty()->SetOpacity(1.0);
+      edgeActor->GetProperty()->LightingOff();
+      edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
+      edgeActor->GetProperty()->RenderPointsAsSpheresOn();
+      edgeActor->GetProperty()->SetLineWidth((hasLines || hasVerts) ? 8.0 : 4.0);
+      edgeActor->GetProperty()->SetPointSize((hasLines || hasVerts) ? 11.0 : 8.0);
+      if (hasFaces) {
+        edgeActor->GetProperty()->SetRepresentationToWireframe();
+      } else {
+        edgeActor->GetProperty()->SetRepresentation(sourceActor->GetProperty()->GetRepresentation());
+      }
+      renderer->AddActor(edgeActor);
+      m_part_overlay_actors.push_back(edgeActor);
+    }
   }
 
-  vtkSmartPointer<vtkActor> edgeActor = vtkSmartPointer<vtkActor>::New();
-  edgeActor->SetMapper(sourceActor->GetMapper());
-  edgeActor->SetUserTransform(sourceActor->GetUserTransform());
-  if (sourceActor->GetTexture() != nullptr) {
-    edgeActor->SetTexture(sourceActor->GetTexture());
+  if (m_show_msh_dlg &&
+      selected_prt != nullptr &&
+      m_mshdlg.isCurvePreviewVisible() &&
+      isPartGeometryVisible(selected_prt)) {
+    if (m_mshdlg.shouldApplyTransfiniteSurfaces()) {
+      for (const MeshDialog::SurfacePreview &entry : m_mshdlg.getSurfacePreview()) {
+        const std::string label = "TF S" + std::to_string(entry.tag);
+        vtkSmartPointer<vtkBillboardTextActor3D> textActor =
+            vtkSmartPointer<vtkBillboardTextActor3D>::New();
+        textActor->SetInput(label.c_str());
+        textActor->SetPosition(entry.center_x, entry.center_y, entry.center_z);
+        textActor->PickableOff();
+        textActor->GetTextProperty()->SetFontSize(16);
+        textActor->GetTextProperty()->SetColor(0.55, 1.0, 0.55);
+        textActor->GetTextProperty()->SetBold(true);
+        textActor->GetTextProperty()->SetBackgroundColor(0.0, 0.0, 0.0);
+        textActor->GetTextProperty()->SetBackgroundOpacity(0.45);
+        renderer->AddActor(textActor);
+        m_part_overlay_actors.push_back(textActor);
+      }
+    }
+
+    for (const MeshDialog::CurveDivisionPreview &entry : m_mshdlg.getCurvePreview()) {
+      const int effectiveSegments = entry.use_custom_segments ? entry.custom_segment_count : entry.segment_count;
+      const std::string label = std::to_string(effectiveSegments);
+      const bool isSelectedCurve = (entry.tag == m_mshdlg.getSelectedCurveTag());
+      vtkSmartPointer<vtkBillboardTextActor3D> textActor =
+          vtkSmartPointer<vtkBillboardTextActor3D>::New();
+      textActor->SetInput(label.c_str());
+      textActor->SetPosition(entry.center_x, entry.center_y, entry.center_z);
+      textActor->PickableOff();
+      textActor->GetTextProperty()->SetFontSize(18);
+      textActor->GetTextProperty()->SetColor(isSelectedCurve ? 0.25 : 1.0,
+                                             isSelectedCurve ? 1.0 : 0.95,
+                                             isSelectedCurve ? 1.0 : 0.1);
+      textActor->GetTextProperty()->SetBold(true);
+      textActor->GetTextProperty()->SetBackgroundColor(0.0, 0.0, 0.0);
+      textActor->GetTextProperty()->SetBackgroundOpacity(isSelectedCurve ? 0.75 : 0.55);
+      renderer->AddActor(textActor);
+      m_part_overlay_actors.push_back(textActor);
+    }
   }
-  vtkSmartPointer<vtkProperty> overlayProperty = vtkSmartPointer<vtkProperty>::New();
-  overlayProperty->DeepCopy(sourceActor->GetProperty());
-  edgeActor->SetProperty(overlayProperty);
-  edgeActor->PickableOff();
-  edgeActor->GetProperty()->SetColor(0.25, 0.85, 1.0);
-  edgeActor->GetProperty()->SetOpacity(1.0);
-  edgeActor->GetProperty()->LightingOff();
-  edgeActor->GetProperty()->SetRenderLinesAsTubes(true);
-  edgeActor->GetProperty()->RenderPointsAsSpheresOn();
-  edgeActor->GetProperty()->SetLineWidth((hasLines || hasVerts) ? 8.0 : 4.0);
-  edgeActor->GetProperty()->SetPointSize((hasLines || hasVerts) ? 11.0 : 8.0);
-  if (hasFaces) {
-    edgeActor->GetProperty()->SetRepresentationToWireframe();
-  } else {
-    edgeActor->GetProperty()->SetRepresentation(sourceActor->GetProperty()->GetRepresentation());
+
+  if (viewer->getRenderWindow() != nullptr) {
+    viewer->getRenderWindow()->Render();
   }
-  renderer->AddActor(edgeActor);
-  m_part_overlay_actors.push_back(edgeActor);
 }
 
 bool Editor::consumeResultsViewerActivationRequest()
@@ -4194,12 +4374,19 @@ void Editor::meshPart(Part* part){
   geo->setFileName(step_path.string());
   geo->ExportSTEP();
 
-  gmsh::clear();
-  gmsh::model::add("t20");
-  std::vector<std::pair<int, int> > v;
-  gmsh::model::occ::importShapes(step_path.string(), v);
-  gmsh::model::occ::synchronize();
-  int gmsh_dim = gmsh::model::getDimension();
+  int gmsh_dim = -1;
+  auto rebuildCurrentGmshModel = [&]() {
+    gmsh::clear();
+    gmsh::model::add("t20");
+    std::vector<std::pair<int, int> > imported_entities;
+    gmsh::model::occ::importShapes(step_path.string(), imported_entities);
+    gmsh::vectorpair healed_entities;
+    gmsh::model::occ::healShapes(healed_entities, imported_entities);
+    gmsh::model::occ::removeAllDuplicates();
+    gmsh::model::occ::synchronize();
+    gmsh_dim = gmsh::model::getDimension();
+  };
+  rebuildCurrentGmshModel();
   AnalysisType analysis_type = m_model->getAnalysisType();
   bool is_2d_analysis = (analysis_type == PlaneStress2D ||
                          analysis_type == PlaneStrain2D ||
@@ -4270,7 +4457,7 @@ void Editor::meshPart(Part* part){
     }
   } else if (is_2d_analysis && is_rigid_part) {
     applyMeshSizeToCurrentGmshModel(element_size);
-    applyTransfiniteConstraintsToCurrentGmshModel(element_size);
+    applyTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
 
     gmsh::model::mesh::generate(1);
 
@@ -4281,25 +4468,39 @@ void Editor::meshPart(Part* part){
     part->generateMesh();
     mesh_ready = true;
   } else {
-    std::vector<std::pair<int, int>> entities;
-    gmsh::model::getEntities(entities);
-    applyMeshSizeToCurrentGmshModel(element_size);
-    const bool prefer_hexa_transfinite =
-        gmsh_dim == 3 && geo->prefersHexaTransfinite();
-    
-    if (is_2d_analysis) {
-      applyTransfiniteConstraintsToCurrentGmshModel(element_size);
-      for(auto &e : entities) {
-          if(e.first == 2) {
-              gmsh::model::mesh::setRecombine(2, e.second);
-              cout << "Recombine in 2 dim"<<endl;
+    auto configureAndGenerateGmshMesh = [&](bool apply_transfinite_surfaces) {
+      std::vector<std::pair<int, int>> entities;
+      gmsh::model::getEntities(entities);
+      applyMeshSizeToCurrentGmshModel(element_size);
+      const bool prefer_hexa_transfinite =
+          gmsh_dim == 3 && geo->prefersHexaTransfinite();
+
+      if (is_2d_analysis) {
+        applyTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
+        for (auto &e : entities) {
+          if (e.first == 2) {
+            if (apply_transfinite_surfaces &&
+                canApplyTransfiniteSurfaceToCurrentGmshSurface(e.second, element_size, &m_mshdlg)) {
+              gmsh::model::mesh::setTransfiniteSurface(e.second);
+              cout << "Applied transfinite surface on surface " << e.second << endl;
+            } else if (apply_transfinite_surfaces) {
+              cout << "Skipped transfinite surface on surface " << e.second
+                   << " due to incompatible boundary node counts or non-4-sided face" << endl;
+            }
+            gmsh::model::mesh::setRecombine(2, e.second);
+            cout << "Recombine in 2 dim" << endl;
           }
+        }
+      } else if (prefer_hexa_transfinite) {
+        applyHexaTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
       }
-    } else if (prefer_hexa_transfinite) {
-      applyHexaTransfiniteConstraintsToCurrentGmshModel(element_size);
-    }
-    
-    if (gmsh_dim > -1) gmsh::model::mesh::generate(gmsh_dim);
+
+      if (gmsh_dim > -1) {
+        gmsh::model::mesh::generate(gmsh_dim);
+      }
+    };
+
+    configureAndGenerateGmshMesh(is_2d_analysis && m_mshdlg.shouldApplyTransfiniteSurfaces());
     
     fs::path mesh_path = activeModelOutputPath(*m_model,
                                                activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".msh");

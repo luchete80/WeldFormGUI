@@ -215,6 +215,7 @@ protected:
   void drawSelectionControls();
   bool isSelectorInteractionEnabled() const;
   bool shouldDrawSelectionOverlay() const;
+  bool handleMeshSeedInteraction();
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   bool projectElementCentroidToViewport(Element* element, double& x, double& y) const;
   Mesh* findResultViewerTargetMesh() const;

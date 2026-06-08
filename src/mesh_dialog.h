@@ -4,10 +4,29 @@
 
 #include "Part.h"
 #include "model/Model.h"
+#include <string>
+#include <vector>
 
 //SAME DIALOG FROM CREATE AND EDIT MATERIAL
 // IS BASICALLY THE SAME 
 struct MeshDialog{
+  struct CurveDivisionPreview {
+    int tag = -1;
+    double approx_length = 0.0;
+    int node_count = 0;
+    int segment_count = 0;
+    bool use_custom_segments = false;
+    int custom_segment_count = 0;
+    double center_x = 0.0;
+    double center_y = 0.0;
+    double center_z = 0.0;
+  };
+  struct SurfacePreview {
+    int tag = -1;
+    double center_x = 0.0;
+    double center_y = 0.0;
+    double center_z = 0.0;
+  };
   
    MeshDialog() {
      m_v = make_double3(0,0,0);
@@ -29,11 +48,31 @@ struct MeshDialog{
   int m_2d_mesh_generator = 0;
   bool m_apply_mesh;
   Part* m_mesh_part;
+  bool m_curve_preview_visible = false;
+  bool m_curve_preview_dirty = false;
+  bool m_seed_pick_mode = false;
+  int m_selected_curve_tag = -1;
+  bool m_apply_transfinite_surfaces = true;
+  std::string m_curve_preview_status;
+  std::vector<CurveDivisionPreview> m_curve_preview;
+  std::vector<SurfacePreview> m_surface_preview;
 
 
   
   const bool & isPartCreated()const{return create_part;}
   bool hasMeshRequest() const { return m_apply_mesh; }
+  bool isCurvePreviewVisible() const { return m_curve_preview_visible; }
+  bool isSeedPickModeActive() const { return m_seed_pick_mode; }
+  int getSelectedCurveTag() const { return m_selected_curve_tag; }
+  bool shouldApplyTransfiniteSurfaces() const { return m_apply_transfinite_surfaces; }
+  const std::vector<CurveDivisionPreview>& getCurvePreview() const { return m_curve_preview; }
+  const std::vector<SurfacePreview>& getSurfacePreview() const { return m_surface_preview; }
+  const CurveDivisionPreview* getSelectedCurvePreview() const;
+  bool selectCurveByTag(int tag);
+  bool setSelectedCurveSegments(int segmentCount);
+  void resetSelectedCurveSegments();
+  void resetAllCurveSegments();
+  int getCurveNodeCountOverride(int tag) const;
   Part* consumeMeshRequest() {
     Part* part = m_mesh_part;
     m_apply_mesh = false;

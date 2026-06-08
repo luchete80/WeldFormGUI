@@ -1,0 +1,62 @@
+{
+    "Configuration": {
+        "SPH": {
+            "hFactor": 1.2
+        },
+        "analysisType": "PlaneStress2D",
+        "modelType": "SPH",
+        "solver": "WeldForm",
+        "twoDMeshGenerator": "gmsh"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 5000.0,
+            "useGapPenalty": true
+        }
+    ],
+    "Remeshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": false,
+        "enabled": false,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 165.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "model": {
+        "parts": [
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_0.step"
+                },
+                "id": 0,
+                "isRigid": false,
+                "mesh": {
+                    "source": "demo_part_0.bdf"
+                },
+                "name": "traction",
+                "sectionId": -1
+            }
+        ]
+    }
+}
