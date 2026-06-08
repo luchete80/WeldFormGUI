@@ -214,6 +214,7 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
       else
         m_2d_mesh_generator = 0;
       m_apply_transfinite_surfaces = true;
+      m_force_tetra_only = true;
       m_curve_preview_visible = false;
       m_curve_preview_dirty = false;
       m_seed_pick_mode = false;
@@ -288,6 +289,12 @@ void MeshDialog::Draw(const char* title, bool* p_open, Model *model, Part *part)
       const char* mesher_items[] = {"mesh-adapt", "gmsh"};
       preview_settings_changed |=
         ImGui::Combo("2D mesher", &m_2d_mesh_generator, mesher_items, IM_ARRAYSIZE(mesher_items));
+  }
+
+  if (model != nullptr && model->getDimension() == 3) {
+    ImGui::Checkbox("Tetra only", &m_force_tetra_only);
+    ImGui::SameLine();
+    ImGui::TextDisabled("Disable transfinite/recombine hybrid meshing for 3D.");
   }
 
   if (preview_settings_changed && m_curve_preview_visible) {

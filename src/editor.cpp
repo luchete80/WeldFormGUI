@@ -4467,13 +4467,14 @@ void Editor::meshPart(Part* part){
 
     part->generateMesh();
     mesh_ready = true;
-  } else {
-    auto configureAndGenerateGmshMesh = [&](bool apply_transfinite_surfaces) {
-      std::vector<std::pair<int, int>> entities;
-      gmsh::model::getEntities(entities);
-      applyMeshSizeToCurrentGmshModel(element_size);
-      const bool prefer_hexa_transfinite =
-          gmsh_dim == 3 && geo->prefersHexaTransfinite();
+	  } else {
+	    auto configureAndGenerateGmshMesh = [&](bool apply_transfinite_surfaces) {
+	      std::vector<std::pair<int, int>> entities;
+	      gmsh::model::getEntities(entities);
+	      applyMeshSizeToCurrentGmshModel(element_size);
+	      const bool prefer_hexa_transfinite =
+	          gmsh_dim == 3 && geo->prefersHexaTransfinite() &&
+	          !m_mshdlg.shouldForceTetraOnly();
 
       if (is_2d_analysis) {
         applyTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
@@ -4495,20 +4496,30 @@ void Editor::meshPart(Part* part){
         applyHexaTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
       }
 
-      if (gmsh_dim > -1) {
-        gmsh::model::mesh::generate(gmsh_dim);
-      }
-    };
+	      if (gmsh_dim > -1) {
+	        gmsh::model::mesh::generate(gmsh_dim);
+	      }
+	    };
 
-    configureAndGenerateGmshMesh(is_2d_analysis && m_mshdlg.shouldApplyTransfiniteSurfaces());
-    
-    fs::path mesh_path = activeModelOutputPath(*m_model,
-                                               activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".msh");
-    gmsh::write(mesh_path.string().c_str());
-    
-    part->generateMesh();
-    mesh_ready = true;
-  }
+	    try {
+	      configureAndGenerateGmshMesh(is_2d_analysis && m_mshdlg.shouldApplyTransfiniteSurfaces());
+	      
+	      fs::path mesh_path = activeModelOutputPath(*m_model,
+	                                                 activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".msh");
+	      gmsh::write(mesh_path.string().c_str());
+	      
+	      part->generateMesh();
+	      mesh_ready = true;
+	    } catch (const std::exception& e) {
+	      cerr << "Error generating gmsh mesh: " << e.what() << endl;
+	      appendToAppConsole("Error generating gmsh mesh: " + std::string(e.what()) + "\n");
+	      mesh_ready = false;
+	    } catch (...) {
+	      cerr << "Unknown error generating gmsh mesh" << endl;
+	      appendToAppConsole("Unknown error generating gmsh mesh\n");
+	      mesh_ready = false;
+	    }
+	  }
 
   if (!mesh_ready){
     return;

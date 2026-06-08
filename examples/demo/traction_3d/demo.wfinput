@@ -1,0 +1,132 @@
+{
+    "Amplitudes": null,
+    "BoundaryConditions": [
+        {
+            "id": 1,
+            "setId": 0,
+            "value": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        },
+        {
+            "id": 2,
+            "setId": 1,
+            "value": [
+                1.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        }
+    ],
+    "Configuration": {
+        "cflFactor": 0.3,
+        "domType": "PlaneStress",
+        "fixedTS": false,
+        "outTime": 0.0001,
+        "simTime": 0.05,
+        "solver": "WeldForm"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 5000.0,
+            "useGapPenalty": true
+        }
+    ],
+    "DomainBlocks": [
+        {
+            "fileName": "demo_part_0.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "InitialConditions": [],
+    "Materials": [
+        {
+            "const": [
+                387000000.0,
+                0.154
+            ],
+            "density0": 270000.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "strRange": [
+                0.0,
+                0.65
+            ],
+            "strdotRange": [
+                0.001,
+                10.0
+            ],
+            "tempRange": [
+                20.0,
+                1000.0
+            ],
+            "thermalCond": 0.0,
+            "thermalExp": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "yieldStress0": 190000000.0,
+            "youngsModulus": 70000000000.0
+        }
+    ],
+    "Meshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": false,
+        "enabled": false,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 165.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "Sets": [
+        {
+            "id": 0,
+            "nodes": [
+                1,
+                4,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40
+            ]
+        },
+        {
+            "id": 1,
+            "nodes": [
+                11,
+                12,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124
+            ]
+        }
+    ]
+}

@@ -53,6 +53,7 @@ struct MeshDialog{
   bool m_seed_pick_mode = false;
   int m_selected_curve_tag = -1;
   bool m_apply_transfinite_surfaces = true;
+  bool m_force_tetra_only = true;
   std::string m_curve_preview_status;
   std::vector<CurveDivisionPreview> m_curve_preview;
   std::vector<SurfacePreview> m_surface_preview;
@@ -65,6 +66,7 @@ struct MeshDialog{
   bool isSeedPickModeActive() const { return m_seed_pick_mode; }
   int getSelectedCurveTag() const { return m_selected_curve_tag; }
   bool shouldApplyTransfiniteSurfaces() const { return m_apply_transfinite_surfaces; }
+  bool shouldForceTetraOnly() const { return m_force_tetra_only; }
   const std::vector<CurveDivisionPreview>& getCurvePreview() const { return m_curve_preview; }
   const std::vector<SurfacePreview>& getSurfacePreview() const { return m_surface_preview; }
   const CurveDivisionPreview* getSelectedCurvePreview() const;
