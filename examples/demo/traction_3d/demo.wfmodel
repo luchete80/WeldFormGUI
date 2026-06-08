@@ -1,9 +1,45 @@
 {
+    "BoundaryConditions": [
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 0,
+            "type": "VelocityBC",
+            "value": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        },
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 1,
+            "type": "VelocityBC",
+            "value": [
+                1.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        }
+    ],
     "Configuration": {
         "SPH": {
             "hFactor": 1.2
         },
-        "analysisType": "PlaneStress2D",
+        "analysisType": "Solid3D",
         "modelType": "SPH",
         "solver": "WeldForm",
         "twoDMeshGenerator": "gmsh"
@@ -35,11 +71,81 @@
         "yieldStress0": 190000000.0,
         "youngsModulus": 70000000000.0
     },
+    "NodeSets": [
+        {
+            "id": 0,
+            "label": "set_0",
+            "nodeIds": [
+                1,
+                2,
+                7,
+                8,
+                25,
+                56,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                296,
+                297,
+                298,
+                299,
+                300,
+                301,
+                302,
+                303,
+                304
+            ],
+            "partId": 1
+        },
+        {
+            "id": 1,
+            "label": "set_1",
+            "nodeIds": [
+                21,
+                22,
+                23,
+                24,
+                231,
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251,
+                252,
+                796,
+                797,
+                798,
+                799,
+                800,
+                801,
+                802,
+                803,
+                804
+            ],
+            "partId": 1
+        }
+    ],
     "Remeshing": {
         "beta": 4.0,
         "dampFactor": 0.02,
         "debug": false,
-        "enabled": false,
+        "enabled": true,
         "epsRef": 1.0,
         "mapAcc": false,
         "mapVel": false,
@@ -99,24 +205,13 @@
                         0.0,
                         0.0
                     ],
-                    "source": "demo_part_0.step"
-                },
-                "id": 0,
-                "isRigid": false,
-                "name": "traction",
-                "sectionId": -1
-            },
-            {
-                "geometry": {
-                    "origin": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
                     "source": "demo_part_1.step"
                 },
                 "id": 1,
                 "isRigid": false,
+                "mesh": {
+                    "source": "demo_part_1.bdf"
+                },
                 "name": "",
                 "sectionId": -1
             }
