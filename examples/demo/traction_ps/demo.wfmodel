@@ -1,4 +1,40 @@
 {
+    "BoundaryConditions": [
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 0,
+            "type": "VelocityBC",
+            "value": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        },
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "NodeSet",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 1,
+            "type": "VelocityBC",
+            "value": [
+                1.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        }
+    ],
     "Configuration": {
         "SPH": {
             "hFactor": 1.2
@@ -20,6 +56,53 @@
             "useGapPenalty": true
         }
     ],
+    "Materials": {
+        "const": [
+            387000000.0,
+            0.154
+        ],
+        "density0": 270000.0,
+        "poissonsRatio": 0.3,
+        "strRange": [
+            0.0,
+            0.65
+        ],
+        "type": "Hollomon",
+        "yieldStress0": 190000000.0,
+        "youngsModulus": 70000000000.0
+    },
+    "NodeSets": [
+        {
+            "id": 0,
+            "label": "set_0",
+            "nodeIds": [
+                1,
+                4,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40
+            ],
+            "partId": 0
+        },
+        {
+            "id": 1,
+            "label": "set_1",
+            "nodeIds": [
+                11,
+                12,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124
+            ],
+            "partId": 0
+        }
+    ],
     "Remeshing": {
         "beta": 4.0,
         "dampFactor": 0.02,
@@ -38,6 +121,43 @@
         "transitionAngle": 15.0,
         "type": 0
     },
+    "Steps": [
+        {
+            "artifViscAlpha": 1.0,
+            "artifViscBeta": 0.0,
+            "autoTS": [
+                false,
+                false,
+                false
+            ],
+            "axiSymmVol": false,
+            "cflFactor": 0.3,
+            "elemLengthFraction": 0.2,
+            "fixedTS": false,
+            "id": 0,
+            "implicit": {
+                "divTol": 1.0,
+                "forceTol": 10.0,
+                "maxIter": 200,
+                "omegaP": 0.1,
+                "omegaV": 0.4,
+                "pressTol": 10.0,
+                "springFactor": 1e-07,
+                "springMode": 1,
+                "springStiffness": 0.0,
+                "timeStepGrowthFactor": 1.2,
+                "type": "Picard",
+                "useSprings": false,
+                "velTol": 0.05
+            },
+            "kernelGradCorr": false,
+            "name": "Step-1",
+            "nproc": 1,
+            "outTime": 0.0001,
+            "simTime": 0.05,
+            "type": "Explicit"
+        }
+    ],
     "model": {
         "parts": [
             {
