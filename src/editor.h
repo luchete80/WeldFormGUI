@@ -148,6 +148,7 @@ public:
                           double axisDirY,
                           double axisDirZ);
   void adoptModelFromScript(Model* model);
+  bool consumeModelViewerActivationRequest();
   bool consumeResultsViewerActivationRequest();
   bool isLoadingResults() const;
   bool hasBlockingDialogOpen() const;
@@ -175,8 +176,14 @@ public:
   void clearSelectedNodeSet();
   void clearSelectedElementSet();
   void clearSelectedFaceSet();
+  void requestCloseCurrentModel();
+  void showModelSidebar() { m_sidebar_tab = SidebarTab::Model; }
+  void showResultsSidebar() { m_sidebar_tab = SidebarTab::Results; }
   void closeCurrentModel();
   void closeCurrentResults();
+  void selectResultNodeSetById(int setId);
+  void clearSelectedResultNodeSet();
+  void refreshSelectedResultNodeSetHighlight();
   
   void CalcFPS();
   void addViewer(VtkViewer *);
@@ -239,6 +246,19 @@ protected:
   void clearStateForDeletedPart(Part* part);
   void clearStateForDeletedCondition(Condition* condition);
   void clearSelectionForHiddenPart(Part* part);
+  const ResultNodeSet* findResultNodeSetById(int setId) const;
+  void removeResultNodeSetHighlightActor();
+  vtkSmartPointer<vtkActor> buildResultNodeSetHighlightActor(const ResultFrame& frame,
+                                                             const ResultNodeSet& nodeSet) const;
+  void markActiveModelDirty();
+  bool requestModelCloseOrReplace(bool closeCurrent,
+                                  const std::string& nextPath = std::string(),
+                                  bool openAsInput = false);
+  bool openModelFromPathImpl(const std::string& filePathName);
+  bool openInputFromPathImpl(const std::string& filePathName);
+  void runPendingModelAction();
+  void clearPendingModelAction();
+  void drawPendingModelSavePopup();
 
   GLFWwindow* window;
   unsigned int shaderProgram;
@@ -401,10 +421,13 @@ protected:
   vtkSmartPointer<TransformGizmo> gizmo;
 
   vtkSmartPointer<vtkActor> m_curr_res_actor = nullptr;
+  vtkSmartPointer<vtkActor> m_result_node_set_highlight_actor = nullptr;
+  int m_selected_result_node_set_id = -1;
   
   MultiResult *m_results = nullptr;
   std::map<int, bool> m_results_part_visibility;
   std::unique_ptr<MeasurementTool> m_measurement_tool;
+  bool m_activate_model_viewer = false;
   bool m_activate_results_viewer = false;
   bool m_selection_enabled = false;
   bool m_show_selected_node_labels = false;
@@ -447,6 +470,14 @@ protected:
     std::vector<fs::path> artifacts;
   };
   PendingJobRunConfirmation m_pending_job_run_confirmation;
+  struct PendingModelAction {
+    bool openPopup = false;
+    bool closeCurrent = false;
+    bool openAsInput = false;
+    bool runAfterSaveDialog = false;
+    std::string nextPath;
+  };
+  PendingModelAction m_pending_model_action;
   struct ModelCheckPopupState {
     bool open = false;
     wfgui::modelcheck::CheckReport report;

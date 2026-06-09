@@ -296,3 +296,10 @@
 20260608 - Added seeing and editing seed line subdivisions and transfinite mesh control.
          - Added Friction Energy.
          - Added "Extrude" to New Geometry. 
+20260609 - Added Load in sets.
+         - Added model name path in tree.
+         - Fixed close previous model at opening new, and saved model flag.
+         - Added fast closing model action.
+         - Added close results fast action.
+         - Auto switch left bar with model/results viewer at change.
+         - Added set to results an hightlight them in the tree

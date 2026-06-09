@@ -58,18 +58,18 @@
     ],
     "Materials": {
         "const": [
-            387000000.0,
+            386790000.0,
             0.154
         ],
         "density0": 270000.0,
         "poissonsRatio": 0.3,
         "strRange": [
             0.0,
-            0.65
+            1.0
         ],
         "type": "Hollomon",
-        "yieldStress0": 190000000.0,
-        "youngsModulus": 70000000000.0
+        "yieldStress0": 190400000.0,
+        "youngsModulus": 68900000000.0
     },
     "NodeSets": [
         {

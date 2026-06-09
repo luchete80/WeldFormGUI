@@ -106,38 +106,57 @@ bool IsLoadSeriesColumn(const std::string& token) {
   return true;
 }
 
-}  // namespace
-
-void LoadPlotDialog::SetCsvPath(const std::string& csv_path) {
-  if (csv_path == m_csv_path && !m_time_values.empty()) {
-    return;
-  }
-  LoadCsv(csv_path);
-}
-
-bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
-  std::map<std::string, bool> previous_visibility;
-  for (std::size_t i = 0; i < m_series_names.size() && i < m_series_visible.size(); ++i) {
-    previous_visibility[m_series_names[i]] = m_series_visible[i];
-  }
-
-  m_csv_path = csv_path;
-  m_error_message.clear();
-  m_x_label = "Time";
-  m_series_names.clear();
-  m_series_visible.clear();
-  m_time_values.clear();
-  m_series_values.clear();
-  m_auto_fit_pending = true;
-
-  if (csv_path.empty()) {
-    m_error_message = "CSV path is empty.";
+bool IsSetSeriesColumn(const std::string& token) {
+  const std::string trimmed = Trim(token);
+  if (trimmed.size() < 5) {
     return false;
   }
 
+  std::string lower = trimmed;
+  std::transform(lower.begin(), lower.end(), lower.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  if (lower.rfind("set", 0) != 0) {
+    return false;
+  }
+
+  std::size_t i = 3;
+  while (i < lower.size() && std::isdigit(static_cast<unsigned char>(lower[i]))) {
+    ++i;
+  }
+  if (i == 3 || i >= lower.size() || lower[i] != '_') {
+    return false;
+  }
+  ++i;
+  if (i >= lower.size()) {
+    return false;
+  }
+
+  for (; i < lower.size(); ++i) {
+    const char c = lower[i];
+    if (c != '_' && (c < 'a' || c > 'z')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool IsSupportedLoadSeriesColumn(const std::string& token) {
+  return IsLoadSeriesColumn(token) || IsSetSeriesColumn(token);
+}
+
+struct LoadedCsvData {
+  std::string x_label = "Time";
+  std::vector<std::string> series_names;
+  std::vector<double> time_values;
+  std::vector<std::vector<double>> series_values;
+};
+
+bool LoadPlotCsvFile(const std::string& csv_path,
+                     LoadedCsvData& data,
+                     std::string& error_message) {
   std::ifstream file(csv_path);
   if (!file.is_open()) {
-    m_error_message = "Could not open CSV file: " + csv_path;
+    error_message = "Could not open CSV file: " + csv_path;
     return false;
   }
 
@@ -168,20 +187,17 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     }
 
     if (!header_processed && !numeric_row) {
-      m_x_label = tokens[0].empty() ? "Time" : tokens[0];
+      data.x_label = tokens[0].empty() ? "Time" : tokens[0];
       for (std::size_t i = 1; i < tokens.size(); ++i) {
-        if (!IsLoadSeriesColumn(tokens[i])) {
+        if (!IsSupportedLoadSeriesColumn(tokens[i])) {
           continue;
         }
         selected_series_columns.push_back(i);
-        if (tokens[i].empty()) {
-          m_series_names.push_back("Load " + std::to_string(i));
-        } else {
-          m_series_names.push_back(tokens[i]);
-        }
+        data.series_names.push_back(tokens[i].empty() ? "Load " + std::to_string(i)
+                                                      : tokens[i]);
       }
       if (selected_series_columns.empty()) {
-        m_error_message = "No load columns matching f<number> were found in the header.";
+        error_message = "No load columns matching f<number> or set<number> were found in the header.";
         return false;
       }
       header_processed = true;
@@ -189,48 +205,166 @@ bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
     }
 
     if (!numeric_row) {
-      m_error_message = "Invalid numeric data in line " + std::to_string(line_number) + ".";
-      m_time_values.clear();
-      m_series_values.clear();
+      error_message = "Invalid numeric data in line " + std::to_string(line_number) + ".";
+      data.time_values.clear();
+      data.series_values.clear();
       return false;
     }
 
     if (!header_processed) {
       header_processed = true;
-      m_series_names.resize(tokens.size() - 1);
+      data.series_names.resize(tokens.size() - 1);
       selected_series_columns.resize(tokens.size() - 1);
-      for (std::size_t i = 0; i < m_series_names.size(); ++i) {
+      for (std::size_t i = 0; i < data.series_names.size(); ++i) {
         selected_series_columns[i] = i + 1;
-        m_series_names[i] = "Rigid Body " + std::to_string(i + 1);
+        data.series_names[i] = "Series " + std::to_string(i + 1);
       }
     }
 
     if (selected_series_columns.empty()) {
-      m_error_message = "No series columns selected for plotting.";
-      m_time_values.clear();
-      m_series_values.clear();
+      error_message = "No series columns selected for plotting.";
+      data.time_values.clear();
+      data.series_values.clear();
       return false;
     }
 
     if (tokens.size() <= selected_series_columns.back()) {
-      m_error_message = "Inconsistent column count in line " + std::to_string(line_number) + ".";
-      m_time_values.clear();
-      m_series_values.clear();
+      error_message = "Inconsistent column count in line " + std::to_string(line_number) + ".";
+      data.time_values.clear();
+      data.series_values.clear();
       return false;
     }
 
-    if (m_series_values.empty()) {
-      m_series_values.resize(selected_series_columns.size());
+    if (data.series_values.empty()) {
+      data.series_values.resize(selected_series_columns.size());
     }
 
-    m_time_values.push_back(numeric_values[0]);
+    data.time_values.push_back(numeric_values[0]);
     for (std::size_t i = 0; i < selected_series_columns.size(); ++i) {
-      m_series_values[i].push_back(numeric_values[selected_series_columns[i]]);
+      data.series_values[i].push_back(numeric_values[selected_series_columns[i]]);
     }
   }
 
-  if (m_time_values.empty()) {
-    m_error_message = "No plot data found in CSV file: " + csv_path;
+  if (data.time_values.empty()) {
+    error_message = "No plot data found in CSV file: " + csv_path;
+    return false;
+  }
+
+  return true;
+}
+
+std::string JoinPaths(const std::vector<std::string>& paths) {
+  std::ostringstream oss;
+  for (std::size_t i = 0; i < paths.size(); ++i) {
+    if (i > 0) {
+      oss << " | ";
+    }
+    oss << paths[i];
+  }
+  return oss.str();
+}
+
+std::string MakeUniqueSeriesName(const std::string& candidate,
+                                 const std::vector<std::string>& existing) {
+  if (std::find(existing.begin(), existing.end(), candidate) == existing.end()) {
+    return candidate;
+  }
+  int suffix = 2;
+  std::string unique_name;
+  do {
+    unique_name = candidate + " (" + std::to_string(suffix) + ")";
+    ++suffix;
+  } while (std::find(existing.begin(), existing.end(), unique_name) != existing.end());
+  return unique_name;
+}
+
+}  // namespace
+
+void LoadPlotDialog::SetCsvPath(const std::string& csv_path) {
+  SetCsvPaths(csv_path.empty() ? std::vector<std::string>() : std::vector<std::string>{csv_path});
+}
+
+void LoadPlotDialog::SetCsvPaths(const std::vector<std::string>& csv_paths) {
+  if (csv_paths == m_csv_paths && !m_time_values.empty()) {
+    return;
+  }
+  LoadCsvFiles(csv_paths);
+}
+
+bool LoadPlotDialog::LoadCsv(const std::string& csv_path) {
+  return LoadCsvFiles(csv_path.empty() ? std::vector<std::string>()
+                                       : std::vector<std::string>{csv_path});
+}
+
+bool LoadPlotDialog::LoadCsvFiles(const std::vector<std::string>& csv_paths) {
+  std::map<std::string, bool> previous_visibility;
+  for (std::size_t i = 0; i < m_series_names.size() && i < m_series_visible.size(); ++i) {
+    previous_visibility[m_series_names[i]] = m_series_visible[i];
+  }
+
+  m_csv_paths = csv_paths;
+  m_csv_path = JoinPaths(csv_paths);
+  m_error_message.clear();
+  m_x_label = "Time";
+  m_series_names.clear();
+  m_series_visible.clear();
+  m_time_values.clear();
+  m_series_values.clear();
+  m_auto_fit_pending = true;
+
+  if (csv_paths.empty()) {
+    m_error_message = "CSV path is empty.";
+    return false;
+  }
+
+  bool loaded_any = false;
+  std::vector<std::string> warnings;
+  for (const std::string& csv_path : csv_paths) {
+    if (csv_path.empty()) {
+      continue;
+    }
+
+    LoadedCsvData loaded;
+    std::string file_error;
+    if (!LoadPlotCsvFile(csv_path, loaded, file_error)) {
+      warnings.push_back(file_error);
+      continue;
+    }
+
+    if (!loaded_any) {
+      m_x_label = loaded.x_label;
+      m_time_values = loaded.time_values;
+      m_series_names = loaded.series_names;
+      m_series_values = loaded.series_values;
+      loaded_any = true;
+      continue;
+    }
+
+    if (loaded.time_values.size() != m_time_values.size()) {
+      warnings.push_back("Skipping CSV with different sample count: " + csv_path);
+      continue;
+    }
+
+    bool same_time_grid = true;
+    for (std::size_t i = 0; i < m_time_values.size(); ++i) {
+      if (std::abs(loaded.time_values[i] - m_time_values[i]) > 1.0e-12) {
+        same_time_grid = false;
+        break;
+      }
+    }
+    if (!same_time_grid) {
+      warnings.push_back("Skipping CSV with different time grid: " + csv_path);
+      continue;
+    }
+
+    for (std::size_t i = 0; i < loaded.series_names.size(); ++i) {
+      m_series_names.push_back(MakeUniqueSeriesName(loaded.series_names[i], m_series_names));
+      m_series_values.push_back(loaded.series_values[i]);
+    }
+  }
+
+  if (!loaded_any || m_time_values.empty()) {
+    m_error_message = warnings.empty() ? "No plot data found in CSV file." : warnings.front();
     return false;
   }
 
@@ -255,17 +389,24 @@ void LoadPlotDialog::Draw(const char* title, bool* p_open) {
   }
 
   ImGui::TextWrapped("Source: %s", m_csv_path.empty() ? "<none>" : m_csv_path.c_str());
-  if (!m_csv_path.empty() && std::filesystem::exists(m_csv_path)) {
-    const auto file_size = std::filesystem::file_size(m_csv_path);
+  if (!m_csv_paths.empty()) {
+    unsigned long long total_file_size = 0;
+    int existing_files = 0;
+    for (const std::string& path : m_csv_paths) {
+      if (!path.empty() && std::filesystem::exists(path)) {
+        total_file_size += static_cast<unsigned long long>(std::filesystem::file_size(path));
+        ++existing_files;
+      }
+    }
     ImGui::Text("Samples: %d", static_cast<int>(m_time_values.size()));
     ImGui::SameLine();
     ImGui::Text("Series: %d", static_cast<int>(m_series_names.size()));
     ImGui::SameLine();
-    ImGui::Text("Size: %llu bytes", static_cast<unsigned long long>(file_size));
+    ImGui::Text("Files: %d  Size: %llu bytes", existing_files, total_file_size);
   }
 
   if (ImGui::Button("Reload")) {
-    LoadCsv(m_csv_path);
+    LoadCsvFiles(m_csv_paths);
   }
   ImGui::SameLine();
   if (ImGui::Button("Auto Scale")) {

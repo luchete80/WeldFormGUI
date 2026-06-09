@@ -5,7 +5,8 @@
         },
         "analysisType": "Solid3D",
         "modelType": "SPH",
-        "solver": "WeldForm"
+        "solver": "WeldForm",
+        "twoDMeshGenerator": "mesh-adapt"
     },
     "Contact": [
         {
@@ -49,21 +50,10 @@
                     "source": "demo_part_1.step"
                 },
                 "id": 1,
-                "isRigid": false,
-                "name": "",
-                "sectionId": -1
-            },
-            {
-                "geometry": {
-                    "origin": [
-                        0.0,
-                        0.15181558354275454,
-                        0.0
-                    ],
-                    "source": "demo_part_2.step"
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_1.bdf"
                 },
-                "id": 2,
-                "isRigid": false,
                 "name": "",
                 "sectionId": -1
             },
@@ -78,6 +68,37 @@
                 },
                 "id": 3,
                 "isRigid": false,
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_4.step"
+                },
+                "id": 4,
+                "isRigid": false,
+                "name": "disk",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_5.step"
+                },
+                "id": 5,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_5.bdf"
+                },
                 "name": "",
                 "sectionId": -1
             }

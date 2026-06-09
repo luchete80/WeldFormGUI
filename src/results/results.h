@@ -50,9 +50,16 @@ namespace fs = std::filesystem;
 
 class ResultFrame;
 
+struct ResultNodeSet {
+    int setId = -1;
+    std::vector<int> nodeIds;
+    std::vector<int> directions;
+};
+
 struct MultiResult {
     //std::vector<std::unique_ptr<ResultFrame>> frames;
     std::vector<std::unique_ptr<ResultFrame>> frames;
+    std::vector<ResultNodeSet> nodeSets;
     fs::path sourceDirectory;
     fs::path sourceJsonFile;
     void setShowEdges(bool showEdges);
@@ -66,7 +73,8 @@ struct ResultFrameEntry {
 std::vector<ResultFrameEntry> CollectResultFrameEntriesFromJson(
     const std::string& jsonFile,
     fs::path* sourceDirectory = nullptr,
-    fs::path* sourceJsonFile = nullptr);
+    fs::path* sourceJsonFile = nullptr,
+    std::vector<ResultNodeSet>* nodeSets = nullptr);
 
 MultiResult LoadResultsFromJson(const std::string& jsonFile);
 

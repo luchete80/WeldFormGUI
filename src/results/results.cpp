@@ -5,7 +5,8 @@
 
 std::vector<ResultFrameEntry> CollectResultFrameEntriesFromJson(const std::string& jsonFile,
                                                                fs::path* sourceDirectory,
-                                                               fs::path* sourceJsonFile)
+                                                               fs::path* sourceJsonFile,
+                                                               std::vector<ResultNodeSet>* nodeSets)
 {
     std::vector<ResultFrameEntry> entries;
     fs::path json_path(jsonFile);
@@ -36,6 +37,25 @@ std::vector<ResultFrameEntry> CollectResultFrameEntriesFromJson(const std::strin
         return entries;
     }
 
+    if (nodeSets != nullptr) {
+        nodeSets->clear();
+        if (data.contains("sets") && data["sets"].is_array()) {
+            for (const auto& setEntry : data["sets"]) {
+                ResultNodeSet nodeSet;
+                nodeSet.setId = setEntry.value("id", -1);
+                if (setEntry.contains("nodeIds") && setEntry["nodeIds"].is_array()) {
+                    nodeSet.nodeIds = setEntry["nodeIds"].get<std::vector<int>>();
+                }
+                if (setEntry.contains("directions") && setEntry["directions"].is_array()) {
+                    nodeSet.directions = setEntry["directions"].get<std::vector<int>>();
+                }
+                if (nodeSet.setId >= 0) {
+                    nodeSets->push_back(std::move(nodeSet));
+                }
+            }
+        }
+    }
+
     if (!data.contains("vtk_files") || !data["vtk_files"].is_array()) {
         std::cerr << "Error: JSON does not contain valid 'vtk_files' array." << std::endl;
         return entries;
@@ -64,7 +84,10 @@ MultiResult LoadResultsFromJson(const std::string& jsonFile)
 {
     MultiResult results;
     std::vector<ResultFrameEntry> entries =
-        CollectResultFrameEntriesFromJson(jsonFile, &results.sourceDirectory, &results.sourceJsonFile);
+        CollectResultFrameEntriesFromJson(jsonFile,
+                                          &results.sourceDirectory,
+                                          &results.sourceJsonFile,
+                                          &results.nodeSets);
 
     for (const auto& entry : entries) {
         if (!fs::exists(entry.vtkPath)) {

@@ -2491,6 +2491,7 @@ int main(int argc, char* argv[])
 
       if (ImGui::BeginTabBar("##ViewersTabBar", ImGuiTabBarFlags_None))
       {
+          bool activate_model_tab = editor->consumeModelViewerActivationRequest();
           bool activate_results_tab = editor->consumeResultsViewerActivationRequest();
           static bool was_results_viewer_active = false;
           bool results_viewer_active = false;
@@ -2558,9 +2559,11 @@ int main(int argc, char* argv[])
           }
 
           // ================= TAB: Modelo =================
-	          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open))
+          ImGuiTabItemFlags model_tab_flags = activate_model_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+	          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open, model_tab_flags))
           {
 	              ImGui::PushFont(current_ui_font);
+                  editor->showModelSidebar();
 
 	              auto renderer = vtkViewer2.getRenderer();
                 static ModelViewportOverlayState modelOverlayState;
@@ -2582,6 +2585,26 @@ int main(int argc, char* argv[])
 	              if (ImGui::Button("Zoom all")) {
 	                vtkViewer2.resetCamera();
 	              }
+                  ImGui::SameLine();
+                  if (ImGui::SmallButton("X##close_active_model_viewer")) {
+                      editor->requestCloseCurrentModel();
+                  }
+                  if (ImGui::IsItemHovered()) {
+                      ImGui::SetTooltip("Close model");
+                  }
+                  const std::string activeModelPath = editor->getModel().getFilePath();
+                  if (!activeModelPath.empty()) {
+                      ImGui::SameLine();
+                      ImGui::TextDisabled("%s%s",
+                                          std::filesystem::path(activeModelPath).filename().string().c_str(),
+                                          editor->getModel().isDirty() ? " *" : "");
+                      if (ImGui::IsItemHovered()) {
+                          ImGui::SetTooltip("%s", activeModelPath.c_str());
+                      }
+                  } else if (editor->getModel().isDirty()) {
+                      ImGui::SameLine();
+                      ImGui::TextDisabled("*");
+                  }
 
 	              // Botones de background específicos
 	              //~ if (ImGui::Button("Black BG"))        renderer->SetBackground(0,0,0);
@@ -2652,6 +2675,7 @@ int main(int argc, char* argv[])
           if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
                 results_viewer_active = true;
+                editor->showResultsSidebar();
                 if (!was_results_viewer_active) {
                     editor->clearPartSelectionState();
                 }
@@ -2785,17 +2809,35 @@ int main(int argc, char* argv[])
 		                      lastFrame = -1;
 		                  }
 		              }
+                  ImGui::SameLine();
+                  if (ImGui::SmallButton("X##close_active_results_viewer")) {
+                      editor->closeCurrentResults();
+                  }
+                  if (ImGui::IsItemHovered()) {
+                      ImGui::SetTooltip("Close results");
+                  }
 	              ImGui::SameLine();
 	              if (ImGui::Button("load plot")) {
-	                  std::filesystem::path csv_path;
+	                  std::filesystem::path results_dir;
 	                  if (editor->getResults()) {
 	                      if (!editor->getResults()->sourceDirectory.empty()) {
-	                          csv_path = editor->getResults()->sourceDirectory / "Contact_Forces.csv";
+	                          results_dir = editor->getResults()->sourceDirectory;
 	                      } else if (!editor->getResults()->frames.empty()) {
-	                          csv_path = std::filesystem::path(editor->getResults()->frames.front()->name).parent_path() / "Contact_Forces.csv";
+	                          results_dir = std::filesystem::path(editor->getResults()->frames.front()->name).parent_path();
 	                      }
 	                  }
-	                  loadPlotDialog.SetCsvPath(csv_path.string());
+	                  std::vector<std::string> csv_paths;
+	                  if (!results_dir.empty()) {
+	                      const std::filesystem::path contact_path = results_dir / "Contact_Forces.csv";
+	                      const std::filesystem::path set_path = results_dir / "Set_Forces.csv";
+	                      if (std::filesystem::exists(contact_path)) {
+	                          csv_paths.push_back(contact_path.string());
+	                      }
+	                      if (std::filesystem::exists(set_path)) {
+	                          csv_paths.push_back(set_path.string());
+	                      }
+	                  }
+	                  loadPlotDialog.SetCsvPaths(csv_paths);
 	                  showLoadPlotDialog = true;
 	              }
                 ImGui::SameLine();
@@ -2877,9 +2919,9 @@ int main(int argc, char* argv[])
 	                      } else {
 	                          renderer->ResetCamera();
 	                      }
-                      if (!activeFieldName.empty()) {
-                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
-                      }
+	                      if (!activeFieldName.empty()) {
+	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
+	                      }
                         syncCurrentVectorFieldActor(*editor->getResults()->frames[currentFrame]);
                         applyDisplayModeToActor(editor->getResults()->frames[currentFrame]->actor,
                                                 resultsOverlayState.displayMode, resultsOverlayState.showEdges, true);
@@ -2888,6 +2930,7 @@ int main(int argc, char* argv[])
                                                  resultsToolState,
                                                  *editor->getResults()->frames[currentFrame]);
                         }
+                        editor->refreshSelectedResultNodeSetHighlight();
 	                      
 	                      lastFrame = currentFrame;                // Actualizamos el frame anterior
                       //vtkViewer_res.render();

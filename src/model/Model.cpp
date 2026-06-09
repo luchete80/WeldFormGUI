@@ -27,6 +27,7 @@ using namespace LS_Dyna;
 Model::Model(string name){
   part_count = 0;
   have_meshes = false;
+  m_dirty = false;
   cout << "Creating Model ..."<<endl;
   cout << "Reading "<<name<<endl;
   string ext = name.substr(name.find_last_of(".")+1, name.length() - 1);

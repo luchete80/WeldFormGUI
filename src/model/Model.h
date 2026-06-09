@@ -89,6 +89,7 @@ public:
     m_name = "";
     m_analysisType =  Solid3D;
     m_element_size = 1.0;
+    m_dirty = false;
   }
   Model(std::string );
   //Mesh* getPartMesh(const int &i);
@@ -141,6 +142,9 @@ public:
   string getPrevName(){return m_prev_name;}
   void setFilePath(const std::string &path){m_file_path = path;}
   const std::string & getFilePath() const {return m_file_path;}
+  bool isDirty() const { return m_dirty; }
+  void markDirty() { m_dirty = true; }
+  void markSaved() { m_dirty = false; }
   std::string getBaseDir() const {
     if (m_file_path.empty()) return ".";
     return std::filesystem::path(m_file_path).parent_path().string();
@@ -231,6 +235,7 @@ protected:
   
   //IO AND SETTING THINGS
   bool m_hasname;
+  bool m_dirty;
   string m_name;
   string m_prev_name;
   string m_file_path;

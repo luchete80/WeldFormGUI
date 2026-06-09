@@ -1069,6 +1069,7 @@ bool saveModelToPath(Model& model, const std::string& filePathName)
 
     ModelWriter writer(model);
     writer.writeToFile(normalizedPath);
+    model.markSaved();
     getApp().addRecentFile(normalizedPath);
 
     appendToAppConsole("Saved Model: " + normalizedPath + "\n");
@@ -2564,7 +2565,10 @@ bool Editor::beginResultsLoadFromJson(const std::string& jsonFile,
                                       int preferredFrameIndex)
 {
   PendingResultsLoad pending;
-  pending.entries = CollectResultFrameEntriesFromJson(jsonFile, &pending.sourceDirectory, &pending.sourceJsonFile);
+  pending.entries = CollectResultFrameEntriesFromJson(jsonFile,
+                                                      &pending.sourceDirectory,
+                                                      &pending.sourceJsonFile,
+                                                      &pending.results.nodeSets);
   pending.results.sourceDirectory = pending.sourceDirectory;
   pending.results.sourceJsonFile = pending.sourceJsonFile;
   pending.replaceExistingResults = replaceExistingResults;
@@ -2599,6 +2603,14 @@ bool Editor::beginResultsLoadFromJson(const std::string& jsonFile,
 }
 
 bool Editor::openModelFromPath(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
+  return requestModelCloseOrReplace(false, filePathName, false);
+}
+
+bool Editor::openModelFromPathImpl(const std::string& filePathName)
 {
   if (filePathName.empty())
     return false;
@@ -2650,6 +2662,7 @@ bool Editor::openModelFromPath(const std::string& filePathName)
   m_model->setName(model_name);
   m_model->setFilePath(filePathName);
   m_model->setNoSaveAs();
+  m_model->markSaved();
   is_model = true;
   m_creating_model = false;
   m_expand_model_tree_once = true;
@@ -2671,6 +2684,14 @@ bool Editor::openInputFromPath(const std::string& filePathName)
   if (filePathName.empty())
     return false;
 
+  return requestModelCloseOrReplace(false, filePathName, true);
+}
+
+bool Editor::openInputFromPathImpl(const std::string& filePathName)
+{
+  if (filePathName.empty())
+    return false;
+
   m_undo_stack.clear();
   m_redo_stack.clear();
 
@@ -2685,6 +2706,7 @@ bool Editor::openInputFromPath(const std::string& filePathName)
   m_model->setName(model_name);
   m_model->setFilePath(filePathName);
   m_model->setNoSaveAs();
+  m_model->markSaved();
   is_model = true;
   m_creating_model = false;
   m_expand_model_tree_once = true;
@@ -2699,6 +2721,60 @@ bool Editor::openInputFromPath(const std::string& filePathName)
   getApp().Update();
 
   return true;
+}
+
+bool Editor::requestModelCloseOrReplace(bool closeCurrent,
+                                        const std::string& nextPath,
+                                        bool openAsInput)
+{
+  if (m_model != nullptr && is_model && m_model->isDirty()) {
+    m_pending_model_action.openPopup = true;
+    m_pending_model_action.closeCurrent = closeCurrent;
+    m_pending_model_action.openAsInput = openAsInput;
+    m_pending_model_action.runAfterSaveDialog = false;
+    m_pending_model_action.nextPath = nextPath;
+    return false;
+  }
+
+  if (closeCurrent) {
+    closeCurrentModel();
+    return true;
+  }
+
+  if (m_model != nullptr && is_model) {
+    closeCurrentModel();
+  }
+
+  return openAsInput ? openInputFromPathImpl(nextPath)
+                     : openModelFromPathImpl(nextPath);
+}
+
+void Editor::runPendingModelAction()
+{
+  if (m_pending_model_action.closeCurrent) {
+    closeCurrentModel();
+  } else if (!m_pending_model_action.nextPath.empty()) {
+    if (m_model != nullptr && is_model) {
+      closeCurrentModel();
+    }
+    if (m_pending_model_action.openAsInput) {
+      openInputFromPathImpl(m_pending_model_action.nextPath);
+    } else {
+      openModelFromPathImpl(m_pending_model_action.nextPath);
+    }
+  }
+
+  clearPendingModelAction();
+}
+
+void Editor::clearPendingModelAction()
+{
+  m_pending_model_action = PendingModelAction{};
+}
+
+void Editor::requestCloseCurrentModel()
+{
+  requestModelCloseOrReplace(true);
 }
 
 bool Editor::openScriptFromPath(const std::string& filePathName)
@@ -2756,7 +2832,62 @@ bool Editor::importMeshPartFromPath(const std::string& filePathName)
 
   getApp().setActiveModel(m_model);
   getApp().Update();
+  markActiveModelDirty();
   return true;
+}
+
+void Editor::markActiveModelDirty()
+{
+  if (m_model != nullptr && is_model) {
+    m_model->markDirty();
+  }
+}
+
+void Editor::drawPendingModelSavePopup()
+{
+  if (m_pending_model_action.openPopup) {
+    ImGui::OpenPopup("Unsaved Model Changes");
+    m_pending_model_action.openPopup = false;
+  }
+
+  if (!ImGui::BeginPopupModal("Unsaved Model Changes", nullptr,
+                              ImGuiWindowFlags_AlwaysAutoResize)) {
+    return;
+  }
+
+  const std::string modelName =
+    (m_model != nullptr && !m_model->getName().empty()) ? m_model->getName() : std::string("current model");
+  ImGui::TextWrapped("Save changes to %s before closing or replacing it?", modelName.c_str());
+  ImGui::Separator();
+
+  if (ImGui::Button("Save", ImVec2(120.0f, 0.0f))) {
+    ImGui::CloseCurrentPopup();
+    if (m_model != nullptr) {
+      std::string savePath = m_model->getFilePath();
+      if (savePath.empty()) {
+        m_pending_model_action.runAfterSaveDialog = true;
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgSave", "Choose File", ".wfmodel", ".");
+      } else if (saveModelToPath(*m_model, savePath)) {
+        runPendingModelAction();
+      } else {
+        clearPendingModelAction();
+      }
+    } else {
+      clearPendingModelAction();
+    }
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Don't Save", ImVec2(120.0f, 0.0f))) {
+    ImGui::CloseCurrentPopup();
+    runPendingModelAction();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel", ImVec2(120.0f, 0.0f))) {
+    ImGui::CloseCurrentPopup();
+    clearPendingModelAction();
+  }
+
+  ImGui::EndPopup();
 }
 
 void Editor::closeCurrentModel()
@@ -2815,6 +2946,7 @@ void Editor::closeCurrentResults()
   clearPartOverlay();
   hovered_bc = nullptr;
   hovered_prt = nullptr;
+  clearSelectedResultNodeSet();
 
   if (res_viewer != nullptr) {
     res_viewer->setActor(nullptr);
@@ -2833,6 +2965,120 @@ void Editor::closeCurrentResults()
   }
 
   m_pending_results_frame_index = -1;
+}
+
+const ResultNodeSet* Editor::findResultNodeSetById(int setId) const
+{
+  if (m_results == nullptr) {
+    return nullptr;
+  }
+
+  for (const ResultNodeSet& nodeSet : m_results->nodeSets) {
+    if (nodeSet.setId == setId) {
+      return &nodeSet;
+    }
+  }
+
+  return nullptr;
+}
+
+void Editor::removeResultNodeSetHighlightActor()
+{
+  if (res_viewer != nullptr &&
+      res_viewer->getRenderer() != nullptr &&
+      m_result_node_set_highlight_actor != nullptr) {
+    res_viewer->getRenderer()->RemoveActor(m_result_node_set_highlight_actor);
+  }
+  m_result_node_set_highlight_actor = nullptr;
+}
+
+vtkSmartPointer<vtkActor> Editor::buildResultNodeSetHighlightActor(const ResultFrame& frame,
+                                                                   const ResultNodeSet& nodeSet) const
+{
+  if (frame.mesh == nullptr || nodeSet.nodeIds.empty()) {
+    return nullptr;
+  }
+
+  vtkNew<vtkPoints> points;
+  vtkNew<vtkCellArray> verts;
+  const vtkIdType pointCount = frame.mesh->GetNumberOfPoints();
+
+  for (int nodeId : nodeSet.nodeIds) {
+    if (nodeId < 0 || static_cast<vtkIdType>(nodeId) >= pointCount) {
+      continue;
+    }
+
+    double point[3] = {0.0, 0.0, 0.0};
+    frame.mesh->GetPoint(static_cast<vtkIdType>(nodeId), point);
+    const vtkIdType insertedPointId = points->InsertNextPoint(point);
+    verts->InsertNextCell(1);
+    verts->InsertCellPoint(insertedPointId);
+  }
+
+  if (points->GetNumberOfPoints() == 0) {
+    return nullptr;
+  }
+
+  vtkNew<vtkPolyData> polyData;
+  polyData->SetPoints(points);
+  polyData->SetVerts(verts);
+
+  vtkNew<vtkPolyDataMapper> mapper;
+  mapper->SetInputData(polyData);
+
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->SetMapper(mapper);
+  actor->PickableOff();
+  actor->GetProperty()->SetColor(1.0, 0.9, 0.15);
+  actor->GetProperty()->SetOpacity(1.0);
+  actor->GetProperty()->LightingOff();
+  actor->GetProperty()->SetRepresentationToPoints();
+  actor->GetProperty()->SetPointSize(12.0);
+  actor->GetProperty()->RenderPointsAsSpheresOn();
+  return actor;
+}
+
+void Editor::refreshSelectedResultNodeSetHighlight()
+{
+  removeResultNodeSetHighlightActor();
+
+  if (m_selected_result_node_set_id < 0 ||
+      m_results == nullptr ||
+      res_viewer == nullptr ||
+      res_viewer->getRenderer() == nullptr) {
+    return;
+  }
+
+  const ResultNodeSet* nodeSet = findResultNodeSetById(m_selected_result_node_set_id);
+  ResultFrame* activeFrame = getActiveResultFrame();
+  if (nodeSet == nullptr || activeFrame == nullptr) {
+    return;
+  }
+
+  m_result_node_set_highlight_actor = buildResultNodeSetHighlightActor(*activeFrame, *nodeSet);
+  if (m_result_node_set_highlight_actor != nullptr) {
+    res_viewer->getRenderer()->AddActor(m_result_node_set_highlight_actor);
+    if (res_viewer->getRenderWindow() != nullptr) {
+      res_viewer->getRenderWindow()->Render();
+    }
+  }
+}
+
+void Editor::selectResultNodeSetById(int setId)
+{
+  if (findResultNodeSetById(setId) == nullptr) {
+    clearSelectedResultNodeSet();
+    return;
+  }
+
+  m_selected_result_node_set_id = setId;
+  refreshSelectedResultNodeSetHighlight();
+}
+
+void Editor::clearSelectedResultNodeSet()
+{
+  m_selected_result_node_set_id = -1;
+  removeResultNodeSetHighlightActor();
 }
 
 ResultFrame* Editor::getActiveResultFrame() const
@@ -3003,6 +3249,7 @@ bool Editor::scalePartGeometry(Part* part, double factor)
   }
 
   getApp().Update();
+  markActiveModelDirty();
   return true;
 }
 
@@ -3063,6 +3310,7 @@ bool Editor::rotatePartGeometry(Part* part,
   }
 
   getApp().Update();
+  markActiveModelDirty();
   return true;
 }
 
@@ -3363,6 +3611,15 @@ void Editor::resetCurrentPartTransform()
 
 void Editor::finishMoveMode(bool acceptTransform)
 {
+  bool acceptedTransform = false;
+  if (acceptTransform) {
+    updateMovePartOffsetFromCurrentState();
+    acceptedTransform =
+      std::abs(m_move_part_offset[0]) > 1.0e-12 ||
+      std::abs(m_move_part_offset[1]) > 1.0e-12 ||
+      std::abs(m_move_part_offset[2]) > 1.0e-12;
+  }
+
   if (m_moving_mode && !acceptTransform) {
     resetCurrentPartTransform();
   }
@@ -3376,6 +3633,10 @@ void Editor::finishMoveMode(bool acceptTransform)
       gizmo->Hide();
       gizmo->RemoveFromRenderer(viewer->getRenderer());
     }
+  }
+
+  if (acceptedTransform) {
+    markActiveModelDirty();
   }
 }
 
@@ -4043,6 +4304,13 @@ bool Editor::consumeResultsViewerActivationRequest()
   return activate;
 }
 
+bool Editor::consumeModelViewerActivationRequest()
+{
+  bool activate = m_activate_model_viewer;
+  m_activate_model_viewer = false;
+  return activate;
+}
+
 bool Editor::isLoadingResults() const
 {
   return m_pending_results_load.active;
@@ -4109,6 +4377,7 @@ void Editor::finishResultsLoad()
   MultiResult mergedResults;
   mergedResults.sourceDirectory = m_pending_results_load.results.sourceDirectory;
   mergedResults.sourceJsonFile = m_pending_results_load.results.sourceJsonFile;
+  mergedResults.nodeSets = m_pending_results_load.results.nodeSets;
 
   if (m_pending_results_load.replaceExistingResults && m_results != nullptr) {
     const std::size_t keepCount = std::min(
@@ -4136,6 +4405,9 @@ void Editor::finishResultsLoad()
                static_cast<int>(m_results->frames.size()) - 1));
   } else {
     m_pending_results_frame_index = 0;
+  }
+  if (findResultNodeSetById(m_selected_result_node_set_id) == nullptr) {
+    clearSelectedResultNodeSet();
   }
   m_activate_results_viewer = true;
   rebuildResultsPartVisibility();
@@ -4552,6 +4824,7 @@ void Editor::meshPart(Part* part){
   getApp().setActiveModel(m_model);
   getApp().Update();
   getApp().checkUpdate();
+  markActiveModelDirty();
   
   fs::path kpath = activeModelOutputPath(*m_model,
                                          activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + ".k");
@@ -5045,6 +5318,8 @@ void Editor::drawGui() {
     const bool model_tab_open = ImGui::BeginTabItem("Model", nullptr, model_tab_flags);
     if (ImGui::IsItemClicked()) {
       m_sidebar_tab = SidebarTab::Model;
+      m_activate_model_viewer = true;
+      m_activate_results_viewer = false;
     }
     if (model_tab_open) { 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -5095,6 +5370,13 @@ void Editor::drawGui() {
 	        if (ImGui::IsItemClicked()) {
 	          model_tree_item_clicked = true;
 	        }
+          ImGui::SameLine();
+          if (ImGui::SmallButton("X##close_active_model_tree")) {
+            close_model_requested = true;
+          }
+          if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Close model");
+          }
 	        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
           m_show_mod_dlg_edit = true;
           selected_mod = m_model;
@@ -5115,6 +5397,16 @@ void Editor::drawGui() {
         }   
         if (model_tree_open)
         {
+          const std::string activeModelPath = m_model->getFilePath();
+          if (!activeModelPath.empty()) {
+            ImGui::TextDisabled("File: %s%s",
+                                fs::path(activeModelPath).filename().string().c_str(),
+                                m_model->isDirty() ? " *" : "");
+            ImGui::TextWrapped("%s", activeModelPath.c_str());
+          } else {
+            ImGui::TextDisabled("File: unsaved model%s", m_model->isDirty() ? " *" : "");
+          }
+          ImGui::Separator();
         
           if (expand_model_tree_once) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -5200,6 +5492,7 @@ void Editor::drawGui() {
                 getApp().removeVisualForPart(treePart);
                 m_model->delPart(i);
                 getApp().Update();
+                markActiveModelDirty();
                 deletedPartFromTree = true;
               } else if (ImGui::MenuItem("Mesh", "CTRL+Z")){
 	                selected_prt = treePart;
@@ -5453,6 +5746,7 @@ void Editor::drawGui() {
                           clearStateForDeletedMesh(treePart->getMesh());
 	                        getApp().removeGraphicMeshForPart(treePart);
 	                        treePart->deleteMesh();
+                          markActiveModelDirty();
 	                        meshDeleted = true;
                         
                       }
@@ -6400,7 +6694,7 @@ void Editor::drawGui() {
     }
         
 	    if (close_model_requested) {
-	      closeCurrentModel();
+	      requestCloseCurrentModel();
 	    }
 
       if (m_expand_model_tree_once) {
@@ -6417,6 +6711,8 @@ void Editor::drawGui() {
     const bool results_tab_open = ImGui::BeginTabItem("Results", nullptr, results_tab_flags);
     if (ImGui::IsItemClicked()) {
       m_sidebar_tab = SidebarTab::Results;
+      m_activate_results_viewer = true;
+      m_activate_model_viewer = false;
     }
     if (results_tab_open) { 
       bool close_results_requested = false;
@@ -6433,6 +6729,13 @@ void Editor::drawGui() {
            ImGui::TreePop();
         }      
       open_ = ImGui::TreeNode("Loaded Results");
+      ImGui::SameLine();
+      if (ImGui::SmallButton("X##close_loaded_results_tree")) {
+        close_results_requested = true;
+      }
+      if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Close results");
+      }
       if (ImGui::BeginPopupContextItem())
       {
           if ((m_results != nullptr || m_pending_results_load.active) &&
@@ -6461,6 +6764,44 @@ void Editor::drawGui() {
              ImGui::TextWrapped("Directory: %s", m_results->sourceDirectory.string().c_str());
 
            ImGui::Text("Frames: %zu", m_results->frames.size());
+
+           if (ImGui::TreeNode("Node Sets")) {
+             if (m_results->nodeSets.empty()) {
+               ImGui::TextDisabled("No node sets in results file.");
+             } else {
+               for (std::size_t setIndex = 0; setIndex < m_results->nodeSets.size(); ++setIndex) {
+                 const ResultNodeSet& nodeSet = m_results->nodeSets[setIndex];
+                 const bool isSelected = (m_selected_result_node_set_id == nodeSet.setId);
+                 const std::string label =
+                   "Set " + std::to_string(nodeSet.setId) +
+                   " (" + std::to_string(nodeSet.nodeIds.size()) + " nodes)";
+                 const std::string itemId = label + "##result_nodeset_" + std::to_string(setIndex);
+                 if (ImGui::Selectable(itemId.c_str(), isSelected)) {
+                   selectResultNodeSetById(nodeSet.setId);
+                 }
+                 if (ImGui::IsItemHovered()) {
+                   if (nodeSet.directions.empty()) {
+                     ImGui::SetTooltip("Set id %d\n%zu nodes",
+                                       nodeSet.setId,
+                                       nodeSet.nodeIds.size());
+                   } else {
+                     std::string directionsText;
+                     for (std::size_t dirIndex = 0; dirIndex < nodeSet.directions.size(); ++dirIndex) {
+                       if (!directionsText.empty()) {
+                         directionsText += ", ";
+                       }
+                       directionsText += std::to_string(nodeSet.directions[dirIndex]);
+                     }
+                     ImGui::SetTooltip("Set id %d\n%zu nodes\nDirections: %s",
+                                       nodeSet.setId,
+                                       nodeSet.nodeIds.size(),
+                                       directionsText.c_str());
+                   }
+                 }
+               }
+             }
+             ImGui::TreePop();
+           }
 
            rebuildResultsPartVisibility();
            ResultFrame* activeResultsFrame = getActiveResultFrame();
@@ -7687,6 +8028,7 @@ void Editor::drawGui() {
       #endif
 
       getApp().Update(); //To create graphic GEOMETRY (ADD vtkOCCTGeom TR)
+      markActiveModelDirty();
     
     }
     
@@ -7761,7 +8103,12 @@ void Editor::drawGui() {
     if (ImGuiFileDialog::Instance()->IsOk())
     {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      saveModelToPath(getApp().getActiveModel(), filePathName);
+      if (saveModelToPath(getApp().getActiveModel(), filePathName) &&
+          m_pending_model_action.runAfterSaveDialog) {
+        runPendingModelAction();
+      }
+    } else if (m_pending_model_action.runAfterSaveDialog) {
+      clearPendingModelAction();
     }
     // close
     ImGuiFileDialog::Instance()->Close();
@@ -7814,6 +8161,8 @@ void Editor::drawGui() {
       saveModelToPath(activeModel, save_path);
     }
   }
+
+  drawPendingModelSavePopup();
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);
@@ -7897,13 +8246,24 @@ void Editor::drawGui() {
   }
 
   //if (m_show_job_dlg) {job = ShowCreateJobDialog(&m_show_job_dlg, &m_jobdlg, &create_new_job);}
-  if (m_show_mat_dlg_edit) {ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat);}
-  if (m_show_prt_dlg_edit) {ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt);}
+  if (m_show_mat_dlg_edit) {
+    if (ShowEditMaterialDialog(&m_show_mat_dlg_edit, &m_matdlg, selected_mat)) {
+      markActiveModelDirty();
+    }
+  }
+  if (m_show_prt_dlg_edit) {
+    if (ShowEditPartDialog(&m_show_prt_dlg_edit, &m_prtdlg, selected_prt)) {
+      markActiveModelDirty();
+    }
+  }
   if (m_show_mod_dlg_edit) {
     ShowEditModelDialog(&m_show_mod_dlg_edit, &m_moddlg, selected_mod);
     if (!m_show_mod_dlg_edit) {
       if (m_creating_model && m_moddlg.m_saved && selected_mod == m_model) {
         is_model = true;
+        markActiveModelDirty();
+      } else if (m_moddlg.m_saved && selected_mod == m_model) {
+        markActiveModelDirty();
       }
 
       if (m_creating_model) {
@@ -7918,6 +8278,9 @@ void Editor::drawGui() {
     if (!m_show_step_dlg_edit) {
       if (m_stepdlg.m_saved && m_creating_step && selected_step != nullptr) {
         m_model->addStep(selected_step);
+        markActiveModelDirty();
+      } else if (m_stepdlg.m_saved) {
+        markActiveModelDirty();
       } else if (m_stepdlg.m_cancelled && m_creating_step && selected_step != nullptr) {
         delete selected_step;
       }
@@ -7928,7 +8291,9 @@ void Editor::drawGui() {
     }
   }
   if (m_show_remesh_dlg_edit) {
-    ShowEditRemeshDialog(&m_show_remesh_dlg_edit, &m_remeshdlg, m_model);
+    if (ShowEditRemeshDialog(&m_show_remesh_dlg_edit, &m_remeshdlg, m_model)) {
+      markActiveModelDirty();
+    }
   }
   else if (m_show_set_dlg) {
     const std::vector<Node*> selectedNodesForSet = m_selector.getSelectedNodes();
@@ -7957,6 +8322,7 @@ void Editor::drawGui() {
               selectedSet->add(node);
             }
             selectNodeSet(targetMesh, m_selected_node_set_index);
+            markActiveModelDirty();
             cout << "Updated node set: name=" << m_setdlg.m_name
                  << ", id=" << selectedSet->getId()
                  << ", nodes=" << selectedSet->getItemCount() << endl;
@@ -7971,6 +8337,7 @@ void Editor::drawGui() {
           targetMesh->addNodeSet(nodeSet);
           selectNodeSet(targetMesh, targetMesh->getNodeSetCount() - 1);
           pushAction(std::unique_ptr<Action>(new CreateNodeSetAction(this, targetMesh, nodeSet)));
+          markActiveModelDirty();
           cout << "Created node set: name=" << m_setdlg.m_name
                << ", id=" << nodeSet.getId()
                << ", nodes=" << nodeSet.getItemCount() << endl;
@@ -7990,6 +8357,7 @@ void Editor::drawGui() {
               selectedSet->add(element);
             }
             selectElementSet(targetMesh, m_selected_element_set_index);
+            markActiveModelDirty();
             cout << "Updated element set: name=" << m_setdlg.m_name
                  << ", id=" << selectedSet->getId()
                  << ", elements=" << selectedSet->getItemCount() << endl;
@@ -8004,6 +8372,7 @@ void Editor::drawGui() {
           targetMesh->addElementSet(elementSet);
           selectElementSet(targetMesh, targetMesh->getElementSetCount() - 1);
           pushAction(std::unique_ptr<Action>(new CreateElementSetAction(this, targetMesh, elementSet)));
+          markActiveModelDirty();
           cout << "Created element set: name=" << m_setdlg.m_name
                << ", id=" << elementSet.getId()
                << ", elements=" << elementSet.getItemCount() << endl;
@@ -8032,6 +8401,7 @@ void Editor::drawGui() {
         ImGui::InputText("Name", m_rename_set_name, IM_ARRAYSIZE(m_rename_set_name));
         if (ImGui::Button("Save")) {
           selectedSet->setLabel(m_rename_set_name);
+          markActiveModelDirty();
           cout << "Renamed set to " << m_rename_set_name << endl;
           m_show_rename_set_dlg = false;
         }
@@ -8053,6 +8423,7 @@ void Editor::drawGui() {
     m_mats.push_back(m_matdlg.m_temp_mat);
     getApp().getActiveModel().addMaterial(m_matdlg.m_temp_mat);
     m_matdlg.m_temp_mat = nullptr; // opcional, para que el diálogo se pueda reiniciar
+    markActiveModelDirty();
     
     //getApp().getActiveModel().addMaterial(new Material_(mat));
     cout << "Material size is "<< m_mats.size()<<endl;
@@ -8423,6 +8794,7 @@ void Editor::adoptModelFromScript(Model* model)
   m_creating_model = false;
   m_expand_model_tree_once = true;
   getApp().setActiveModel(model);
+  m_model->markDirty();
 }
 
 
