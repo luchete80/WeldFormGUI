@@ -38,6 +38,18 @@
         "transitionAngle": 15.0,
         "type": 0
     },
+    "SymmetryPlanes": [
+        {
+            "axis": 0,
+            "enabled": true,
+            "value": 0.0
+        },
+        {
+            "axis": 2,
+            "enabled": true,
+            "value": 0.0
+        }
+    ],
     "model": {
         "parts": [
             {
