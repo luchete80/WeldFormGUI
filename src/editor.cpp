@@ -4459,13 +4459,12 @@ void Editor::drawResultsLoadProgress()
     lastLoggedProcessed = processed;
   }
 
-  ImGui::SetNextWindowSize(ImVec2(520.0f, 0.0f), ImGuiCond_Appearing);
+  ImGui::SetNextWindowSize(ImVec2(520.0f, 150.0f), ImGuiCond_Appearing);
   ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
                           ImGuiCond_Appearing,
                           ImVec2(0.5f, 0.5f));
 
-  ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
-                           ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse |
                            ImGuiWindowFlags_NoResize |
                            ImGuiWindowFlags_NoSavedSettings;
   if (ImGui::BeginPopupModal("Loading Results", nullptr, flags)) {
@@ -4479,11 +4478,17 @@ void Editor::drawResultsLoadProgress()
         ImGui::TextUnformatted("Current: preparing frame list...");
 
       ImGui::Text("Loaded: %zu", m_pending_results_load.loadedFrames);
-      if (m_pending_results_load.skippedFrames > 0)
+      if (m_pending_results_load.skippedFrames > 0) {
         ImGui::Text("Skipped: %zu", m_pending_results_load.skippedFrames);
+      } else {
+        ImGui::TextUnformatted("Skipped: 0");
+      }
 
-      if (!m_pending_results_load.errorMessage.empty())
+      if (!m_pending_results_load.errorMessage.empty()) {
         ImGui::TextWrapped("Last error: %s", m_pending_results_load.errorMessage.c_str());
+      } else {
+        ImGui::TextUnformatted("Last error: none");
+      }
     }
 
     if (m_close_results_load_popup) {
@@ -5367,21 +5372,15 @@ void Editor::drawGui() {
             ImGui::SetNextItemOpen(true, ImGuiCond_Always);
           }
 	        bool model_tree_open = ImGui::TreeNode("##active_model_tree", "Model (%s)", des.c_str());
-	        if (ImGui::IsItemClicked()) {
+          const bool model_tree_hovered = ImGui::IsItemHovered();
+          if (ImGui::IsItemClicked()) {
 	          model_tree_item_clicked = true;
 	        }
-          ImGui::SameLine();
-          if (ImGui::SmallButton("X##close_active_model_tree")) {
-            close_model_requested = true;
-          }
-          if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Close model");
-          }
-	        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
+	        if (ImGui::IsMouseDoubleClicked(0) && model_tree_hovered){                
           m_show_mod_dlg_edit = true;
           selected_mod = m_model;
         }
-        if (ImGui::BeginPopupContextItem())
+        if (ImGui::BeginPopupContextItem("active_model_tree_context"))
         {
           if (ImGui::MenuItem("Edit"/*, "CTRL+Z"*/)) { 
             m_show_mod_dlg_edit = true;
@@ -5394,7 +5393,14 @@ void Editor::drawGui() {
             close_model_requested = true;
           }
           ImGui::EndPopup();          
-        }   
+        }
+          ImGui::SameLine();
+          if (ImGui::SmallButton("X##close_active_model_tree")) {
+            close_model_requested = true;
+          }
+          if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Close model");
+          }
         if (model_tree_open)
         {
           const std::string activeModelPath = m_model->getFilePath();

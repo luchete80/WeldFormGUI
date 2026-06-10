@@ -303,3 +303,5 @@
          - Added close results fast action.
          - Auto switch left bar with model/results viewer at change.
          - Added set to results an hightlight them in the tree
+20260610 - Fixed right click on model.
+         - Fixed decresing size poput at opening results progress bar.
