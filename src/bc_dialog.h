@@ -41,6 +41,7 @@ public Dialog
   double m_amplitudeFactor = 1.0;
   std::vector<double> m_amplitudeTime;
   std::vector<double> m_amplitudeValue;
+  int m_activeAmplitudeRow = -1;
 
   int bcType = 0;      // 0 = Velocity, 1 = Displacement, 2 = Symmetry
   double3 m_normal = make_double3(0,0,1);

@@ -3190,6 +3190,9 @@ int main(int argc, char* argv[])
               ImGui::PopFont();
               ImGui::EndTabItem();
           }
+          if (editor->getResults() == nullptr && currentScalarBar != nullptr) {
+              clearResultsViewerTransientProps();
+          }
           if (was_results_viewer_active && !results_viewer_active) {
               editor->setActiveViewer(nullptr);
           }

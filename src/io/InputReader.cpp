@@ -150,6 +150,8 @@ void readContact(const json& root, Model* model)
   const json& contact = root["Contact"][0];
   ContactProperties& props = model->contactProps();
   props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
+  props.frictionRegularizationVelocity =
+      contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
   props.gapPenaltyScale = contact.value("gapPenaltyScale", props.gapPenaltyScale);
   props.heatCondCoeff = contact.value("heatCondCoeff", props.heatCondCoeff);
   props.heatConductance = contact.value("heatConductance", props.heatConductance);

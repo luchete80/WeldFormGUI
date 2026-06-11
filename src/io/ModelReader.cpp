@@ -115,6 +115,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
         const auto &contact = j["Contact"][0];
         ContactProperties &props = m_model->contactProps();
         props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
+        props.frictionRegularizationVelocity =
+            contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
         props.gapPenaltyScale = contact.value("gapPenaltyScale", props.gapPenaltyScale);
         props.heatCondCoeff = contact.value("heatCondCoeff", props.heatCondCoeff);
         props.heatConductance = contact.value("heatConductance", props.heatConductance);

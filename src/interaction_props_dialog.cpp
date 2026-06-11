@@ -26,6 +26,11 @@ void InteractionPropsDialog::Draw()
   ContactProperties &contact = m_model->contactProps();
 
   ImGui::InputDouble("Static Friction", &contact.fricCoeffStatic, 0.01, 0.1, "%.4f");
+  ImGui::InputDouble("Friction Reg. Vel. (implicit solver)",
+                     &contact.frictionRegularizationVelocity,
+                     0.01,
+                     0.1,
+                     "%.6g");
   ImGui::InputDouble("Penalty Factor", &contact.penaltyFactor, 10.0, 100.0, "%.4f");
   ImGui::Checkbox("Use Gap Penalty", &contact.useGapPenalty);
   ImGui::InputDouble("Gap Penalty Scale", &contact.gapPenaltyScale, 0.1, 1.0, "%.4f");

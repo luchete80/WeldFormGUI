@@ -5412,10 +5412,12 @@ void Editor::drawGui() {
         {
           const std::string activeModelPath = m_model->getFilePath();
           if (!activeModelPath.empty()) {
+            std::error_code activeModelPathEc;
+            const std::string displayModelPath =
+              fs::absolute(fs::path(activeModelPath), activeModelPathEc).string();
             ImGui::TextDisabled("File: %s%s",
-                                fs::path(activeModelPath).filename().string().c_str(),
+                                (activeModelPathEc ? activeModelPath : displayModelPath).c_str(),
                                 m_model->isDirty() ? " *" : "");
-            ImGui::TextWrapped("%s", activeModelPath.c_str());
           } else {
             ImGui::TextDisabled("File: unsaved model%s", m_model->isDirty() ? " *" : "");
           }
@@ -6297,6 +6299,8 @@ void Editor::drawGui() {
           {
              ContactProperties &contact = m_model->contactProps();
              ImGui::Text("Static friction: %.4f", contact.fricCoeffStatic);
+             ImGui::Text("Friction Reg. Vel. (implicit solver): %.6g",
+                         contact.frictionRegularizationVelocity);
              ImGui::Text("Penalty factor: %.4f", contact.penaltyFactor);
              if (ImGui::Button("Edit Interaction Props")) {
                m_interactionpropsdlg.setModel(m_model);

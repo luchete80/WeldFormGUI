@@ -440,6 +440,7 @@ void InputWriter::writeToFile(std::string fname) {
   const ContactProperties &contact = m_model->contactProps();
   json cont;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
+  cont["frictionRegularizationVelocity"] = contact.frictionRegularizationVelocity;
   cont["gapPenaltyScale"] = contact.gapPenaltyScale;
   cont["heatCondCoeff"] = contact.heatCondCoeff;
   cont["heatConductance"] = contact.heatConductance;
@@ -617,6 +618,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
     {"fricCoeffStatic", contact.fricCoeffStatic},
+    {"frictionRegularizationVelocity", contact.frictionRegularizationVelocity},
     {"gapPenaltyScale", contact.gapPenaltyScale},
     {"heatCondCoeff", contact.heatCondCoeff},
     {"heatConductance", contact.heatConductance},

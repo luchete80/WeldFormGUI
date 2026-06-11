@@ -314,22 +314,58 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
                 ImGui::PushID(i);
                 ImGui::SetNextItemWidth(120.0f);
                 ImGui::InputDouble("Time", &m_amplitudeTime[i], 0.0, 0.0, "%.6g");
+                if (ImGui::IsItemActive() || ImGui::IsItemFocused()) {
+                    m_activeAmplitudeRow = i;
+                }
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(120.0f);
                 ImGui::InputDouble("Scale", &m_amplitudeValue[i], 0.0, 0.0, "%.6g");
+                if (ImGui::IsItemActive() || ImGui::IsItemFocused()) {
+                    m_activeAmplitudeRow = i;
+                }
                 ImGui::PopID();
             }
 
-            if (ImGui::Button("Add Point")) {
-                const double nextTime = m_amplitudeTime.empty() ? 0.0 : (m_amplitudeTime.back() + 1.0);
-                const double nextValue = m_amplitudeValue.empty() ? 1.0 : m_amplitudeValue.back();
-                m_amplitudeTime.push_back(nextTime);
-                m_amplitudeValue.push_back(nextValue);
+            if (ImGui::Button("Add Point Below")) {
+                const int insertIndex =
+                    (m_activeAmplitudeRow >= 0 &&
+                     m_activeAmplitudeRow < static_cast<int>(m_amplitudeTime.size()))
+                    ? (m_activeAmplitudeRow + 1)
+                    : static_cast<int>(m_amplitudeTime.size());
+
+                double nextTime = 0.0;
+                double nextValue = 1.0;
+                if (m_amplitudeTime.empty()) {
+                    nextTime = 0.0;
+                    nextValue = 1.0;
+                } else if (insertIndex <= 0) {
+                    nextTime = m_amplitudeTime.front();
+                    nextValue = m_amplitudeValue.front();
+                } else if (insertIndex >= static_cast<int>(m_amplitudeTime.size())) {
+                    nextTime = m_amplitudeTime.back() + 1.0;
+                    nextValue = m_amplitudeValue.back();
+                } else {
+                    const double previousTime = m_amplitudeTime[insertIndex - 1];
+                    const double nextExistingTime = m_amplitudeTime[insertIndex];
+                    nextTime = previousTime + (nextExistingTime - previousTime) * 0.5;
+                    nextValue = m_amplitudeValue[insertIndex - 1];
+                }
+
+                m_amplitudeTime.insert(m_amplitudeTime.begin() + insertIndex, nextTime);
+                m_amplitudeValue.insert(m_amplitudeValue.begin() + insertIndex, nextValue);
+                m_activeAmplitudeRow = insertIndex;
             }
             ImGui::SameLine();
             if (ImGui::Button("Remove Point") && m_amplitudeTime.size() > 2) {
-                m_amplitudeTime.pop_back();
-                m_amplitudeValue.pop_back();
+                const int removeIndex =
+                    (m_activeAmplitudeRow >= 0 &&
+                     m_activeAmplitudeRow < static_cast<int>(m_amplitudeTime.size()))
+                    ? m_activeAmplitudeRow
+                    : (static_cast<int>(m_amplitudeTime.size()) - 1);
+                m_amplitudeTime.erase(m_amplitudeTime.begin() + removeIndex);
+                m_amplitudeValue.erase(m_amplitudeValue.begin() + removeIndex);
+                m_activeAmplitudeRow = std::min(removeIndex,
+                                                static_cast<int>(m_amplitudeTime.size()) - 1);
             }
 
             std::vector<double> plotTime;

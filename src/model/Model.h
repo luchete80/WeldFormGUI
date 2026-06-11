@@ -43,6 +43,7 @@ enum TwoDMeshGenerator {
 
 struct ContactProperties {
   double fricCoeffStatic = 0.0;
+  double frictionRegularizationVelocity = 0.0;
   double gapPenaltyScale = 2.0;
   double heatCondCoeff = 0.5;
   bool heatConductance = false;

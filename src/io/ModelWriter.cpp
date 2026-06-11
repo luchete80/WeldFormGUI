@@ -127,6 +127,7 @@ void ModelWriter::writeToFile(std::string fname){
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
     {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
+    {"frictionRegularizationVelocity", m_model.contactProps().frictionRegularizationVelocity},
     {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},
     {"heatCondCoeff", m_model.contactProps().heatCondCoeff},
     {"heatConductance", m_model.contactProps().heatConductance},
