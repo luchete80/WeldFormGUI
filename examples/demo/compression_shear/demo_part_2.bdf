@@ -1,6 +1,7 @@
 $ WeldFormGUI NASTRAN export
 BEGIN BULK
 MAT1           1  2.1+11           3.0-1
+PSHELL         1       1   1.0+0
 GRID           1              0.   7.5-3      0.
 GRID           2           4.0-3   7.5-3      0.
 GRID           3         2.353-4   7.5-3      0.
