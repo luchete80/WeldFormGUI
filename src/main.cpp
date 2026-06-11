@@ -1280,6 +1280,54 @@ bool drawScreenshotIconButton()
     return pressed;
 }
 
+bool drawMeasureIconButton(bool active, const char* tooltip = nullptr)
+{
+    const ImVec2 size(24.0f, 24.0f);
+    ImGui::PushID("measure_icon_button");
+    const bool pressed = ImGui::InvisibleButton("##measure", size);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool held = ImGui::IsItemActive();
+
+    const ImVec2 min = ImGui::GetItemRectMin();
+    const ImVec2 max = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImU32 bgColor = active ? IM_COL32(168, 118, 26, 210) : IM_COL32(28, 34, 44, 110);
+    if (held) {
+        bgColor = IM_COL32(46, 74, 122, 220);
+    } else if (hovered) {
+        bgColor = active ? IM_COL32(192, 138, 32, 225) : IM_COL32(54, 64, 80, 180);
+    }
+
+    const ImU32 strokeColor = active || hovered || held
+        ? IM_COL32(255, 245, 210, 255)
+        : IM_COL32(220, 224, 230, 255);
+
+    drawList->AddRectFilled(min, max, bgColor, 6.0f);
+    drawList->AddRect(min, max, IM_COL32(255, 255, 255, 18), 6.0f, 0, 1.0f);
+
+    const float left = min.x + 5.0f;
+    const float right = max.x - 5.0f;
+    const float centerY = (min.y + max.y) * 0.5f;
+    const float thickness = 1.6f;
+    drawList->AddLine(ImVec2(left, centerY + 4.0f), ImVec2(right - 2.0f, centerY - 4.0f), strokeColor, thickness);
+
+    for (int i = 0; i < 4; ++i) {
+        const float t = static_cast<float>(i) / 4.0f;
+        const float x = left + (right - left - 3.0f) * t;
+        const float y = centerY + 4.0f - 8.0f * t;
+        const float tick = (i % 2 == 0) ? 3.0f : 2.0f;
+        drawList->AddLine(ImVec2(x, y), ImVec2(x + 1.5f, y - tick), strokeColor, thickness * 0.85f);
+    }
+
+    if (hovered) {
+        ImGui::SetTooltip("%s", tooltip != nullptr ? tooltip : "Measure distance");
+    }
+
+    ImGui::PopID();
+    return pressed;
+}
+
 void drawSelectionCountBadge(int selectedNodeCount, int selectedElementCount)
 {
     if (selectedNodeCount <= 0 && selectedElementCount <= 0) {
@@ -1464,6 +1512,10 @@ void drawViewportOverlay(VtkViewer& viewer,
             ImGui::SameLine();
             if (drawToolbarButton("Ei", editor->getShowAllElementLabels(), "Show all element ids")) {
                 editor->setShowAllElementLabels(!editor->getShowAllElementLabels());
+            }
+            ImGui::SameLine();
+            if (drawMeasureIconButton(editor->isMeasurementEnabled(), "Measure distance")) {
+                editor->setMeasurementEnabled(!editor->isMeasurementEnabled());
             }
         }
         if (editor != nullptr &&
@@ -3012,7 +3064,9 @@ int main(int argc, char* argv[])
                   }
               }
               editor->setActiveViewer(&vtkViewer_res);
+              editor->handleMeasurementInteraction();
               editor->handleSelectionInteraction();
+              editor->drawMeasurementOverlay();
               editor->drawSelectionOverlay();
               if (editor->getResults() != nullptr && !editor->getResults()->frames.empty()) {
                   const int safeFrame = std::max(0, std::min(currentFrame, (int)editor->getResults()->frames.size() - 1));

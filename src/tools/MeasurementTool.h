@@ -6,9 +6,11 @@
 #include <vector>
 
 #include <vtkSmartPointer.h>
+#include <vtkDataSet.h>
 #include <vtkProp.h>
 
 class Model;
+class Mesh;
 class Node;
 class VtkViewer;
 
@@ -17,7 +19,10 @@ public:
   MeasurementTool() = default;
   ~MeasurementTool();
 
-  void setContext(VtkViewer* viewer, Model* model);
+  void setContext(VtkViewer* viewer,
+                  Model* model,
+                  Mesh* targetMesh = nullptr,
+                  vtkDataSet* targetDataSet = nullptr);
   void setEnabled(bool enabled);
   bool isEnabled() const { return m_enabled; }
 
@@ -28,6 +33,7 @@ public:
 private:
   struct MeasurementPoint {
     Node* node = nullptr;
+    vtkIdType pointId = -1;
     std::array<double, 3> world = {0.0, 0.0, 0.0};
   };
 
@@ -42,6 +48,8 @@ private:
 private:
   VtkViewer* m_viewer = nullptr;
   Model* m_model = nullptr;
+  Mesh* m_target_mesh = nullptr;
+  vtkDataSet* m_target_data_set = nullptr;
   bool m_enabled = false;
   std::vector<MeasurementPoint> m_points;
   std::vector<vtkSmartPointer<vtkProp>> m_overlayActors;

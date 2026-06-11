@@ -1,0 +1,9 @@
+Initial height      : 7.5000 mm
+Final height        : 3.5800 mm
+Strain rate         : 0.1000 1/s
+
+Initial velocity    : 0.7500 mm/s
+Final velocity      : 0.3580 mm/s
+Test duration       : 7.3954 s
+Test duration       : 0.1233 min
+

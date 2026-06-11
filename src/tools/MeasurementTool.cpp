@@ -13,6 +13,7 @@
 #include "VtkViewer.h"
 
 #include <vtkActor.h>
+#include <vtkDataSet.h>
 #include <vtkLineSource.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
@@ -23,15 +24,23 @@ MeasurementTool::~MeasurementTool()
   clearOverlay();
 }
 
-void MeasurementTool::setContext(VtkViewer* viewer, Model* model)
+void MeasurementTool::setContext(VtkViewer* viewer,
+                                 Model* model,
+                                 Mesh* targetMesh,
+                                 vtkDataSet* targetDataSet)
 {
-  if (m_viewer == viewer && m_model == model) {
+  if (m_viewer == viewer &&
+      m_model == model &&
+      m_target_mesh == targetMesh &&
+      m_target_data_set == targetDataSet) {
     return;
   }
 
   clearOverlay();
   m_viewer = viewer;
   m_model = model;
+  m_target_mesh = targetMesh;
+  m_target_data_set = targetDataSet;
 }
 
 void MeasurementTool::setEnabled(bool enabled)
@@ -198,13 +207,33 @@ Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistanceP
   Node* closest = nullptr;
   double bestDist2 = maxDistancePixels * maxDistancePixels;
 
-  for (int p = 0; p < m_model->getPartCount(); ++p) {
-    Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
-      continue;
+  if (m_target_data_set != nullptr) {
+    for (vtkIdType pointId = 0; pointId < m_target_data_set->GetNumberOfPoints(); ++pointId) {
+      double worldPoint[3] = {0.0, 0.0, 0.0};
+      m_target_data_set->GetPoint(pointId, worldPoint);
+
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectWorldToViewport({worldPoint[0], worldPoint[1], worldPoint[2]}, sx, sy)) {
+        continue;
+      }
+
+      const double dx = sx - x;
+      const double dy = sy - y;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 <= bestDist2) {
+        bestDist2 = dist2;
+        closest = nullptr;
+      }
+    }
+    return closest;
+  }
+
+  auto inspectMesh = [&](Mesh* mesh) {
+    if (mesh == nullptr) {
+      return;
     }
 
-    Mesh* mesh = part->getMesh();
     for (int n = 0; n < mesh->getNodeCount(); ++n) {
       Node* node = mesh->getNode(n);
       double sx = 0.0;
@@ -221,6 +250,20 @@ Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistanceP
         closest = node;
       }
     }
+  };
+
+  if (m_target_mesh != nullptr) {
+    inspectMesh(m_target_mesh);
+    return closest;
+  }
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) {
+      continue;
+    }
+
+    inspectMesh(part->getMesh());
   }
 
   return closest;
@@ -228,6 +271,39 @@ Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistanceP
 
 bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoint) const
 {
+  if (m_target_data_set != nullptr) {
+    vtkIdType closestPointId = -1;
+    double bestDist2 = 12.0 * 12.0;
+
+    for (vtkIdType pointId = 0; pointId < m_target_data_set->GetNumberOfPoints(); ++pointId) {
+      double worldPoint[3] = {0.0, 0.0, 0.0};
+      m_target_data_set->GetPoint(pointId, worldPoint);
+
+      double sx = 0.0;
+      double sy = 0.0;
+      if (!projectWorldToViewport({worldPoint[0], worldPoint[1], worldPoint[2]}, sx, sy)) {
+        continue;
+      }
+
+      const double dx = sx - x;
+      const double dy = sy - y;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 <= bestDist2) {
+        bestDist2 = dist2;
+        closestPointId = pointId;
+        outPoint.world = {worldPoint[0], worldPoint[1], worldPoint[2]};
+      }
+    }
+
+    if (closestPointId < 0) {
+      return false;
+    }
+
+    outPoint.node = nullptr;
+    outPoint.pointId = closestPointId;
+    return true;
+  }
+
   Node* node = pickClosestNodeAt(x, y);
   if (node == nullptr) {
     return false;
@@ -235,6 +311,7 @@ bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoin
 
   const Vector3f& pos = node->getPos();
   outPoint.node = node;
+  outPoint.pointId = -1;
   outPoint.world = {pos.x, pos.y, pos.z};
   return true;
 }

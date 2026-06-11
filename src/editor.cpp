@@ -1508,19 +1508,6 @@ void Editor::drawSelectionControls()
     }
   }
 
-  ImGui::Separator();
-  bool measureMode = (m_measurement_tool != nullptr) ? m_measurement_tool->isEnabled() : false;
-  if (ImGui::Checkbox("Measure distance", &measureMode) && m_measurement_tool != nullptr) {
-    m_measurement_tool->setEnabled(measureMode);
-    if (measureMode && m_selector.isBoxSelecting()) {
-      m_selector.finishBoxSelection();
-    }
-  }
-
-  if (measureMode) {
-    ImGui::TextDisabled("Measure: Click point A, then point B");
-    ImGui::TextDisabled("Measure: Esc clears current measurement");
-  }
 }
 
 bool Editor::isSelectorInteractionEnabled() const
@@ -2493,7 +2480,10 @@ void Editor::handleMeasurementInteraction()
     return;
   }
 
-  m_measurement_tool->setContext(viewer, m_model);
+  ResultFrame* activeResultFrame = getActiveResultFrame();
+  vtkDataSet* activeResultDataSet =
+      (activeResultFrame != nullptr) ? activeResultFrame->mesh.GetPointer() : nullptr;
+  m_measurement_tool->setContext(viewer, m_model, findResultViewerTargetMesh(), activeResultDataSet);
   m_measurement_tool->handleInteraction();
 }
 
@@ -2504,6 +2494,23 @@ void Editor::drawMeasurementOverlay() const
   }
 
   m_measurement_tool->drawOverlay();
+}
+
+bool Editor::isMeasurementEnabled() const
+{
+  return m_measurement_tool != nullptr && m_measurement_tool->isEnabled();
+}
+
+void Editor::setMeasurementEnabled(bool enabled)
+{
+  if (m_measurement_tool == nullptr) {
+    return;
+  }
+
+  m_measurement_tool->setEnabled(enabled);
+  if (enabled && m_selector.isBoxSelecting()) {
+    m_selector.finishBoxSelection();
+  }
 }
 
 bool Editor::openResultsFromPath(const std::string& filePathName)

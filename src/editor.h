@@ -129,6 +129,8 @@ public:
   void drawSelectionOverlay() const;
   void handleMeasurementInteraction();
   void drawMeasurementOverlay() const;
+  bool isMeasurementEnabled() const;
+  void setMeasurementEnabled(bool enabled);
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
   bool openModelFromPath(const std::string& filePathName);
   bool openInputFromPath(const std::string& filePathName);

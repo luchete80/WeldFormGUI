@@ -1,0 +1,40 @@
+$ WeldFormGUI NASTRAN export
+BEGIN BULK
+MAT1           1  2.1+11           3.0-1
+GRID           1              0.      0.      0.
+GRID           2           4.0-3      0.      0.
+GRID           3         2.353-4      0.      0.
+GRID           4         4.706-4      0.      0.
+GRID           5         7.059-4      0.      0.
+GRID           6         9.412-4      0.      0.
+GRID           7         1.176-3      0.      0.
+GRID           8         1.412-3      0.      0.
+GRID           9         1.647-3      0.      0.
+GRID          10         1.882-3      0.      0.
+GRID          11         2.118-3      0.      0.
+GRID          12         2.353-3      0.      0.
+GRID          13         2.588-3      0.      0.
+GRID          14         2.824-3      0.      0.
+GRID          15         3.059-3      0.      0.
+GRID          16         3.294-3      0.      0.
+GRID          17         3.529-3      0.      0.
+GRID          18         3.765-3      0.      0.
+CBAR           1       1       1       3
+CBAR           2       1       3       4
+CBAR           3       1       4       5
+CBAR           4       1       5       6
+CBAR           5       1       6       7
+CBAR           6       1       7       8
+CBAR           7       1       8       9
+CBAR           8       1       9      10
+CBAR           9       1      10      11
+CBAR          10       1      11      12
+CBAR          11       1      12      13
+CBAR          12       1      13      14
+CBAR          13       1      14      15
+CBAR          14       1      15      16
+CBAR          15       1      16      17
+CBAR          16       1      17      18
+CBAR          17       1      18       2
+PBAR           1       1,1.0,0.1,0.01,0.01
+ENDDATA
