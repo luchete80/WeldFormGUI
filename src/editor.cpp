@@ -4639,8 +4639,6 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
   }
 
   if (nodeOpen) {
-    job->UpdateOutput(20);
-
     const bool running = job->isRunning();
     const fs::path resultsPath = job->getResultsFilePath();
     const double currentTime = job->getCurrentResultTime();
@@ -4667,13 +4665,12 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
     }
     if (ImGui::Button(("Stop##job_stop_" + std::to_string(index)).c_str())) {
       job->Stop();
-      job->UpdateOutput(20);
     }
     if (!running) {
       ImGui::EndDisabled();
     }
     ImGui::SameLine();
-    if (ImGui::Button(("Show##job_show_" + std::to_string(index)).c_str())) {
+    if (ImGui::Button(("Details##job_show_" + std::to_string(index)).c_str())) {
       m_jobshowdlg.m_job = job;
       job->UpdateOutput();
       m_jobshowdlg.m_show = true;
@@ -4689,21 +4686,6 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
     if (!canLoadResults) {
       ImGui::EndDisabled();
     }
-
-    ImGui::TextWrapped("Path: %s", job->getPathFile().c_str());
-    if (!resultsPath.empty()) {
-      ImGui::TextWrapped("Results: %s", resultsPath.string().c_str());
-    } else {
-      ImGui::TextDisabled("Results: waiting for *.wfresult");
-    }
-
-    ImGui::Separator();
-    ImGui::BeginChild(("JobLogPreview##" + std::to_string(index)).c_str(),
-                      ImVec2(0.0f, 120.0f),
-                      true,
-                      ImGuiWindowFlags_HorizontalScrollbar);
-    ImGui::TextUnformatted(job->getLog().c_str());
-    ImGui::EndChild();
     ImGui::TreePop();
   }
 
