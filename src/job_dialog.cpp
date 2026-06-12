@@ -2,7 +2,6 @@
 #include "job_dialog.h"
 #include "io/InputWriter.h"
 #include "App.h"
-#include "model/Step.h"
 #include <iostream>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -11,13 +10,9 @@
 #include <filesystem>
 #include <fstream>
 #include <cmath>
-#include <vector>
-#include <nlohmann/json.hpp>
 
 using namespace std;
 namespace fs = std::filesystem;
-using json = nlohmann::json;
-
 namespace {
 std::string modelStem(Model &model) {
   std::string model_name = fs::path(model.getName()).stem().string();
@@ -30,72 +25,6 @@ std::string modelStem(Model &model) {
 
 fs::path modelOutputPath(Model &model, const std::string &filename) {
   return fs::path(model.getBaseDir()) / filename;
-}
-
-fs::path findResultsJsonForJob(Job &job) {
-  const std::string &jobPath = job.getPathFile();
-  if (jobPath.empty())
-    return {};
-
-  fs::path runPath(jobPath);
-  fs::path runDir = runPath.parent_path();
-  std::string stem = runPath.stem().string();
-
-  std::vector<fs::path> candidates;
-  if (runPath.extension() == ".wfinput")
-    candidates.push_back(runDir / (runPath.stem().string() + ".wfresult"));
-  candidates.push_back(runDir / (stem + ".wfresult"));
-  candidates.push_back(runDir / "modelo.wfresult");
-
-  for (const auto &candidate : candidates) {
-    if (fs::exists(candidate))
-      return candidate;
-  }
-
-  return {};
-}
-
-double getLastResultTime(const fs::path &resultsPath) {
-  if (resultsPath.empty() || !fs::exists(resultsPath))
-    return 0.0;
-
-  std::ifstream file(resultsPath);
-  if (!file.is_open())
-    return 0.0;
-
-  json data;
-  try {
-    file >> data;
-  } catch (...) {
-    return 0.0;
-  }
-
-  if (!data.contains("vtk_files") || !data["vtk_files"].is_array())
-    return 0.0;
-
-  double lastTime = 0.0;
-  for (const auto &entry : data["vtk_files"]) {
-    if (!entry.contains("time"))
-      continue;
-    try {
-      lastTime = entry["time"].get<double>();
-    } catch (...) {
-      continue;
-    }
-  }
-
-  return lastTime;
-}
-
-double expectedSimTime(Model &model) {
-  if (model.getStepCount() <= 0)
-    return 0.0;
-
-  Step *step = model.getStep(0);
-  if (step == nullptr || step->m_simTime <= 0.0)
-    return 0.0;
-
-  return step->m_simTime;
 }
 }
 
@@ -232,13 +161,10 @@ void JobShowDialog::Draw(){
 
   str = m_job->getLog();
 
-  Model &model = getApp().getActiveModel();
-  const double simTime = expectedSimTime(model);
-  const fs::path resultsPath = findResultsJsonForJob(*m_job);
-  const double currentTime = getLastResultTime(resultsPath);
-  const float progress = simTime > 0.0
-    ? std::min(1.0f, static_cast<float>(currentTime / simTime))
-    : 0.0f;
+  const double simTime = m_job->getExpectedSimTime();
+  const fs::path resultsPath = m_job->getResultsFilePath();
+  const double currentTime = m_job->getCurrentResultTime();
+  const float progress = m_job->getEstimatedProgress();
 
   ImGui::Separator();
   ImGui::Text("Estimated progress");

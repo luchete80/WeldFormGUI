@@ -17,6 +17,8 @@
 #ifdef _WIN32
 #include "common/platform/WindowsHeaders.h"
 #else
+#include <cerrno>
+#include <csignal>
 #include <unistd.h>
 #endif
 
@@ -169,6 +171,69 @@ fs::path resolveSolverExecutablePath(const std::string& solverName,
   return {};
 }
 
+fs::path findResultsJsonForJobPath(const std::string& jobPath)
+{
+  if (jobPath.empty()) {
+    return {};
+  }
+
+  const fs::path runPath(jobPath);
+  const fs::path runDir = runPath.parent_path();
+  const std::string stem = runPath.stem().string();
+
+  std::vector<fs::path> candidates;
+  if (runPath.extension() == ".wfinput") {
+    candidates.push_back(runDir / (runPath.stem().string() + ".wfresult"));
+  }
+  candidates.push_back(runDir / (stem + ".wfresult"));
+  candidates.push_back(runDir / "modelo.wfresult");
+
+  for (const fs::path& candidate : candidates) {
+    if (fs::exists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return {};
+}
+
+double readLastResultTime(const fs::path& resultsPath)
+{
+  if (resultsPath.empty() || !fs::exists(resultsPath)) {
+    return 0.0;
+  }
+
+  std::ifstream file(resultsPath);
+  if (!file.is_open()) {
+    return 0.0;
+  }
+
+  try {
+    json data;
+    file >> data;
+
+    if (!data.contains("vtk_files") || !data["vtk_files"].is_array()) {
+      return 0.0;
+    }
+
+    double lastTime = 0.0;
+    for (const auto& entry : data["vtk_files"]) {
+      if (!entry.contains("time")) {
+        continue;
+      }
+      try {
+        lastTime = entry["time"].get<double>();
+      } catch (...) {
+        continue;
+      }
+    }
+
+    return lastTime;
+  } catch (...) {
+    return 0.0;
+  }
+}
+
 std::string joinPathsForLog(const std::vector<fs::path>& paths)
 {
   if (paths.empty()) {
@@ -224,6 +289,22 @@ Job::Job(std::string str){
   cout << "path "<<str<<endl;
 }
 
+std::string Job::getDisplayName() const
+{
+  if (m_path_file.empty()) {
+    return "Unnamed Job";
+  }
+
+  const fs::path jobPath(m_path_file);
+  const std::string stem = jobPath.stem().string();
+  if (!stem.empty()) {
+    return stem;
+  }
+
+  const std::string filename = jobPath.filename().string();
+  return filename.empty() ? m_path_file : filename;
+}
+
 fs::path Job::getJobDirectory() const{
   fs::path input_path(m_path_file);
   fs::path dir = input_path.parent_path();
@@ -264,6 +345,71 @@ int Job::getPid() const{
     return -1;
 
   return pid;
+}
+
+bool Job::isRunning() const
+{
+  const int pid = getPid();
+  if (pid <= 0) {
+    return false;
+  }
+
+#ifdef _WIN32
+  HANDLE processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
+                                     FALSE,
+                                     static_cast<DWORD>(pid));
+  if (processHandle == nullptr) {
+    return false;
+  }
+
+  DWORD exitCode = 0;
+  const bool running =
+      GetExitCodeProcess(processHandle, &exitCode) &&
+      exitCode == STILL_ACTIVE;
+  CloseHandle(processHandle);
+  return running;
+#else
+  const int result = kill(pid, 0);
+  if (result == 0) {
+    return true;
+  }
+  return errno != ESRCH;
+#endif
+}
+
+fs::path Job::getResultsFilePath() const
+{
+  return findResultsJsonForJobPath(m_path_file);
+}
+
+double Job::getExpectedSimTime() const
+{
+  const std::optional<json> input = loadInputJson();
+  if (!input.has_value() || !input->contains("Configuration")) {
+    return 0.0;
+  }
+
+  try {
+    return (*input)["Configuration"].value("simTime", 0.0);
+  } catch (...) {
+    return 0.0;
+  }
+}
+
+double Job::getCurrentResultTime() const
+{
+  return readLastResultTime(getResultsFilePath());
+}
+
+float Job::getEstimatedProgress() const
+{
+  const double simTime = getExpectedSimTime();
+  if (simTime <= 0.0) {
+    return 0.0f;
+  }
+
+  const float progress = static_cast<float>(getCurrentResultTime() / simTime);
+  return std::clamp(progress, 0.0f, 1.0f);
 }
 
 bool Job::isImplicit() const{

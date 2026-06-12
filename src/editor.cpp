@@ -4581,6 +4581,179 @@ void Editor::drawPendingJobRunConfirmation()
   }
 }
 
+bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
+{
+  if (job == nullptr) {
+    return false;
+  }
+
+  if (expandOnce || index == 0) {
+    ImGui::SetNextItemOpen(true, expandOnce ? ImGuiCond_Always : ImGuiCond_Once);
+  }
+
+  const std::string jobLabel = job->getDisplayName() + "##job_" + std::to_string(index);
+  const bool nodeOpen = ImGui::TreeNode(jobLabel.c_str());
+
+  if (ImGui::BeginPopupContextItem()) {
+    if (ImGui::MenuItem("Edit")) {
+      m_jobdlg.m_show = true;
+      m_jobdlg.m_edit_mode = true;
+      m_jobdlg.m_job = job;
+      m_jobdlg.m_filename = job->getPathFile();
+      m_jobdlg.m_solver_edition = static_cast<int>(job->getSolverEditionOverride());
+    }
+    if (ImGui::MenuItem("Show Progress")) {
+      m_jobshowdlg.m_job = job;
+      job->UpdateOutput();
+      m_jobshowdlg.m_show = true;
+    }
+    if (ImGui::MenuItem("Run")) {
+      requestJobRun(job);
+    }
+    if (ImGui::MenuItem("Load Results")) {
+      openResultsForJob(job);
+    }
+    if (ImGui::MenuItem("Delete")) {
+      if (m_jobdlg.m_job == job) {
+        m_jobdlg.m_job = nullptr;
+        m_jobdlg.m_edit_mode = false;
+        m_jobdlg.m_show = false;
+      }
+      if (m_jobshowdlg.m_job == job) {
+        m_jobshowdlg.m_job = nullptr;
+        m_jobshowdlg.m_last_job = nullptr;
+        m_jobshowdlg.m_last_refresh_time = -1.0;
+        m_jobshowdlg.m_show = false;
+      }
+      if (m_pending_job_run_confirmation.job == job) {
+        m_pending_job_run_confirmation = PendingJobRunConfirmation{};
+      }
+      delete job;
+      m_jobs.erase(m_jobs.begin() + index);
+      if (nodeOpen) {
+        ImGui::TreePop();
+      }
+      return true;
+    }
+    ImGui::EndPopup();
+  }
+
+  if (nodeOpen) {
+    job->UpdateOutput(20);
+
+    const bool running = job->isRunning();
+    const fs::path resultsPath = job->getResultsFilePath();
+    const double currentTime = job->getCurrentResultTime();
+    const double simTime = job->getExpectedSimTime();
+    const float progress = job->getEstimatedProgress();
+
+    ImGui::TextDisabled("%s", running ? "Running" : "Idle");
+    ImGui::SameLine();
+    ImGui::TextDisabled("PID: %d", job->getPid());
+
+    ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
+    if (simTime > 0.0) {
+      ImGui::Text("%.4f / %.4f", currentTime, simTime);
+    } else {
+      ImGui::TextDisabled("Progress unavailable");
+    }
+
+    if (ImGui::Button(("Run##job_run_" + std::to_string(index)).c_str())) {
+      requestJobRun(job);
+    }
+    ImGui::SameLine();
+    if (!running) {
+      ImGui::BeginDisabled();
+    }
+    if (ImGui::Button(("Stop##job_stop_" + std::to_string(index)).c_str())) {
+      job->Stop();
+      job->UpdateOutput(20);
+    }
+    if (!running) {
+      ImGui::EndDisabled();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(("Show##job_show_" + std::to_string(index)).c_str())) {
+      m_jobshowdlg.m_job = job;
+      job->UpdateOutput();
+      m_jobshowdlg.m_show = true;
+    }
+    ImGui::SameLine();
+    const bool canLoadResults = !resultsPath.empty();
+    if (!canLoadResults) {
+      ImGui::BeginDisabled();
+    }
+    if (ImGui::Button(("Results##job_results_" + std::to_string(index)).c_str())) {
+      openResultsForJob(job);
+    }
+    if (!canLoadResults) {
+      ImGui::EndDisabled();
+    }
+
+    ImGui::TextWrapped("Path: %s", job->getPathFile().c_str());
+    if (!resultsPath.empty()) {
+      ImGui::TextWrapped("Results: %s", resultsPath.string().c_str());
+    } else {
+      ImGui::TextDisabled("Results: waiting for *.wfresult");
+    }
+
+    ImGui::Separator();
+    ImGui::BeginChild(("JobLogPreview##" + std::to_string(index)).c_str(),
+                      ImVec2(0.0f, 120.0f),
+                      true,
+                      ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::TextUnformatted(job->getLog().c_str());
+    ImGui::EndChild();
+    ImGui::TreePop();
+  }
+
+  return false;
+}
+
+void Editor::drawJobsSidebar(bool expandOnce)
+{
+  if (expandOnce) {
+    ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+  }
+
+  const bool jobsOpen = ImGui::TreeNode("Jobs");
+  if (ImGui::BeginPopupContextItem()) {
+    if (ImGui::MenuItem("New")) {
+      m_jobdlg.m_edit_mode = false;
+      m_jobdlg.m_job = nullptr;
+      m_jobdlg.m_filename.clear();
+      m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
+      m_jobdlg.m_show = true;
+    }
+    ImGui::EndPopup();
+  }
+
+  ImGui::SameLine();
+  if (ImGui::SmallButton("New##jobs_sidebar_new")) {
+    m_jobdlg.m_edit_mode = false;
+    m_jobdlg.m_job = nullptr;
+    m_jobdlg.m_filename.clear();
+    m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
+    m_jobdlg.m_show = true;
+  }
+
+  if (!jobsOpen) {
+    return;
+  }
+
+  if (m_jobs.empty()) {
+    ImGui::TextDisabled("No jobs created.");
+  } else {
+    for (int i = 0; i < static_cast<int>(m_jobs.size()); ++i) {
+      if (drawJobTreeNode(m_jobs[i], i, expandOnce)) {
+        break;
+      }
+    }
+  }
+
+  ImGui::TreePop();
+}
+
 void Editor::drawModelCheckPopup()
 {
   if (!m_model_check_popup.open && !ImGui::IsPopupOpen("Model Check")) {
@@ -6617,99 +6790,6 @@ void Editor::drawGui() {
     
 
 
-    if (expand_model_tree_once) {
-      ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-    }
-    bool open_ = ImGui::TreeNode("Jobs");
-    if (ImGui::BeginPopupContextItem())
-    {
-      if (ImGui::MenuItem("New", "CTRL+Z")) {
-        m_jobdlg.m_edit_mode = false;
-        m_jobdlg.m_job = nullptr;
-        m_jobdlg.m_filename.clear();
-        m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
-        m_jobdlg.m_show=true;
-      }
-                       
-      ImGui::EndPopup();
-    }
-
-    for (int i = 0; i < m_jobs.size(); i++)
-    {
-      bool deletedJobFromTree = false;
-      
-	      if (expand_model_tree_once || i == 0)
-	        ImGui::SetNextItemOpen(true, expand_model_tree_once ? ImGuiCond_Always : ImGuiCond_Once);
-
-      if (ImGui::TreeNode((void*)(intptr_t)i, "Job %d", i))
-      {
-        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()){                
-          //m_show_job_dlg_edit = true;
-        }
-          //selected_mat = m_mats[i];}
-        if (ImGui::BeginPopupContextItem())
-        {
-          if (ImGui::MenuItem("Edit", "CTRL+Z")) {
-            m_jobdlg.m_show = true;
-            m_jobdlg.m_edit_mode = true;
-            m_jobdlg.m_job = m_jobs[i];
-            m_jobdlg.m_filename = m_jobs[i]->getPathFile();
-            m_jobdlg.m_solver_edition = static_cast<int>(m_jobs[i]->getSolverEditionOverride());
-          }
-          if (ImGui::MenuItem("Show Progress", "")) {
-            m_jobshowdlg.m_job = m_jobs[i];
-            m_jobs[i]->UpdateOutput();
-
-            m_jobshowdlg.m_show = true;
-            
-            //selected_mat = m_mats[i];
-          }
-          if (ImGui::MenuItem("Run", "")) {
-            requestJobRun(m_jobs[i]);
-          }
-          if (ImGui::MenuItem("Load Results", "")) {
-            openResultsForJob(m_jobs[i]);
-          }
-          if (ImGui::MenuItem("Delete", "")) {
-            Job* jobToDelete = m_jobs[i];
-            if (m_jobdlg.m_job == jobToDelete) {
-              m_jobdlg.m_job = nullptr;
-              m_jobdlg.m_edit_mode = false;
-              m_jobdlg.m_show = false;
-            }
-            if (m_jobshowdlg.m_job == jobToDelete) {
-              m_jobshowdlg.m_job = nullptr;
-              m_jobshowdlg.m_last_job = nullptr;
-              m_jobshowdlg.m_last_refresh_time = -1.0;
-              m_jobshowdlg.m_show = false;
-            }
-            if (m_pending_job_run_confirmation.job == jobToDelete) {
-              m_pending_job_run_confirmation = PendingJobRunConfirmation{};
-            }
-            delete jobToDelete;
-            m_jobs.erase(m_jobs.begin() + i);
-            deletedJobFromTree = true;
-          }
-          ImGui::EndPopup();
-        }
-        if (deletedJobFromTree) {
-          ImGui::TreePop();
-          break;
-        }
-        ImGui::SameLine();
-        if (ImGui::SmallButton("button")) {}
-        ImGui::TreePop();
-      }//Is hovered
-      
-      
-    }//Jobs
-
-    if (open_)
-    {
-       // your tree code stuff
-       ImGui::TreePop();
-    }
-        
 	    if (close_model_requested) {
 	      requestCloseCurrentModel();
 	    }
@@ -6983,6 +7063,19 @@ void Editor::drawGui() {
          ImGui::TreePop();
       }
       ImGui::EndTabItem(); 
+    }
+
+    const ImGuiTabItemFlags jobs_tab_flags =
+      (m_sidebar_tab == SidebarTab::Jobs) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+    const bool jobs_tab_open = ImGui::BeginTabItem("Jobs", nullptr, jobs_tab_flags);
+    if (ImGui::IsItemClicked()) {
+      m_sidebar_tab = SidebarTab::Jobs;
+      m_activate_model_viewer = false;
+      m_activate_results_viewer = false;
+    }
+    if (jobs_tab_open) {
+      drawJobsSidebar(m_expand_model_tree_once);
+      ImGui::EndTabItem();
     }
     
       ImGui::EndTabBar();

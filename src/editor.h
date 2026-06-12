@@ -181,6 +181,7 @@ public:
   void requestCloseCurrentModel();
   void showModelSidebar() { m_sidebar_tab = SidebarTab::Model; }
   void showResultsSidebar() { m_sidebar_tab = SidebarTab::Results; }
+  void showJobsSidebar() { m_sidebar_tab = SidebarTab::Jobs; }
   void closeCurrentModel();
   void closeCurrentResults();
   void selectResultNodeSetById(int setId);
@@ -437,7 +438,8 @@ protected:
   bool m_show_all_element_labels = false;
   enum class SidebarTab {
     Model,
-    Results
+    Results,
+    Jobs
   };
   SidebarTab m_sidebar_tab = SidebarTab::Model;
   std::vector<vtkSmartPointer<vtkProp>> m_model_bc_overlay_actors;
@@ -494,6 +496,8 @@ protected:
   void drawResultsLoadProgress();
   void drawPendingJobRunConfirmation();
   void executePendingJobRun(bool deleteExistingArtifacts);
+  void drawJobsSidebar(bool expandOnce);
+  bool drawJobTreeNode(Job* job, int index, bool expandOnce);
   bool runModelCheckBeforeJobRun(Model& model);
   void drawModelCheckPopup();
   void clearBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,

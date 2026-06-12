@@ -2615,9 +2615,7 @@ int main(int argc, char* argv[])
 	          if (vtk_2_open && ImGui::BeginTabItem("Model Viewer", &vtk_2_open, model_tab_flags))
           {
 	              ImGui::PushFont(current_ui_font);
-                  editor->showModelSidebar();
-
-	              auto renderer = vtkViewer2.getRenderer();
+		              auto renderer = vtkViewer2.getRenderer();
                 static ModelViewportOverlayState modelOverlayState;
                 static ResultsViewportToolState modelToolState;
 
@@ -2727,10 +2725,9 @@ int main(int argc, char* argv[])
           if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
                 results_viewer_active = true;
-                editor->showResultsSidebar();
-                if (!was_results_viewer_active) {
-                    editor->clearPartSelectionState();
-                }
+	                if (!was_results_viewer_active) {
+	                    editor->clearPartSelectionState();
+	                }
 	              ImGui::PushFont(current_ui_font);
 
 	              auto renderer = vtkViewer_res.getRenderer();

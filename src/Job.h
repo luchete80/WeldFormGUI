@@ -26,8 +26,14 @@ public:
   std::string & getPathFile(){return m_path_file;}
   std::string & getLog(){return m_log;  }
   void setPathFile(const std::string &path){m_path_file = path;}
+  std::string getDisplayName() const;
   bool isImplicit() const;
   int getPid() const;
+  bool isRunning() const;
+  std::filesystem::path getResultsFilePath() const;
+  double getExpectedSimTime() const;
+  double getCurrentResultTime() const;
+  float getEstimatedProgress() const;
   void setSolverEditionOverride(SolverEdition edition) { m_solver_edition_override = edition; }
   SolverEdition getSolverEditionOverride() const { return m_solver_edition_override; }
 protected:
