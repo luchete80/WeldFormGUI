@@ -311,3 +311,4 @@
 
 20260612 - simplified job tree
 20260612 - changed example
+20260612 - changed axis direction at reselect edge

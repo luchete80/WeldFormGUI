@@ -343,9 +343,21 @@ void VtkViewer::orientCameraToAxis(int axis){
     distance = 1.0;
   }
 
+  const double invDistance = 1.0 / distance;
+  double currentDirection[3] = {
+    viewDirection[0] * invDistance,
+    viewDirection[1] * invDistance,
+    viewDirection[2] * invDistance
+  };
+
   double axisDirection[3] = {0.0, 0.0, 0.0};
   double viewUp[3] = {0.0, 1.0, 0.0};
-	  axisDirection[axis] = 1.0;
+  double sign = 1.0;
+  const double alignment = currentDirection[axis];
+  if (std::abs(alignment) >= 0.98) {
+    sign = (alignment > 0.0) ? -1.0 : 1.0;
+  }
+  axisDirection[axis] = sign;
 
   if (axis == 0 || axis == 1) {
     viewUp[0] = 0.0;
@@ -357,6 +369,7 @@ void VtkViewer::orientCameraToAxis(int axis){
                       focalPoint[1] + axisDirection[1] * distance,
                       focalPoint[2] + axisDirection[2] * distance);
   camera->SetViewUp(viewUp);
+  camera->OrthogonalizeViewUp();
   renderer->ResetCameraClippingRange();
 }
 
