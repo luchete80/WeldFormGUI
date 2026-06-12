@@ -306,5 +306,6 @@
 20260610 - Fixed right click on model.
          - Fixed decresing size poput at opening results progress bar.
 20260611 - Added Friction Contact Regularization
-         - Fixed close colorbar at closing results.
-           
+         - Fixed close colorbar at closing results.           
+20260612 - Added Job progress to tree and separate from model
+
