@@ -1,0 +1,142 @@
+{
+    "Amplitudes": [],
+    "BoundaryConditions": [
+        {
+            "id": 1,
+            "value": [
+                0.0,
+                0.0,
+                -1.0
+            ],
+            "valueType": 0,
+            "zoneId": 2
+        }
+    ],
+    "Configuration": {
+        "AxiSymmVol": false,
+        "Nproc": 1,
+        "artifViscAlpha": 1.0,
+        "artifViscBeta": 0.0,
+        "autoTS": [
+            false,
+            false,
+            false
+        ],
+        "cflFactor": 0.3,
+        "domType": "3D",
+        "elemLentghFraction": 0.2,
+        "fixedTS": false,
+        "kernelGradCorr": false,
+        "outTime": 0.0001,
+        "simTime": 0.01,
+        "solver": {
+            "implicit": {
+                "divTol": 1.0,
+                "forceTol": 10.0,
+                "maxIter": 200,
+                "omegaP": 0.1,
+                "omegaV": 0.4,
+                "pressTol": 10.0,
+                "timeStepGrowthFactor": 1.2,
+                "type": "Picard",
+                "velTol": 0.05
+            }
+        }
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 5000.0,
+            "useGapPenalty": true
+        }
+    ],
+    "DomainBlocks": [
+        {
+            "fileName": "compression_tetra_part_0.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "InitialConditions": [],
+    "Materials": [
+        {
+            "const": [
+                650000000.0,
+                0.22
+            ],
+            "density0": 1.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "strRange": [
+                0.0,
+                0.65
+            ],
+            "strdotRange": [
+                0.0,
+                10000000000.0
+            ],
+            "tempRange": [
+                0.0,
+                10000000000.0
+            ],
+            "thermalCond": 0.0,
+            "thermalExp": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "yieldStress0": 190000000.0,
+            "youngsModulus": 210000000000.0
+        }
+    ],
+    "Meshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": true,
+        "enabled": true,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 150.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "RigidBodies": [
+        {
+            "fileName": "compression_tetra_part_1.bdf",
+            "orientNormals": true,
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 1
+        },
+        {
+            "fileName": "compression_tetra_part_2.bdf",
+            "orientNormals": true,
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 2
+        }
+    ],
+    "Sets": []
+}

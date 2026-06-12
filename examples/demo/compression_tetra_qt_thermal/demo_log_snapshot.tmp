@@ -1,0 +1,2950 @@
+Log initialized: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/log.txt
+Out file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/log.txt
+INPUT FILE NAME /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo
+-----------------------------------------------
+------------------ WELDFORM FEM -----------------
+------------- Version: ------------------
+------------- Commit:  1d92eb2-------------------
+------------- Build:   2026-06-11 10:24:22------------
+Opening WFINPUT format file
+Fixed time step: OFF
+Number of threads used: 1np 1
+Thread 
+Threads used: 1, np parameter (via [Config]{Nproc})
+SYMMETRY ON AXIS X plane=0 tol=0.0001
+SYMMETRY ON AXIS Y plane=0 tol=0.0001
+Reading Domain type
+Domain type: File
+Reading Domain from Input file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_3.bdf
+Extension bdf
+Creating domain from Nastran file /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_3.bdf
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_3.bdf
+720 nodes and 2633 elements found.
+[Nastran] CTETRA detected. Shell/beam elements are ignored for solid import.
+[I] 3357 lines readed ...
+Allocating 720 nodes
+Allocating 2633 Elements...
+Done.
+Setting Dimension for implicit domain
+m_dim
+setting deriv allocation size of 31596
+mdim: 3 , Nod x Elem 4 2633 1
+Allocating 720 nodes 
+Allocating 2633 elements, node x element: 4
+Setting elements per node 
+Node 12 found in element 2038
+Node 12 found in element 2224
+Node 12 found in element 2453
+Node 12 found in element 2465
+Allocating 2633 and 4nodes x elem
+COPYING 10532 element nodes 
+Done
+Size of Nodal shared Elements vector 10532
+Total orphan nodes: 0
+Node Elemets set. 
+[Nastran] Orphan nodes: 0
+[Nastran] Tetra stats: tiny=0 inverted_or_zero=0 repeated_nodes=0 duplicates=0 min|det|=2.27274e-09 max|det|=2.47504e-08
+[Nastran] Bounding box: xmin=0 xmax=0.0127 ymin=0 ymax=0.0127 zmin=0 zmax=0.03
+Node Size: 720
+Element Size: 2633
+Executable variant: mini3d
+Node limit: none
+Solver params: velTol=0.05, pressTol=10, forceTol=10, divTol=1, omegaV=0.4, omegaP=0.1, betaH=1e-06, nrEntryDivTol=0.05, nrEntryMaxDiv=1, elemLengthFraction=0.2, timeStepGrowthFactor=1.2, useSprings=false, springFactor=1e-07, springStiffness=0, springMode=1, picardWarmupIter=3, maxIter=200
+Initial Temp: 20 zoneId=3
+THERMAL COUPLING SET TO ON
+Setting density
+Done.
+Creating Material..:
+Type: Hollomon
+eps_0, 9.05e-04 eps_1 3.73e-03
+Hollomon Material Constants, K: 6.5e+08, n: 0.22
+eps_0, 9.05e-04 eps_1 3.73e-03
+Strain Range: 0, 0.65
+Thermal Material Properties: k=50, cp=560, alpha_T=0
+Material Parameters K: 6.5e+08
+Done.
+Reading Boundary Conditions ...
+Done
+done. Face count: 5796
+Total External Nodal Area: 1.6123e-03, external nodes: 532
+Searching external nodes
+Creating plane mesh...
+Mesh start: 0,0, 0
+Mesh dim: 0,0, 0
+[RigidBody] Loading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_4.bdf
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_4.bdf
+146 nodes and 250 elements found.
+[I] 401 lines readed ...
+Allocating 146 nodes
+Allocating 250 Elements...
+Done.
+[RigidBody] 3D domain detected. Treating shell contact mesh as 3D surface.
+Mesh0 Start: 0, 0, 0
+Nastran Mesh NodeCount: 146
+Copying 146 nodes 
+Centroid of matrix: 0.0248973, 0.025296, 0
+endl
+Element count: 250done. Creating elements... Global Centroid:0.00532662, 0.00527365, 0.0149518
+Writing elements...
+Done. 
+Reorienting normals...
+3D fallback finished using matrix centroid offset from orient_pt.
+Element 0 normal -0, 0, 1
+Element 1 normal 0, 0, 1
+Element 2 normal 0, 0, 1
+Element 3 normal 0, 0, 1
+Element 4 normal 0, -0, 1
+Element 5 normal 0, 0, 1
+Element 6 normal 0, 0, 1
+Element 7 normal 0, 0, 1
+Element 8 normal 0, 0, 1
+Element 9 normal 0, 0, 1
+Element 10 normal 0, 0, 1
+Element 11 normal 0, -0, 1
+Element 12 normal 0, 0, 1
+Element 13 normal -0, 0, 1
+Element 14 normal 0, 0, 1
+Element 15 normal 0, 0, 1
+Element 16 normal 0, 0, 1
+Element 17 normal 0, 0, 1
+Element 18 normal 0, -0, 1
+Element 19 normal 0, -0, 1
+Element 20 normal 0, 0, 1
+Element 21 normal 0, 0, 1
+Element 22 normal 0, 0, 1
+Element 23 normal 0, 0, 1
+Element 24 normal 0, 0, 1
+Element 25 normal 0, 0, 1
+Element 26 normal -0, 0, 1
+Element 27 normal 0, -0, 1
+Element 28 normal 0, -0, 1
+Element 29 normal 0, 0, 1
+Element 30 normal 0, 0, 1
+Element 31 normal 0, 0, 1
+Element 32 normal 0, 0, 1
+Element 33 normal 0, -0, 1
+Element 34 normal 0, -0, 1
+Element 35 normal 0, 0, 1
+Element 36 normal 0, 0, 1
+Element 37 normal 0, 0, 1
+Element 38 normal 0, 0, 1
+Element 39 normal 0, 0, 1
+Element 40 normal 0, 0, 1
+Element 41 normal -0, 0, 1
+Element 42 normal 0, 0, 1
+Element 43 normal 0, 0, 1
+Element 44 normal 0, -0, 1
+Element 45 normal -0, 0, 1
+Element 46 normal 0, 0, 1
+Element 47 normal 0, 0, 1
+Element 48 normal 0, 0, 1
+Element 49 normal 0, 0, 1
+Element 50 normal 0, 0, 1
+Element 51 normal 0, 0, 1
+Element 52 normal 0, 0, 1
+Element 53 normal 0, 0, 1
+Element 54 normal 0, 0, 1
+Element 55 normal -0, 0, 1
+Element 56 normal 0, 0, 1
+Element 57 normal 0, 0, 1
+Element 58 normal 0, 0, 1
+Element 59 normal 0, 0, 1
+Element 60 normal 0, 0, 1
+Element 61 normal 0, 0, 1
+Element 62 normal -0, 0, 1
+Element 63 normal 0, 0, 1
+Element 64 normal 0, 0, 1
+Element 65 normal 0, -0, 1
+Element 66 normal 0, -0, 1
+Element 67 normal 0, 0, 1
+Element 68 normal -0, 0, 1
+Element 69 normal 0, 0, 1
+Element 70 normal 0, -0, 1
+Element 71 normal 0, 0, 1
+Element 72 normal 0, -0, 1
+Element 73 normal 0, -0, 1
+Element 74 normal 0, -0, 1
+Element 75 normal 0, 0, 1
+Element 76 normal 0, 0, 1
+Element 77 normal 0, -0, 1
+Element 78 normal 0, 0, 1
+Element 79 normal -0, 0, 1
+Element 80 normal 0, 0, 1
+Element 81 normal 0, 0, 1
+Element 82 normal 0, 0, 1
+Element 83 normal 0, 0, 1
+Element 84 normal -0, 0, 1
+Element 85 normal -0, 0, 1
+Element 86 normal 0, 0, 1
+Element 87 normal 0, -0, 1
+Element 88 normal 0, 0, 1
+Element 89 normal 0, 0, 1
+Element 90 normal 0, -0, 1
+Element 91 normal 0, 0, 1
+Element 92 normal 0, 0, 1
+Element 93 normal -0, 0, 1
+Element 94 normal 0, 0, 1
+Element 95 normal -0, 0, 1
+Element 96 normal 0, 0, 1
+Element 97 normal 0, 0, 1
+Element 98 normal 0, -0, 1
+Element 99 normal 0, 0, 1
+Element 100 normal -0, 0, 1
+Element 101 normal -0, 0, 1
+Element 102 normal 0, 0, 1
+Element 103 normal 0, -0, 1
+Element 104 normal 0, 0, 1
+Element 105 normal 0, 0, 1
+Element 106 normal 0, 0, 1
+Element 107 normal 0, 0, 1
+Element 108 normal 0, -0, 1
+Element 109 normal -0, 0, 1
+Element 110 normal 0, 0, 1
+Element 111 normal 0, 0, 1
+Element 112 normal -0, 0, 1
+Element 113 normal 0, 0, 1
+Element 114 normal 0, 0, 1
+Element 115 normal 0, 0, 1
+Element 116 normal 0, 0, 1
+Element 117 normal 0, 0, 1
+Element 118 normal 0, 0, 1
+Element 119 normal 0, 0, 1
+Element 120 normal 0, -0, 1
+Element 121 normal 0, 0, 1
+Element 122 normal 0, 0, 1
+Element 123 normal 0, 0, 1
+Element 124 normal 0, 0, 1
+Element 125 normal 0, 0, 1
+Element 126 normal 0, 0, 1
+Element 127 normal 0, -0, 1
+Element 128 normal 0, -0, 1
+Element 129 normal 0, 0, 1
+Element 130 normal 0, 0, 1
+Element 131 normal 0, 0, 1
+Element 132 normal 0, 0, 1
+Element 133 normal 0, 0, 1
+Element 134 normal 0, 0, 1
+Element 135 normal 0, 0, 1
+Element 136 normal 0, 0, 1
+Element 137 normal -0, 0, 1
+Element 138 normal -0, 0, 1
+Element 139 normal 0, 0, 1
+Element 140 normal 0, 0, 1
+Element 141 normal 0, 0, 1
+Element 142 normal 0, 0, 1
+Element 143 normal 0, 0, 1
+Element 144 normal 0, 0, 1
+Element 145 normal 0, 0, 1
+Element 146 normal 0, 0, 1
+Element 147 normal 0, 0, 1
+Element 148 normal -0, 0, 1
+Element 149 normal 0, 0, 1
+Element 150 normal 0, -0, 1
+Element 151 normal 0, 0, 1
+Element 152 normal 0, 0, 1
+Element 153 normal 0, 0, 1
+Element 154 normal 0, -0, 1
+Element 155 normal 0, 0, 1
+Element 156 normal -0, 0, 1
+Element 157 normal 0, 0, 1
+Element 158 normal 0, 0, 1
+Element 159 normal 0, 0, 1
+Element 160 normal 0, 0, 1
+Element 161 normal 0, 0, 1
+Element 162 normal 0, 0, 1
+Element 163 normal 0, 0, 1
+Element 164 normal 0, 0, 1
+Element 165 normal 0, -0, 1
+Element 166 normal -0, 0, 1
+Element 167 normal -0, 0, 1
+Element 168 normal 0, 0, 1
+Element 169 normal -0, 0, 1
+Element 170 normal 0, 0, 1
+Element 171 normal 0, 0, 1
+Element 172 normal 0, 0, 1
+Element 173 normal 0, 0, 1
+Element 174 normal 0, 0, 1
+Element 175 normal -0, 0, 1
+Element 176 normal 0, 0, 1
+Element 177 normal 0, 0, 1
+Element 178 normal 0, 0, 1
+Element 179 normal 0, 0, 1
+Element 180 normal 0, 0, 1
+Element 181 normal -0, 0, 1
+Element 182 normal 0, 0, 1
+Element 183 normal -0, 0, 1
+Element 184 normal 0, 0, 1
+Element 185 normal 0, 0, 1
+Element 186 normal 0, 0, 1
+Element 187 normal 0, 0, 1
+Element 188 normal 0, 0, 1
+Element 189 normal -0, 0, 1
+Element 190 normal 0, -0, 1
+Element 191 normal -0, 0, 1
+Element 192 normal 0, 0, 1
+Element 193 normal 0, 0, 1
+Element 194 normal 0, -0, 1
+Element 195 normal 0, 0, 1
+Element 196 normal 0, 0, 1
+Element 197 normal 0, 0, 1
+Element 198 normal 0, 0, 1
+Element 199 normal 0, 0, 1
+Element 200 normal 0, 0, 1
+Element 201 normal 0, 0, 1
+Element 202 normal 0, -0, 1
+Element 203 normal 0, 0, 1
+Element 204 normal 0, 0, 1
+Element 205 normal 0, 0, 1
+Element 206 normal 0, -0, 1
+Element 207 normal 0, 0, 1
+Element 208 normal -0, 0, 1
+Element 209 normal 0, 0, 1
+Element 210 normal 0, 0, 1
+Element 211 normal 0, 0, 1
+Element 212 normal 0, 0, 1
+Element 213 normal 0, 0, 1
+Element 214 normal 0, 0, 1
+Element 215 normal -0, 0, 1
+Element 216 normal 0, 0, 1
+Element 217 normal 0, 0, 1
+Element 218 normal 0, 0, 1
+Element 219 normal 0, 0, 1
+Element 220 normal 0, 0, 1
+Element 221 normal 0, -0, 1
+Element 222 normal 0, 0, 1
+Element 223 normal 0, 0, 1
+Element 224 normal 0, 0, 1
+Element 225 normal 0, 0, 1
+Element 226 normal 0, 0, 1
+Element 227 normal 0, 0, 1
+Element 228 normal -0, 0, 1
+Element 229 normal 0, -0, 1
+Element 230 normal 0, 0, 1
+Element 231 normal 0, 0, 1
+Element 232 normal 0, 0, 1
+Element 233 normal -0, 0, 1
+Element 234 normal 0, 0, 1
+Element 235 normal 0, 0, 1
+Element 236 normal -0, 0, 1
+Element 237 normal 0, 0, 1
+Element 238 normal 0, 0, 1
+Element 239 normal 0, 0, 1
+Element 240 normal -0, 0, 1
+Element 241 normal 0, -0, 1
+Element 242 normal 0, -0, 1
+Element 243 normal 0, 0, 1
+Element 244 normal 0, 0, 1
+Element 245 normal 0, 0, 1
+Element 246 normal -0, 0, 1
+Element 247 normal 0, 0, 1
+Element 248 normal 0, 0, 1
+Element 249 normal 0, -0, 1
+Done.
+Allocation success.
+MESH ID 4
+Searching bcs for ZoneID 4..
+FRICTION COEFFS 2.000e-01 5.147e-310
+CONTACT PENALTY FACTOR: 500
+CONTACT GAP PENALTY: ON, scale=2
+FRICTION REGULARIZATION VELOCITY: 0
+RECOMPUTE CONTACT DT EACH STEP: OFF
+-------------------
+Done
+More than one Rigid Bodies found.
+Loading additional rigid body 1
+Start: 0, 0, 0
+[RigidBody] Loading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_5.bdf
+[I] Reading Nastran file: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_5.bdf
+146 nodes and 250 elements found.
+[I] 401 lines readed ...
+Allocating 146 nodes
+Allocating 250 Elements...
+Done.
+[RigidBody] 3D domain detected. Treating shell contact mesh as 3D surface.
+Contact Mesh 1. Oriented normals is set to true
+Mesh 1 Start: 0, 0, 0
+Nastran Mesh NodeCount: 146
+Copying 146 nodes 
+Centroid of matrix: 0.0248973, 0.025296, 0.03
+endl
+Element count: 250done. Creating elements... Global Centroid:0.00532662, 0.00527365, 0.0149518
+Writing elements...
+Done. 
+Reorienting normals...
+3D fallback finished using matrix centroid offset from orient_pt.
+Element 0 normal 0, -0, -1
+Element 1 normal -0, -0, -1
+Element 2 normal -0, -0, -1
+Element 3 normal -0, -0, -1
+Element 4 normal -0, 0, -1
+Element 5 normal -0, -0, -1
+Element 6 normal -0, -0, -1
+Element 7 normal -0, -0, -1
+Element 8 normal -0, -0, -1
+Element 9 normal -0, -0, -1
+Element 10 normal -0, -0, -1
+Element 11 normal -0, 0, -1
+Element 12 normal -0, -0, -1
+Element 13 normal 0, -0, -1
+Element 14 normal -0, -0, -1
+Element 15 normal -0, -0, -1
+Element 16 normal -0, -0, -1
+Element 17 normal -0, -0, -1
+Element 18 normal -0, 0, -1
+Element 19 normal -0, 0, -1
+Element 20 normal -0, -0, -1
+Element 21 normal -0, -0, -1
+Element 22 normal -0, -0, -1
+Element 23 normal -0, -0, -1
+Element 24 normal -0, -0, -1
+Element 25 normal -0, -0, -1
+Element 26 normal 0, -0, -1
+Element 27 normal -0, 0, -1
+Element 28 normal -0, 0, -1
+Element 29 normal -0, -0, -1
+Element 30 normal -0, -0, -1
+Element 31 normal -0, -0, -1
+Element 32 normal -0, -0, -1
+Element 33 normal -0, 0, -1
+Element 34 normal -0, 0, -1
+Element 35 normal -0, -0, -1
+Element 36 normal -0, -0, -1
+Element 37 normal -0, -0, -1
+Element 38 normal -0, -0, -1
+Element 39 normal -0, -0, -1
+Element 40 normal -0, -0, -1
+Element 41 normal 0, -0, -1
+Element 42 normal -0, -0, -1
+Element 43 normal -0, -0, -1
+Element 44 normal -0, 0, -1
+Element 45 normal 0, -0, -1
+Element 46 normal -0, -0, -1
+Element 47 normal -0, -0, -1
+Element 48 normal -0, -0, -1
+Element 49 normal -0, -0, -1
+Element 50 normal -0, -0, -1
+Element 51 normal -0, -0, -1
+Element 52 normal -0, -0, -1
+Element 53 normal -0, -0, -1
+Element 54 normal -0, -0, -1
+Element 55 normal 0, -0, -1
+Element 56 normal -0, -0, -1
+Element 57 normal -0, -0, -1
+Element 58 normal -0, -0, -1
+Element 59 normal -0, -0, -1
+Element 60 normal -0, -0, -1
+Element 61 normal -0, -0, -1
+Element 62 normal 0, -0, -1
+Element 63 normal -0, -0, -1
+Element 64 normal -0, -0, -1
+Element 65 normal -0, 0, -1
+Element 66 normal -0, 0, -1
+Element 67 normal -0, -0, -1
+Element 68 normal 0, -0, -1
+Element 69 normal -0, -0, -1
+Element 70 normal -0, 0, -1
+Element 71 normal -0, -0, -1
+Element 72 normal -0, 0, -1
+Element 73 normal -0, 0, -1
+Element 74 normal -0, 0, -1
+Element 75 normal -0, -0, -1
+Element 76 normal -0, -0, -1
+Element 77 normal -0, 0, -1
+Element 78 normal -0, -0, -1
+Element 79 normal 0, -0, -1
+Element 80 normal -0, -0, -1
+Element 81 normal -0, -0, -1
+Element 82 normal -0, -0, -1
+Element 83 normal -0, -0, -1
+Element 84 normal 0, -0, -1
+Element 85 normal 0, -0, -1
+Element 86 normal -0, -0, -1
+Element 87 normal -0, 0, -1
+Element 88 normal -0, -0, -1
+Element 89 normal -0, -0, -1
+Element 90 normal -0, 0, -1
+Element 91 normal -0, -0, -1
+Element 92 normal -0, -0, -1
+Element 93 normal 0, -0, -1
+Element 94 normal -0, -0, -1
+Element 95 normal 0, -0, -1
+Element 96 normal -0, -0, -1
+Element 97 normal -0, -0, -1
+Element 98 normal -0, 0, -1
+Element 99 normal -0, -0, -1
+Element 100 normal 0, -0, -1
+Element 101 normal 0, -0, -1
+Element 102 normal -0, -0, -1
+Element 103 normal -0, 0, -1
+Element 104 normal -0, -0, -1
+Element 105 normal -0, -0, -1
+Element 106 normal -0, -0, -1
+Element 107 normal -0, -0, -1
+Element 108 normal -0, 0, -1
+Element 109 normal 0, -0, -1
+Element 110 normal -0, -0, -1
+Element 111 normal -0, -0, -1
+Element 112 normal 0, -0, -1
+Element 113 normal -0, -0, -1
+Element 114 normal -0, -0, -1
+Element 115 normal -0, -0, -1
+Element 116 normal -0, -0, -1
+Element 117 normal -0, -0, -1
+Element 118 normal -0, -0, -1
+Element 119 normal -0, -0, -1
+Element 120 normal -0, 0, -1
+Element 121 normal -0, -0, -1
+Element 122 normal -0, -0, -1
+Element 123 normal -0, -0, -1
+Element 124 normal -0, -0, -1
+Element 125 normal -0, -0, -1
+Element 126 normal -0, -0, -1
+Element 127 normal -0, 0, -1
+Element 128 normal -0, 0, -1
+Element 129 normal -0, -0, -1
+Element 130 normal -0, -0, -1
+Element 131 normal -0, -0, -1
+Element 132 normal -0, -0, -1
+Element 133 normal -0, -0, -1
+Element 134 normal -0, -0, -1
+Element 135 normal -0, -0, -1
+Element 136 normal -0, -0, -1
+Element 137 normal 0, -0, -1
+Element 138 normal 0, -0, -1
+Element 139 normal -0, -0, -1
+Element 140 normal -0, -0, -1
+Element 141 normal -0, -0, -1
+Element 142 normal -0, -0, -1
+Element 143 normal -0, -0, -1
+Element 144 normal -0, -0, -1
+Element 145 normal -0, -0, -1
+Element 146 normal -0, -0, -1
+Element 147 normal -0, -0, -1
+Element 148 normal 0, -0, -1
+Element 149 normal -0, -0, -1
+Element 150 normal -0, 0, -1
+Element 151 normal -0, -0, -1
+Element 152 normal -0, -0, -1
+Element 153 normal -0, -0, -1
+Element 154 normal -0, 0, -1
+Element 155 normal -0, -0, -1
+Element 156 normal 0, -0, -1
+Element 157 normal -0, -0, -1
+Element 158 normal -0, -0, -1
+Element 159 normal -0, -0, -1
+Element 160 normal -0, -0, -1
+Element 161 normal -0, -0, -1
+Element 162 normal -0, -0, -1
+Element 163 normal -0, -0, -1
+Element 164 normal -0, -0, -1
+Element 165 normal -0, 0, -1
+Element 166 normal 0, -0, -1
+Element 167 normal 0, -0, -1
+Element 168 normal -0, -0, -1
+Element 169 normal 0, -0, -1
+Element 170 normal -0, -0, -1
+Element 171 normal -0, -0, -1
+Element 172 normal -0, -0, -1
+Element 173 normal -0, -0, -1
+Element 174 normal -0, -0, -1
+Element 175 normal 0, -0, -1
+Element 176 normal -0, -0, -1
+Element 177 normal -0, -0, -1
+Element 178 normal -0, -0, -1
+Element 179 normal -0, -0, -1
+Element 180 normal -0, -0, -1
+Element 181 normal 0, -0, -1
+Element 182 normal -0, -0, -1
+Element 183 normal 0, -0, -1
+Element 184 normal -0, -0, -1
+Element 185 normal -0, -0, -1
+Element 186 normal -0, -0, -1
+Element 187 normal -0, -0, -1
+Element 188 normal -0, -0, -1
+Element 189 normal 0, -0, -1
+Element 190 normal -0, 0, -1
+Element 191 normal 0, -0, -1
+Element 192 normal -0, -0, -1
+Element 193 normal -0, -0, -1
+Element 194 normal -0, 0, -1
+Element 195 normal -0, -0, -1
+Element 196 normal -0, -0, -1
+Element 197 normal -0, -0, -1
+Element 198 normal -0, -0, -1
+Element 199 normal -0, -0, -1
+Element 200 normal -0, -0, -1
+Element 201 normal -0, -0, -1
+Element 202 normal -0, 0, -1
+Element 203 normal -0, -0, -1
+Element 204 normal -0, -0, -1
+Element 205 normal -0, -0, -1
+Element 206 normal -0, 0, -1
+Element 207 normal -0, -0, -1
+Element 208 normal 0, -0, -1
+Element 209 normal -0, -0, -1
+Element 210 normal -0, -0, -1
+Element 211 normal -0, -0, -1
+Element 212 normal -0, -0, -1
+Element 213 normal -0, -0, -1
+Element 214 normal -0, -0, -1
+Element 215 normal 0, -0, -1
+Element 216 normal -0, -0, -1
+Element 217 normal -0, -0, -1
+Element 218 normal -0, -0, -1
+Element 219 normal -0, -0, -1
+Element 220 normal -0, -0, -1
+Element 221 normal -0, 0, -1
+Element 222 normal -0, -0, -1
+Element 223 normal -0, -0, -1
+Element 224 normal -0, -0, -1
+Element 225 normal -0, -0, -1
+Element 226 normal -0, -0, -1
+Element 227 normal -0, -0, -1
+Element 228 normal 0, -0, -1
+Element 229 normal -0, 0, -1
+Element 230 normal -0, -0, -1
+Element 231 normal -0, -0, -1
+Element 232 normal -0, -0, -1
+Element 233 normal 0, -0, -1
+Element 234 normal -0, -0, -1
+Element 235 normal -0, -0, -1
+Element 236 normal 0, -0, -1
+Element 237 normal -0, -0, -1
+Element 238 normal -0, -0, -1
+Element 239 normal -0, -0, -1
+Element 240 normal 0, -0, -1
+Element 241 normal -0, 0, -1
+Element 242 normal -0, 0, -1
+Element 243 normal -0, -0, -1
+Element 244 normal -0, -0, -1
+Element 245 normal -0, -0, -1
+Element 246 normal 0, -0, -1
+Element 247 normal -0, -0, -1
+Element 248 normal -0, -0, -1
+Element 249 normal -0, 0, -1
+Done.
+Allocation success.
+MESH ID 5
+Searching bcs for ZoneID 5..
+BC Found for Zone ID: 5
+Applying Velocity 0.000e+00 0.000e+00 -1.000e+00
+-------------------
+Resizing storage
+Allocated meshes: 1
+assigning 
+done 
+New Mesh capacity: 2
+Resizing Node Data
+Old Node count 146, New node count 292, current_node_capacity 0
+New capacity 292
+copying 146 nodes 
+assigning 
+Resizing Element Data
+Copying memory
+Copying 250 elements to offset 250
+Setting vel
+new_nodes_start 146, new_nodes_end 292
+new_elem_start 146, new_elem_end 292
+Updating metadata..
+Done.
+MESH NODE COUNT 292
+Setting contact...
+Done.
+Calulating min element size ...
+Setting remesh size at MIN ELEM SIZE:0.001256
+Min length: 0.001256
+Time Step 0.01
+End Time: 0.01
+DEBUG REMESH IS ON
+MESH INTERVAL: 0
+REMESH ENABLED: true
+REMESH TRANSITION ANGLE: 15 deg
+REMESH STRAIN RANGE: -1 to 1e+06
+REMESH SIZE FRACTIONS: min=2 max=2 epsRef=1 beta=4 type=0 baseSize=0.001256
+FIXED 0 NODES
+VEL  0 NODES
+SYMMETRY BCs total=298 x=149 y=149 z=0 symtol=0.0001
+Allocated BCS: 
+X 149
+Y 149
+Z 0
+Element Count 2633
+Reading Solver type
+Solving..
+Using Martins Picard solver
+[Nastran] 3D rigid body mesh source: /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_part_4.bdf, nodes=292, elements=500
+======================================================================
+WeldForm MINI 3D tetra solver (P1+bubble/P1 saddle point)
+References: Arnold-Brezzi-Fortin MINI; Cioncolini-Boffi MINI study
+Contact: enabled (rigid triangular meshes).
+Remeshing: enabled with MMG for 3D tetrahedra.
+Elements=2633, Nodes=720
+======================================================================
+Initial Vol: 3.7886e-06
+done. Face count: 5796
+Total External Nodal Area: 1.6123e-03, external nodes: 532
+MAX Contact Surfaces 5
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_00000.vtk
+DONE writing VTK.
+
+--- MINI 3D step 1 Time=0 dt=1e-05 ---
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 1: |dv|_inf=1.76276, |db|_inf=215150, dp_rel=1, div_l2=0.377906, max_div=2218.74
+    cpu_time[s]=0.086538
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 2: |dv|_inf=0.787144, |db|_inf=30120.2, dp_rel=0.111111, div_l2=0.226744, max_div=1331.24
+    cpu_time[s]=0.080337
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 3: |dv|_inf=0.4723, |db|_inf=35370.5, dp_rel=0.111111, div_l2=0.136046, max_div=798.746
+    cpu_time[s]=0.080383
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 4: |dv|_inf=0.28338, |db|_inf=50083.3, dp_rel=0.111111, div_l2=0.0816267, max_div=479.223
+    cpu_time[s]=0.08066
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 5: |dv|_inf=0.170001, |db|_inf=45633.6, dp_rel=0.111111, div_l2=0.0489761, max_div=287.544
+    cpu_time[s]=0.080335
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 6: |dv|_inf=0.102032, |db|_inf=35790.2, dp_rel=0.111111, div_l2=0.0293874, max_div=172.548
+    cpu_time[s]=0.079726
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 7: |dv|_inf=0.061208, |db|_inf=26019.5, dp_rel=0.111111, div_l2=0.0176337, max_div=103.52
+    cpu_time[s]=0.080877
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+  MINI3D contact force sum=1.75807e+09
+  MINI3D Picard 8: |dv|_inf=0.0367487, |db|_inf=18070.5, dp_rel=0.111111, div_l2=0.0105823, max_div=62.1097
+    cpu_time[s]=0.08011
+Surface 4, Contact Faces Count: 0
+Area 0
+Surface 5, Contact Faces Count: 96
+Area 0.00012615
+Mesh quality: min_angle=24.3596 (elem 980), max_angle=166.56 (elem 190), min_Jnorm=0.0124901
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_00001.vtk
+DONE writing VTK.
+WARNING: Max Angle > 150 on element 190, remeshing
+REMESHING 3D MINI solver at step 1, dim=3
+Writing VTK output in_remesh3d_1.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=61132
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=61132
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e1193598 sol=0x5ec4e118af68
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=61388
+Number of tetrahedrons: 2633
+Structure Node count np=720 dom_nodes=720 dom_elems=2633 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=2.27184e-09 at elem=2271
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=61388
+Calling MMG3D_Set_meshSize with np=720 ne=2633 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=61388
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=412876
+MESH CREATED OK
+Number of points: 720
+Node count 720
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 2.4322e-04 at element 75 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  2633
+     BEST   0.999084  AVRG.   0.736756  WRST.   0.259602 (1019)
+     HISTOGRAMM:  100.00 % > 0.12
+                   94.19 % >  0.5
+       0.8 < Q <   1.0       922    35.02 %
+       0.6 < Q <   0.8      1322    50.21 %
+       0.4 < Q <   0.6       318    12.08 %
+       0.2 < Q <   0.4        71     2.70 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1590,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     442 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  3882
+     AVERAGE LENGTH               0.9544
+     SMALLEST EDGE LENGTH         0.4999      232    247
+     LARGEST  EDGE LENGTH         1.6650      586    216 
+     0.71 < L < 1.41      3349   86.27 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        96    2.47 %  
+     0.60 < L < 0.71       316    8.14 %  
+     0.71 < L < 0.90      1642   42.30 %  
+     0.90 < L < 1.30      1454   37.45 %  
+     1.30 < L < 1.41       253    6.52 %  
+     1.41 < L < 2.00       121    3.12 %  
+  -- PHASE 1 COMPLETED.     0.033s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+                             184 splitted,        0 collapsed,      254 swapped
+                               0 splitted,        0 collapsed,        2 swapped
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+                               0 splitted,       14 collapsed,       18 swapped
+                               0 splitted,        3 collapsed,        1 swapped
+          184 filtered,      166 splitted,      134 collapsed,      367 swapped,      292 moved
+          140 filtered,        5 splitted,      129 collapsed,      124 swapped,      159 moved
+          115 filtered,        3 splitted,       22 collapsed,       55 swapped,       88 moved
+           40 filtered,        1 splitted,        5 collapsed,       20 swapped,       61 moved
+                                                   0 improved,       23 swapped,       65 moved
+                                                   0 improved,        9 swapped,       18 moved
+                                                   0 improved,        4 swapped,        4 moved
+           60 filtered,        1 splitted,        4 collapsed,       12 swapped,       21 moved
+           58 filtered,        0 splitted,        0 collapsed,        4 swapped,       12 moved
+            8 filtered,        0 splitted,        1 collapsed,        1 swapped,        6 moved
+                                                   0 improved,       30 swapped,        8 moved
+                                                   0 improved,        0 swapped,       12 moved
+                                                   0 improved,        3 swapped,        1 moved
+                                                                                       23 moved
+  -- PHASE 2 COMPLETED.     0.422s
+
+  -- MESH QUALITY  3028
+     BEST   0.999084  AVRG.   0.774797  WRST.   0.259875 (1755)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.21 % >  0.5
+       0.8 < Q <   1.0      1337    44.15 %
+       0.6 < Q <   0.8      1494    49.34 %
+       0.4 < Q <   0.6       191     6.31 %
+       0.2 < Q <   0.4         6     0.20 %
+
+  -- RESULTING EDGE LENGTHS  4264
+     AVERAGE LENGTH               0.9144
+     SMALLEST EDGE LENGTH         0.2395      878    933
+     LARGEST  EDGE LENGTH         1.5442      318    620 
+     0.71 < L < 1.41      3792   88.93 %  
+
+     HISTOGRAMM:
+     0.00 < L < 0.30         1    0.02 %  
+     0.30 < L < 0.60        98    2.30 %  
+     0.60 < L < 0.71       359    8.42 %  
+     0.71 < L < 0.90      1853   43.46 %  
+     0.90 < L < 1.30      1841   43.18 %  
+     1.30 < L < 1.41        98    2.30 %  
+     1.41 < L < 2.00        14    0.33 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        768   CORNERS        6
+     NUMBER OF TETRAHEDRA     3028
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       938
+
+   MMG3DLIB: ELAPSED TIME  0.485s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 768
+Done. 
+OVERALL tetrahedron count 3028
+NEW MESH. Done mapping 
+OLD Node count 720, ELEM COUNT 2633
+NEW Node count 768, ELEM COUNT 3028
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 768 NODES 3028ELEMS
+[ThermalSummary] before_remesh content=0.0576651 capacity=0.00212164 mass=3.78864e-06 mass_range=[4.4485e-10, 1.96566e-08] cp_range=[560, 560] temp_range=[20.0074, 87.2036] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=601 |m*cp*T|=0.000427465 mass=1.69932e-08 cp=560 T=44.9198
+  [ThermalSummary] top[1] node=564 |m*cp*T|=0.000403236 mass=1.77827e-08 cp=560 T=40.4923
+  [ThermalSummary] top[2] node=562 |m*cp*T|=0.000347791 mass=1.96147e-08 cp=560 T=31.6628
+  [ThermalSummary] top[3] node=623 |m*cp*T|=0.000321324 mass=1.49543e-08 cp=560 T=38.3698
+  [ThermalSummary] top[4] node=557 |m*cp*T|=0.000313561 mass=1.94035e-08 cp=560 T=28.8572
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 106 (13.8021%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 106 (13.8021%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 106 (13.8021%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 87.2036; MIN 20.0074
+MAX ORIGINAL VALUE 87.2036; MIN 20.0074
+Not inside element: 0 (0%)
+Not same node: 106 (13.8021%)
+DONE. Setting Volumes for 3028 elements
+New Element Volume: 3.78784e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3028 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 768nodes and 3dim
+setting deriv allocation size of 36336
+mdim3 4 3028 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78784e-06 min=1.01564e-10 max=3.36264e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3028 and 4nodes x elem
+COPYING 12112 element nodes 
+Done
+Size of Nodal shared Elements vector 12112
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78784e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=0.0575597 capacity=0.00212119 mass=3.78784e-06 mass_range=[2.47564e-10, 1.81374e-08] cp_range=[560, 560] temp_range=[20.0074, 87.2036] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=695 |m*cp*T|=0.000280012 mass=1.81374e-08 cp=560 T=27.5685
+  [ThermalSummary] top[1] node=641 |m*cp*T|=0.000271712 mass=1.36966e-08 cp=560 T=35.4248
+  [ThermalSummary] top[2] node=631 |m*cp*T|=0.000271453 mass=1.78492e-08 cp=560 T=27.1574
+  [ThermalSummary] top[3] node=701 |m*cp*T|=0.000270721 mass=1.4374e-08 cp=560 T=33.6324
+  [ThermalSummary] top[4] node=623 |m*cp*T|=0.000263375 mass=1.22574e-08 cp=560 T=38.3698
+[ThermalSummary] after_remesh_after_correction content=0.0576651 capacity=0.00212119 mass=3.78784e-06 mass_range=[2.47564e-10, 1.81374e-08] cp_range=[560, 560] temp_range=[20.0571, 87.2533] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=695 |m*cp*T|=0.000280517 mass=1.81374e-08 cp=560 T=27.6182
+  [ThermalSummary] top[1] node=641 |m*cp*T|=0.000272093 mass=1.36966e-08 cp=560 T=35.4745
+  [ThermalSummary] top[2] node=631 |m*cp*T|=0.00027195 mass=1.78492e-08 cp=560 T=27.2071
+  [ThermalSummary] top[3] node=701 |m*cp*T|=0.000271122 mass=1.4374e-08 cp=560 T=33.6821
+  [ThermalSummary] top[4] node=623 |m*cp*T|=0.000263716 mass=1.22574e-08 cp=560 T=38.4195
+Thermal content before remesh: 0.0576651
+Thermal content after remesh map: 0.0575597
+Applied uniform dT correction: 0.0497114
+Thermal content after correction: 0.0576651
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6525
+Total External Nodal Area: 1.6123e-03, external nodes: 471
+Allocated BCS: 
+X 133
+Y 136
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=136 Z=0 Total=269 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=1.41007e-18 Y=136 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_1.vtk
+DONE writing VTK.
+
+--- MINI 3D step 2 Time=1e-05 dt=1.2e-05 ---
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 1: |dv|_inf=0.408498, |db|_inf=284.664, dp_rel=0.111111, div_l2=0.0281621, max_div=113.475
+    cpu_time[s]=0.097345
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 2: |dv|_inf=0.245116, |db|_inf=175.01, dp_rel=0.111112, div_l2=0.0190373, max_div=74.3377
+    cpu_time[s]=0.089986
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 3: |dv|_inf=0.147073, |db|_inf=115.803, dp_rel=0.111112, div_l2=0.0133926, max_div=48.4353
+    cpu_time[s]=0.090063
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 4: |dv|_inf=0.0882505, |db|_inf=82.3689, dp_rel=0.111112, div_l2=0.0098533, max_div=34.0764
+    cpu_time[s]=0.090377
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 5: |dv|_inf=0.0529542, |db|_inf=46.0586, dp_rel=0.111111, div_l2=0.00761671, max_div=23.6887
+    cpu_time[s]=0.090745
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 6: |dv|_inf=0.0323155, |db|_inf=20.3121, dp_rel=0.111112, div_l2=0.00615229, max_div=18.3634
+    cpu_time[s]=0.089775
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 7: |dv|_inf=0.0206031, |db|_inf=31.5098, dp_rel=0.111111, div_l2=0.00516162, max_div=14.7078
+    cpu_time[s]=0.090027
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 8: |dv|_inf=0.0143502, |db|_inf=38.0538, dp_rel=0.111111, div_l2=0.00447534, max_div=12.1869
+    cpu_time[s]=0.08995
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 9: |dv|_inf=0.0109357, |db|_inf=40.915, dp_rel=0.111111, div_l2=0.00397912, max_div=10.1328
+    cpu_time[s]=0.089782
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 10: |dv|_inf=0.00870067, |db|_inf=41.1895, dp_rel=0.111112, div_l2=0.00361162, max_div=8.44698
+    cpu_time[s]=0.089457
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 11: |dv|_inf=0.00718206, |db|_inf=39.4287, dp_rel=0.111112, div_l2=0.00333498, max_div=7.05519
+    cpu_time[s]=0.090039
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 12: |dv|_inf=0.0061225, |db|_inf=36.7034, dp_rel=0.111112, div_l2=0.00312554, max_div=6.47785
+    cpu_time[s]=0.089838
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 13: |dv|_inf=0.00540471, |db|_inf=34.3159, dp_rel=0.111112, div_l2=0.00296688, max_div=6.03438
+    cpu_time[s]=0.08977
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 14: |dv|_inf=0.00490064, |db|_inf=31.8887, dp_rel=0.111112, div_l2=0.00284059, max_div=6.02394
+    cpu_time[s]=0.089898
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 15: |dv|_inf=0.0044248, |db|_inf=29.4385, dp_rel=0.111112, div_l2=0.00274388, max_div=6.01769
+    cpu_time[s]=0.089742
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 16: |dv|_inf=0.00410437, |db|_inf=26.713, dp_rel=0.111112, div_l2=0.00268254, max_div=6.00036
+    cpu_time[s]=0.090532
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 17: |dv|_inf=0.00407754, |db|_inf=24.2021, dp_rel=0.111112, div_l2=0.00264989, max_div=5.97406
+    cpu_time[s]=0.090063
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 18: |dv|_inf=0.00362057, |db|_inf=22.0379, dp_rel=0.111112, div_l2=0.00260067, max_div=5.94017
+    cpu_time[s]=0.090493
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 19: |dv|_inf=0.00478868, |db|_inf=19.4305, dp_rel=0.111112, div_l2=0.00254011, max_div=5.90324
+    cpu_time[s]=0.089983
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 20: |dv|_inf=0.00323165, |db|_inf=17.6687, dp_rel=0.111112, div_l2=0.00250962, max_div=5.86005
+    cpu_time[s]=0.090198
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 21: |dv|_inf=0.00402852, |db|_inf=15.8141, dp_rel=0.111112, div_l2=0.00250286, max_div=5.81641
+    cpu_time[s]=0.090591
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 22: |dv|_inf=0.00317603, |db|_inf=14.1701, dp_rel=0.111112, div_l2=0.00246692, max_div=5.76879
+    cpu_time[s]=0.090092
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 23: |dv|_inf=0.00324488, |db|_inf=12.6487, dp_rel=0.111112, div_l2=0.00245929, max_div=5.72142
+    cpu_time[s]=0.090445
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 24: |dv|_inf=0.00279442, |db|_inf=11.4478, dp_rel=0.111113, div_l2=0.00245569, max_div=5.67377
+    cpu_time[s]=0.090006
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 25: |dv|_inf=0.00306433, |db|_inf=10.1842, dp_rel=0.111113, div_l2=0.00243966, max_div=5.62633
+    cpu_time[s]=0.090771
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 26: |dv|_inf=0.00382562, |db|_inf=9.10381, dp_rel=0.111112, div_l2=0.00248467, max_div=5.58048
+    cpu_time[s]=0.089588
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 27: |dv|_inf=0.00262053, |db|_inf=8.14736, dp_rel=0.111113, div_l2=0.00244643, max_div=5.53329
+    cpu_time[s]=0.091503
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 28: |dv|_inf=0.00251292, |db|_inf=7.34123, dp_rel=0.111113, div_l2=0.00243282, max_div=5.48807
+    cpu_time[s]=0.090103
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 29: |dv|_inf=0.0040815, |db|_inf=6.60285, dp_rel=0.111113, div_l2=0.00251071, max_div=5.4473
+    cpu_time[s]=0.090546
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 30: |dv|_inf=0.00306174, |db|_inf=5.87681, dp_rel=0.111114, div_l2=0.00244621, max_div=5.40116
+    cpu_time[s]=0.091284
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 31: |dv|_inf=0.00301372, |db|_inf=5.23881, dp_rel=0.111114, div_l2=0.00243661, max_div=5.35842
+    cpu_time[s]=0.090138
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 32: |dv|_inf=0.00238964, |db|_inf=4.69038, dp_rel=0.111115, div_l2=0.00242836, max_div=5.31738
+    cpu_time[s]=0.090798
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 33: |dv|_inf=0.00264496, |db|_inf=4.1986, dp_rel=0.111115, div_l2=0.00242622, max_div=5.27792
+    cpu_time[s]=0.090503
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 34: |dv|_inf=0.00224935, |db|_inf=3.80333, dp_rel=0.111115, div_l2=0.00242287, max_div=5.3407
+    cpu_time[s]=0.090741
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 35: |dv|_inf=0.00233364, |db|_inf=3.42652, dp_rel=0.111116, div_l2=0.00242074, max_div=5.40329
+    cpu_time[s]=0.090211
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 36: |dv|_inf=0.00241556, |db|_inf=3.04396, dp_rel=0.111117, div_l2=0.00242519, max_div=5.46307
+    cpu_time[s]=0.09131
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 37: |dv|_inf=0.0024228, |db|_inf=2.72506, dp_rel=0.111117, div_l2=0.00242552, max_div=5.52061
+    cpu_time[s]=0.090287
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 38: |dv|_inf=0.00265554, |db|_inf=2.44304, dp_rel=0.111118, div_l2=0.00243659, max_div=5.57417
+    cpu_time[s]=0.091057
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 39: |dv|_inf=0.00214659, |db|_inf=2.20989, dp_rel=0.111118, div_l2=0.00243304, max_div=5.62545
+    cpu_time[s]=0.090997
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 40: |dv|_inf=0.0024038, |db|_inf=1.99409, dp_rel=0.111121, div_l2=0.00244282, max_div=5.67587
+    cpu_time[s]=0.090236
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 41: |dv|_inf=0.00258533, |db|_inf=1.79244, dp_rel=0.111123, div_l2=0.00246245, max_div=5.84195
+    cpu_time[s]=0.090955
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 42: |dv|_inf=0.0028021, |db|_inf=1.57924, dp_rel=0.111124, div_l2=0.00246668, max_div=5.96752
+    cpu_time[s]=0.090144
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 43: |dv|_inf=0.00445776, |db|_inf=1.43954, dp_rel=0.11112, div_l2=0.00248609, max_div=5.81299
+    cpu_time[s]=0.090391
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 44: |dv|_inf=0.00241314, |db|_inf=1.29203, dp_rel=0.111122, div_l2=0.00247467, max_div=5.85553
+    cpu_time[s]=0.09036
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 45: |dv|_inf=0.00299292, |db|_inf=1.14966, dp_rel=0.111124, div_l2=0.00244486, max_div=5.89609
+    cpu_time[s]=0.090295
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 46: |dv|_inf=0.00239278, |db|_inf=1.02704, dp_rel=0.111127, div_l2=0.00245691, max_div=5.93486
+    cpu_time[s]=0.090573
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 47: |dv|_inf=0.00203557, |db|_inf=0.918164, dp_rel=0.11113, div_l2=0.00248772, max_div=5.97194
+    cpu_time[s]=0.090291
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 48: |dv|_inf=0.00174309, |db|_inf=0.8405, dp_rel=0.111127, div_l2=0.00248322, max_div=6.00735
+    cpu_time[s]=0.09042
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 49: |dv|_inf=0.0020679, |db|_inf=0.763083, dp_rel=0.111127, div_l2=0.00246172, max_div=6.04322
+    cpu_time[s]=0.090652
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 50: |dv|_inf=0.00198456, |db|_inf=0.690365, dp_rel=0.111131, div_l2=0.00245523, max_div=6.07665
+    cpu_time[s]=0.089809
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 51: |dv|_inf=0.00259903, |db|_inf=0.617693, dp_rel=0.111135, div_l2=0.00248132, max_div=6.10855
+    cpu_time[s]=0.089822
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 52: |dv|_inf=0.00255805, |db|_inf=0.555764, dp_rel=0.111148, div_l2=0.00248713, max_div=6.14168
+    cpu_time[s]=0.089582
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 53: |dv|_inf=0.00186925, |db|_inf=0.492978, dp_rel=0.111142, div_l2=0.00247562, max_div=6.17261
+    cpu_time[s]=0.09052
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 54: |dv|_inf=0.0025862, |db|_inf=0.453088, dp_rel=0.111143, div_l2=0.00246746, max_div=6.20287
+    cpu_time[s]=0.090172
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 55: |dv|_inf=0.00169483, |db|_inf=0.404145, dp_rel=0.111142, div_l2=0.00245714, max_div=6.23242
+    cpu_time[s]=0.089272
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 56: |dv|_inf=0.00185036, |db|_inf=0.360888, dp_rel=0.11115, div_l2=0.00246157, max_div=6.26127
+    cpu_time[s]=0.090047
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 57: |dv|_inf=0.00202938, |db|_inf=0.322053, dp_rel=0.111158, div_l2=0.00246478, max_div=6.28963
+    cpu_time[s]=0.089654
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 58: |dv|_inf=0.00413218, |db|_inf=0.303627, dp_rel=0.111159, div_l2=0.00249585, max_div=6.31752
+    cpu_time[s]=0.089963
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 59: |dv|_inf=0.00223011, |db|_inf=0.274111, dp_rel=0.111166, div_l2=0.00252082, max_div=6.34393
+    cpu_time[s]=0.089948
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 60: |dv|_inf=0.00341341, |db|_inf=0.238774, dp_rel=0.111169, div_l2=0.00248333, max_div=6.36963
+    cpu_time[s]=0.089542
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 61: |dv|_inf=0.00181455, |db|_inf=0.217489, dp_rel=0.111155, div_l2=0.00247791, max_div=6.39539
+    cpu_time[s]=0.089962
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 62: |dv|_inf=0.00284215, |db|_inf=0.201669, dp_rel=0.111171, div_l2=0.00253848, max_div=6.42112
+    cpu_time[s]=0.089751
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 63: |dv|_inf=0.00192128, |db|_inf=0.177359, dp_rel=0.111178, div_l2=0.00248883, max_div=6.44631
+    cpu_time[s]=0.089968
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 64: |dv|_inf=0.00240838, |db|_inf=0.161211, dp_rel=0.111155, div_l2=0.00250681, max_div=6.47005
+    cpu_time[s]=0.090115
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 65: |dv|_inf=0.00208448, |db|_inf=0.142675, dp_rel=0.111193, div_l2=0.00249829, max_div=6.49256
+    cpu_time[s]=0.090033
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 66: |dv|_inf=0.00223105, |db|_inf=0.126099, dp_rel=0.111191, div_l2=0.00247017, max_div=6.51588
+    cpu_time[s]=0.090588
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 67: |dv|_inf=0.00176986, |db|_inf=0.113309, dp_rel=0.111203, div_l2=0.00247172, max_div=6.53907
+    cpu_time[s]=0.08893
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 68: |dv|_inf=0.00331172, |db|_inf=0.102139, dp_rel=0.111199, div_l2=0.00250455, max_div=6.55999
+    cpu_time[s]=0.089721
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 69: |dv|_inf=0.0018375, |db|_inf=0.0932562, dp_rel=0.111175, div_l2=0.00252691, max_div=6.5834
+    cpu_time[s]=0.090666
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 70: |dv|_inf=0.00202281, |db|_inf=0.0834231, dp_rel=0.111191, div_l2=0.00251473, max_div=6.606
+    cpu_time[s]=0.089428
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 71: |dv|_inf=0.00167105, |db|_inf=0.0767392, dp_rel=0.111163, div_l2=0.00249626, max_div=6.6289
+    cpu_time[s]=0.089999
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 72: |dv|_inf=0.00196851, |db|_inf=0.0707028, dp_rel=0.111102, div_l2=0.00248211, max_div=6.6516
+    cpu_time[s]=0.090796
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 73: |dv|_inf=0.00213819, |db|_inf=0.0623955, dp_rel=0.111169, div_l2=0.00249442, max_div=6.67213
+    cpu_time[s]=0.091086
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 74: |dv|_inf=0.00297683, |db|_inf=0.0571831, dp_rel=0.111141, div_l2=0.00247503, max_div=6.69237
+    cpu_time[s]=0.0903
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 75: |dv|_inf=0.00148655, |db|_inf=0.051215, dp_rel=0.111036, div_l2=0.00247415, max_div=6.71174
+    cpu_time[s]=0.090463
+MINI3D contact: external_faces=938, active_faces=144, max_penetration=1.21685e-05 (face 6406)
+  MINI3D contact force sum=1.58287e+09
+  MINI3D Picard 76: |dv|_inf=0.00139462, |db|_inf=0.0464327, dp_rel=0.111006, div_l2=0.00246813, max_div=6.73106
+    cpu_time[s]=0.090554
+Surface 4, Contact Faces Count: 66
+Area 0.000126185
+Surface 5, Contact Faces Count: 78
+Area 0.000126156
+Mesh quality: min_angle=40.1876 (elem 2856), max_angle=158.466 (elem 1538), min_Jnorm=0.0125003
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 1538, remeshing
+REMESHING 3D MINI solver at step 2, dim=3
+Writing VTK output in_remesh3d_2.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=429708
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=429708
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e1191968 sol=0x5ec4e1191ba8
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=429708
+Number of tetrahedrons: 3028
+Structure Node count np=768 dom_nodes=768 dom_elems=3028 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=6.09387e-10 at elem=2168
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=429708
+Calling MMG3D_Set_meshSize with np=768 ne=3028 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=429708
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=430688
+MESH CREATED OK
+Number of points: 768
+Node count 768
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 7.7629e-04 at element 82 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3028
+     BEST   0.999074  AVRG.   0.774784  WRST.   0.259814 (2122)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.21 % >  0.5
+       0.8 < Q <   1.0      1336    44.12 %
+       0.6 < Q <   0.8      1495    49.37 %
+       0.4 < Q <   0.6       191     6.31 %
+       0.2 < Q <   0.4         6     0.20 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1407,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     381 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4264
+     AVERAGE LENGTH               0.9144
+     SMALLEST EDGE LENGTH         0.2396      435    266
+     LARGEST  EDGE LENGTH         1.5442      318    620 
+     0.71 < L < 1.41      3792   88.93 %  
+
+     HISTOGRAMM:
+     0.00 < L < 0.30         1    0.02 %  
+     0.30 < L < 0.60        98    2.30 %  
+     0.60 < L < 0.71       359    8.42 %  
+     0.71 < L < 0.90      1853   43.46 %  
+     0.90 < L < 1.30      1841   43.18 %  
+     1.30 < L < 1.41        98    2.30 %  
+     1.41 < L < 2.00        14    0.33 %  
+  -- PHASE 1 COMPLETED.     0.030s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+                               0 splitted,        1 collapsed,        2 swapped
+           67 filtered,        1 splitted,        1 collapsed,        7 swapped,       12 moved
+                                                   0 improved,        4 swapped,        9 moved
+            0 filtered,        0 splitted,        0 collapsed,        0 swapped,        2 moved
+            0 filtered,        1 splitted,        1 collapsed,        5 swapped,        6 moved
+            0 filtered,        0 splitted,        1 collapsed,        0 swapped,        7 moved
+            8 filtered,        1 splitted,        2 collapsed,        4 swapped,       10 moved
+            2 filtered,        1 splitted,        2 collapsed,        3 swapped,        6 moved
+                                                   0 improved,        5 swapped,        3 moved
+                                                   0 improved,        0 swapped,        1 moved
+                                                                                        9 moved
+  -- PHASE 2 COMPLETED.     0.363s
+
+  -- MESH QUALITY  3020
+     BEST   0.999074  AVRG.   0.777542  WRST.   0.346195 (921)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1363    45.13 %
+       0.6 < Q <   0.8      1468    48.61 %
+       0.4 < Q <   0.6       187     6.19 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4248
+     AVERAGE LENGTH               0.9158
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5442      318    620 
+     0.71 < L < 1.41      3800   89.45 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        95    2.24 %  
+     0.60 < L < 0.71       339    7.98 %  
+     0.71 < L < 0.90      1848   43.50 %  
+     0.90 < L < 1.30      1852   43.60 %  
+     1.30 < L < 1.41       100    2.35 %  
+     1.41 < L < 2.00        14    0.33 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        764   CORNERS        6
+     NUMBER OF TETRAHEDRA     3020
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       930
+
+   MMG3DLIB: ELAPSED TIME  0.422s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 764
+Done. 
+OVERALL tetrahedron count 3020
+NEW MESH. Done mapping 
+OLD Node count 768, ELEM COUNT 3028
+NEW Node count 764, ELEM COUNT 3020
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 764 NODES 3020ELEMS
+[ThermalSummary] before_remesh content=0.292428 capacity=0.00212119 mass=3.78784e-06 mass_range=[2.47564e-10, 1.81374e-08] cp_range=[560, 560] temp_range=[-54061.4, 61082.6] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=733 |m*cp*T|=0.0495374 mass=3.91787e-09 cp=560 T=22578.5
+  [ThermalSummary] top[1] node=75 |m*cp*T|=0.041691 mass=2.1151e-09 cp=560 T=-35198.4
+  [ThermalSummary] top[2] node=412 |m*cp*T|=0.0331649 mass=9.69558e-10 cp=560 T=61082.6
+  [ThermalSummary] top[3] node=423 |m*cp*T|=0.0302008 mass=4.67092e-09 cp=560 T=-11545.9
+  [ThermalSummary] top[4] node=180 |m*cp*T|=0.0289992 mass=4.34728e-09 cp=560 T=-11911.9
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.26178%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.26178%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.26178%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 61082.6; MIN -35198.4
+MAX ORIGINAL VALUE 61082.6; MIN -54061.4
+Not inside element: 0 (0%)
+Not same node: 2 (0.26178%)
+DONE. Setting Volumes for 3020 elements
+New Element Volume: 3.78784e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3020 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 764nodes and 3dim
+setting deriv allocation size of 36240
+mdim3 4 3020 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78784e-06 min=2.33604e-10 max=3.36269e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3020 and 4nodes x elem
+COPYING 12080 element nodes 
+Done
+Size of Nodal shared Elements vector 12080
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78784e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=0.340817 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54518e-10, 1.83454e-08] cp_range=[560, 560] temp_range=[-35198.4, 61082.6] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=0.0770743 mass=2.25322e-09 cp=560 T=61082.6
+  [ThermalSummary] top[1] node=733 |m*cp*T|=0.0509321 mass=4.02818e-09 cp=560 T=22578.5
+  [ThermalSummary] top[2] node=75 |m*cp*T|=0.041691 mass=2.1151e-09 cp=560 T=-35198.4
+  [ThermalSummary] top[3] node=387 |m*cp*T|=0.0338742 mass=2.11234e-09 cp=560 T=-28636.2
+  [ThermalSummary] top[4] node=423 |m*cp*T|=0.0332205 mass=5.13797e-09 cp=560 T=-11545.9
+[ThermalSummary] after_remesh_after_correction content=0.292428 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54518e-10, 1.83454e-08] cp_range=[560, 560] temp_range=[-35221.2, 61059.8] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=0.0770455 mass=2.25322e-09 cp=560 T=61059.8
+  [ThermalSummary] top[1] node=733 |m*cp*T|=0.0508806 mass=4.02818e-09 cp=560 T=22555.7
+  [ThermalSummary] top[2] node=75 |m*cp*T|=0.041718 mass=2.1151e-09 cp=560 T=-35221.2
+  [ThermalSummary] top[3] node=387 |m*cp*T|=0.0339011 mass=2.11234e-09 cp=560 T=-28659
+  [ThermalSummary] top[4] node=423 |m*cp*T|=0.0332862 mass=5.13797e-09 cp=560 T=-11568.7
+Thermal content before remesh: 0.292428
+Thermal content after remesh map: 0.340817
+Applied uniform dT correction: -22.812
+Thermal content after correction: 0.292428
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6505
+Total External Nodal Area: 1.6121e-03, external nodes: 467
+Allocated BCS: 
+X 133
+Y 132
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=132 Z=0 Total=265 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=132 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_2.vtk
+DONE writing VTK.
+
+--- MINI 3D step 3 Time=2.2e-05 dt=1.44e-05 ---
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 1: |dv|_inf=0.537746, |db|_inf=0.049972, dp_rel=0.10927, div_l2=0.0481732, max_div=555.147
+    cpu_time[s]=0.102475
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 2: |dv|_inf=0.321151, |db|_inf=0.02173, dp_rel=0.108738, div_l2=0.0290931, max_div=334.014
+    cpu_time[s]=0.09632
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 3: |dv|_inf=0.190716, |db|_inf=0.0109449, dp_rel=0.108088, div_l2=0.0178418, max_div=202.459
+    cpu_time[s]=0.09693
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 4: |dv|_inf=0.111733, |db|_inf=0.0133628, dp_rel=0.107235, div_l2=0.0113078, max_div=125.084
+    cpu_time[s]=0.097314
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 5: |dv|_inf=0.063162, |db|_inf=0.0108316, dp_rel=0.106199, div_l2=0.00765812, max_div=80.8786
+    cpu_time[s]=0.096532
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.45687e-05 (face 102)
+  MINI3D contact force sum=1.58296e+09
+  MINI3D Picard 6: |dv|_inf=0.0335398, |db|_inf=0.00660626, dp_rel=0.104937, div_l2=0.00572382, max_div=56.4504
+    cpu_time[s]=0.096078
+Surface 4, Contact Faces Count: 66
+Area 0.000126234
+Surface 5, Contact Faces Count: 78
+Area 0.000126175
+Mesh quality: min_angle=37.248 (elem 1966), max_angle=161.232 (elem 932), min_Jnorm=0.0166497
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 3, dim=3
+Writing VTK output in_remesh3d_3.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=442720
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=442720
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e11dad88 sol=0x5ec4e1e93b78
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=442720
+Number of tetrahedrons: 3020
+Structure Node count np=764 dom_nodes=764 dom_elems=3020 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40163e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=442720
+Calling MMG3D_Set_meshSize with np=764 ne=3020 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=442720
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=442720
+MESH CREATED OK
+Number of points: 764
+Node count 764
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 1.5991e-03 at element 81 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3020
+     BEST   0.999061  AVRG.   0.777525  WRST.   0.346058 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1362    45.10 %
+       0.6 < Q <   0.8      1469    48.64 %
+       0.4 < Q <   0.6       187     6.19 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1395,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     377 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4248
+     AVERAGE LENGTH               0.9158
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3800   89.45 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        95    2.24 %  
+     0.60 < L < 0.71       339    7.98 %  
+     0.71 < L < 0.90      1848   43.50 %  
+     0.90 < L < 1.30      1852   43.60 %  
+     1.30 < L < 1.41       100    2.35 %  
+     1.41 < L < 2.00        14    0.33 %  
+  -- PHASE 1 COMPLETED.     0.030s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+           57 filtered,        2 splitted,        0 collapsed,        2 swapped,        2 moved
+                                                   0 improved,        2 swapped,        7 moved
+                                                   0 improved,        1 swapped,        0 moved
+                                                                                        7 moved
+  -- PHASE 2 COMPLETED.     0.352s
+
+  -- MESH QUALITY  3033
+     BEST   0.999061  AVRG.   0.778853  WRST.   0.346058 (928)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1384    45.63 %
+       0.6 < Q <   0.8      1458    48.07 %
+       0.4 < Q <   0.6       189     6.23 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4263
+     AVERAGE LENGTH               0.9146
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3820   89.61 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        92    2.16 %  
+     0.60 < L < 0.71       341    8.00 %  
+     0.71 < L < 0.90      1859   43.61 %  
+     0.90 < L < 1.30      1866   43.77 %  
+     1.30 < L < 1.41        95    2.23 %  
+     1.41 < L < 2.00        10    0.23 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        766   CORNERS        6
+     NUMBER OF TETRAHEDRA     3033
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       930
+
+   MMG3DLIB: ELAPSED TIME  0.412s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 766
+Done. 
+OVERALL tetrahedron count 3033
+NEW MESH. Done mapping 
+OLD Node count 764, ELEM COUNT 3020
+NEW Node count 766, ELEM COUNT 3033
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 766 NODES 3033ELEMS
+[ThermalSummary] before_remesh content=0.574834 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54518e-10, 1.83454e-08] cp_range=[560, 560] temp_range=[-1.86771e+08, 1.11751e+08] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=235.669 mass=2.25322e-09 cp=560 T=-1.86771e+08
+  [ThermalSummary] top[1] node=733 |m*cp*T|=154.598 mass=4.02818e-09 cp=560 T=-6.85341e+07
+  [ThermalSummary] top[2] node=22 |m*cp*T|=83.4749 mass=1.33388e-09 cp=560 T=1.11751e+08
+  [ThermalSummary] top[3] node=329 |m*cp*T|=79.3421 mass=1.66208e-09 cp=560 T=8.52442e+07
+  [ThermalSummary] top[4] node=434 |m*cp*T|=66.4845 mass=1.85643e-09 cp=560 T=-6.39518e+07
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.261097%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.261097%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 2 (0.261097%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 1.11751e+08; MIN -1.86771e+08
+MAX ORIGINAL VALUE 1.11751e+08; MIN -1.86771e+08
+Not inside element: 0 (0%)
+Not same node: 2 (0.261097%)
+DONE. Setting Volumes for 3033 elements
+New Element Volume: 3.78784e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3033 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 766nodes and 3dim
+setting deriv allocation size of 36396
+mdim3 4 3033 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78784e-06 min=2.33605e-10 max=3.39755e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3033 and 4nodes x elem
+COPYING 12132 element nodes 
+Done
+Size of Nodal shared Elements vector 12132
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78784e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=7.75699 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54516e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-1.86771e+08, 1.11751e+08] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=235.668 mass=2.25321e-09 cp=560 T=-1.86771e+08
+  [ThermalSummary] top[1] node=733 |m*cp*T|=154.598 mass=4.02818e-09 cp=560 T=-6.85341e+07
+  [ThermalSummary] top[2] node=22 |m*cp*T|=83.4742 mass=1.33387e-09 cp=560 T=1.11751e+08
+  [ThermalSummary] top[3] node=329 |m*cp*T|=79.3417 mass=1.66207e-09 cp=560 T=8.52442e+07
+  [ThermalSummary] top[4] node=434 |m*cp*T|=66.4842 mass=1.85643e-09 cp=560 T=-6.39518e+07
+[ThermalSummary] after_remesh_after_correction content=0.574834 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54516e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-1.86775e+08, 1.11747e+08] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=235.672 mass=2.25321e-09 cp=560 T=-1.86775e+08
+  [ThermalSummary] top[1] node=733 |m*cp*T|=154.605 mass=4.02818e-09 cp=560 T=-6.85375e+07
+  [ThermalSummary] top[2] node=22 |m*cp*T|=83.4717 mass=1.33387e-09 cp=560 T=1.11747e+08
+  [ThermalSummary] top[3] node=329 |m*cp*T|=79.3386 mass=1.66207e-09 cp=560 T=8.52409e+07
+  [ThermalSummary] top[4] node=434 |m*cp*T|=66.4878 mass=1.85643e-09 cp=560 T=-6.39552e+07
+Thermal content before remesh: 0.574834
+Thermal content after remesh map: 7.75699
+Applied uniform dT correction: -3385.91
+Thermal content after correction: 0.574834
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6531
+Total External Nodal Area: 1.6118e-03, external nodes: 467
+Allocated BCS: 
+X 133
+Y 132
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=132 Z=0 Total=265 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=132 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_3.vtk
+DONE writing VTK.
+
+--- MINI 3D step 4 Time=3.64e-05 dt=1.728e-05 ---
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 1: |dv|_inf=0.553716, |db|_inf=0.0143512, dp_rel=0.0941786, div_l2=0.0617602, max_div=774.296
+    cpu_time[s]=0.099944
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 2: |dv|_inf=0.331177, |db|_inf=0.00724556, dp_rel=0.0908407, div_l2=0.0371969, max_div=463.751
+    cpu_time[s]=0.092877
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 3: |dv|_inf=0.196963, |db|_inf=0.00306031, dp_rel=0.0872472, div_l2=0.0227142, max_div=279.126
+    cpu_time[s]=0.091593
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 4: |dv|_inf=0.115697, |db|_inf=0.00099356, dp_rel=0.0831051, div_l2=0.0143703, max_div=170.778
+    cpu_time[s]=0.091875
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 5: |dv|_inf=0.0660932, |db|_inf=0.0011563, dp_rel=0.0785413, div_l2=0.00967155, max_div=109.046
+    cpu_time[s]=0.091949
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=1.74492e-05 (face 6460)
+  MINI3D contact force sum=1.58308e+09
+  MINI3D Picard 6: |dv|_inf=0.0368702, |db|_inf=0.00129083, dp_rel=0.0743294, div_l2=0.00703748, max_div=74.8836
+    cpu_time[s]=0.091965
+Surface 4, Contact Faces Count: 66
+Area 0.00012629
+Surface 5, Contact Faces Count: 78
+Area 0.000126198
+Mesh quality: min_angle=37.2854 (elem 1966), max_angle=161.244 (elem 932), min_Jnorm=0.0166419
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 4, dim=3
+Writing VTK output in_remesh3d_4.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=459440
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=459440
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e11decc8 sol=0x5ec4e16f5388
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=459440
+Number of tetrahedrons: 3033
+Structure Node count np=766 dom_nodes=766 dom_elems=3033 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40163e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=459440
+Calling MMG3D_Set_meshSize with np=766 ne=3033 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=459440
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=459440
+MESH CREATED OK
+Number of points: 766
+Node count 766
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 2.5991e-03 at element 330 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3033
+     BEST   0.999046  AVRG.   0.778830  WRST.   0.345896 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1384    45.63 %
+       0.6 < Q <   0.8      1457    48.04 %
+       0.4 < Q <   0.6       190     6.26 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1395,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     377 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4263
+     AVERAGE LENGTH               0.9145
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3821   89.63 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        92    2.16 %  
+     0.60 < L < 0.71       340    7.98 %  
+     0.71 < L < 0.90      1861   43.65 %  
+     0.90 < L < 1.30      1865   43.75 %  
+     1.30 < L < 1.41        95    2.23 %  
+     1.41 < L < 2.00        10    0.23 %  
+  -- PHASE 1 COMPLETED.     0.030s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+           46 filtered,        1 splitted,        0 collapsed,        0 swapped,        2 moved
+                                                   0 improved,        0 swapped,        2 moved
+                                                   0 improved,        0 swapped,        1 moved
+  -- PHASE 2 COMPLETED.     0.350s
+
+  -- MESH QUALITY  3039
+     BEST   0.999046  AVRG.   0.779292  WRST.   0.345896 (928)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1385    45.57 %
+       0.6 < Q <   0.8      1461    48.08 %
+       0.4 < Q <   0.6       191     6.28 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4270
+     AVERAGE LENGTH               0.9140
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3829   89.67 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        92    2.15 %  
+     0.60 < L < 0.71       340    7.96 %  
+     0.71 < L < 0.90      1865   43.68 %  
+     0.90 < L < 1.30      1872   43.84 %  
+     1.30 < L < 1.41        92    2.15 %  
+     1.41 < L < 2.00         9    0.21 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        767   CORNERS        6
+     NUMBER OF TETRAHEDRA     3039
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       930
+
+   MMG3DLIB: ELAPSED TIME  0.410s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 767
+Done. 
+OVERALL tetrahedron count 3039
+NEW MESH. Done mapping 
+OLD Node count 766, ELEM COUNT 3033
+NEW Node count 767, ELEM COUNT 3039
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 767 NODES 3039ELEMS
+[ThermalSummary] before_remesh content=0.9141 capacity=0.00212119 mass=3.78784e-06 mass_range=[4.54516e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-5.05409e+11, 7.77625e+11] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=981207 mass=2.25321e-09 cp=560 T=7.77625e+11
+  [ThermalSummary] top[1] node=733 |m*cp*T|=518349 mass=4.02818e-09 cp=560 T=2.29787e+11
+  [ThermalSummary] top[2] node=22 |m*cp*T|=377525 mass=1.33387e-09 cp=560 T=-5.05409e+11
+  [ThermalSummary] top[3] node=329 |m*cp*T|=320076 mass=1.66207e-09 cp=560 T=-3.43887e+11
+  [ThermalSummary] top[4] node=434 |m*cp*T|=314860 mass=1.85643e-09 cp=560 T=3.02867e+11
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130378%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130378%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130378%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 7.77625e+11; MIN -5.05409e+11
+MAX ORIGINAL VALUE 7.77625e+11; MIN -5.05409e+11
+Not inside element: 0 (0%)
+Not same node: 1 (0.130378%)
+DONE. Setting Volumes for 3039 elements
+New Element Volume: 3.78783e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3039 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 767nodes and 3dim
+setting deriv allocation size of 36468
+mdim3 4 3039 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78783e-06 min=2.33605e-10 max=3.39765e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3039 and 4nodes x elem
+COPYING 12156 element nodes 
+Done
+Size of Nodal shared Elements vector 12156
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78783e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=7049.35 capacity=0.00212119 mass=3.78783e-06 mass_range=[4.54514e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-5.05409e+11, 7.77625e+11] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=981201 mass=2.2532e-09 cp=560 T=7.77625e+11
+  [ThermalSummary] top[1] node=733 |m*cp*T|=518350 mass=4.02818e-09 cp=560 T=2.29787e+11
+  [ThermalSummary] top[2] node=22 |m*cp*T|=377524 mass=1.33387e-09 cp=560 T=-5.05409e+11
+  [ThermalSummary] top[3] node=329 |m*cp*T|=320077 mass=1.66207e-09 cp=560 T=-3.43887e+11
+  [ThermalSummary] top[4] node=434 |m*cp*T|=314858 mass=1.85642e-09 cp=560 T=3.02867e+11
+[ThermalSummary] after_remesh_after_correction content=0.9141 capacity=0.00212119 mass=3.78783e-06 mass_range=[4.54514e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-5.05413e+11, 7.77622e+11] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=981197 mass=2.2532e-09 cp=560 T=7.77622e+11
+  [ThermalSummary] top[1] node=733 |m*cp*T|=518342 mass=4.02818e-09 cp=560 T=2.29784e+11
+  [ThermalSummary] top[2] node=22 |m*cp*T|=377526 mass=1.33387e-09 cp=560 T=-5.05413e+11
+  [ThermalSummary] top[3] node=329 |m*cp*T|=320080 mass=1.66207e-09 cp=560 T=-3.43891e+11
+  [ThermalSummary] top[4] node=434 |m*cp*T|=314855 mass=1.85642e-09 cp=560 T=3.02863e+11
+Thermal content before remesh: 0.9141
+Thermal content after remesh map: 7049.35
+Applied uniform dT correction: -3.32287e+06
+Thermal content after correction: 0.9141
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6543
+Total External Nodal Area: 1.6115e-03, external nodes: 467
+Allocated BCS: 
+X 133
+Y 132
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=132 Z=0 Total=265 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=132 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_4.vtk
+DONE writing VTK.
+
+--- MINI 3D step 5 Time=5.368e-05 dt=2.0736e-05 ---
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 1: |dv|_inf=0.462559, |db|_inf=0.00481171, dp_rel=0.0584226, div_l2=0.0371276, max_div=439.87
+    cpu_time[s]=0.099845
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 2: |dv|_inf=0.27643, |db|_inf=0.00246121, dp_rel=0.0531637, div_l2=0.0226313, max_div=265.87
+    cpu_time[s]=0.093206
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 3: |dv|_inf=0.16453, |db|_inf=0.00105657, dp_rel=0.0486252, div_l2=0.0140438, max_div=161.566
+    cpu_time[s]=0.092891
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 4: |dv|_inf=0.0965854, |db|_inf=0.000364733, dp_rel=0.0457386, div_l2=0.00908082, max_div=99.5431
+    cpu_time[s]=0.092387
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 5: |dv|_inf=0.0550148, |db|_inf=0.000281704, dp_rel=0.0401294, div_l2=0.00630188, max_div=63.4904
+    cpu_time[s]=0.092136
+MINI3D contact: external_faces=930, active_faces=144, max_penetration=2.09059e-05 (face 3570)
+  MINI3D contact force sum=1.58323e+09
+  MINI3D Picard 6: |dv|_inf=0.0316778, |db|_inf=0.000460338, dp_rel=0.0365691, div_l2=0.00474959, max_div=42.3837
+    cpu_time[s]=0.092082
+Surface 4, Contact Faces Count: 66
+Area 0.000126355
+Surface 5, Contact Faces Count: 78
+Area 0.000126228
+Mesh quality: min_angle=37.3296 (elem 1966), max_angle=161.256 (elem 932), min_Jnorm=0.0166336
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 5, dim=3
+Writing VTK output in_remesh3d_5.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=459440
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=459440
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e2f77f18 sol=0x5ec4e2f78158
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=459440
+Number of tetrahedrons: 3039
+Structure Node count np=767 dom_nodes=767 dom_elems=3039 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40163e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=459440
+Calling MMG3D_Set_meshSize with np=767 ne=3039 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=459440
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=459440
+MESH CREATED OK
+Number of points: 767
+Node count 767
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 3.8192e-03 at element 82 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3039
+     BEST   0.999025  AVRG.   0.779265  WRST.   0.345723 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.54 % >  0.5
+       0.8 < Q <   1.0      1384    45.54 %
+       0.6 < Q <   0.8      1462    48.11 %
+       0.4 < Q <   0.6       191     6.28 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1395,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     377 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4270
+     AVERAGE LENGTH               0.9140
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3829   89.67 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        93    2.18 %  
+     0.60 < L < 0.71       339    7.94 %  
+     0.71 < L < 0.90      1863   43.63 %  
+     0.90 < L < 1.30      1874   43.89 %  
+     1.30 < L < 1.41        92    2.15 %  
+     1.41 < L < 2.00         9    0.21 %  
+  -- PHASE 1 COMPLETED.     0.029s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+           50 filtered,        0 splitted,        1 collapsed,        2 swapped,        5 moved
+                                                   0 improved,        0 swapped,        6 moved
+            0 filtered,        2 splitted,        2 collapsed,        2 swapped,       15 moved
+            0 filtered,        0 splitted,        0 collapsed,        1 swapped,        7 moved
+            0 filtered,        0 splitted,        0 collapsed,        0 swapped,        1 moved
+                                                   0 improved,        2 swapped,        3 moved
+                                                   0 improved,        1 swapped,        1 moved
+                                                                                        2 moved
+  -- PHASE 2 COMPLETED.     0.351s
+
+  -- MESH QUALITY  3040
+     BEST   0.999025  AVRG.   0.780936  WRST.   0.345723 (926)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1407    46.28 %
+       0.6 < Q <   0.8      1445    47.53 %
+       0.4 < Q <   0.6       186     6.12 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4268
+     AVERAGE LENGTH               0.9141
+     SMALLEST EDGE LENGTH         0.4307      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3835   89.85 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        91    2.13 %  
+     0.60 < L < 0.71       332    7.78 %  
+     0.71 < L < 0.90      1870   43.81 %  
+     0.90 < L < 1.30      1873   43.88 %  
+     1.30 < L < 1.41        92    2.16 %  
+     1.41 < L < 2.00        10    0.23 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        766   CORNERS        6
+     NUMBER OF TETRAHEDRA     3040
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       926
+
+   MMG3DLIB: ELAPSED TIME  0.410s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 766
+Done. 
+OVERALL tetrahedron count 3040
+NEW MESH. Done mapping 
+OLD Node count 767, ELEM COUNT 3039
+NEW Node count 766, ELEM COUNT 3040
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 766 NODES 3040ELEMS
+[ThermalSummary] before_remesh content=1.32377 capacity=0.00212119 mass=3.78783e-06 mass_range=[4.54514e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-4.03058e+15, 2.67348e+15] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=5.08576e+09 mass=2.2532e-09 cp=560 T=-4.03058e+15
+  [ThermalSummary] top[1] node=733 |m*cp*T|=2.15852e+09 mass=4.02818e-09 cp=560 T=-9.56883e+14
+  [ThermalSummary] top[2] node=22 |m*cp*T|=1.997e+09 mass=1.33387e-09 cp=560 T=2.67348e+15
+  [ThermalSummary] top[3] node=434 |m*cp*T|=1.76273e+09 mass=1.85642e-09 cp=560 T=-1.69559e+15
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.58339e+09 mass=2.05182e-09 cp=560 T=1.37804e+15
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130548%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130548%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 1 (0.130548%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 2.67348e+15; MIN -4.03058e+15
+MAX ORIGINAL VALUE 2.67348e+15; MIN -4.03058e+15
+Not inside element: 0 (0%)
+Not same node: 1 (0.130548%)
+DONE. Setting Volumes for 3040 elements
+New Element Volume: 3.78783e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3040 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 766nodes and 3dim
+setting deriv allocation size of 36480
+mdim3 4 3040 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78783e-06 min=2.33604e-10 max=3.39777e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3040 and 4nodes x elem
+COPYING 12160 element nodes 
+Done
+Size of Nodal shared Elements vector 12160
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78783e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=-2.03578e+08 capacity=0.00212118 mass=3.78783e-06 mass_range=[4.54512e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-4.03058e+15, 2.67348e+15] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=5.08576e+09 mass=2.2532e-09 cp=560 T=-4.03058e+15
+  [ThermalSummary] top[1] node=733 |m*cp*T|=2.13058e+09 mass=3.97605e-09 cp=560 T=-9.56883e+14
+  [ThermalSummary] top[2] node=22 |m*cp*T|=1.99704e+09 mass=1.3339e-09 cp=560 T=2.67348e+15
+  [ThermalSummary] top[3] node=434 |m*cp*T|=1.81703e+09 mass=1.9136e-09 cp=560 T=-1.69559e+15
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.58338e+09 mass=2.05181e-09 cp=560 T=1.37804e+15
+[ThermalSummary] after_remesh_after_correction content=1.32376 capacity=0.00212118 mass=3.78783e-06 mass_range=[4.54512e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-4.03049e+15, 2.67357e+15] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=5.08564e+09 mass=2.2532e-09 cp=560 T=-4.03049e+15
+  [ThermalSummary] top[1] node=733 |m*cp*T|=2.13037e+09 mass=3.97605e-09 cp=560 T=-9.56787e+14
+  [ThermalSummary] top[2] node=22 |m*cp*T|=1.99711e+09 mass=1.3339e-09 cp=560 T=2.67357e+15
+  [ThermalSummary] top[3] node=434 |m*cp*T|=1.81693e+09 mass=1.9136e-09 cp=560 T=-1.6955e+15
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.58349e+09 mass=2.05181e-09 cp=560 T=1.37813e+15
+Thermal content before remesh: 1.32377
+Thermal content after remesh map: -2.03578e+08
+Applied uniform dT correction: 9.5974e+10
+Thermal content after correction: 1.32376
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6543
+Total External Nodal Area: 1.6111e-03, external nodes: 465
+Allocated BCS: 
+X 133
+Y 131
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=131 Z=0 Total=264 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=131 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_5.vtk
+DONE writing VTK.
+
+--- MINI 3D step 6 Time=7.4416e-05 dt=2.48832e-05 ---
+MINI3D contact: external_faces=926, active_faces=144, max_penetration=2.50542e-05 (face 3572)
+  MINI3D contact force sum=1.58342e+09
+  MINI3D Picard 1: |dv|_inf=0.0202298, |db|_inf=0.0015855, dp_rel=0.0304664, div_l2=0.00509768, max_div=39.2408
+    cpu_time[s]=0.098705
+Surface 4, Contact Faces Count: 66
+Area 0.000126434
+Surface 5, Contact Faces Count: 78
+Area 0.000126263
+Mesh quality: min_angle=37.3831 (elem 1966), max_angle=161.272 (elem 932), min_Jnorm=0.0166234
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 6, dim=3
+Writing VTK output in_remesh3d_6.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=464600
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=464600
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e2f6d5f8 sol=0x5ec4e172cd48
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=464600
+Number of tetrahedrons: 3040
+Structure Node count np=766 dom_nodes=766 dom_elems=3040 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40162e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=464600
+Calling MMG3D_Set_meshSize with np=766 ne=3040 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=464600
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=464600
+MESH CREATED OK
+Number of points: 766
+Node count 766
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 5.2737e-03 at element 82 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3040
+     BEST   0.998998  AVRG.   0.780905  WRST.   0.345512 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1403    46.15 %
+       0.6 < Q <   0.8      1449    47.66 %
+       0.4 < Q <   0.6       186     6.12 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1389,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     375 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4268
+     AVERAGE LENGTH               0.9140
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3832   89.78 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        91    2.13 %  
+     0.60 < L < 0.71       334    7.83 %  
+     0.71 < L < 0.90      1868   43.77 %  
+     0.90 < L < 1.30      1872   43.86 %  
+     1.30 < L < 1.41        92    2.16 %  
+     1.41 < L < 2.00        11    0.26 %  
+  -- PHASE 1 COMPLETED.     0.030s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+           51 filtered,        0 splitted,        0 collapsed,        0 swapped,        4 moved
+            2 filtered,        0 splitted,        0 collapsed,        0 swapped,        1 moved
+                                                   0 improved,        0 swapped,        1 moved
+                                                   0 improved,        0 swapped,        1 moved
+                                                   0 improved,        1 swapped,        0 moved
+                                                                                        1 moved
+  -- PHASE 2 COMPLETED.     0.348s
+
+  -- MESH QUALITY  3040
+     BEST   0.998998  AVRG.   0.781166  WRST.   0.345512 (931)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1406    46.25 %
+       0.6 < Q <   0.8      1449    47.66 %
+       0.4 < Q <   0.6       183     6.02 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4268
+     AVERAGE LENGTH               0.9140
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3832   89.78 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        91    2.13 %  
+     0.60 < L < 0.71       334    7.83 %  
+     0.71 < L < 0.90      1868   43.77 %  
+     0.90 < L < 1.30      1872   43.86 %  
+     1.30 < L < 1.41        92    2.16 %  
+     1.41 < L < 2.00        11    0.26 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        766   CORNERS        6
+     NUMBER OF TETRAHEDRA     3040
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       926
+
+   MMG3DLIB: ELAPSED TIME  0.409s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 766
+Done. 
+OVERALL tetrahedron count 3040
+NEW MESH. Done mapping 
+OLD Node count 766, ELEM COUNT 3040
+NEW Node count 766, ELEM COUNT 3040
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 766 NODES 3040ELEMS
+[ThermalSummary] before_remesh content=1.7759 capacity=0.00212118 mass=3.78783e-06 mass_range=[4.54512e-10, 1.80495e-08] cp_range=[560, 560] temp_range=[-1.69261e+19, 2.53593e+19] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=3.19982e+13 mass=2.2532e-09 cp=560 T=2.53593e+19
+  [ThermalSummary] top[1] node=22 |m*cp*T|=1.26435e+13 mass=1.3339e-09 cp=560 T=-1.69261e+19
+  [ThermalSummary] top[2] node=434 |m*cp*T|=1.21269e+13 mass=1.9136e-09 cp=560 T=1.13164e+19
+  [ThermalSummary] top[3] node=733 |m*cp*T|=1.09953e+13 mass=3.97605e-09 cp=560 T=4.93819e+18
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.00733e+13 mass=2.05181e-09 cp=560 T=-8.7669e+18
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 2.53593e+19; MIN -1.69261e+19
+MAX ORIGINAL VALUE 2.53593e+19; MIN -1.69261e+19
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+DONE. Setting Volumes for 3040 elements
+New Element Volume: 3.78782e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3040 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 766nodes and 3dim
+setting deriv allocation size of 36480
+mdim3 4 3040 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78782e-06 min=2.33603e-10 max=3.39791e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3040 and 4nodes x elem
+COPYING 12160 element nodes 
+Done
+Size of Nodal shared Elements vector 12160
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78782e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=-7.70272e+10 capacity=0.00212118 mass=3.78782e-06 mass_range=[4.89402e-10, 1.80494e-08] cp_range=[560, 560] temp_range=[-1.69261e+19, 2.53593e+19] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=3.19983e+13 mass=2.25321e-09 cp=560 T=2.53593e+19
+  [ThermalSummary] top[1] node=22 |m*cp*T|=1.26437e+13 mass=1.33392e-09 cp=560 T=-1.69261e+19
+  [ThermalSummary] top[2] node=434 |m*cp*T|=1.21264e+13 mass=1.91353e-09 cp=560 T=1.13164e+19
+  [ThermalSummary] top[3] node=733 |m*cp*T|=1.09952e+13 mass=3.97602e-09 cp=560 T=4.93819e+18
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.00733e+13 mass=2.0518e-09 cp=560 T=-8.7669e+18
+[ThermalSummary] after_remesh_after_correction content=1.73085 capacity=0.00212118 mass=3.78782e-06 mass_range=[4.89402e-10, 1.80494e-08] cp_range=[560, 560] temp_range=[-1.69261e+19, 2.53593e+19] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=3.19983e+13 mass=2.25321e-09 cp=560 T=2.53593e+19
+  [ThermalSummary] top[1] node=22 |m*cp*T|=1.26437e+13 mass=1.33392e-09 cp=560 T=-1.69261e+19
+  [ThermalSummary] top[2] node=434 |m*cp*T|=1.21264e+13 mass=1.91353e-09 cp=560 T=1.13164e+19
+  [ThermalSummary] top[3] node=733 |m*cp*T|=1.09953e+13 mass=3.97602e-09 cp=560 T=4.93822e+18
+  [ThermalSummary] top[4] node=325 |m*cp*T|=1.00732e+13 mass=2.0518e-09 cp=560 T=-8.76686e+18
+Thermal content before remesh: 1.7759
+Thermal content after remesh map: -7.70272e+10
+Applied uniform dT correction: 3.63134e+13
+Thermal content after correction: 1.73085
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6543
+Total External Nodal Area: 1.6107e-03, external nodes: 465
+Allocated BCS: 
+X 133
+Y 131
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=131 Z=0 Total=264 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=131 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_6.vtk
+DONE writing VTK.
+
+--- MINI 3D step 7 Time=9.92992e-05 dt=2.98598e-05 ---
+MINI3D contact: external_faces=926, active_faces=144, max_penetration=3.0032e-05 (face 3572)
+  MINI3D contact force sum=1.58364e+09
+  MINI3D Picard 1: |dv|_inf=0.0122983, |db|_inf=0.000890139, dp_rel=0.0267182, div_l2=0.00398575, max_div=27.03
+    cpu_time[s]=0.099163
+Surface 4, Contact Faces Count: 66
+Area 0.000126523
+Surface 5, Contact Faces Count: 78
+Area 0.000126306
+Mesh quality: min_angle=37.4471 (elem 1966), max_angle=161.29 (elem 932), min_Jnorm=0.0166112
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+Writing VTK output /home/weldform-pc/Numerico/WeldFormGUI/examples/demo/compression_tetra_qt_thermal/demo_00007.vtk
+DONE writing VTK.
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 7, dim=3
+Writing VTK output in_remesh3d_7.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=472436
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=472436
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e1191d18 sol=0x5ec4e1191908
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=472436
+Number of tetrahedrons: 3040
+Structure Node count np=766 dom_nodes=766 dom_elems=3040 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40162e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=472436
+Calling MMG3D_Set_meshSize with np=766 ne=3040 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=472436
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=473572
+MESH CREATED OK
+Number of points: 766
+Node count 766
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 6.9958e-03 at element 82 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3040
+     BEST   0.998962  AVRG.   0.781125  WRST.   0.345258 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1405    46.22 %
+       0.6 < Q <   0.8      1449    47.66 %
+       0.4 < Q <   0.6       184     6.05 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1389,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     375 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4268
+     AVERAGE LENGTH               0.9140
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3832   89.78 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        91    2.13 %  
+     0.60 < L < 0.71       334    7.83 %  
+     0.71 < L < 0.90      1866   43.72 %  
+     0.90 < L < 1.30      1875   43.93 %  
+     1.30 < L < 1.41        91    2.13 %  
+     1.41 < L < 2.00        11    0.26 %  
+  -- PHASE 1 COMPLETED.     0.028s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+           55 filtered,        0 splitted,        1 collapsed,        0 swapped,        1 moved
+                                                   0 improved,        0 swapped,        4 moved
+                                                   0 improved,        1 swapped,        0 moved
+                                                   0 improved,        0 swapped,        1 moved
+  -- PHASE 2 COMPLETED.     0.349s
+
+  -- MESH QUALITY  3035
+     BEST   0.998962  AVRG.   0.781162  WRST.   0.345258 (931)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1404    46.26 %
+       0.6 < Q <   0.8      1445    47.61 %
+       0.4 < Q <   0.6       184     6.06 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4262
+     AVERAGE LENGTH               0.9146
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3829   89.84 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        89    2.09 %  
+     0.60 < L < 0.71       332    7.79 %  
+     0.71 < L < 0.90      1861   43.66 %  
+     0.90 < L < 1.30      1877   44.04 %  
+     1.30 < L < 1.41        91    2.14 %  
+     1.41 < L < 2.00        12    0.28 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        765   CORNERS        6
+     NUMBER OF TETRAHEDRA     3035
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       926
+
+   MMG3DLIB: ELAPSED TIME  0.406s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 765
+Done. 
+OVERALL tetrahedron count 3035
+NEW MESH. Done mapping 
+OLD Node count 766, ELEM COUNT 3040
+NEW Node count 765, ELEM COUNT 3035
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 765 NODES 3035ELEMS
+[ThermalSummary] before_remesh content=-495.117 capacity=0.00212118 mass=3.78782e-06 mass_range=[4.89402e-10, 1.80494e-08] cp_range=[560, 560] temp_range=[-1.92163e+23, 1.28608e+23] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=2.42471e+17 mass=2.25321e-09 cp=560 T=-1.92163e+23
+  [ThermalSummary] top[1] node=434 |m*cp*T|=9.65801e+16 mass=1.91353e-09 cp=560 T=-9.0129e+22
+  [ThermalSummary] top[2] node=22 |m*cp*T|=9.60695e+16 mass=1.33392e-09 cp=560 T=1.28608e+23
+  [ThermalSummary] top[3] node=325 |m*cp*T|=7.65382e+16 mass=2.0518e-09 cp=560 T=6.66123e+22
+  [ThermalSummary] top[4] node=733 |m*cp*T|=6.89916e+16 mass=3.97602e-09 cp=560 T=-3.09856e+22
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 1.28608e+23; MIN -1.92163e+23
+MAX ORIGINAL VALUE 1.28608e+23; MIN -1.92163e+23
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+DONE. Setting Volumes for 3035 elements
+New Element Volume: 3.78781e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0
+Elements INSIDE old mesh: 3035 (100%)
+Elements NOT inside old mesh: 0 (0%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 765nodes and 3dim
+setting deriv allocation size of 36420
+mdim3 4 3035 1
+SETTING DENSITY TO 1
+Copied remesh volume summary: sum=3.78781e-06 min=2.33604e-10 max=3.39807e-09
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 1843
+Node 12 found in element 2114
+Node 12 found in element 2224
+Node 12 found in element 2399
+Node 12 found in element 2453
+Node 12 found in element 2909
+Allocating 3035 and 4nodes x elem
+COPYING 12140 element nodes 
+Done
+Size of Nodal shared Elements vector 12140
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 3.78781e-06
+Calculating mass from Vols
+[ThermalSummary] after_remesh_before_correction content=-1.01669e+16 capacity=0.00212118 mass=3.78781e-06 mass_range=[4.89398e-10, 1.80493e-08] cp_range=[560, 560] temp_range=[-1.92163e+23, 1.28608e+23] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=2.4247e+17 mass=2.2532e-09 cp=560 T=-1.92163e+23
+  [ThermalSummary] top[1] node=434 |m*cp*T|=9.65772e+16 mass=1.91347e-09 cp=560 T=-9.0129e+22
+  [ThermalSummary] top[2] node=22 |m*cp*T|=9.60709e+16 mass=1.33394e-09 cp=560 T=1.28608e+23
+  [ThermalSummary] top[3] node=325 |m*cp*T|=7.6538e+16 mass=2.0518e-09 cp=560 T=6.66123e+22
+  [ThermalSummary] top[4] node=733 |m*cp*T|=6.89913e+16 mass=3.97601e-09 cp=560 T=-3.09856e+22
+[ThermalSummary] after_remesh_after_correction content=-448.719 capacity=0.00212118 mass=3.78781e-06 mass_range=[4.89398e-10, 1.80493e-08] cp_range=[560, 560] temp_range=[-1.92158e+23, 1.28613e+23] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=2.42464e+17 mass=2.2532e-09 cp=560 T=-1.92158e+23
+  [ThermalSummary] top[1] node=434 |m*cp*T|=9.6572e+16 mass=1.91347e-09 cp=560 T=-9.01242e+22
+  [ThermalSummary] top[2] node=22 |m*cp*T|=9.60745e+16 mass=1.33394e-09 cp=560 T=1.28613e+23
+  [ThermalSummary] top[3] node=325 |m*cp*T|=7.65435e+16 mass=2.0518e-09 cp=560 T=6.66171e+22
+  [ThermalSummary] top[4] node=733 |m*cp*T|=6.89806e+16 mass=3.97601e-09 cp=560 T=-3.09808e+22
+Thermal content before remesh: -495.117
+Thermal content after remesh map: -1.01669e+16
+Applied uniform dT correction: 4.79306e+18
+Thermal content after correction: -448.719
+recovering velocities
+deleting 
+MESH CHANGED
+Initial Vol: 3.7878e-06
+done. Face count: 6533
+Total External Nodal Area: 1.6101e-03, external nodes: 465
+Allocated BCS: 
+X 133
+Y 131
+Z 0
+Reapplied symmetry BCs after 3D remesh: X=133 Y=131 Z=0 Total=264 symtol=0.0001
+Projected symmetry nodes after 3D remesh: X=133 max_dx=0 Y=131 max_dy=0 Z=0 max_dz=0
+Writing VTK output out_remesh3d_7.vtk
+DONE writing VTK.
+
+--- MINI 3D step 8 Time=0.000129159 dt=3.58318e-05 ---
+MINI3D contact: external_faces=926, active_faces=144, max_penetration=3.60054e-05 (face 3570)
+  MINI3D contact force sum=1.58391e+09
+  MINI3D Picard 1: |dv|_inf=0.00806502, |db|_inf=0.00051402, dp_rel=0.0248147, div_l2=0.00335893, max_div=19.4982
+    cpu_time[s]=0.096731
+Surface 4, Contact Faces Count: 66
+Area 0.000126639
+Surface 5, Contact Faces Count: 78
+Area 0.000126361
+Mesh quality: min_angle=37.5092 (elem 932), max_angle=161.312 (elem 932), min_Jnorm=0.0165966
+SolveThermalImplicit currently supports only 2D Q4 elements. Falling back to explicit ThermalCalcs().
+WARNING: Max Angle > 150 on element 932, remeshing
+REMESHING 3D MINI solver at step 8, dim=3
+Writing VTK output in_remesh3d_8.vtk
+DONE writing VTK.
+Generate mmg
+[MMG][mem] enter Generate_mmg maxrss_kb=473956
+[MMG] Before MMG3D_Init_mesh
+[MMG][mem] before MMG3D_Init_mesh maxrss_kb=473956
+[MMG] After MMG3D_Init_mesh mesh=0x5ec4e1190578 sol=0x5ec4e11def68
+[MMG][mem] after MMG3D_Init_mesh maxrss_kb=473956
+Number of tetrahedrons: 3035
+Structure Node count np=765 dom_nodes=765 dom_elems=3035 remesh_length=0.001256
+Pre-MMG tetra determinant summary: min_abs_det=1.40162e-09 at elem=397
+[MMG][mem] after pre-MMG determinant scan maxrss_kb=473956
+Calling MMG3D_Set_meshSize with np=765 ne=3035 nprism=0 nt_tri=0 nquad=0 na=0
+[MMG] About to call MMG3D_Set_meshSize
+[MMG][mem] before MMG3D_Set_meshSize maxrss_kb=473956
+[MMG] Returned from MMG3D_Set_meshSize with status=1
+[MMG][mem] after MMG3D_Set_meshSize maxrss_kb=473956
+MESH CREATED OK
+Number of points: 765
+Node count 765
+Vertices allocated
+SETTING TETRAHEDRONS 
+Initial Mesh check succeed 
+BETA: 4
+EPS REF: 1
+REMESH TYPE IS LINEAR
+Max PS 9.0278e-03 at element 82 Min Element size 2.5120e-03.Size Limits: min 2.5120e-03 , max 2.5120e-03
+Calling MMG3D_mmg3dlib
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   MODULE MMG3D: 5.8.0 (Oct. 30, 2024)
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+     git branch: No git branch found
+     git commit: No git commit found
+     git date:   No git commit found
+
+
+  -- MMG3DLIB: INPUT DATA
+  --  INPUT DATA COMPLETED.     0.000s
+
+  -- PHASE 1 : ANALYSIS
+
+  -- MESH QUALITY  3035
+     BEST   0.998915  AVRG.   0.781113  WRST.   0.344955 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1401    46.16 %
+       0.6 < Q <   0.8      1448    47.71 %
+       0.4 < Q <   0.6       184     6.06 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  ** SURFACE ANALYSIS
+     Connected component: 1,  genus: 0,   reoriented: 0
+     Edges: 1389,  tagged: 0,  ridges: 0, required: 0, refs: 0
+     93 ridges, 0 edges added
+     6 corners, 6 singular points detected
+  ** DEFINING GEOMETRY
+     375 normals,  84 tangents updated  (0 failed)
+     0 required edges added
+     0 corner and 0 required vertices added
+
+  -- RESULTING EDGE LENGTHS  4262
+     AVERAGE LENGTH               0.9146
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3829   89.84 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        89    2.09 %  
+     0.60 < L < 0.71       332    7.79 %  
+     0.71 < L < 0.90      1861   43.66 %  
+     0.90 < L < 1.30      1877   44.04 %  
+     1.30 < L < 1.41        91    2.14 %  
+     1.41 < L < 2.00        12    0.28 %  
+  -- PHASE 1 COMPLETED.     0.028s
+
+  -- PHASE 2 : ISOTROPIC MESHING
+  ** MESH ANALYSIS
+  ** GEOMETRIC MESH
+  ** COMPUTATIONAL MESH
+
+  -- GRADATION : 1.300000 (2.300000)
+     gradation:       0 updated, 1 iter.
+                                                   0 improved,        0 swapped,        1 moved
+  -- PHASE 2 COMPLETED.     0.343s
+
+  -- MESH QUALITY  3035
+     BEST   0.998915  AVRG.   0.781159  WRST.   0.344955 (933)
+     HISTOGRAMM:  100.00 % > 0.12
+                   99.47 % >  0.5
+       0.8 < Q <   1.0      1400    46.13 %
+       0.6 < Q <   0.8      1450    47.78 %
+       0.4 < Q <   0.6       183     6.03 %
+       0.2 < Q <   0.4         2     0.07 %
+
+  -- RESULTING EDGE LENGTHS  4262
+     AVERAGE LENGTH               0.9146
+     SMALLEST EDGE LENGTH         0.4306      220    760
+     LARGEST  EDGE LENGTH         1.5443      318    620 
+     0.71 < L < 1.41      3829   89.84 %  
+
+     HISTOGRAMM:
+     0.30 < L < 0.60        89    2.09 %  
+     0.60 < L < 0.71       332    7.79 %  
+     0.71 < L < 0.90      1860   43.64 %  
+     0.90 < L < 1.30      1878   44.06 %  
+     1.30 < L < 1.41        91    2.14 %  
+     1.41 < L < 2.00        12    0.28 %  
+
+  -- MESH PACKED UP
+     NUMBER OF VERTICES        765   CORNERS        6
+     NUMBER OF TETRAHEDRA     3035
+     NUMBER OF EDGES            93   RIDGES        93
+     NUMBER OF TRIANGLES       926
+
+   MMG3DLIB: ELAPSED TIME  0.400s
+
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+   END OF MODULE MMG3D
+  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+MMG3D_mmg3dlib returned ier=0
+New node count 765
+Done. 
+OVERALL tetrahedron count 3035
+NEW MESH. Done mapping 
+OLD Node count 765, ELEM COUNT 3035
+NEW Node count 765, ELEM COUNT 3035
+MESH CREATED.
+[MMG] Freed MMG mesh/sol structures
+WRITING DOMAIN 765 NODES 3035ELEMS
+[ThermalSummary] before_remesh content=-258688 capacity=0.00212118 mass=3.78781e-06 mass_range=[4.89398e-10, 1.80493e-08] cp_range=[560, 560] temp_range=[-1.17245e+27, 1.74888e+27] zero_cp_nodes=0 zero_conn_nodes=0 invalid_mass_nodes=0
+  [ThermalSummary] top[0] node=412 |m*cp*T|=2.20673e+21 mass=2.2532e-09 cp=560 T=1.74888e+27
+  [ThermalSummary] top[1] node=434 |m*cp*T|=9.21617e+20 mass=1.91347e-09 cp=560 T=8.60084e+26
+  [ThermalSummary] top[2] node=22 |m*cp*T|=8.75823e+20 mass=1.33394e-09 cp=560 T=-1.17245e+27
+  [ThermalSummary] top[3] node=325 |m*cp*T|=6.96957e+20 mass=2.0518e-09 cp=560 T=-6.06574e+26
+  [ThermalSummary] top[4] node=94 |m*cp*T|=6.22945e+20 mass=1.50931e-09 cp=560 T=-7.37025e+26
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=3
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL SCALAR RAW (MMG), dim=3
+MAX INTERPOLATED VALUE 1.74888e+27; MIN -1.17245e+27
+MAX ORIGINAL VALUE 1.74888e+27; MIN -1.17245e+27
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+DONE. Setting Volumes for 3035 elements
+New Element Volume: 3.7878e-06
+Remesh geometry summary: dim=3 domtype=3 axisymm_vol_weight=0

@@ -1,0 +1,211 @@
+{
+    "BoundaryConditions": [
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "Part",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 5,
+            "type": "VelocityBC",
+            "value": [
+                0.0,
+                0.0,
+                -1.0
+            ],
+            "valueType": 0
+        }
+    ],
+    "Configuration": {
+        "SPH": {
+            "hFactor": 1.2
+        },
+        "analysisType": "Solid3D",
+        "modelType": "SPH",
+        "solver": "WeldForm",
+        "thermal": true,
+        "twoDMeshGenerator": "mesh-adapt"
+    },
+    "Contact": [
+        {
+            "fricCoeffStatic": 0.3,
+            "frictionRegularizationVelocity": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 500.0,
+            "useGapPenalty": true
+        }
+    ],
+    "InitialConditions": [
+        {
+            "amplitudeFactor": 1.0,
+            "applyTo": "Part",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
+            "targetId": 3,
+            "type": "TempIC",
+            "value": [
+                20.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0
+        }
+    ],
+    "Materials": {
+        "const": [
+            650000000.0,
+            0.22
+        ],
+        "density0": 2700.0,
+        "poissonsRatio": 0.3,
+        "strRange": [
+            0.0,
+            0.65
+        ],
+        "thermalCond": 50.0,
+        "thermalHeatCap": 560.0,
+        "type": "Hollomon",
+        "yieldStress0": 190000000.0,
+        "youngsModulus": 210000000000.0
+    },
+    "Remeshing": {
+        "beta": 4.0,
+        "dampFactor": 0.02,
+        "debug": true,
+        "enabled": true,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 150.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "Sections": [
+        {
+            "id": 0,
+            "intendedElementType": "Tetra4",
+            "materialIndex": 0,
+            "name": "Section_0",
+            "thickness": 1.0
+        }
+    ],
+    "Steps": [
+        {
+            "artifViscAlpha": 1.0,
+            "artifViscBeta": 0.0,
+            "autoTS": [
+                false,
+                false,
+                false
+            ],
+            "axiSymmVol": false,
+            "cflFactor": 0.3,
+            "elemLengthFraction": 0.2,
+            "fixedTS": false,
+            "id": 0,
+            "implicit": {
+                "divTol": 1.0,
+                "forceTol": 10.0,
+                "maxIter": 200,
+                "omegaP": 0.1,
+                "omegaV": 0.4,
+                "pressTol": 10.0,
+                "springFactor": 1e-07,
+                "springMode": 1,
+                "springStiffness": 0.0,
+                "timeStepGrowthFactor": 1.2,
+                "type": "Picard",
+                "useSprings": false,
+                "velTol": 0.05
+            },
+            "kernelGradCorr": false,
+            "name": "Step-1",
+            "nproc": 1,
+            "outTime": 0.0001,
+            "simTime": 0.02,
+            "type": "Implicit"
+        }
+    ],
+    "SymmetryPlanes": [
+        {
+            "axis": 1,
+            "enabled": true,
+            "value": 0.0
+        },
+        {
+            "axis": 0,
+            "enabled": true,
+            "value": 0.0
+        }
+    ],
+    "model": {
+        "parts": [
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_3.step"
+                },
+                "id": 3,
+                "isRigid": false,
+                "mesh": {
+                    "source": "demo_part_3.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "source": "demo_part_4.step"
+                },
+                "id": 4,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_4.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            },
+            {
+                "geometry": {
+                    "origin": [
+                        0.0,
+                        0.0,
+                        0.03
+                    ],
+                    "source": "demo_part_5.step"
+                },
+                "id": 5,
+                "isRigid": true,
+                "mesh": {
+                    "source": "demo_part_5.bdf"
+                },
+                "name": "",
+                "sectionId": -1
+            }
+        ]
+    }
+}

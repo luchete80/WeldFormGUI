@@ -310,3 +310,4 @@
 20260612 - Added Job progress to tree and separate from model
 
 20260612 - simplified job tree
+20260612 - changed example

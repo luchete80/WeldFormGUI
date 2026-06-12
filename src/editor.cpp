@@ -4640,6 +4640,7 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
 
   if (nodeOpen) {
     const bool running = job->isRunning();
+    const bool canStop = job->getPid() > 0;
     const fs::path resultsPath = job->getResultsFilePath();
     const double currentTime = job->getCurrentResultTime();
     const double simTime = job->getExpectedSimTime();
@@ -4660,13 +4661,13 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
       requestJobRun(job);
     }
     ImGui::SameLine();
-    if (!running) {
+    if (!canStop) {
       ImGui::BeginDisabled();
     }
     if (ImGui::Button(("Stop##job_stop_" + std::to_string(index)).c_str())) {
       job->Stop();
     }
-    if (!running) {
+    if (!canStop) {
       ImGui::EndDisabled();
     }
     ImGui::SameLine();
