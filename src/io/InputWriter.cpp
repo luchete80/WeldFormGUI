@@ -432,6 +432,8 @@ void InputWriter::writeToFile(std::string fname) {
   m_json["Meshing"]["epsRef"] = remeshing.epsRef;
   m_json["Meshing"]["beta"] = remeshing.beta;
   m_json["Meshing"]["type"] = remeshing.type;
+  m_json["Meshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
+  m_json["Meshing"]["boundaryLayers"] = remeshing.boundaryLayers;
   m_json["Meshing"]["debug"] = remeshing.debug;
   m_json["Meshing"]["minElemAngle"] = remeshing.minElemAngle;
   m_json["Meshing"]["maxElemAngle"] = remeshing.maxElemAngle;
@@ -439,6 +441,8 @@ void InputWriter::writeToFile(std::string fname) {
 
   const ContactProperties &contact = m_model->contactProps();
   json cont;
+  cont["auto"] = contact.autoPenalty;
+  cont["autoFactor"] = contact.autoFactor;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
   cont["frictionRegularizationVelocity"] = contact.frictionRegularizationVelocity;
   cont["gapPenaltyScale"] = contact.gapPenaltyScale;
@@ -609,6 +613,8 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Meshing"]["epsRef"] = remeshing.epsRef;
   m_json["Meshing"]["beta"] = remeshing.beta;
   m_json["Meshing"]["type"] = remeshing.type;
+  m_json["Meshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
+  m_json["Meshing"]["boundaryLayers"] = remeshing.boundaryLayers;
   m_json["Meshing"]["debug"] = remeshing.debug;
   m_json["Meshing"]["minElemAngle"] = remeshing.minElemAngle;
   m_json["Meshing"]["maxElemAngle"] = remeshing.maxElemAngle;
@@ -617,6 +623,8 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   const ContactProperties &contact = m_model->contactProps();
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
+    {"auto", contact.autoPenalty},
+    {"autoFactor", contact.autoFactor},
     {"fricCoeffStatic", contact.fricCoeffStatic},
     {"frictionRegularizationVelocity", contact.frictionRegularizationVelocity},
     {"gapPenaltyScale", contact.gapPenaltyScale},

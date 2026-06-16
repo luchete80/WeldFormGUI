@@ -149,6 +149,8 @@ void readContact(const json& root, Model* model)
 
   const json& contact = root["Contact"][0];
   ContactProperties& props = model->contactProps();
+  props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
+  props.autoFactor = contact.value("autoFactor", props.autoFactor);
   props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
   props.frictionRegularizationVelocity =
       contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
@@ -180,6 +182,8 @@ void readMeshing(const json& root, Model* model)
   settings.epsRef = meshing.value("epsRef", settings.epsRef);
   settings.beta = meshing.value("beta", settings.beta);
   settings.type = meshing.value("type", settings.type);
+  settings.refineOnlyBoundary = meshing.value("refineOnlyBoundary", settings.refineOnlyBoundary);
+  settings.boundaryLayers = std::max(0, meshing.value("boundaryLayers", settings.boundaryLayers));
   settings.debug = meshing.value("debug", settings.debug);
   settings.minElemAngle = meshing.value("minElemAngle", settings.minElemAngle);
   settings.maxElemAngle = meshing.value("maxElemAngle", settings.maxElemAngle);

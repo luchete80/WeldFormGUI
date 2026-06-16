@@ -114,6 +114,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
     if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
         const auto &contact = j["Contact"][0];
         ContactProperties &props = m_model->contactProps();
+        props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
+        props.autoFactor = contact.value("autoFactor", props.autoFactor);
         props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
         props.frictionRegularizationVelocity =
             contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
@@ -141,6 +143,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
         settings.epsRef = remeshing.value("epsRef", settings.epsRef);
         settings.beta = remeshing.value("beta", settings.beta);
         settings.type = remeshing.value("type", settings.type);
+        settings.refineOnlyBoundary = remeshing.value("refineOnlyBoundary", settings.refineOnlyBoundary);
+        settings.boundaryLayers = std::max(0, remeshing.value("boundaryLayers", settings.boundaryLayers));
         settings.debug = remeshing.value("debug", settings.debug);
         settings.minElemAngle = remeshing.value("minElemAngle", settings.minElemAngle);
         settings.maxElemAngle = remeshing.value("maxElemAngle", settings.maxElemAngle);

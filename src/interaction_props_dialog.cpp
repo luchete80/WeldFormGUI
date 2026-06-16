@@ -31,9 +31,15 @@ void InteractionPropsDialog::Draw()
                      0.01,
                      0.1,
                      "%.6g");
+  ImGui::Checkbox("Auto", &contact.autoPenalty);
+  ImGui::BeginDisabled(contact.autoPenalty);
   ImGui::InputDouble("Penalty Factor", &contact.penaltyFactor, 10.0, 100.0, "%.4f");
   ImGui::Checkbox("Use Gap Penalty", &contact.useGapPenalty);
+  ImGui::EndDisabled();
   ImGui::InputDouble("Gap Penalty Scale", &contact.gapPenaltyScale, 0.1, 1.0, "%.4f");
+  ImGui::BeginDisabled(!contact.autoPenalty);
+  ImGui::InputDouble("Auto Factor", &contact.autoFactor, 0.05, 0.1, "%.4f");
+  ImGui::EndDisabled();
   ImGui::Checkbox("Heat Conductance", &contact.heatConductance);
   ImGui::InputDouble("Heat Cond Coeff", &contact.heatCondCoeff, 0.1, 1.0, "%.4f");
   ImGui::InputDouble("Max Penetration Ratio", &contact.maxPenetRatio, 0.01, 0.1, "%.4f");

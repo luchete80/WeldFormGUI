@@ -126,6 +126,8 @@ void ModelWriter::writeToFile(std::string fname){
 
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
+    {"auto", m_model.contactProps().autoPenalty},
+    {"autoFactor", m_model.contactProps().autoFactor},
     {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
     {"frictionRegularizationVelocity", m_model.contactProps().frictionRegularizationVelocity},
     {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},
@@ -517,6 +519,8 @@ void ModelWriter::writeToFile(std::string fname){
     m_json["Remeshing"]["epsRef"] = remeshing.epsRef;
     m_json["Remeshing"]["beta"] = remeshing.beta;
     m_json["Remeshing"]["type"] = remeshing.type;
+    m_json["Remeshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
+    m_json["Remeshing"]["boundaryLayers"] = remeshing.boundaryLayers;
     m_json["Remeshing"]["debug"] = remeshing.debug;
     m_json["Remeshing"]["minElemAngle"] = remeshing.minElemAngle;
     m_json["Remeshing"]["maxElemAngle"] = remeshing.maxElemAngle;

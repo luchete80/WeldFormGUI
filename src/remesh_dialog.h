@@ -13,13 +13,15 @@ struct RemeshDialog {
   double m_maxStrain = 1.0e6;
   bool m_mapVel = false;
   bool m_mapAcc = false;
-  int m_maxCount = 100;
+  int m_maxCount = 1000000;
   double m_dampFactor = 0.02;
   double m_minFrac = 2.0;
   double m_maxFrac = 2.0;
   double m_epsRef = 1.0;
   double m_beta = 4.0;
   int m_type = 0;
+  bool m_refineOnlyBoundary = false;
+  int m_boundaryLayers = 2;
   bool m_debug = false;
   double m_minElemAngle = 15.0;
   double m_maxElemAngle = 165.0;

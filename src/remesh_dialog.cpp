@@ -23,6 +23,8 @@ void RemeshDialog::InitFromModel(Model* model)
   m_epsRef = remesh.epsRef;
   m_beta = remesh.beta;
   m_type = remesh.type;
+  m_refineOnlyBoundary = remesh.refineOnlyBoundary;
+  m_boundaryLayers = remesh.boundaryLayers;
   m_debug = remesh.debug;
   m_minElemAngle = remesh.minElemAngle;
   m_maxElemAngle = remesh.maxElemAngle;
@@ -56,6 +58,17 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
     ImGui::InputDouble("Eps Ref", &m_epsRef, 0.0, 0.0, "%.6g");
     ImGui::InputDouble("Beta", &m_beta, 0.0, 0.0, "%.6g");
     ImGui::InputInt("Type", &m_type);
+    ImGui::Checkbox("Refine Only On Boundary", &m_refineOnlyBoundary);
+    ImGui::BeginDisabled(!m_refineOnlyBoundary);
+    ImGui::InputInt("Boundary Layers", &m_boundaryLayers);
+    if (m_boundaryLayers < 0) {
+      m_boundaryLayers = 0;
+    }
+    ImGui::EndDisabled();
+    ImGui::TextUnformatted("- 0: external nodes only");
+    ImGui::TextUnformatted("- 1: external nodes + immediate neighbors by element connectivity");
+    ImGui::TextUnformatted("- 2: adds one more layer inward");
+    ImGui::TextUnformatted("- and so on");
   }
 
   if (ImGui::CollapsingHeader("Mapping", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -85,6 +98,8 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
       remesh.epsRef = m_epsRef;
       remesh.beta = m_beta;
       remesh.type = m_type;
+      remesh.refineOnlyBoundary = m_refineOnlyBoundary;
+      remesh.boundaryLayers = m_boundaryLayers < 0 ? 0 : m_boundaryLayers;
       remesh.debug = m_debug;
       remesh.minElemAngle = m_minElemAngle;
       remesh.maxElemAngle = m_maxElemAngle;

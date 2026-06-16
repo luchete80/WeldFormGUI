@@ -42,6 +42,8 @@ enum TwoDMeshGenerator {
 };
 
 struct ContactProperties {
+  bool autoPenalty = false;
+  double autoFactor = 0.5;
   double fricCoeffStatic = 0.0;
   double frictionRegularizationVelocity = 0.0;
   double gapPenaltyScale = 2.0;
@@ -59,13 +61,15 @@ struct RemeshingSettings {
   double maxStrain = 1.0e6;
   bool mapVel = false;
   bool mapAcc = false;
-  int maxCount = 100;
+  int maxCount = 1000000;
   double dampFactor = 0.02;
   double minFrac = 2.0;
   double maxFrac = 2.0;
   double epsRef = 1.0;
   double beta = 4.0;
   int type = 0;
+  bool refineOnlyBoundary = false;
+  int boundaryLayers = 2;
   bool debug = false;
   double minElemAngle = 15.0;
   double maxElemAngle = 165.0;

@@ -2400,7 +2400,7 @@ int main(int argc, char* argv[])
   
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO
-  cout << "WeldFormGUI version " << PROJECT_VERSION
+  cout << "WeldFormGUI version " << GIT_DESCRIBE_VERSION
        << " commit " << GIT_COMMIT_HASH
        << " build " << BUILD_TIMESTAMP << endl;
   cout << "Creating Editor"<<endl;
@@ -2497,7 +2497,7 @@ int main(int argc, char* argv[])
     if (ImGui::BeginPopupModal("About WeldFormGUI", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
       ImGui::Text("WeldFormGUI");
       ImGui::Separator();
-      ImGui::Text("Version: %s", PROJECT_VERSION);
+      ImGui::Text("Version: %s", GIT_DESCRIBE_VERSION);
       ImGui::Text("Commit: %s", GIT_COMMIT_HASH);
       ImGui::Text("Build: %s", BUILD_TIMESTAMP);
       ImGui::Spacing();

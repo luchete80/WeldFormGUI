@@ -5489,7 +5489,7 @@ void Editor::drawGui() {
   {
       ImGui::Text("WeldFormGUI");
       ImGui::Separator();
-      ImGui::Text("Version: %s", PROJECT_VERSION);
+      ImGui::Text("Version: %s", GIT_DESCRIBE_VERSION);
       ImGui::Text("Commit: %s", GIT_COMMIT_HASH);
       ImGui::Text("Build: %s", BUILD_TIMESTAMP);
       ImGui::Spacing();
@@ -6479,6 +6479,8 @@ void Editor::drawGui() {
              ImGui::Text("Static friction: %.4f", contact.fricCoeffStatic);
              ImGui::Text("Friction Reg. Vel. (implicit solver): %.6g",
                          contact.frictionRegularizationVelocity);
+             ImGui::Text("Auto penalty: %s", contact.autoPenalty ? "Enabled" : "Disabled");
+             ImGui::Text("Auto factor: %.4f", contact.autoFactor);
              ImGui::Text("Penalty factor: %.4f", contact.penaltyFactor);
              if (ImGui::Button("Edit Interaction Props")) {
                m_interactionpropsdlg.setModel(m_model);
