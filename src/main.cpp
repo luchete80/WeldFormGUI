@@ -24,6 +24,7 @@
 #include "imgui_impl_opengl3.h"
 #include "implot.h"
 #include "VtkViewer.h"
+#include "git_commit.h"
 
 // VTK
 #include <vtkSmartPointer.h>
@@ -2399,6 +2400,9 @@ int main(int argc, char* argv[])
   
   App::initApp(); //singleton
   ///AFTER APP INITIALIZATIO
+  cout << "WeldFormGUI version " << PROJECT_VERSION
+       << " commit " << GIT_COMMIT_HASH
+       << " build " << BUILD_TIMESTAMP << endl;
   cout << "Creating Editor"<<endl;
   Editor* editor = new Editor();//THIS RELIES ON THE App Singleton!! ALWAIS GENERATE IT FIRST AND THE CALL EDITOR, otherwise crashes
   editor->addViewer(&vtkViewer2);  
@@ -2444,6 +2448,7 @@ int main(int argc, char* argv[])
     
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
+    static bool show_about_popup = false;
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
         ImGui::MenuItem("Project actions are available in the left panel", nullptr, false, false);
@@ -2476,7 +2481,30 @@ int main(int argc, char* argv[])
         }
         ImGui::EndMenu();
       }
+      if (ImGui::BeginMenu("Help")) {
+        if (ImGui::MenuItem("About")) {
+          show_about_popup = true;
+        }
+        ImGui::EndMenu();
+      }
       ImGui::EndMainMenuBar();
+    }
+
+    if (show_about_popup) {
+      ImGui::OpenPopup("About WeldFormGUI");
+      show_about_popup = false;
+    }
+    if (ImGui::BeginPopupModal("About WeldFormGUI", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+      ImGui::Text("WeldFormGUI");
+      ImGui::Separator();
+      ImGui::Text("Version: %s", PROJECT_VERSION);
+      ImGui::Text("Commit: %s", GIT_COMMIT_HASH);
+      ImGui::Text("Build: %s", BUILD_TIMESTAMP);
+      ImGui::Spacing();
+      if (ImGui::Button("Close")) {
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
     }
     
     editor->drawGui();

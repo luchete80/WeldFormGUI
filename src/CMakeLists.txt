@@ -21,6 +21,19 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(APP_VERSION_MAJOR 1)
 set(APP_VERSION_MINOR 0)
 set(EXEC_NAME imgui_vtk)
+set(PROJECT_VERSION "${APP_VERSION_MAJOR}.${APP_VERSION_MINOR}")
+
+set(GIT_COMMIT_HEADER "${CMAKE_BINARY_DIR}/generated/git_commit.h")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
+
+add_custom_target(update_git_commit ALL
+  COMMAND ${CMAKE_COMMAND}
+          -DOUT_HEADER=${GIT_COMMIT_HEADER}
+          -DVERSION=${PROJECT_VERSION}
+          -P ${CMAKE_SOURCE_DIR}/cmake/WriteGitHash.cmake
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Forcing regeneration of git_commit.h"
+)
 
 link_directories ("${GLFW_BINARY_DIR}/src")
 if (WIN32)
@@ -93,6 +106,8 @@ add_executable(${EXEC_NAME} main.cpp
                             
                             #graphics/axis.cpp
                             )
+add_dependencies(${EXEC_NAME} update_git_commit)
+target_include_directories(${EXEC_NAME} PRIVATE "${CMAKE_BINARY_DIR}/generated")
 add_library (global_sta STATIC global.cpp)
 
 # OpenGL

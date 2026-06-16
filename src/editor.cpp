@@ -21,6 +21,7 @@
 #endif
 
 #include "editor.h"
+#include "git_commit.h"
 #include <sstream>
 
 //#include <glm/gtc/matrix_transform.hpp>
@@ -5461,6 +5462,13 @@ void Editor::drawGui() {
           // ImGui::MenuItem("Documents", NULL, &show_app_documents);
           ImGui::EndMenu();
       }
+      if (ImGui::BeginMenu("Help"))
+      {
+          if (ImGui::MenuItem("About")) {
+              ImGui::OpenPopup("About WeldFormGUI");
+          }
+          ImGui::EndMenu();
+      }
   
       // ////if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
       // if (ImGui::BeginMenu("Tools"))
@@ -5475,6 +5483,20 @@ void Editor::drawGui() {
           // ImGui::EndMenu();
       // }
       ImGui::EndMenuBar();
+  }
+
+  if (ImGui::BeginPopupModal("About WeldFormGUI", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+      ImGui::Text("WeldFormGUI");
+      ImGui::Separator();
+      ImGui::Text("Version: %s", PROJECT_VERSION);
+      ImGui::Text("Commit: %s", GIT_COMMIT_HASH);
+      ImGui::Text("Build: %s", BUILD_TIMESTAMP);
+      ImGui::Spacing();
+      if (ImGui::Button("Close")) {
+          ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
   }
 
   /////////////////////////// TREEEEEE
@@ -8919,6 +8941,7 @@ Editor::Editor(){
   m_show_msh_dlg = false;
   m_show_set_dlg = false;
   
+  m_show_app_main_menu_bar = true;
   m_show_app_console = true;
   m_model = new Model();
   getApp().setActiveModel(m_model);
