@@ -4602,6 +4602,8 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
       m_jobdlg.m_job = job;
       m_jobdlg.m_filename = job->getPathFile();
       m_jobdlg.m_solver_edition = static_cast<int>(job->getSolverEditionOverride());
+      job->loadRestartSettingsFromInput();
+      m_jobdlg.loadRestartOptionsFromJob(job);
     }
     if (ImGui::MenuItem("Show Progress")) {
       m_jobshowdlg.m_job = job;
@@ -4707,6 +4709,7 @@ void Editor::drawJobsSidebar(bool expandOnce)
       m_jobdlg.m_job = nullptr;
       m_jobdlg.m_filename.clear();
       m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
+      m_jobdlg.resetRestartOptions();
       m_jobdlg.m_show = true;
     }
     ImGui::EndPopup();
@@ -4718,6 +4721,7 @@ void Editor::drawJobsSidebar(bool expandOnce)
     m_jobdlg.m_job = nullptr;
     m_jobdlg.m_filename.clear();
     m_jobdlg.m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
+    m_jobdlg.resetRestartOptions();
     m_jobdlg.m_show = true;
   }
 
@@ -8557,6 +8561,12 @@ void Editor::drawGui() {
     cout << "Creating Job "<<m_jobdlg.m_filename<<endl;
     Job* newJob = new Job(m_jobdlg.m_filename);
     newJob->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_jobdlg.m_solver_edition));
+    newJob->setCheckpointEnabled(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_checkpoint_enabled : false);
+    newJob->setCheckpointInterval(m_jobdlg.m_checkpoint_interval);
+    newJob->setCheckpointDir(m_jobdlg.m_checkpoint_dir);
+    newJob->setCheckpointPrefix(m_jobdlg.m_checkpoint_prefix);
+    newJob->setRestartFile(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_restart_file : std::string());
+    newJob->applyRestartSettingsToInput();
     m_jobs.push_back(newJob); 
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
@@ -9102,7 +9112,7 @@ int Editor::Init(){
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO(); (void)io;
-  ////io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;        // Enable keyboard navigation in Dear ImGui widgets/dialogs
   ////io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
   // Setup Dear ImGui style

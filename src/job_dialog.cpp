@@ -7,11 +7,15 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "ImGuiFileDialog.h"
+#include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
+#include <cstring>
 
 using namespace std;
+using json = nlohmann::json;
 namespace fs = std::filesystem;
 namespace {
 std::string modelStem(Model &model) {
@@ -26,6 +30,131 @@ std::string modelStem(Model &model) {
 fs::path modelOutputPath(Model &model, const std::string &filename) {
   return fs::path(model.getBaseDir()) / filename;
 }
+
+bool loadRestartConfigurationFromInput(const std::string& filename,
+                                       bool& checkpointEnabled,
+                                       int& checkpointInterval,
+                                       std::string& checkpointDir,
+                                       std::string& checkpointPrefix,
+                                       std::string& restartFile,
+                                       bool& supportsRestart)
+{
+  checkpointEnabled = false;
+  checkpointInterval = 1;
+  checkpointDir = "checkpoints";
+  checkpointPrefix = "restart_qt";
+  restartFile.clear();
+  supportsRestart = false;
+
+  if (filename.empty()) {
+    return false;
+  }
+
+  std::ifstream input(filename);
+  if (!input.is_open()) {
+    return false;
+  }
+
+  try {
+    json data;
+    input >> data;
+    if (!data.contains("Configuration") || !data["Configuration"].is_object()) {
+      return false;
+    }
+
+    const json& configuration = data["Configuration"];
+    if (configuration.value("domType", std::string("3D")) != "3D") {
+      return false;
+    }
+
+    if (!configuration.contains("solver") || !configuration["solver"].is_object()) {
+      return false;
+    }
+
+    const json& solver = configuration["solver"];
+    if (!solver.contains("implicit") || !solver["implicit"].is_object()) {
+      return false;
+    }
+
+    supportsRestart = true;
+    const json& implicit = solver["implicit"];
+    checkpointEnabled = implicit.value("checkpointEnabled", false);
+    checkpointInterval = std::max(1, implicit.value("checkpointInterval", 1));
+    checkpointDir = implicit.value("checkpointDir", std::string("checkpoints"));
+    checkpointPrefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
+    restartFile = implicit.value("restartFile", std::string());
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+}
+
+void JobDialog::resetRestartOptions()
+{
+  m_checkpoint_enabled = false;
+  m_checkpoint_interval = 1;
+  m_checkpoint_dir = "checkpoints";
+  m_checkpoint_prefix = "restart_qt";
+  m_restart_file.clear();
+  std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
+  std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
+  m_restart_file_buffer[0] = '\0';
+  m_show_restart_files = false;
+}
+
+void JobDialog::loadRestartOptionsFromJob(const Job* job)
+{
+  if (job == nullptr) {
+    resetRestartOptions();
+    return;
+  }
+
+  m_checkpoint_enabled = job->getCheckpointEnabled();
+  m_checkpoint_interval = std::max(1, job->getCheckpointInterval());
+  m_checkpoint_dir = job->getCheckpointDir().empty() ? "checkpoints" : job->getCheckpointDir();
+  m_checkpoint_prefix = job->getCheckpointPrefix().empty() ? "restart_qt" : job->getCheckpointPrefix();
+  m_restart_file = job->getRestartFile();
+  std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
+  std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
+  std::snprintf(m_restart_file_buffer.data(), m_restart_file_buffer.size(), "%s", m_restart_file.c_str());
+}
+
+void JobDialog::loadRestartOptionsFromInputFile()
+{
+  bool supportsRestart = false;
+  if (!loadRestartConfigurationFromInput(m_filename,
+                                         m_checkpoint_enabled,
+                                         m_checkpoint_interval,
+                                         m_checkpoint_dir,
+                                         m_checkpoint_prefix,
+                                         m_restart_file,
+                                         supportsRestart)) {
+    resetRestartOptions();
+    return;
+  }
+
+  std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
+  std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
+  std::snprintf(m_restart_file_buffer.data(), m_restart_file_buffer.size(), "%s", m_restart_file.c_str());
+}
+
+bool JobDialog::inputSupportsImplicit3DRestart() const
+{
+  bool checkpointEnabled = false;
+  int checkpointInterval = 1;
+  std::string checkpointDir;
+  std::string checkpointPrefix;
+  std::string restartFile;
+  bool supportsRestart = false;
+  loadRestartConfigurationFromInput(m_filename,
+                                    checkpointEnabled,
+                                    checkpointInterval,
+                                    checkpointDir,
+                                    checkpointPrefix,
+                                    restartFile,
+                                    supportsRestart);
+  return supportsRestart;
 }
 
 void  JobDialog::Draw(){
@@ -55,6 +184,13 @@ void  JobDialog::Draw(){
       m_filename = input_path.string();
       InputWriter writer(&model);
       writer.writeToFile(input_path.string());
+      Job tempJob(m_filename);
+      tempJob.setCheckpointEnabled(m_checkpoint_enabled);
+      tempJob.setCheckpointInterval(m_checkpoint_interval);
+      tempJob.setCheckpointDir(m_checkpoint_dir);
+      tempJob.setCheckpointPrefix(m_checkpoint_prefix);
+      tempJob.setRestartFile(m_restart_file);
+      tempJob.applyRestartSettingsToInput();
       create_entity = true;
       m_edit_mode = false;
       m_job = nullptr;
@@ -79,10 +215,9 @@ void  JobDialog::Draw(){
       if (ImGuiFileDialog::Instance()->IsOk())
       {
         m_filename = ImGuiFileDialog::Instance()->GetFilePathName();
+        loadRestartOptionsFromInputFile();
         if (m_edit_mode && m_job != nullptr)
           m_job->setPathFile(m_filename);
-        else
-          create_entity = true;
         cout << "file path name "<<m_filename<<endl;
       }
       
@@ -91,18 +226,102 @@ void  JobDialog::Draw(){
     }
   }
 
+  const bool supportsRestartFromModel = [&]() {
+    Model &model = getApp().getActiveModel();
+    if (model.getStepCount() <= 0) {
+      return false;
+    }
+    Step* step = model.getStep(0);
+    return step != nullptr && step->isImplicit() && model.getAnalysisType() == Solid3D;
+  }();
+  const bool supportsRestartFromInput = inputSupportsImplicit3DRestart();
+  const bool supportsRestart = (!m_filename.empty() ? supportsRestartFromInput : supportsRestartFromModel);
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Restart / checkpoint");
+  ImGui::TextDisabled("Available only for implicit 3D jobs (weldform_imp_3d).");
+
+  if (!supportsRestart) {
+    ImGui::BeginDisabled();
+  }
+
+  ImGui::Checkbox("Generate checkpoint", &m_checkpoint_enabled);
+  if (m_checkpoint_enabled) {
+    if (m_checkpoint_interval < 1)
+      m_checkpoint_interval = 1;
+    ImGui::InputInt("Checkpoint interval", &m_checkpoint_interval);
+    if (m_checkpoint_interval < 1)
+      m_checkpoint_interval = 1;
+    if (ImGui::InputText("Checkpoint dir", m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size())) {
+      m_checkpoint_dir = m_checkpoint_dir_buffer.data();
+    }
+    if (ImGui::InputText("Checkpoint prefix", m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size())) {
+      m_checkpoint_prefix = m_checkpoint_prefix_buffer.data();
+    }
+  }
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Restart run");
+  if (ImGui::InputText("Restart file", m_restart_file_buffer.data(), m_restart_file_buffer.size())) {
+    m_restart_file = m_restart_file_buffer.data();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Browse restart")) {
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgRestartWfrst", "Choose Restart File", ".wfrst,.WFRST", ".");
+    m_show_restart_files = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Clear restart")) {
+    m_restart_file.clear();
+    m_restart_file_buffer[0] = '\0';
+  }
+  ImGui::TextDisabled("When set, exported as Configuration.solver.implicit.restartFile.");
+
+  if (!supportsRestart) {
+    ImGui::EndDisabled();
+  }
+
+  if (m_show_restart_files) {
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgRestartWfrst")) {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        m_restart_file = ImGuiFileDialog::Instance()->GetFilePathName();
+        std::snprintf(m_restart_file_buffer.data(), m_restart_file_buffer.size(), "%s", m_restart_file.c_str());
+      }
+      ImGuiFileDialog::Instance()->Close();
+      m_show_restart_files = false;
+    }
+  }
+
+  if (!m_edit_mode && m_filename.empty()) {
+    ImGui::BeginDisabled();
+  }
   if (!m_edit_mode && ImGui::Button("Create")) {
     create_entity = true;
     m_show = false;
+  }
+  if (!m_edit_mode && m_filename.empty()) {
+    ImGui::EndDisabled();
+  }
+  if (m_edit_mode && m_filename.empty()) {
+    ImGui::BeginDisabled();
   }
   if (m_edit_mode && ImGui::Button("Save")) {
     if (m_job != nullptr) {
       m_job->setPathFile(m_filename);
       m_job->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_solver_edition));
+      m_job->setCheckpointEnabled(supportsRestart ? m_checkpoint_enabled : false);
+      m_job->setCheckpointInterval(m_checkpoint_interval);
+      m_job->setCheckpointDir(m_checkpoint_dir);
+      m_job->setCheckpointPrefix(m_checkpoint_prefix);
+      m_job->setRestartFile(supportsRestart ? m_restart_file : std::string());
+      m_job->applyRestartSettingsToInput();
     }
     m_edit_mode = false;
     m_job = nullptr;
     m_show = false;
+  }
+  if (m_edit_mode && m_filename.empty()) {
+    ImGui::EndDisabled();
   }
   if (((m_edit_mode && m_job != nullptr) || !m_filename.empty()) && m_open_results) {
     ImGui::SameLine();

@@ -2269,6 +2269,7 @@ int main(int argc, char* argv[])
 
   rebuildUiFonts();
     
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable keyboard navigation in Dear ImGui widgets/dialogs
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows'
 

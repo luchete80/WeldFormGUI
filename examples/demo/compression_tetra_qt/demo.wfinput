@@ -37,8 +37,12 @@
                 "omegaP": 0.1,
                 "omegaV": 0.4,
                 "pressTol": 10.0,
+                "springFactor": 1e-07,
+                "springMode": 1,
+                "springStiffness": 0.0,
                 "timeStepGrowthFactor": 1.2,
-                "type": "Picard",
+                "type": "picard",
+                "useSprings": false,
                 "velTol": 0.05
             }
         },
@@ -49,7 +53,10 @@
     },
     "Contact": [
         {
+            "auto": false,
+            "autoFactor": 0.5,
             "fricCoeffStatic": 0.0,
+            "frictionRegularizationVelocity": 0.0,
             "gapPenaltyScale": 2.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
@@ -102,6 +109,7 @@
     ],
     "Meshing": {
         "beta": 4.0,
+        "boundaryLayers": 2,
         "dampFactor": 0.02,
         "debug": true,
         "enabled": true,
@@ -115,6 +123,7 @@
         "minElemAngle": 15.0,
         "minFrac": 2.0,
         "minStrain": -1.0,
+        "refineOnlyBoundary": false,
         "transitionAngle": 15.0,
         "type": 0
     },

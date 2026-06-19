@@ -1,2 +1,1984 @@
-[Job::Run] Solver binary not found: weldform_imp_3d_std
-[Job::Run] Searched: D:\Luciano\Numerico\WeldFormGUI_bin\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\WeldFormGUI_bin\solvers\weldform_imp_3d_std; D:\Luciano\Numerico\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\solvers\weldform_imp_3d_std; D:\Luciano\Numerico\WeldFormGUI\solvers\weldform_imp_3d_std.exe; D:\Luciano\Numerico\WeldFormGUI\solvers\weldform_imp_3d_std; examples\demo\compression_tetra_qt\solvers\weldform_imp_3d_std.exe; examples\demo\compression_tetra_qt\solvers\weldform_imp_3d_std
+Log initialized: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt/log.txt
+Out file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt/log.txt
+INPUT FILE NAME D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo
+-----------------------------------------------
+------------------ WELDFORM FEM -----------------
+------------- Version: ------------------
+------------- Commit:  0e840c8-------------------
+------------- Build:   2026-06-18 16:35:33------------
+Opening WFINPUT format file
+Fixed time step: OFF
+Number of threads used: 1np 1
+Thread 
+Threads used: 1, np parameter (via [Config]{Nproc})
+SYMMETRY ON AXIS X plane=0 tol=0.0001
+SYMMETRY ON AXIS Y plane=0 tol=0.0001
+Reading Domain type
+Domain type: File
+Reading Domain from Input file D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_3.bdf
+Extension bdf
+Creating domain from Nastran file D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_3.bdf
+[I] Reading Nastran file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_3.bdf
+720 nodes and 2633 elements found.
+[Nastran] CTETRA detected. Shell/beam elements are ignored for solid import.
+[I] 3357 lines readed ...
+Allocating 720 nodes
+Allocating 2633 Elements...
+Done.
+Setting Dimension for implicit domain
+m_dim
+setting deriv allocation size of 31596
+mdim: 3 , Nod x Elem 4 2633 1
+Allocating 720 nodes 
+Allocating 2633 elements, node x element: 4
+Setting elements per node 
+Node 12 found in element 2038
+Node 12 found in element 2224
+Node 12 found in element 2453
+Node 12 found in element 2465
+Allocating 2633 and 4nodes x elem
+COPYING 10532 element nodes 
+Done
+Size of Nodal shared Elements vector 10532
+Total orphan nodes: 0
+Node Elemets set. 
+[Nastran] Orphan nodes: 0
+[Nastran] Tetra stats: tiny=0 inverted_or_zero=0 repeated_nodes=0 duplicates=0 min|det|=2.27274e-09 max|det|=2.47504e-08
+[Nastran] Bounding box: xmin=0 xmax=0.0127 ymin=0 ymax=0.0127 zmin=0 zmax=0.03
+Node Size: 720
+Element Size: 2633
+Executable variant: mini3d
+Node limit: none
+Solver params: velTol=0.05, pressTol=10, forceTol=10, divTol=1, omegaV=0.4, omegaP=0.1, betaH=1e-06, nrEntryDivTol=0.05, nrEntryMaxDiv=1, elemLengthFraction=0.2, timeStepGrowthFactor=1.2, useSprings=false, springFactor=1e-07, springStiffness=0, springMode=1, picardWarmupIter=3, maxIter=200
+Setting density
+Done.
+Creating Material..:
+Type: Hollomon
+eps_0, 9.05e-04 eps_1 3.73e-03
+Hollomon Material Constants, K: 6.5e+08, n: 0.22
+eps_0, 9.05e-04 eps_1 3.73e-03
+Strain Range: 0, 0.65
+Thermal Material Properties: k=0, cp=0, alpha_T=0
+Material Parameters K: 6.5e+08
+Done.
+Reading Boundary Conditions ...
+Done
+done. Face count: 5796
+Total External Nodal Area: 1.6123e-03, external nodes: 532
+Searching external nodes
+Creating plane mesh...
+Mesh start: 0,0, 0
+Mesh dim: 0,0, 0
+[RigidBody] Loading Nastran file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_4.bdf
+[I] Reading Nastran file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_4.bdf
+146 nodes and 250 elements found.
+[I] 401 lines readed ...
+Allocating 146 nodes
+Allocating 250 Elements...
+Done.
+[RigidBody] 3D domain detected. Treating shell contact mesh as 3D surface.
+Mesh0 Start: 0, 0, 0
+Nastran Mesh NodeCount: 146
+Copying 146 nodes 
+Centroid of matrix: 0.0248973, 0.025296, 0
+endl
+Element count: 250done. Creating elements... Global Centroid:0.00532662, 0.00527365, 0.0149518
+Writing elements...
+Done. 
+Reorienting normals...
+3D fallback finished using matrix centroid offset from orient_pt.
+Element 0 normal -0, 0, 1
+Element 1 normal 0, 0, 1
+Element 2 normal 0, 0, 1
+Element 3 normal 0, 0, 1
+Element 4 normal 0, -0, 1
+Element 5 normal 0, 0, 1
+Element 6 normal 0, 0, 1
+Element 7 normal 0, 0, 1
+Element 8 normal 0, 0, 1
+Element 9 normal 0, 0, 1
+Element 10 normal 0, 0, 1
+Element 11 normal 0, -0, 1
+Element 12 normal 0, 0, 1
+Element 13 normal -0, 0, 1
+Element 14 normal 0, 0, 1
+Element 15 normal 0, 0, 1
+Element 16 normal 0, 0, 1
+Element 17 normal 0, 0, 1
+Element 18 normal 0, -0, 1
+Element 19 normal 0, -0, 1
+Element 20 normal 0, 0, 1
+Element 21 normal 0, 0, 1
+Element 22 normal 0, 0, 1
+Element 23 normal 0, 0, 1
+Element 24 normal 0, 0, 1
+Element 25 normal 0, 0, 1
+Element 26 normal -0, 0, 1
+Element 27 normal 0, -0, 1
+Element 28 normal 0, -0, 1
+Element 29 normal 0, 0, 1
+Element 30 normal 0, 0, 1
+Element 31 normal 0, 0, 1
+Element 32 normal 0, 0, 1
+Element 33 normal 0, -0, 1
+Element 34 normal 0, -0, 1
+Element 35 normal 0, 0, 1
+Element 36 normal 0, 0, 1
+Element 37 normal 0, 0, 1
+Element 38 normal 0, 0, 1
+Element 39 normal 0, 0, 1
+Element 40 normal 0, 0, 1
+Element 41 normal -0, 0, 1
+Element 42 normal 0, 0, 1
+Element 43 normal 0, 0, 1
+Element 44 normal 0, -0, 1
+Element 45 normal -0, 0, 1
+Element 46 normal 0, 0, 1
+Element 47 normal 0, 0, 1
+Element 48 normal 0, 0, 1
+Element 49 normal 0, 0, 1
+Element 50 normal 0, 0, 1
+Element 51 normal 0, 0, 1
+Element 52 normal 0, 0, 1
+Element 53 normal 0, 0, 1
+Element 54 normal 0, 0, 1
+Element 55 normal -0, 0, 1
+Element 56 normal 0, 0, 1
+Element 57 normal 0, 0, 1
+Element 58 normal 0, 0, 1
+Element 59 normal 0, 0, 1
+Element 60 normal 0, 0, 1
+Element 61 normal 0, 0, 1
+Element 62 normal -0, 0, 1
+Element 63 normal 0, 0, 1
+Element 64 normal 0, 0, 1
+Element 65 normal 0, -0, 1
+Element 66 normal 0, -0, 1
+Element 67 normal 0, 0, 1
+Element 68 normal -0, 0, 1
+Element 69 normal 0, 0, 1
+Element 70 normal 0, -0, 1
+Element 71 normal 0, 0, 1
+Element 72 normal 0, -0, 1
+Element 73 normal 0, -0, 1
+Element 74 normal 0, -0, 1
+Element 75 normal 0, 0, 1
+Element 76 normal 0, 0, 1
+Element 77 normal 0, -0, 1
+Element 78 normal 0, 0, 1
+Element 79 normal -0, 0, 1
+Element 80 normal 0, 0, 1
+Element 81 normal 0, 0, 1
+Element 82 normal 0, 0, 1
+Element 83 normal 0, 0, 1
+Element 84 normal -0, 0, 1
+Element 85 normal -0, 0, 1
+Element 86 normal 0, 0, 1
+Element 87 normal 0, -0, 1
+Element 88 normal 0, 0, 1
+Element 89 normal 0, 0, 1
+Element 90 normal 0, -0, 1
+Element 91 normal 0, 0, 1
+Element 92 normal 0, 0, 1
+Element 93 normal -0, 0, 1
+Element 94 normal 0, 0, 1
+Element 95 normal -0, 0, 1
+Element 96 normal 0, 0, 1
+Element 97 normal 0, 0, 1
+Element 98 normal 0, -0, 1
+Element 99 normal 0, 0, 1
+Element 100 normal -0, 0, 1
+Element 101 normal -0, 0, 1
+Element 102 normal 0, 0, 1
+Element 103 normal 0, -0, 1
+Element 104 normal 0, 0, 1
+Element 105 normal 0, 0, 1
+Element 106 normal 0, 0, 1
+Element 107 normal 0, 0, 1
+Element 108 normal 0, -0, 1
+Element 109 normal -0, 0, 1
+Element 110 normal 0, 0, 1
+Element 111 normal 0, 0, 1
+Element 112 normal -0, 0, 1
+Element 113 normal 0, 0, 1
+Element 114 normal 0, 0, 1
+Element 115 normal 0, 0, 1
+Element 116 normal 0, 0, 1
+Element 117 normal 0, 0, 1
+Element 118 normal 0, 0, 1
+Element 119 normal 0, 0, 1
+Element 120 normal 0, -0, 1
+Element 121 normal 0, 0, 1
+Element 122 normal 0, 0, 1
+Element 123 normal 0, 0, 1
+Element 124 normal 0, 0, 1
+Element 125 normal 0, 0, 1
+Element 126 normal 0, 0, 1
+Element 127 normal 0, -0, 1
+Element 128 normal 0, -0, 1
+Element 129 normal 0, 0, 1
+Element 130 normal 0, 0, 1
+Element 131 normal 0, 0, 1
+Element 132 normal 0, 0, 1
+Element 133 normal 0, 0, 1
+Element 134 normal 0, 0, 1
+Element 135 normal 0, 0, 1
+Element 136 normal 0, 0, 1
+Element 137 normal -0, 0, 1
+Element 138 normal -0, 0, 1
+Element 139 normal 0, 0, 1
+Element 140 normal 0, 0, 1
+Element 141 normal 0, 0, 1
+Element 142 normal 0, 0, 1
+Element 143 normal 0, 0, 1
+Element 144 normal 0, 0, 1
+Element 145 normal 0, 0, 1
+Element 146 normal 0, 0, 1
+Element 147 normal 0, 0, 1
+Element 148 normal -0, 0, 1
+Element 149 normal 0, 0, 1
+Element 150 normal 0, -0, 1
+Element 151 normal 0, 0, 1
+Element 152 normal 0, 0, 1
+Element 153 normal 0, 0, 1
+Element 154 normal 0, -0, 1
+Element 155 normal 0, 0, 1
+Element 156 normal -0, 0, 1
+Element 157 normal 0, 0, 1
+Element 158 normal 0, 0, 1
+Element 159 normal 0, 0, 1
+Element 160 normal 0, 0, 1
+Element 161 normal 0, 0, 1
+Element 162 normal 0, 0, 1
+Element 163 normal 0, 0, 1
+Element 164 normal 0, 0, 1
+Element 165 normal 0, -0, 1
+Element 166 normal -0, 0, 1
+Element 167 normal -0, 0, 1
+Element 168 normal 0, 0, 1
+Element 169 normal -0, 0, 1
+Element 170 normal 0, 0, 1
+Element 171 normal 0, 0, 1
+Element 172 normal 0, 0, 1
+Element 173 normal 0, 0, 1
+Element 174 normal 0, 0, 1
+Element 175 normal -0, 0, 1
+Element 176 normal 0, 0, 1
+Element 177 normal 0, 0, 1
+Element 178 normal 0, 0, 1
+Element 179 normal 0, 0, 1
+Element 180 normal 0, 0, 1
+Element 181 normal -0, 0, 1
+Element 182 normal 0, 0, 1
+Element 183 normal -0, 0, 1
+Element 184 normal 0, 0, 1
+Element 185 normal 0, 0, 1
+Element 186 normal 0, 0, 1
+Element 187 normal 0, 0, 1
+Element 188 normal 0, 0, 1
+Element 189 normal -0, 0, 1
+Element 190 normal 0, -0, 1
+Element 191 normal -0, 0, 1
+Element 192 normal 0, 0, 1
+Element 193 normal 0, 0, 1
+Element 194 normal 0, -0, 1
+Element 195 normal 0, 0, 1
+Element 196 normal 0, 0, 1
+Element 197 normal 0, 0, 1
+Element 198 normal 0, 0, 1
+Element 199 normal 0, 0, 1
+Element 200 normal 0, 0, 1
+Element 201 normal 0, 0, 1
+Element 202 normal 0, -0, 1
+Element 203 normal 0, 0, 1
+Element 204 normal 0, 0, 1
+Element 205 normal 0, 0, 1
+Element 206 normal 0, -0, 1
+Element 207 normal 0, 0, 1
+Element 208 normal -0, 0, 1
+Element 209 normal 0, 0, 1
+Element 210 normal 0, 0, 1
+Element 211 normal 0, 0, 1
+Element 212 normal 0, 0, 1
+Element 213 normal 0, 0, 1
+Element 214 normal 0, 0, 1
+Element 215 normal -0, 0, 1
+Element 216 normal 0, 0, 1
+Element 217 normal 0, 0, 1
+Element 218 normal 0, 0, 1
+Element 219 normal 0, 0, 1
+Element 220 normal 0, 0, 1
+Element 221 normal 0, -0, 1
+Element 222 normal 0, 0, 1
+Element 223 normal 0, 0, 1
+Element 224 normal 0, 0, 1
+Element 225 normal 0, 0, 1
+Element 226 normal 0, 0, 1
+Element 227 normal 0, 0, 1
+Element 228 normal -0, 0, 1
+Element 229 normal 0, -0, 1
+Element 230 normal 0, 0, 1
+Element 231 normal 0, 0, 1
+Element 232 normal 0, 0, 1
+Element 233 normal -0, 0, 1
+Element 234 normal 0, 0, 1
+Element 235 normal 0, 0, 1
+Element 236 normal -0, 0, 1
+Element 237 normal 0, 0, 1
+Element 238 normal 0, 0, 1
+Element 239 normal 0, 0, 1
+Element 240 normal -0, 0, 1
+Element 241 normal 0, -0, 1
+Element 242 normal 0, -0, 1
+Element 243 normal 0, 0, 1
+Element 244 normal 0, 0, 1
+Element 245 normal 0, 0, 1
+Element 246 normal -0, 0, 1
+Element 247 normal 0, 0, 1
+Element 248 normal 0, 0, 1
+Element 249 normal 0, -0, 1
+Done.
+Allocation success.
+MESH ID 4
+Searching bcs for ZoneID 4..
+FRICTION COEFFS 0.000e+00 0.000e+00
+CONTACT PENALTY FACTOR: 5000
+CONTACT GAP PENALTY: ON, scale=2, dynamicWithGap=OFF
+CONTACT AUTO PENALTY FACTOR: OFF, autoFactor=0.5
+FRICTION REGULARIZATION VELOCITY: 0
+RECOMPUTE CONTACT DT EACH STEP: OFF
+-------------------
+Done
+More than one Rigid Bodies found.
+Loading additional rigid body 1
+Start: 0, 0, 0
+[RigidBody] Loading Nastran file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_5.bdf
+[I] Reading Nastran file: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_5.bdf
+146 nodes and 250 elements found.
+[I] 401 lines readed ...
+Allocating 146 nodes
+Allocating 250 Elements...
+Done.
+[RigidBody] 3D domain detected. Treating shell contact mesh as 3D surface.
+Contact Mesh 1. Oriented normals is set to true
+Mesh 1 Start: 0, 0, 0
+Nastran Mesh NodeCount: 146
+Copying 146 nodes 
+Centroid of matrix: 0.0248973, 0.025296, 0.03
+endl
+Element count: 250done. Creating elements... Global Centroid:0.00532662, 0.00527365, 0.0149518
+Writing elements...
+Done. 
+Reorienting normals...
+3D fallback finished using matrix centroid offset from orient_pt.
+Element 0 normal 0, -0, -1
+Element 1 normal -0, -0, -1
+Element 2 normal -0, -0, -1
+Element 3 normal -0, -0, -1
+Element 4 normal -0, 0, -1
+Element 5 normal -0, -0, -1
+Element 6 normal -0, -0, -1
+Element 7 normal -0, -0, -1
+Element 8 normal -0, -0, -1
+Element 9 normal -0, -0, -1
+Element 10 normal -0, -0, -1
+Element 11 normal -0, 0, -1
+Element 12 normal -0, -0, -1
+Element 13 normal 0, -0, -1
+Element 14 normal -0, -0, -1
+Element 15 normal -0, -0, -1
+Element 16 normal -0, -0, -1
+Element 17 normal -0, -0, -1
+Element 18 normal -0, 0, -1
+Element 19 normal -0, 0, -1
+Element 20 normal -0, -0, -1
+Element 21 normal -0, -0, -1
+Element 22 normal -0, -0, -1
+Element 23 normal -0, -0, -1
+Element 24 normal -0, -0, -1
+Element 25 normal -0, -0, -1
+Element 26 normal 0, -0, -1
+Element 27 normal -0, 0, -1
+Element 28 normal -0, 0, -1
+Element 29 normal -0, -0, -1
+Element 30 normal -0, -0, -1
+Element 31 normal -0, -0, -1
+Element 32 normal -0, -0, -1
+Element 33 normal -0, 0, -1
+Element 34 normal -0, 0, -1
+Element 35 normal -0, -0, -1
+Element 36 normal -0, -0, -1
+Element 37 normal -0, -0, -1
+Element 38 normal -0, -0, -1
+Element 39 normal -0, -0, -1
+Element 40 normal -0, -0, -1
+Element 41 normal 0, -0, -1
+Element 42 normal -0, -0, -1
+Element 43 normal -0, -0, -1
+Element 44 normal -0, 0, -1
+Element 45 normal 0, -0, -1
+Element 46 normal -0, -0, -1
+Element 47 normal -0, -0, -1
+Element 48 normal -0, -0, -1
+Element 49 normal -0, -0, -1
+Element 50 normal -0, -0, -1
+Element 51 normal -0, -0, -1
+Element 52 normal -0, -0, -1
+Element 53 normal -0, -0, -1
+Element 54 normal -0, -0, -1
+Element 55 normal 0, -0, -1
+Element 56 normal -0, -0, -1
+Element 57 normal -0, -0, -1
+Element 58 normal -0, -0, -1
+Element 59 normal -0, -0, -1
+Element 60 normal -0, -0, -1
+Element 61 normal -0, -0, -1
+Element 62 normal 0, -0, -1
+Element 63 normal -0, -0, -1
+Element 64 normal -0, -0, -1
+Element 65 normal -0, 0, -1
+Element 66 normal -0, 0, -1
+Element 67 normal -0, -0, -1
+Element 68 normal 0, -0, -1
+Element 69 normal -0, -0, -1
+Element 70 normal -0, 0, -1
+Element 71 normal -0, -0, -1
+Element 72 normal -0, 0, -1
+Element 73 normal -0, 0, -1
+Element 74 normal -0, 0, -1
+Element 75 normal -0, -0, -1
+Element 76 normal -0, -0, -1
+Element 77 normal -0, 0, -1
+Element 78 normal -0, -0, -1
+Element 79 normal 0, -0, -1
+Element 80 normal -0, -0, -1
+Element 81 normal -0, -0, -1
+Element 82 normal -0, -0, -1
+Element 83 normal -0, -0, -1
+Element 84 normal 0, -0, -1
+Element 85 normal 0, -0, -1
+Element 86 normal -0, -0, -1
+Element 87 normal -0, 0, -1
+Element 88 normal -0, -0, -1
+Element 89 normal -0, -0, -1
+Element 90 normal -0, 0, -1
+Element 91 normal -0, -0, -1
+Element 92 normal -0, -0, -1
+Element 93 normal 0, -0, -1
+Element 94 normal -0, -0, -1
+Element 95 normal 0, -0, -1
+Element 96 normal -0, -0, -1
+Element 97 normal -0, -0, -1
+Element 98 normal -0, 0, -1
+Element 99 normal -0, -0, -1
+Element 100 normal 0, -0, -1
+Element 101 normal 0, -0, -1
+Element 102 normal -0, -0, -1
+Element 103 normal -0, 0, -1
+Element 104 normal -0, -0, -1
+Element 105 normal -0, -0, -1
+Element 106 normal -0, -0, -1
+Element 107 normal -0, -0, -1
+Element 108 normal -0, 0, -1
+Element 109 normal 0, -0, -1
+Element 110 normal -0, -0, -1
+Element 111 normal -0, -0, -1
+Element 112 normal 0, -0, -1
+Element 113 normal -0, -0, -1
+Element 114 normal -0, -0, -1
+Element 115 normal -0, -0, -1
+Element 116 normal -0, -0, -1
+Element 117 normal -0, -0, -1
+Element 118 normal -0, -0, -1
+Element 119 normal -0, -0, -1
+Element 120 normal -0, 0, -1
+Element 121 normal -0, -0, -1
+Element 122 normal -0, -0, -1
+Element 123 normal -0, -0, -1
+Element 124 normal -0, -0, -1
+Element 125 normal -0, -0, -1
+Element 126 normal -0, -0, -1
+Element 127 normal -0, 0, -1
+Element 128 normal -0, 0, -1
+Element 129 normal -0, -0, -1
+Element 130 normal -0, -0, -1
+Element 131 normal -0, -0, -1
+Element 132 normal -0, -0, -1
+Element 133 normal -0, -0, -1
+Element 134 normal -0, -0, -1
+Element 135 normal -0, -0, -1
+Element 136 normal -0, -0, -1
+Element 137 normal 0, -0, -1
+Element 138 normal 0, -0, -1
+Element 139 normal -0, -0, -1
+Element 140 normal -0, -0, -1
+Element 141 normal -0, -0, -1
+Element 142 normal -0, -0, -1
+Element 143 normal -0, -0, -1
+Element 144 normal -0, -0, -1
+Element 145 normal -0, -0, -1
+Element 146 normal -0, -0, -1
+Element 147 normal -0, -0, -1
+Element 148 normal 0, -0, -1
+Element 149 normal -0, -0, -1
+Element 150 normal -0, 0, -1
+Element 151 normal -0, -0, -1
+Element 152 normal -0, -0, -1
+Element 153 normal -0, -0, -1
+Element 154 normal -0, 0, -1
+Element 155 normal -0, -0, -1
+Element 156 normal 0, -0, -1
+Element 157 normal -0, -0, -1
+Element 158 normal -0, -0, -1
+Element 159 normal -0, -0, -1
+Element 160 normal -0, -0, -1
+Element 161 normal -0, -0, -1
+Element 162 normal -0, -0, -1
+Element 163 normal -0, -0, -1
+Element 164 normal -0, -0, -1
+Element 165 normal -0, 0, -1
+Element 166 normal 0, -0, -1
+Element 167 normal 0, -0, -1
+Element 168 normal -0, -0, -1
+Element 169 normal 0, -0, -1
+Element 170 normal -0, -0, -1
+Element 171 normal -0, -0, -1
+Element 172 normal -0, -0, -1
+Element 173 normal -0, -0, -1
+Element 174 normal -0, -0, -1
+Element 175 normal 0, -0, -1
+Element 176 normal -0, -0, -1
+Element 177 normal -0, -0, -1
+Element 178 normal -0, -0, -1
+Element 179 normal -0, -0, -1
+Element 180 normal -0, -0, -1
+Element 181 normal 0, -0, -1
+Element 182 normal -0, -0, -1
+Element 183 normal 0, -0, -1
+Element 184 normal -0, -0, -1
+Element 185 normal -0, -0, -1
+Element 186 normal -0, -0, -1
+Element 187 normal -0, -0, -1
+Element 188 normal -0, -0, -1
+Element 189 normal 0, -0, -1
+Element 190 normal -0, 0, -1
+Element 191 normal 0, -0, -1
+Element 192 normal -0, -0, -1
+Element 193 normal -0, -0, -1
+Element 194 normal -0, 0, -1
+Element 195 normal -0, -0, -1
+Element 196 normal -0, -0, -1
+Element 197 normal -0, -0, -1
+Element 198 normal -0, -0, -1
+Element 199 normal -0, -0, -1
+Element 200 normal -0, -0, -1
+Element 201 normal -0, -0, -1
+Element 202 normal -0, 0, -1
+Element 203 normal -0, -0, -1
+Element 204 normal -0, -0, -1
+Element 205 normal -0, -0, -1
+Element 206 normal -0, 0, -1
+Element 207 normal -0, -0, -1
+Element 208 normal 0, -0, -1
+Element 209 normal -0, -0, -1
+Element 210 normal -0, -0, -1
+Element 211 normal -0, -0, -1
+Element 212 normal -0, -0, -1
+Element 213 normal -0, -0, -1
+Element 214 normal -0, -0, -1
+Element 215 normal 0, -0, -1
+Element 216 normal -0, -0, -1
+Element 217 normal -0, -0, -1
+Element 218 normal -0, -0, -1
+Element 219 normal -0, -0, -1
+Element 220 normal -0, -0, -1
+Element 221 normal -0, 0, -1
+Element 222 normal -0, -0, -1
+Element 223 normal -0, -0, -1
+Element 224 normal -0, -0, -1
+Element 225 normal -0, -0, -1
+Element 226 normal -0, -0, -1
+Element 227 normal -0, -0, -1
+Element 228 normal 0, -0, -1
+Element 229 normal -0, 0, -1
+Element 230 normal -0, -0, -1
+Element 231 normal -0, -0, -1
+Element 232 normal -0, -0, -1
+Element 233 normal 0, -0, -1
+Element 234 normal -0, -0, -1
+Element 235 normal -0, -0, -1
+Element 236 normal 0, -0, -1
+Element 237 normal -0, -0, -1
+Element 238 normal -0, -0, -1
+Element 239 normal -0, -0, -1
+Element 240 normal 0, -0, -1
+Element 241 normal -0, 0, -1
+Element 242 normal -0, 0, -1
+Element 243 normal -0, -0, -1
+Element 244 normal -0, -0, -1
+Element 245 normal -0, -0, -1
+Element 246 normal 0, -0, -1
+Element 247 normal -0, -0, -1
+Element 248 normal -0, -0, -1
+Element 249 normal -0, 0, -1
+Done.
+Allocation success.
+MESH ID 5
+Searching bcs for ZoneID 5..
+BC Found for Zone ID: 5
+Applying Velocity 0.000e+00 0.000e+00 -1.000e+00
+-------------------
+Resizing storage
+Allocated meshes: 1
+assigning 
+done 
+New Mesh capacity: 2
+Resizing Node Data
+Old Node count 146, New node count 292, current_node_capacity 0
+New capacity 292
+copying 146 nodes 
+assigning 
+Resizing Element Data
+Copying memory
+Copying 250 elements to offset 250
+Setting vel
+new_nodes_start 146, new_nodes_end 292
+new_elem_start 146, new_elem_end 292
+Updating metadata..
+Done.
+MESH NODE COUNT 292
+Setting contact...
+Done.
+Calulating min element size ...
+Setting remesh size at MIN ELEM SIZE:0.001256
+Min length: 0.001256
+Time Step 0.01
+End Time: 0.01
+DEBUG REMESH IS ON
+MESH INTERVAL: 0
+REMESH ENABLED: true
+REMESH TRANSITION ANGLE: 15 deg
+REMESH STRAIN RANGE: -1 to 1e+06
+REMESH SIZE FRACTIONS: min=2 max=2 epsRef=1 beta=4 type=0 refineOnlyBoundary=false boundaryLayers=2 baseSize=0.001256
+FIXED 0 NODES
+VEL  0 NODES
+SYMMETRY BCs total=298 x=149 y=149 z=0 symtol=0.0001
+Allocated BCS: 
+X 149
+Y 149
+Z 0
+Element Count 2633
+Reading Solver type
+Solving..
+Using Martins Picard solver
+[Nastran] 3D rigid body mesh source: D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_part_4.bdf, nodes=292, elements=500
+======================================================================
+WeldForm MINI 3D tetra solver (P1+bubble/P1 saddle point)
+References: Arnold-Brezzi-Fortin MINI; Cioncolini-Boffi MINI study
+Contact: enabled (rigid triangular meshes).
+Remeshing: enabled with MMG for 3D tetrahedra.
+Elements=2633, Nodes=720
+======================================================================
+Initial Vol: 3.7886e-06
+done. Face count: 5796
+Total External Nodal Area: 1.6123e-03, external nodes: 532
+MAX Contact Surfaces 5
+Writing VTK output D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_00000.vtk
+DONE writing VTK.
+
+--- MINI 3D step 1 Time=0 dt=1e-05 ---
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 1: |dv|_inf=1.82866, |db|_inf=171883, dp_rel=1, div_l2=0.369631, max_div=2674.36
+    cpu_time[s]=0.317
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 2: |dv|_inf=1.06153, |db|_inf=24064.3, dp_rel=0.111111, div_l2=0.221779, max_div=1604.61
+    cpu_time[s]=0.306
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 3: |dv|_inf=0.636953, |db|_inf=28257.9, dp_rel=0.111111, div_l2=0.133067, max_div=962.762
+    cpu_time[s]=0.26
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 4: |dv|_inf=0.382099, |db|_inf=40009, dp_rel=0.111111, div_l2=0.0798414, max_div=577.658
+    cpu_time[s]=0.265
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 5: |dv|_inf=0.229333, |db|_inf=36456.2, dp_rel=0.111111, div_l2=0.0479084, max_div=346.582
+    cpu_time[s]=0.255
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 6: |dv|_inf=0.137569, |db|_inf=28597, dp_rel=0.111111, div_l2=0.0287454, max_div=207.937
+    cpu_time[s]=0.264
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 7: |dv|_inf=0.0826351, |db|_inf=20790.2, dp_rel=0.111111, div_l2=0.0172455, max_div=124.754
+    cpu_time[s]=0.284
+MINI3D contact: external_faces=1060, active_faces=96, max_penetration=1e-05 (face 983)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.00176527
+  h_raw: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  h_eff: count=96, min=0.00142403, avg=0.00175328, max=0.00202272, median=0.00176527
+  mu_eff: count=96, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=96, min=1.56555e+14, avg=1.81744e+14, max=2.22373e+14, median=1.79389e+14
+  k_gap: count=96, min=6.26219e+12, avg=7.26977e+12, max=8.89492e+12, median=7.17557e+12
+  gap_ratio=|gap|/h_eff: count=96, min=0.00494384, avg=0.00573929, max=0.0070223, median=0.00566493
+  gapScale_eff: count=96, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 8: |dv|_inf=0.0494955, |db|_inf=14433.2, dp_rel=0.111111, div_l2=0.0103476, max_div=74.8415
+    cpu_time[s]=0.291
+Surface 4, Contact Faces Count: 0
+Area 0
+Surface 5, Contact Faces Count: 96
+Area 0.00012615
+Mesh quality: min_angle=24.3593 (elem 980), max_angle=166.559 (elem 190), min_Jnorm=0.0124905
+Writing VTK output D:\Luciano\Numerico\WeldFormGUI\examples\demo\compression_tetra_qt\demo_00001.vtk
+DONE writing VTK.
+WARNING: Max Angle > 150 on element 190, remeshing
+REMESHING 3D MINI solver at step 1, dim=3
+Writing VTK output in_remesh3d_1.vtk
+DONE writing VTK.
+
+--- MINI 3D step Remeshing requested but this binary was built without USE_MMG; skipping 3D remesh.2 Time=1e-05 dt=1e-05 ---
+
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 1: |dv|_inf=0.409286, |db|_inf=5684.36, dp_rel=0.111111, div_l2=0.00926794, max_div=68.0169
+    cpu_time[s]=0.283
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 2: |dv|_inf=0.245571, |db|_inf=3177.39, dp_rel=0.111111, div_l2=0.00887405, max_div=48.8607
+    cpu_time[s]=0.266
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 3: |dv|_inf=0.147342, |db|_inf=2224.77, dp_rel=0.111111, div_l2=0.00831691, max_div=34.4441
+    cpu_time[s]=0.264
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 4: |dv|_inf=0.0884053, |db|_inf=1840.44, dp_rel=0.111111, div_l2=0.00768899, max_div=30.2495
+    cpu_time[s]=0.272
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 5: |dv|_inf=0.0530432, |db|_inf=1646.05, dp_rel=0.111111, div_l2=0.00705795, max_div=28.7957
+    cpu_time[s]=0.264
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 6: |dv|_inf=0.0328856, |db|_inf=1501.76, dp_rel=0.111111, div_l2=0.00646438, max_div=26.3258
+    cpu_time[s]=0.254
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 7: |dv|_inf=0.0217985, |db|_inf=1364.07, dp_rel=0.111111, div_l2=0.00592713, max_div=23.4699
+    cpu_time[s]=0.254
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 8: |dv|_inf=0.0155213, |db|_inf=1224.91, dp_rel=0.111111, div_l2=0.0054526, max_div=20.579
+    cpu_time[s]=0.268
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 9: |dv|_inf=0.0118527, |db|_inf=1087.76, dp_rel=0.111111, div_l2=0.00503899, max_div=17.8367
+    cpu_time[s]=0.322
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 10: |dv|_inf=0.00937839, |db|_inf=957.327, dp_rel=0.111111, div_l2=0.00468223, max_div=15.4847
+    cpu_time[s]=0.319
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 11: |dv|_inf=0.00766293, |db|_inf=837.159, dp_rel=0.111111, div_l2=0.00437639, max_div=14.7828
+    cpu_time[s]=0.282
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 12: |dv|_inf=0.0064177, |db|_inf=729.071, dp_rel=0.111111, div_l2=0.00411382, max_div=14.0619
+    cpu_time[s]=0.247
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 13: |dv|_inf=0.00549245, |db|_inf=633.581, dp_rel=0.111111, div_l2=0.00388979, max_div=13.3495
+    cpu_time[s]=0.257
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 14: |dv|_inf=0.00476694, |db|_inf=550.102, dp_rel=0.111111, div_l2=0.00369862, max_div=12.6626
+    cpu_time[s]=0.242
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 15: |dv|_inf=0.00419444, |db|_inf=477.747, dp_rel=0.111111, div_l2=0.00353494, max_div=12.0118
+    cpu_time[s]=0.28
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 16: |dv|_inf=0.00373099, |db|_inf=415.326, dp_rel=0.111111, div_l2=0.00339517, max_div=11.4024
+    cpu_time[s]=0.268
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 17: |dv|_inf=0.00333201, |db|_inf=361.56, dp_rel=0.111111, div_l2=0.00327523, max_div=10.8368
+    cpu_time[s]=0.257
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 18: |dv|_inf=0.00302571, |db|_inf=315.283, dp_rel=0.111111, div_l2=0.00317241, max_div=10.3152
+    cpu_time[s]=0.264
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 19: |dv|_inf=0.00284258, |db|_inf=275.426, dp_rel=0.111111, div_l2=0.00308421, max_div=9.83667
+    cpu_time[s]=0.27
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 20: |dv|_inf=0.00266386, |db|_inf=241.063, dp_rel=0.111111, div_l2=0.00300812, max_div=9.39889
+    cpu_time[s]=0.274
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 21: |dv|_inf=0.00247884, |db|_inf=211.38, dp_rel=0.111111, div_l2=0.00294244, max_div=8.99963
+    cpu_time[s]=0.265
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 22: |dv|_inf=0.00231064, |db|_inf=185.692, dp_rel=0.111111, div_l2=0.00288567, max_div=8.68374
+    cpu_time[s]=0.268
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 23: |dv|_inf=0.00214631, |db|_inf=163.403, dp_rel=0.111111, div_l2=0.00283619, max_div=8.50867
+    cpu_time[s]=0.252
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 24: |dv|_inf=0.001988, |db|_inf=144.021, dp_rel=0.111111, div_l2=0.00279314, max_div=8.35343
+    cpu_time[s]=0.248
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 25: |dv|_inf=0.00183651, |db|_inf=127.127, dp_rel=0.111111, div_l2=0.00275577, max_div=8.21412
+    cpu_time[s]=0.261
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 26: |dv|_inf=0.00169182, |db|_inf=112.379, dp_rel=0.111111, div_l2=0.00272278, max_div=8.08856
+    cpu_time[s]=0.273
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 27: |dv|_inf=0.00155732, |db|_inf=99.4668, dp_rel=0.111111, div_l2=0.00269395, max_div=7.97549
+    cpu_time[s]=0.249
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 28: |dv|_inf=0.00142572, |db|_inf=88.1468, dp_rel=0.111111, div_l2=0.00266845, max_div=7.8972
+    cpu_time[s]=0.242
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 29: |dv|_inf=0.00130123, |db|_inf=78.2102, dp_rel=0.111111, div_l2=0.00264559, max_div=7.87556
+    cpu_time[s]=0.246
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 30: |dv|_inf=0.0011841, |db|_inf=69.4631, dp_rel=0.111111, div_l2=0.00262525, max_div=7.85266
+    cpu_time[s]=0.451
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 31: |dv|_inf=0.00115428, |db|_inf=61.7529, dp_rel=0.111111, div_l2=0.00260709, max_div=7.82913
+    cpu_time[s]=0.47
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 32: |dv|_inf=0.00114702, |db|_inf=54.9461, dp_rel=0.111111, div_l2=0.00259058, max_div=7.80411
+    cpu_time[s]=0.438
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 33: |dv|_inf=0.00114048, |db|_inf=48.9299, dp_rel=0.111111, div_l2=0.00257573, max_div=7.78042
+    cpu_time[s]=0.402
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 34: |dv|_inf=0.00113396, |db|_inf=43.6045, dp_rel=0.111111, div_l2=0.00256222, max_div=7.75318
+    cpu_time[s]=0.286
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 35: |dv|_inf=0.00112756, |db|_inf=38.8877, dp_rel=0.111111, div_l2=0.00254967, max_div=7.72977
+    cpu_time[s]=0.274
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 36: |dv|_inf=0.00112165, |db|_inf=34.7024, dp_rel=0.111111, div_l2=0.00253812, max_div=7.70478
+    cpu_time[s]=0.257
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 37: |dv|_inf=0.00111598, |db|_inf=30.9858, dp_rel=0.111111, div_l2=0.00252735, max_div=7.67854
+    cpu_time[s]=0.252
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 38: |dv|_inf=0.00111075, |db|_inf=27.6826, dp_rel=0.111111, div_l2=0.00251723, max_div=7.65462
+    cpu_time[s]=0.262
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 39: |dv|_inf=0.00110612, |db|_inf=24.7424, dp_rel=0.111111, div_l2=0.00250776, max_div=7.62886
+    cpu_time[s]=0.239
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 40: |dv|_inf=0.00110193, |db|_inf=22.1253, dp_rel=0.111111, div_l2=0.00249869, max_div=7.60417
+    cpu_time[s]=0.248
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 41: |dv|_inf=0.00109818, |db|_inf=19.7925, dp_rel=0.111112, div_l2=0.00249022, max_div=7.57968
+    cpu_time[s]=0.283
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 42: |dv|_inf=0.00109595, |db|_inf=17.7128, dp_rel=0.111112, div_l2=0.00248211, max_div=7.55614
+    cpu_time[s]=0.286
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 43: |dv|_inf=0.00109419, |db|_inf=15.8579, dp_rel=0.111112, div_l2=0.00247418, max_div=7.53271
+    cpu_time[s]=0.272
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 44: |dv|_inf=0.00109275, |db|_inf=14.2018, dp_rel=0.111112, div_l2=0.0024666, max_div=7.51021
+    cpu_time[s]=0.27
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 45: |dv|_inf=0.00109121, |db|_inf=12.7215, dp_rel=0.111112, div_l2=0.00245921, max_div=7.48621
+    cpu_time[s]=0.351
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 46: |dv|_inf=0.00109033, |db|_inf=11.399, dp_rel=0.111112, div_l2=0.00245197, max_div=7.46249
+    cpu_time[s]=0.417
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 47: |dv|_inf=0.00108871, |db|_inf=10.2167, dp_rel=0.111112, div_l2=0.00244489, max_div=7.43993
+    cpu_time[s]=0.429
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 48: |dv|_inf=0.00108733, |db|_inf=9.15912, dp_rel=0.111112, div_l2=0.00243782, max_div=7.418
+    cpu_time[s]=0.304
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 49: |dv|_inf=0.00108635, |db|_inf=8.21271, dp_rel=0.111112, div_l2=0.00243099, max_div=7.39683
+    cpu_time[s]=0.29
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 50: |dv|_inf=0.00108489, |db|_inf=7.36559, dp_rel=0.111112, div_l2=0.0024242, max_div=7.37516
+    cpu_time[s]=0.311
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 51: |dv|_inf=0.0010838, |db|_inf=6.60695, dp_rel=0.111112, div_l2=0.00241753, max_div=7.35419
+    cpu_time[s]=0.343
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 52: |dv|_inf=0.00108296, |db|_inf=5.92748, dp_rel=0.111112, div_l2=0.00241086, max_div=7.3321
+    cpu_time[s]=0.297
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 53: |dv|_inf=0.00108178, |db|_inf=5.31866, dp_rel=0.111113, div_l2=0.00240421, max_div=7.31072
+    cpu_time[s]=0.316
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 54: |dv|_inf=0.00108033, |db|_inf=4.77298, dp_rel=0.111113, div_l2=0.00239764, max_div=7.28994
+    cpu_time[s]=0.33
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 55: |dv|_inf=0.00107975, |db|_inf=4.28382, dp_rel=0.111113, div_l2=0.00239109, max_div=7.26778
+    cpu_time[s]=0.399
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 56: |dv|_inf=0.00107913, |db|_inf=3.84519, dp_rel=0.111113, div_l2=0.00238451, max_div=7.24589
+    cpu_time[s]=0.455
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 57: |dv|_inf=0.0010789, |db|_inf=3.45187, dp_rel=0.111113, div_l2=0.00237801, max_div=7.22465
+    cpu_time[s]=0.392
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 58: |dv|_inf=0.00107899, |db|_inf=3.0991, dp_rel=0.111113, div_l2=0.00237138, max_div=7.20372
+    cpu_time[s]=0.288
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 59: |dv|_inf=0.00107866, |db|_inf=2.78263, dp_rel=0.111114, div_l2=0.00236477, max_div=7.18367
+    cpu_time[s]=0.271
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 60: |dv|_inf=0.00107855, |db|_inf=2.49866, dp_rel=0.111114, div_l2=0.00235821, max_div=7.1629
+    cpu_time[s]=0.282
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 61: |dv|_inf=0.0010787, |db|_inf=2.24381, dp_rel=0.111114, div_l2=0.00235156, max_div=7.14119
+    cpu_time[s]=0.266
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 62: |dv|_inf=0.00107852, |db|_inf=2.01511, dp_rel=0.111114, div_l2=0.00234489, max_div=7.11955
+    cpu_time[s]=0.272
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 63: |dv|_inf=0.00107819, |db|_inf=1.80981, dp_rel=0.111115, div_l2=0.00233832, max_div=7.09824
+    cpu_time[s]=0.256
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 64: |dv|_inf=0.00107836, |db|_inf=1.62556, dp_rel=0.111115, div_l2=0.00233165, max_div=7.0775
+    cpu_time[s]=0.25
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 65: |dv|_inf=0.00107825, |db|_inf=1.46011, dp_rel=0.111115, div_l2=0.00232495, max_div=7.05673
+    cpu_time[s]=0.27
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 66: |dv|_inf=0.0010782, |db|_inf=1.31155, dp_rel=0.111115, div_l2=0.00231828, max_div=7.03449
+    cpu_time[s]=0.261
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 67: |dv|_inf=0.00107731, |db|_inf=1.17817, dp_rel=0.111116, div_l2=0.00231157, max_div=7.01327
+    cpu_time[s]=0.276
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 68: |dv|_inf=0.00107817, |db|_inf=1.05839, dp_rel=0.111116, div_l2=0.00230481, max_div=6.99193
+    cpu_time[s]=0.282
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 69: |dv|_inf=0.0010777, |db|_inf=0.950814, dp_rel=0.111116, div_l2=0.00229804, max_div=6.97017
+    cpu_time[s]=0.268
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 70: |dv|_inf=0.00107751, |db|_inf=0.854209, dp_rel=0.111116, div_l2=0.00229121, max_div=6.94846
+    cpu_time[s]=0.241
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 71: |dv|_inf=0.00107852, |db|_inf=0.767436, dp_rel=0.111117, div_l2=0.0022844, max_div=6.92624
+    cpu_time[s]=0.255
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 72: |dv|_inf=0.00107872, |db|_inf=0.689501, dp_rel=0.111117, div_l2=0.00227762, max_div=6.90443
+    cpu_time[s]=0.26
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 73: |dv|_inf=0.00107919, |db|_inf=0.619493, dp_rel=0.111117, div_l2=0.00227072, max_div=6.88282
+    cpu_time[s]=0.271
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 74: |dv|_inf=0.00107953, |db|_inf=0.556604, dp_rel=0.111116, div_l2=0.00226387, max_div=6.86042
+    cpu_time[s]=0.266
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 75: |dv|_inf=0.00107996, |db|_inf=0.500111, dp_rel=0.111116, div_l2=0.00225694, max_div=6.83915
+    cpu_time[s]=0.256
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 76: |dv|_inf=0.00108001, |db|_inf=0.449354, dp_rel=0.111115, div_l2=0.00225002, max_div=6.81661
+    cpu_time[s]=0.261
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 77: |dv|_inf=0.00108045, |db|_inf=0.40376, dp_rel=0.111114, div_l2=0.00224303, max_div=6.79455
+    cpu_time[s]=0.257
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 78: |dv|_inf=0.00108044, |db|_inf=0.362797, dp_rel=0.111112, div_l2=0.0022361, max_div=6.77184
+    cpu_time[s]=0.261
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 79: |dv|_inf=0.00108039, |db|_inf=0.325992, dp_rel=0.11111, div_l2=0.00222913, max_div=6.74893
+    cpu_time[s]=0.266
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 80: |dv|_inf=0.00108068, |db|_inf=0.292928, dp_rel=0.111107, div_l2=0.00222213, max_div=6.72668
+    cpu_time[s]=0.25
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 81: |dv|_inf=0.0010806, |db|_inf=0.263218, dp_rel=0.111103, div_l2=0.00221514, max_div=6.70414
+    cpu_time[s]=0.268
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 82: |dv|_inf=0.00107978, |db|_inf=0.236524, dp_rel=0.111098, div_l2=0.0022081, max_div=6.68158
+    cpu_time[s]=0.267
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 83: |dv|_inf=0.00107956, |db|_inf=0.212539, dp_rel=0.111091, div_l2=0.00220107, max_div=6.65858
+    cpu_time[s]=0.265
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 84: |dv|_inf=0.00107938, |db|_inf=0.190987, dp_rel=0.111081, div_l2=0.00219398, max_div=6.63558
+    cpu_time[s]=0.25
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 85: |dv|_inf=0.00107883, |db|_inf=0.171623, dp_rel=0.11107, div_l2=0.00218695, max_div=6.61288
+    cpu_time[s]=0.262
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 86: |dv|_inf=0.00107832, |db|_inf=0.154225, dp_rel=0.111055, div_l2=0.00217989, max_div=6.59007
+    cpu_time[s]=0.257
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 87: |dv|_inf=0.00107725, |db|_inf=0.138589, dp_rel=0.111036, div_l2=0.00217284, max_div=6.56757
+    cpu_time[s]=0.284
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 88: |dv|_inf=0.00107679, |db|_inf=0.124539, dp_rel=0.111011, div_l2=0.00216573, max_div=6.5445
+    cpu_time[s]=0.254
+MINI3D contact: external_faces=1060, active_faces=192, max_penetration=1.0168e-05 (face 5472)
+Contact penalty diagnostics (3D): mode=manual, PF=5000, gapPenalty=ON, gapScale=2, autoFactor=0.5, href=0.0017653
+  h_raw: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  h_eff: count=192, min=0.00142392, avg=0.00175328, max=0.00202272, median=0.0017653
+  mu_eff: count=192, min=6.33333e+07, avg=6.33333e+07, max=6.33333e+07, median=6.33333e+07
+  k_contact: count=192, min=1.56555e+14, avg=1.81745e+14, max=2.22391e+14, median=1.79386e+14
+  k_gap: count=192, min=6.26219e+12, avg=7.26978e+12, max=8.89564e+12, median=7.17542e+12
+  gap_ratio=|gap|/h_eff: count=192, min=0.00485001, avg=0.00573674, max=0.00714016, median=0.00565896
+  gapScale_eff: count=192, min=2, avg=2, max=2, median=2
+  gap/contact stiffness ratio=0.04
+  MINI3D contact force sum=1.75806e+10
+  MINI3D Picard 89: |dv|_inf=0.00107616, |db|_inf=0.111913, dp_rel=0.110981, div_l2=0.00215862, max_div=6.52138
+    cpu_time[s]=0.26

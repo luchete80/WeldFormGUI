@@ -27,6 +27,23 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 namespace {
+std::string makePathRelativeTo(const fs::path& path, const fs::path& baseDir)
+{
+  if (path.empty()) {
+    return {};
+  }
+
+  std::error_code ec;
+  const fs::path normalizedPath = path.lexically_normal();
+  const fs::path normalizedBase = baseDir.empty() ? fs::path(".") : baseDir.lexically_normal();
+  const fs::path relativePath = fs::relative(normalizedPath, normalizedBase, ec);
+  if (!ec && !relativePath.empty()) {
+    return relativePath.generic_string();
+  }
+
+  return normalizedPath.generic_string();
+}
+
 std::string toLowerCopy(std::string value)
 {
   std::transform(value.begin(), value.end(), value.begin(),
@@ -286,6 +303,7 @@ std::string formatWindowsErrorMessage(DWORD errorCode)
 
 Job::Job(std::string str){
   m_path_file = str;
+  loadRestartSettingsFromInput();
   cout << "path "<<str<<endl;
 }
 
@@ -428,6 +446,99 @@ bool Job::isImplicit() const{
     return true;
 
   return false;
+}
+
+bool Job::supportsImplicit3DRestart() const
+{
+  const SolverInputInfo info = inspectSolverInput();
+  return info.implicit && info.is3D;
+}
+
+bool Job::loadRestartSettingsFromInput()
+{
+  m_checkpoint_enabled = false;
+  m_checkpoint_interval = 1;
+  m_checkpoint_dir = "checkpoints";
+  m_checkpoint_prefix = "restart_qt";
+  m_restart_file.clear();
+
+  const std::optional<json> input = loadInputJson();
+  if (!input.has_value() || !input->contains("Configuration")) {
+    return false;
+  }
+
+  const json& configuration = (*input)["Configuration"];
+  if (!configuration.contains("solver") || !configuration["solver"].is_object()) {
+    return false;
+  }
+
+  const json& solver = configuration["solver"];
+  if (!solver.contains("implicit") || !solver["implicit"].is_object()) {
+    return false;
+  }
+
+  const json& implicit = solver["implicit"];
+  m_checkpoint_enabled = implicit.value("checkpointEnabled", false);
+  m_checkpoint_interval = std::max(1, implicit.value("checkpointInterval", 1));
+  m_checkpoint_dir = implicit.value("checkpointDir", std::string("checkpoints"));
+  m_checkpoint_prefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
+  m_restart_file = implicit.value("restartFile", std::string());
+  return true;
+}
+
+bool Job::applyRestartSettingsToInput() const
+{
+  const std::optional<json> input = loadInputJson();
+  if (!input.has_value()) {
+    return false;
+  }
+
+  json updated = *input;
+  if (!updated.contains("Configuration") || !updated["Configuration"].is_object()) {
+    return false;
+  }
+
+  json& configuration = updated["Configuration"];
+  const std::string domType = configuration.value("domType", std::string("3D"));
+  if (domType != "3D") {
+    return false;
+  }
+
+  if (!configuration.contains("solver") || !configuration["solver"].is_object()) {
+    return false;
+  }
+
+  json& solver = configuration["solver"];
+  if (!solver.contains("implicit") || !solver["implicit"].is_object()) {
+    return false;
+  }
+
+  json& implicit = solver["implicit"];
+  if (m_checkpoint_enabled) {
+    implicit["checkpointEnabled"] = true;
+    implicit["checkpointInterval"] = std::max(1, m_checkpoint_interval);
+    implicit["checkpointDir"] = m_checkpoint_dir.empty() ? "checkpoints" : m_checkpoint_dir;
+    implicit["checkpointPrefix"] = m_checkpoint_prefix.empty() ? "restart_qt" : m_checkpoint_prefix;
+  } else {
+    implicit.erase("checkpointEnabled");
+    implicit.erase("checkpointInterval");
+    implicit.erase("checkpointDir");
+    implicit.erase("checkpointPrefix");
+  }
+
+  if (!m_restart_file.empty()) {
+    implicit["restartFile"] = makePathRelativeTo(fs::path(m_restart_file), getJobDirectory());
+  } else {
+    implicit.erase("restartFile");
+  }
+
+  std::ofstream output(m_path_file, std::ios::out | std::ios::trunc);
+  if (!output.is_open()) {
+    return false;
+  }
+
+  output << std::setw(4) << updated << std::endl;
+  return true;
 }
 
 std::optional<json> Job::loadInputJson() const
@@ -626,6 +737,7 @@ bool Job::validateSolverSelection(const SolverInputInfo& info,
 
 int Job::Run(){
   int returnCode = -1;
+  applyRestartSettingsToInput();
   const SolverInputInfo inputInfo = inspectSolverInput();
   const SolverEdition requestedEdition = getRequestedSolverEdition();
   const std::string solver_name = getSolverBinaryName(inputInfo);

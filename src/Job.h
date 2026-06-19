@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <optional>
 #include <nlohmann/json.hpp>
+#include <cstdint>
 
 #include "Dialog.h"
 
@@ -36,6 +37,20 @@ public:
   float getEstimatedProgress() const;
   void setSolverEditionOverride(SolverEdition edition) { m_solver_edition_override = edition; }
   SolverEdition getSolverEditionOverride() const { return m_solver_edition_override; }
+  void setCheckpointEnabled(bool enabled) { m_checkpoint_enabled = enabled; }
+  bool getCheckpointEnabled() const { return m_checkpoint_enabled; }
+  void setCheckpointInterval(int interval) { m_checkpoint_interval = interval; }
+  int getCheckpointInterval() const { return m_checkpoint_interval; }
+  void setCheckpointDir(const std::string& dir) { m_checkpoint_dir = dir; }
+  const std::string& getCheckpointDir() const { return m_checkpoint_dir; }
+  void setCheckpointPrefix(const std::string& prefix) { m_checkpoint_prefix = prefix; }
+  const std::string& getCheckpointPrefix() const { return m_checkpoint_prefix; }
+  void setRestartFile(const std::string& path) { m_restart_file = path; }
+  const std::string& getRestartFile() const { return m_restart_file; }
+  bool hasRestartFile() const { return !m_restart_file.empty(); }
+  bool supportsImplicit3DRestart() const;
+  bool loadRestartSettingsFromInput();
+  bool applyRestartSettingsToInput() const;
 protected:
   struct SolverInputInfo {
     bool implicit = false;
@@ -60,6 +75,11 @@ protected:
   std::string m_filename;
   std::string m_log;
   SolverEdition m_solver_edition_override = SolverEdition::Auto;
+  bool m_checkpoint_enabled = false;
+  int m_checkpoint_interval = 1;
+  std::string m_checkpoint_dir = "checkpoints";
+  std::string m_checkpoint_prefix = "restart_qt";
+  std::string m_restart_file;
   
 };
 

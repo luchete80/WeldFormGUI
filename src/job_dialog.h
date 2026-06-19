@@ -2,7 +2,9 @@
 #define _JOB_DIALOG_H_
 
 #include "Job.h"
+#include <array>
 #include <functional>
+#include <string>
 
 
 //template  EntityDialog<Job>;
@@ -25,10 +27,25 @@ public ObjDialog{
     create_entity = false;
     m_edit_mode = false;
     m_job = nullptr;
+    resetRestartOptions();
   }
   
   std::string m_filename;
   int m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
+  bool m_checkpoint_enabled = false;
+  int m_checkpoint_interval = 1;
+  std::string m_checkpoint_dir = "checkpoints";
+  std::string m_checkpoint_prefix = "restart_qt";
+  std::string m_restart_file;
+  bool m_show_restart_files = false;
+  std::array<char, 512> m_checkpoint_dir_buffer{};
+  std::array<char, 512> m_checkpoint_prefix_buffer{};
+  std::array<char, 1024> m_restart_file_buffer{};
+
+  void resetRestartOptions();
+  void loadRestartOptionsFromJob(const Job* job);
+  void loadRestartOptionsFromInputFile();
+  bool inputSupportsImplicit3DRestart() const;
   
   //void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
   void Draw();

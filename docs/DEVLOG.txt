@@ -315,3 +315,5 @@
 20260616 - Added Help About and commit 
 20260619 - Added time step limiter by strain rate/velocity
 20260619 - added time step limiter in dialog
+20260619 - Added move in files dialog with arrows 
+         - Added restart for 3D implicit.
