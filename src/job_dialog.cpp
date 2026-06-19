@@ -226,20 +226,14 @@ void  JobDialog::Draw(){
     }
   }
 
-  const bool supportsRestartFromModel = [&]() {
-    Model &model = getApp().getActiveModel();
-    if (model.getStepCount() <= 0) {
-      return false;
-    }
-    Step* step = model.getStep(0);
-    return step != nullptr && step->isImplicit() && model.getAnalysisType() == Solid3D;
-  }();
-  const bool supportsRestartFromInput = inputSupportsImplicit3DRestart();
-  const bool supportsRestart = (!m_filename.empty() ? supportsRestartFromInput : supportsRestartFromModel);
+  const bool supportsRestart = !m_filename.empty() && inputSupportsImplicit3DRestart();
 
   ImGui::Separator();
   ImGui::TextUnformatted("Restart / checkpoint");
   ImGui::TextDisabled("Available only for implicit 3D jobs (weldform_imp_3d).");
+  if (m_filename.empty()) {
+    ImGui::TextDisabled("Create or choose a job input first.");
+  }
 
   if (!supportsRestart) {
     ImGui::BeginDisabled();
