@@ -501,6 +501,10 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["springFactor"] = step->m_springFactor;
       jstep["implicit"]["springStiffness"] = step->m_springStiffness;
       jstep["implicit"]["springMode"] = step->m_springMode;
+      jstep["implicit"]["adaptiveDtLimiter"] = step->m_adaptiveDtLimiter;
+      jstep["implicit"]["adaptiveDtMin"] = step->m_adaptiveDtMin;
+      jstep["implicit"]["maxNodalDisplacementPerStep"] = step->m_maxNodalDisplacementPerStep;
+      jstep["implicit"]["maxEffectiveStrainIncrementPerStep"] = step->m_maxEffectiveStrainIncrementPerStep;
       m_json["Steps"].push_back(jstep);
     }
   }

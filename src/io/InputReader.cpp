@@ -103,6 +103,10 @@ void readStep(const json& root, Model* model)
     step->m_springFactor = implicit.value("springFactor", step->m_springFactor);
     step->m_springStiffness = implicit.value("springStiffness", step->m_springStiffness);
     step->m_springMode = implicit.value("springMode", step->m_springMode);
+    step->m_adaptiveDtLimiter = implicit.value("adaptiveDtLimiter", step->m_adaptiveDtLimiter);
+    step->m_adaptiveDtMin = implicit.value("adaptiveDtMin", step->m_adaptiveDtMin);
+    step->m_maxNodalDisplacementPerStep = implicit.value("maxNodalDisplacementPerStep", step->m_maxNodalDisplacementPerStep);
+    step->m_maxEffectiveStrainIncrementPerStep = implicit.value("maxEffectiveStrainIncrementPerStep", step->m_maxEffectiveStrainIncrementPerStep);
   }
 
   step->m_nproc = conf.value("Nproc", step->m_nproc);

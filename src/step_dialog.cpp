@@ -76,6 +76,10 @@ void StepDialog::InitFromStep(Step *step) {
   m_springFactor = step->m_springFactor;
   m_springStiffness = step->m_springStiffness;
   m_springMode = step->m_springMode;
+  m_adaptiveDtLimiter = step->m_adaptiveDtLimiter;
+  m_adaptiveDtMin = step->m_adaptiveDtMin;
+  m_maxNodalDisplacementPerStep = step->m_maxNodalDisplacementPerStep;
+  m_maxEffectiveStrainIncrementPerStep = step->m_maxEffectiveStrainIncrementPerStep;
 }
 
 void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
@@ -134,6 +138,12 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
+    ImGui::Checkbox("Adaptive DT limiter", &m_adaptiveDtLimiter);
+    ImGui::BeginDisabled(!m_adaptiveDtLimiter);
+    ImGui::InputDouble("Adaptive DT min", &m_adaptiveDtMin, 0.0, 0.0, "%.4g");
+    ImGui::InputDouble("Max nodal displacement per step", &m_maxNodalDisplacementPerStep, 0.0, 0.0, "%.4g");
+    ImGui::InputDouble("Max effective strain increment per step", &m_maxEffectiveStrainIncrementPerStep, 0.0, 0.0, "%.4g");
+    ImGui::EndDisabled();
     ImGui::TextDisabled("Type is exported as Configuration.solver.type for implicit inputs.");
 
     ImGui::Separator();
@@ -177,6 +187,10 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_springFactor = m_springFactor;
       step->m_springStiffness = m_springStiffness;
       step->m_springMode = m_springMode;
+      step->m_adaptiveDtLimiter = m_adaptiveDtLimiter;
+      step->m_adaptiveDtMin = m_adaptiveDtMin;
+      step->m_maxNodalDisplacementPerStep = m_maxNodalDisplacementPerStep;
+      step->m_maxEffectiveStrainIncrementPerStep = m_maxEffectiveStrainIncrementPerStep;
     }
     m_saved = true;
     m_initialized = false;

@@ -37,6 +37,10 @@ struct StepDialog {
   double m_springFactor = 1.0e-7;
   double m_springStiffness = 0.0;
   int m_springMode = 1;
+  bool m_adaptiveDtLimiter = false;
+  double m_adaptiveDtMin = 1.0e-7;
+  double m_maxNodalDisplacementPerStep = 0.0005;
+  double m_maxEffectiveStrainIncrementPerStep = 0.02;
 
   void InitFromStep(Step *step);
   void Draw(const char* title, bool* p_open = nullptr, Step* step = nullptr);

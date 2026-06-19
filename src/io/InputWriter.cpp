@@ -131,6 +131,10 @@ json makeImplicitSolverJson(const Step *step) {
   implicit["springFactor"] = step ? step->m_springFactor : 1.0e-7;
   implicit["springStiffness"] = step ? step->m_springStiffness : 0.0;
   implicit["springMode"] = step ? step->m_springMode : 1;
+  implicit["adaptiveDtLimiter"] = step ? step->m_adaptiveDtLimiter : false;
+  implicit["adaptiveDtMin"] = step ? step->m_adaptiveDtMin : 1.0e-7;
+  implicit["maxNodalDisplacementPerStep"] = step ? step->m_maxNodalDisplacementPerStep : 0.0005;
+  implicit["maxEffectiveStrainIncrementPerStep"] = step ? step->m_maxEffectiveStrainIncrementPerStep : 0.02;
   return implicit;
 }
 

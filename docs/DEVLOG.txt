@@ -313,3 +313,5 @@
 20260612 - changed example
 20260612 - changed axis direction at reselect edge
 20260616 - Added Help About and commit 
+20260619 - Added time step limiter by strain rate/velocity
+20260619 - added time step limiter in dialog
