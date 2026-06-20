@@ -118,13 +118,18 @@ std::string normalizeImplicitSolverType(const std::string& type) {
 
 json makeImplicitSolverJson(const Step *step) {
   json implicit;
+  const ImplicitFormulation formulation =
+      step ? step->m_implicitFormulation : ImplicitFormulation::RigidViscoplastic;
+  implicit["formulation"] = implicitFormulationToConfigString(formulation);
   implicit["type"] = normalizeImplicitSolverType(step ? step->m_implicitType : "");
-  implicit["velTol"] = step ? step->m_velTol : 5e-2;
-  implicit["pressTol"] = step ? step->m_pressTol : 10.0;
-  implicit["forceTol"] = step ? step->m_forceTol : 10.0;
-  implicit["divTol"] = step ? step->m_divTol : 1.0;
-  implicit["omegaV"] = step ? step->m_omegaV : 0.4;
-  implicit["omegaP"] = step ? step->m_omegaP : 0.1;
+  if (formulation == ImplicitFormulation::RigidViscoplastic) {
+    implicit["velTol"] = step ? step->m_velTol : 5e-2;
+    implicit["pressTol"] = step ? step->m_pressTol : 10.0;
+    implicit["forceTol"] = step ? step->m_forceTol : 10.0;
+    implicit["divTol"] = step ? step->m_divTol : 1.0;
+    implicit["omegaV"] = step ? step->m_omegaV : 0.4;
+    implicit["omegaP"] = step ? step->m_omegaP : 0.1;
+  }
   implicit["maxIter"] = step ? step->m_maxIter : 200;
   implicit["timeStepGrowthFactor"] = step ? step->m_timeStepGrowthFactor : 1.2;
   implicit["useSprings"] = step ? step->m_useWeakSprings : false;
@@ -582,7 +587,6 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   }
 
   m_json["Configuration"]["Nproc"] = step ? step->m_nproc : 1;
-  m_json["Configuration"]["cflFactor"] = step ? step->m_cflFactor : 0.3;
   m_json["Configuration"]["autoTS"] = {
     step ? step->m_autoTS[0] : false,
     step ? step->m_autoTS[1] : false,
@@ -590,8 +594,6 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   };
   m_json["Configuration"]["kernelGradCorr"] = step ? step->m_kernelGradCorr : false;
   m_json["Configuration"]["simTime"] = step ? step->m_simTime : 200.0;
-  m_json["Configuration"]["artifViscAlpha"] = step ? step->m_artifViscAlpha : 1.0;
-  m_json["Configuration"]["artifViscBeta"] = step ? step->m_artifViscBeta : 0.0;
   m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0;
   m_json["Configuration"]["fixedTS"] = step ? step->m_fixedTS : false;
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);

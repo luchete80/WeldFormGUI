@@ -444,8 +444,16 @@ inline bool active_model_is_3d()
 inline std::string preferred_solver_binary_name()
 {
   std::string base_name = "weldform_exp";
-  if (active_model_is_implicit())
-    base_name = active_model_is_3d() ? "weldform_imp_3d" : "weldform_imp";
+  if (active_model_is_implicit()) {
+    Model* model = get_active_model();
+    Step* step = (model != nullptr && model->getStepCount() > 0) ? model->getStep(0) : nullptr;
+    const bool uses_j2 = (step != nullptr && step->m_implicitFormulation == ImplicitFormulation::J2Elastoplastic);
+    if (uses_j2) {
+      base_name = "weldform_imp_ep";
+    } else {
+      base_name = active_model_is_3d() ? "weldform_imp_3d" : "weldform_imp";
+    }
+  }
   const char* edition_env = std::getenv("WELDFORM_SOLVER_EDITION");
   const std::string edition = edition_env != nullptr ? to_lower_copy(edition_env) : "";
 
@@ -801,6 +809,7 @@ inline Step* ensure_analysis_step(const std::string& step_name = "Step-1")
 inline Step* create_implicit_step(const std::string& step_name = "Step-1",
                                   double sim_time = 1.0,
                                   double out_time = 0.1,
+                                  const std::string& formulation = "rigid_viscoplastic",
                                   const std::string& implicit_type = "Picard",
                                   int max_iter = 200,
                                   double vel_tol = 5.0e-2,
@@ -819,6 +828,7 @@ inline Step* create_implicit_step(const std::string& step_name = "Step-1",
   step->setStepType(ImplicitStep);
   step->m_simTime = sim_time;
   step->m_outTime = out_time;
+  step->m_implicitFormulation = implicitFormulationFromConfigString(formulation);
   step->m_implicitType = implicit_type;
   step->m_maxIter = max_iter;
   step->m_velTol = vel_tol;

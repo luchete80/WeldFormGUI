@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "Dialog.h"
+#include "model/Step.h"
 
 class Job:
 public Dialog{
@@ -59,6 +60,7 @@ protected:
     bool implicit = false;
     bool is3D = true;
     bool thermal = false;
+    ImplicitFormulation implicitFormulation = ImplicitFormulation::RigidViscoplastic;
     int nodeCount = -1;
   };
 

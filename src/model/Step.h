@@ -9,6 +9,29 @@ enum StepType {
   ImplicitStep = 1
 };
 
+enum class ImplicitFormulation {
+  RigidViscoplastic = 0,
+  J2Elastoplastic = 1
+};
+
+inline const char* implicitFormulationToConfigString(ImplicitFormulation formulation)
+{
+  switch (formulation) {
+    case ImplicitFormulation::J2Elastoplastic:
+      return "j2_elastoplastic";
+    case ImplicitFormulation::RigidViscoplastic:
+    default:
+      return "rigid_viscoplastic";
+  }
+}
+
+inline ImplicitFormulation implicitFormulationFromConfigString(const std::string& value)
+{
+  if (value == "j2_elastoplastic" || value == "j2" || value == "elastoplastic_j2")
+    return ImplicitFormulation::J2Elastoplastic;
+  return ImplicitFormulation::RigidViscoplastic;
+}
+
 class Step : public Entity {
 public:
   Step() {
@@ -19,6 +42,8 @@ public:
   void setStepType(StepType type) { m_step_type = type; }
   StepType getStepType() const { return m_step_type; }
   bool isImplicit() const { return m_step_type == ImplicitStep; }
+  bool usesRigidViscoplasticImplicitSolver() const { return m_implicitFormulation == ImplicitFormulation::RigidViscoplastic; }
+  bool usesJ2ImplicitSolver() const { return m_implicitFormulation == ImplicitFormulation::J2Elastoplastic; }
 
   int m_nproc = 1;
   double m_cflFactor = 0.3;
@@ -32,6 +57,7 @@ public:
   bool m_axiSymmVol = false;
   double m_elemLengthFraction = 0.2;
 
+  ImplicitFormulation m_implicitFormulation = ImplicitFormulation::RigidViscoplastic;
   std::string m_implicitType = "Picard";
   double m_velTol = 5e-2;
   double m_pressTol = 10.0;

@@ -24,6 +24,7 @@ struct StepDialog {
   bool m_axiSymmVol = false;
   double m_elemLengthFraction = 0.2;
 
+  int m_implicit_formulation = static_cast<int>(ImplicitFormulation::RigidViscoplastic);
   char m_implicit_type[128] = "Picard";
   double m_velTol = 5e-2;
   double m_pressTol = 10.0;

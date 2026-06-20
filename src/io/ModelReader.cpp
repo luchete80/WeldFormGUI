@@ -628,6 +628,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
             if (jstep.contains("implicit")) {
                 const auto &implicit = jstep["implicit"];
+                step->m_implicitFormulation =
+                    implicitFormulationFromConfigString(implicit.value("formulation", std::string("rigid_viscoplastic")));
                 step->m_implicitType = implicit.value("type", "Picard");
                 step->m_velTol = implicit.value("velTol", 5e-2);
                 step->m_pressTol = implicit.value("pressTol", 10.0);

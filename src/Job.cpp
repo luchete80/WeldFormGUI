@@ -583,6 +583,9 @@ Job::SolverInputInfo Job::inspectSolverInput() const
         conf["solver"].is_object() &&
         conf["solver"].contains("implicit")) {
       info.implicit = true;
+      const json& implicit = conf["solver"]["implicit"];
+      info.implicitFormulation =
+          implicitFormulationFromConfigString(implicit.value("formulation", std::string("rigid_viscoplastic")));
     }
   }
 
@@ -644,7 +647,11 @@ std::string Job::getSolverBinaryName(const SolverInputInfo& info) const
 {
   std::string baseName = "weldform_exp";
   if (info.implicit) {
-    baseName = info.is3D ? "weldform_imp_3d" : "weldform_imp";
+    if (info.implicitFormulation == ImplicitFormulation::J2Elastoplastic) {
+      baseName = "weldform_imp_ep";
+    } else {
+      baseName = info.is3D ? "weldform_imp_3d" : "weldform_imp";
+    }
   }
   const SolverEdition requestedEdition = getRequestedSolverEdition();
 

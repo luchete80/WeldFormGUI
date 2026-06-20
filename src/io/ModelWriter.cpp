@@ -488,13 +488,16 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["fixedTS"] = step->m_fixedTS;
       jstep["axiSymmVol"] = step->m_axiSymmVol;
       jstep["elemLengthFraction"] = step->m_elemLengthFraction;
+      jstep["implicit"]["formulation"] = implicitFormulationToConfigString(step->m_implicitFormulation);
       jstep["implicit"]["type"] = step->m_implicitType;
-      jstep["implicit"]["velTol"] = step->m_velTol;
-      jstep["implicit"]["pressTol"] = step->m_pressTol;
-      jstep["implicit"]["forceTol"] = step->m_forceTol;
-      jstep["implicit"]["divTol"] = step->m_divTol;
-      jstep["implicit"]["omegaV"] = step->m_omegaV;
-      jstep["implicit"]["omegaP"] = step->m_omegaP;
+      if (step->m_implicitFormulation == ImplicitFormulation::RigidViscoplastic) {
+        jstep["implicit"]["velTol"] = step->m_velTol;
+        jstep["implicit"]["pressTol"] = step->m_pressTol;
+        jstep["implicit"]["forceTol"] = step->m_forceTol;
+        jstep["implicit"]["divTol"] = step->m_divTol;
+        jstep["implicit"]["omegaV"] = step->m_omegaV;
+        jstep["implicit"]["omegaP"] = step->m_omegaP;
+      }
       jstep["implicit"]["maxIter"] = step->m_maxIter;
       jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
       jstep["implicit"]["useSprings"] = step->m_useWeakSprings;

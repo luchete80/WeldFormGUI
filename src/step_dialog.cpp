@@ -38,6 +38,16 @@ const char* implicitSolverTypeFromComboIndex(int combo_index) {
       return "picard";
   }
 }
+
+const char* implicitFormulationLabel(int combo_index) {
+  switch (combo_index) {
+    case 1:
+      return "J2 Elastoplastic";
+    case 0:
+    default:
+      return "Rigid Viscoplastic";
+  }
+}
 }
 
 void StepDialog::InitFromStep(Step *step) {
@@ -62,6 +72,7 @@ void StepDialog::InitFromStep(Step *step) {
   m_axiSymmVol = step->m_axiSymmVol;
   m_elemLengthFraction = step->m_elemLengthFraction;
 
+  m_implicit_formulation = static_cast<int>(step->m_implicitFormulation);
   std::strncpy(m_implicit_type, step->m_implicitType.c_str(), sizeof(m_implicit_type) - 1);
   m_implicit_type[sizeof(m_implicit_type) - 1] = '\0';
   m_velTol = step->m_velTol;
@@ -104,38 +115,49 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
   if (ImGui::RadioButton("Implicit", m_step_type == ImplicitStep))
     m_step_type = ImplicitStep;
 
+  const bool isImplicit = (m_step_type == ImplicitStep);
+  const bool isJ2Implicit = isImplicit && m_implicit_formulation == static_cast<int>(ImplicitFormulation::J2Elastoplastic);
+
   ImGui::InputInt("Nproc", &m_nproc);
-  ImGui::InputDouble("CFL Factor", &m_cflFactor, 0.0, 1.0, "%.3f");
+  if (!isImplicit) {
+    ImGui::InputDouble("CFL Factor", &m_cflFactor, 0.0, 1.0, "%.3f");
+  }
   ImGui::Checkbox("Kernel Grad Corr", &m_kernelGradCorr);
   ImGui::Checkbox("Fixed TS", &m_fixedTS);
   ImGui::Checkbox("AxiSymm Vol", &m_axiSymmVol);
   ImGui::InputDouble("Sim Time", &m_simTime, 0.0, 1.0, "%.4f");
   ImGui::InputDouble("Out Time", &m_outTime, 0.0, 1.0, "%.4f");
-  ImGui::InputDouble("Artif Visc Alpha", &m_artifViscAlpha, 0.0, 1.0, "%.3f");
-  ImGui::InputDouble("Artif Visc Beta", &m_artifViscBeta, 0.0, 1.0, "%.3f");
+  if (!isImplicit) {
+    ImGui::InputDouble("Artif Visc Alpha", &m_artifViscAlpha, 0.0, 1.0, "%.3f");
+    ImGui::InputDouble("Artif Visc Beta", &m_artifViscBeta, 0.0, 1.0, "%.3f");
+  }
   ImGui::InputDouble("Elem Length Fraction", &m_elemLengthFraction, 0.0, 1.0, "%.3f");
   ImGui::Checkbox("Auto TS X", &m_autoTS[0]);
   ImGui::Checkbox("Auto TS Y", &m_autoTS[1]);
   ImGui::Checkbox("Auto TS Z", &m_autoTS[2]);
 
-  if (m_step_type == ImplicitStep && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
+  if (isImplicit && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
     static const char* spring_mode_items[] = {"1 node", "3-2-1"};
     static const char* implicit_solver_items[] = {"Picard", "Hybrid", "Newton", "NR"};
+    static const char* implicit_formulation_items[] = {"Rigid Viscoplastic", "J2 Elastoplastic"};
     int spring_mode_index = springModeComboIndex(m_springMode);
     int implicit_solver_index = implicitSolverTypeComboIndex(m_implicit_type);
 
+    ImGui::Combo("Formulation", &m_implicit_formulation, implicit_formulation_items, IM_ARRAYSIZE(implicit_formulation_items));
     if (ImGui::Combo("Type", &implicit_solver_index, implicit_solver_items, IM_ARRAYSIZE(implicit_solver_items))) {
       std::strncpy(m_implicit_type,
                    implicitSolverTypeFromComboIndex(implicit_solver_index),
                    IM_ARRAYSIZE(m_implicit_type) - 1);
       m_implicit_type[IM_ARRAYSIZE(m_implicit_type) - 1] = '\0';
     }
-    ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
-    ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
-    ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
-    ImGui::InputDouble("Div Tol", &m_divTol, 0.0, 1.0, "%.4g");
-    ImGui::InputDouble("Omega V", &m_omegaV, 0.0, 1.0, "%.4f");
-    ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
+    if (!isJ2Implicit) {
+      ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
+      ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
+      ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
+      ImGui::InputDouble("Div Tol", &m_divTol, 0.0, 1.0, "%.4g");
+      ImGui::InputDouble("Omega V", &m_omegaV, 0.0, 1.0, "%.4f");
+      ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
+    }
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
     ImGui::Checkbox("Adaptive DT limiter", &m_adaptiveDtLimiter);
@@ -144,7 +166,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::InputDouble("Max nodal displacement per step", &m_maxNodalDisplacementPerStep, 0.0, 0.0, "%.4g");
     ImGui::InputDouble("Max effective strain increment per step", &m_maxEffectiveStrainIncrementPerStep, 0.0, 0.0, "%.4g");
     ImGui::EndDisabled();
-    ImGui::TextDisabled("Type is exported as Configuration.solver.type for implicit inputs.");
+    ImGui::TextDisabled("Formulation: %s", implicitFormulationLabel(m_implicit_formulation));
 
     ImGui::Separator();
     ImGui::Checkbox("Use weak springs", &m_useWeakSprings);
@@ -174,6 +196,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_fixedTS = m_fixedTS;
       step->m_axiSymmVol = m_axiSymmVol;
       step->m_elemLengthFraction = m_elemLengthFraction;
+      step->m_implicitFormulation = static_cast<ImplicitFormulation>(m_implicit_formulation);
       step->m_implicitType = m_implicit_type;
       step->m_velTol = m_velTol;
       step->m_pressTol = m_pressTol;
