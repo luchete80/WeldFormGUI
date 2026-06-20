@@ -41,7 +41,7 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
 {
   checkpointEnabled = false;
   checkpointInterval = 1;
-  checkpointDir = "checkpoints";
+  checkpointDir = ".";
   checkpointPrefix = "restart_qt";
   restartFile.clear();
   supportsRestart = false;
@@ -80,7 +80,7 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
     const json& implicit = solver["implicit"];
     checkpointEnabled = implicit.value("checkpointEnabled", false);
     checkpointInterval = std::max(1, implicit.value("checkpointInterval", 1));
-    checkpointDir = implicit.value("checkpointDir", std::string("checkpoints"));
+    checkpointDir = implicit.value("checkpointDir", std::string("."));
     checkpointPrefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
     restartFile = implicit.value("restartFile", std::string());
     return true;
@@ -94,7 +94,7 @@ void JobDialog::resetRestartOptions()
 {
   m_checkpoint_enabled = false;
   m_checkpoint_interval = 1;
-  m_checkpoint_dir = "checkpoints";
+  m_checkpoint_dir = ".";
   m_checkpoint_prefix = "restart_qt";
   m_restart_file.clear();
   std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
@@ -112,7 +112,7 @@ void JobDialog::loadRestartOptionsFromJob(const Job* job)
 
   m_checkpoint_enabled = job->getCheckpointEnabled();
   m_checkpoint_interval = std::max(1, job->getCheckpointInterval());
-  m_checkpoint_dir = job->getCheckpointDir().empty() ? "checkpoints" : job->getCheckpointDir();
+  m_checkpoint_dir = job->getCheckpointDir().empty() ? "." : job->getCheckpointDir();
   m_checkpoint_prefix = job->getCheckpointPrefix().empty() ? "restart_qt" : job->getCheckpointPrefix();
   m_restart_file = job->getRestartFile();
   std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
@@ -226,7 +226,21 @@ void  JobDialog::Draw(){
     }
   }
 
-  const bool supportsRestart = !m_filename.empty() && inputSupportsImplicit3DRestart();
+  const bool supportsRestartFromModel = [&]() {
+    if (m_edit_mode || !m_filename.empty()) {
+      return false;
+    }
+
+    Model &model = getApp().getActiveModel();
+    if (model.getStepCount() <= 0) {
+      return false;
+    }
+
+    Step* step = model.getStep(0);
+    return step != nullptr && step->isImplicit() && model.getAnalysisType() == Solid3D;
+  }();
+  const bool supportsRestartFromInput = !m_filename.empty() && inputSupportsImplicit3DRestart();
+  const bool supportsRestart = supportsRestartFromModel || supportsRestartFromInput;
 
   ImGui::Separator();
   ImGui::TextUnformatted("Restart / checkpoint");
@@ -249,6 +263,7 @@ void  JobDialog::Draw(){
     if (ImGui::InputText("Checkpoint dir", m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size())) {
       m_checkpoint_dir = m_checkpoint_dir_buffer.data();
     }
+    ImGui::TextDisabled("Use . to write restart files in the run directory.");
     if (ImGui::InputText("Checkpoint prefix", m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size())) {
       m_checkpoint_prefix = m_checkpoint_prefix_buffer.data();
     }

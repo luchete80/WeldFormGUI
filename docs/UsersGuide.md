@@ -54,7 +54,30 @@ Model input is a file in which you write the model input file which is taken by 
 A job is a task to run a model. The idea is, for every model you create, you run a job, selecting the run options like number of cores. 
 
 ### Create a Job
-By right cliking "Jobs" you select "Create new job" and then you select input file.
+By right cliking "Jobs" you select "Create new job".
+
+There are two supported flows:
+- `From Model`
+  Exports a new `.wfinput` from the active model and creates a job for it.
+- `Choose File`
+  Uses an existing `.wfinput` or `.json` file and creates a job for that input after pressing `Create`.
+
+### 3D implicit restart and checkpoint
+
+The Job dialog exposes restart/checkpoint options only for implicit 3D jobs using `weldform_imp_3d`.
+
+Supported fields:
+- `checkpointEnabled`
+- `checkpointInterval`
+- `checkpointDir`
+- `checkpointPrefix`
+- `restartFile`
+
+`checkpointDir` is still supported by the GUI and exporter.
+
+If `checkpointDir` is set to `"."`, checkpoint/restart files are written in the run directory itself. This matches the validation setup used by the engine-side restart tests.
+
+The restart file chooser in the GUI uses `.wfrst` files.
 
 ### Runing and monitoring a job
 

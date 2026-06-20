@@ -317,3 +317,7 @@
 20260619 - added time step limiter in dialog
 20260619 - Added move in files dialog with arrows 
          - Added restart for 3D implicit.
+20260620 - Kept checkpointDir support in GUI jobs.
+         - Default checkpointDir is now "." instead of "checkpoints".
+         - "." means restart/checkpoint files are written in the run directory.
+         - Re-enabled restart/checkpoint controls for the "From Model" job creation flow.

@@ -34,7 +34,7 @@ public ObjDialog{
   int m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
   bool m_checkpoint_enabled = false;
   int m_checkpoint_interval = 1;
-  std::string m_checkpoint_dir = "checkpoints";
+  std::string m_checkpoint_dir = ".";
   std::string m_checkpoint_prefix = "restart_qt";
   std::string m_restart_file;
   bool m_show_restart_files = false;

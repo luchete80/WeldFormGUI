@@ -458,7 +458,7 @@ bool Job::loadRestartSettingsFromInput()
 {
   m_checkpoint_enabled = false;
   m_checkpoint_interval = 1;
-  m_checkpoint_dir = "checkpoints";
+  m_checkpoint_dir = ".";
   m_checkpoint_prefix = "restart_qt";
   m_restart_file.clear();
 
@@ -480,7 +480,7 @@ bool Job::loadRestartSettingsFromInput()
   const json& implicit = solver["implicit"];
   m_checkpoint_enabled = implicit.value("checkpointEnabled", false);
   m_checkpoint_interval = std::max(1, implicit.value("checkpointInterval", 1));
-  m_checkpoint_dir = implicit.value("checkpointDir", std::string("checkpoints"));
+  m_checkpoint_dir = implicit.value("checkpointDir", std::string("."));
   m_checkpoint_prefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
   m_restart_file = implicit.value("restartFile", std::string());
   return true;
@@ -517,7 +517,7 @@ bool Job::applyRestartSettingsToInput() const
   if (m_checkpoint_enabled) {
     implicit["checkpointEnabled"] = true;
     implicit["checkpointInterval"] = std::max(1, m_checkpoint_interval);
-    implicit["checkpointDir"] = m_checkpoint_dir.empty() ? "checkpoints" : m_checkpoint_dir;
+    implicit["checkpointDir"] = m_checkpoint_dir.empty() ? "." : m_checkpoint_dir;
     implicit["checkpointPrefix"] = m_checkpoint_prefix.empty() ? "restart_qt" : m_checkpoint_prefix;
   } else {
     implicit.erase("checkpointEnabled");

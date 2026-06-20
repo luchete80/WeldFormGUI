@@ -668,6 +668,32 @@ The next useful areas to document would be:
 - `src/Job.cpp`
   Runtime solver selection for jobs lives here.
 
+## 3D implicit restart/checkpoint in GUI jobs
+
+- `src/job_dialog.cpp`
+  The Job dialog exposes restart/checkpoint controls for implicit 3D jobs.
+- `src/Job.cpp`
+  The selected options are written back into the job input file before the solver is launched.
+
+Current behavior:
+- restart/checkpoint is only enabled for implicit 3D jobs, i.e. jobs resolved to `weldform_imp_3d`
+- the restart browser accepts `.wfrst`
+- `checkpointDir` is still supported and preserved in the exported input
+- default `checkpointDir` is `"."`
+- `"."` means the run directory / current working directory of the solver run
+
+Fields written under `Configuration.solver.implicit`:
+- `checkpointEnabled`
+- `checkpointInterval`
+- `checkpointDir`
+- `checkpointPrefix`
+- `restartFile`
+
+Notes:
+- the GUI still supports custom `checkpointDir` values; it was not removed
+- using `"."` matches the current validation/restart flow in the engine
+- if `restartFile` is left empty, this repo does not inject a fallback name; fallback resolution is left to the solver
+
 Current solver selection layers:
 - `Step` still decides `explicit` vs `implicit` through the exported input file.
 - `Job` decides solver edition `Auto / Std / Full`.
