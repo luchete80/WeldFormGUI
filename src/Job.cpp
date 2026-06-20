@@ -461,6 +461,7 @@ bool Job::loadRestartSettingsFromInput()
   m_checkpoint_dir = ".";
   m_checkpoint_prefix = "restart_qt";
   m_restart_file.clear();
+  m_result_base_name.clear();
 
   const std::optional<json> input = loadInputJson();
   if (!input.has_value() || !input->contains("Configuration")) {
@@ -483,6 +484,7 @@ bool Job::loadRestartSettingsFromInput()
   m_checkpoint_dir = implicit.value("checkpointDir", std::string("."));
   m_checkpoint_prefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
   m_restart_file = implicit.value("restartFile", std::string());
+  m_result_base_name = configuration.value("resultBaseName", std::string());
   return true;
 }
 
@@ -530,6 +532,12 @@ bool Job::applyRestartSettingsToInput() const
     implicit["restartFile"] = makePathRelativeTo(fs::path(m_restart_file), getJobDirectory());
   } else {
     implicit.erase("restartFile");
+  }
+
+  if (!m_result_base_name.empty()) {
+    configuration["resultBaseName"] = m_result_base_name;
+  } else {
+    configuration.erase("resultBaseName");
   }
 
   std::ofstream output(m_path_file, std::ios::out | std::ios::trunc);

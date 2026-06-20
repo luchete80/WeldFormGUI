@@ -37,10 +37,13 @@ public ObjDialog{
   std::string m_checkpoint_dir = ".";
   std::string m_checkpoint_prefix = "restart_qt";
   std::string m_restart_file;
+  std::string m_result_base_name;
   bool m_show_restart_files = false;
+  bool m_show_result_files = false;
   std::array<char, 512> m_checkpoint_dir_buffer{};
   std::array<char, 512> m_checkpoint_prefix_buffer{};
   std::array<char, 1024> m_restart_file_buffer{};
+  std::array<char, 512> m_result_base_name_buffer{};
 
   void resetRestartOptions();
   void loadRestartOptionsFromJob(const Job* job);

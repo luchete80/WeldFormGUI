@@ -48,6 +48,9 @@ public:
   void setRestartFile(const std::string& path) { m_restart_file = path; }
   const std::string& getRestartFile() const { return m_restart_file; }
   bool hasRestartFile() const { return !m_restart_file.empty(); }
+  void setResultBaseName(const std::string& name) { m_result_base_name = name; }
+  const std::string& getResultBaseName() const { return m_result_base_name; }
+  bool hasResultBaseName() const { return !m_result_base_name.empty(); }
   bool supportsImplicit3DRestart() const;
   bool loadRestartSettingsFromInput();
   bool applyRestartSettingsToInput() const;
@@ -80,6 +83,7 @@ protected:
   std::string m_checkpoint_dir = ".";
   std::string m_checkpoint_prefix = "restart_qt";
   std::string m_restart_file;
+  std::string m_result_base_name;
   
 };
 

@@ -8566,6 +8566,7 @@ void Editor::drawGui() {
     newJob->setCheckpointDir(m_jobdlg.m_checkpoint_dir);
     newJob->setCheckpointPrefix(m_jobdlg.m_checkpoint_prefix);
     newJob->setRestartFile(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_restart_file : std::string());
+    newJob->setResultBaseName(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_result_base_name : std::string());
     newJob->applyRestartSettingsToInput();
     m_jobs.push_back(newJob); 
     m_jobdlg.create_entity = false;

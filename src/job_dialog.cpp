@@ -37,6 +37,7 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
                                        std::string& checkpointDir,
                                        std::string& checkpointPrefix,
                                        std::string& restartFile,
+                                       std::string& resultBaseName,
                                        bool& supportsRestart)
 {
   checkpointEnabled = false;
@@ -44,6 +45,7 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
   checkpointDir = ".";
   checkpointPrefix = "restart_qt";
   restartFile.clear();
+  resultBaseName.clear();
   supportsRestart = false;
 
   if (filename.empty()) {
@@ -83,6 +85,7 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
     checkpointDir = implicit.value("checkpointDir", std::string("."));
     checkpointPrefix = implicit.value("checkpointPrefix", std::string("restart_qt"));
     restartFile = implicit.value("restartFile", std::string());
+    resultBaseName = configuration.value("resultBaseName", std::string());
     return true;
   } catch (...) {
     return false;
@@ -97,10 +100,13 @@ void JobDialog::resetRestartOptions()
   m_checkpoint_dir = ".";
   m_checkpoint_prefix = "restart_qt";
   m_restart_file.clear();
+  m_result_base_name.clear();
   std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
   std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
   m_restart_file_buffer[0] = '\0';
+  m_result_base_name_buffer[0] = '\0';
   m_show_restart_files = false;
+  m_show_result_files = false;
 }
 
 void JobDialog::loadRestartOptionsFromJob(const Job* job)
@@ -115,9 +121,11 @@ void JobDialog::loadRestartOptionsFromJob(const Job* job)
   m_checkpoint_dir = job->getCheckpointDir().empty() ? "." : job->getCheckpointDir();
   m_checkpoint_prefix = job->getCheckpointPrefix().empty() ? "restart_qt" : job->getCheckpointPrefix();
   m_restart_file = job->getRestartFile();
+  m_result_base_name = job->getResultBaseName();
   std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
   std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
   std::snprintf(m_restart_file_buffer.data(), m_restart_file_buffer.size(), "%s", m_restart_file.c_str());
+  std::snprintf(m_result_base_name_buffer.data(), m_result_base_name_buffer.size(), "%s", m_result_base_name.c_str());
 }
 
 void JobDialog::loadRestartOptionsFromInputFile()
@@ -129,6 +137,7 @@ void JobDialog::loadRestartOptionsFromInputFile()
                                          m_checkpoint_dir,
                                          m_checkpoint_prefix,
                                          m_restart_file,
+                                         m_result_base_name,
                                          supportsRestart)) {
     resetRestartOptions();
     return;
@@ -137,6 +146,7 @@ void JobDialog::loadRestartOptionsFromInputFile()
   std::snprintf(m_checkpoint_dir_buffer.data(), m_checkpoint_dir_buffer.size(), "%s", m_checkpoint_dir.c_str());
   std::snprintf(m_checkpoint_prefix_buffer.data(), m_checkpoint_prefix_buffer.size(), "%s", m_checkpoint_prefix.c_str());
   std::snprintf(m_restart_file_buffer.data(), m_restart_file_buffer.size(), "%s", m_restart_file.c_str());
+  std::snprintf(m_result_base_name_buffer.data(), m_result_base_name_buffer.size(), "%s", m_result_base_name.c_str());
 }
 
 bool JobDialog::inputSupportsImplicit3DRestart() const
@@ -146,6 +156,7 @@ bool JobDialog::inputSupportsImplicit3DRestart() const
   std::string checkpointDir;
   std::string checkpointPrefix;
   std::string restartFile;
+  std::string resultBaseName;
   bool supportsRestart = false;
   loadRestartConfigurationFromInput(m_filename,
                                     checkpointEnabled,
@@ -153,6 +164,7 @@ bool JobDialog::inputSupportsImplicit3DRestart() const
                                     checkpointDir,
                                     checkpointPrefix,
                                     restartFile,
+                                    resultBaseName,
                                     supportsRestart);
   return supportsRestart;
 }
@@ -190,6 +202,7 @@ void  JobDialog::Draw(){
       tempJob.setCheckpointDir(m_checkpoint_dir);
       tempJob.setCheckpointPrefix(m_checkpoint_prefix);
       tempJob.setRestartFile(m_restart_file);
+      tempJob.setResultBaseName(m_result_base_name);
       tempJob.applyRestartSettingsToInput();
       create_entity = true;
       m_edit_mode = false;
@@ -285,6 +298,20 @@ void  JobDialog::Draw(){
     m_restart_file_buffer[0] = '\0';
   }
   ImGui::TextDisabled("When set, exported as Configuration.solver.implicit.restartFile.");
+  if (ImGui::InputText("Result base name", m_result_base_name_buffer.data(), m_result_base_name_buffer.size())) {
+    m_result_base_name = m_result_base_name_buffer.data();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Use .wfresult")) {
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgRestartResult", "Choose Result File", ".wfresult", ".");
+    m_show_result_files = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Clear result name")) {
+    m_result_base_name.clear();
+    m_result_base_name_buffer[0] = '\0';
+  }
+  ImGui::TextDisabled("Writes Configuration.resultBaseName. Choosing a .wfresult uses its filename without extension.");
 
   if (!supportsRestart) {
     ImGui::EndDisabled();
@@ -298,6 +325,17 @@ void  JobDialog::Draw(){
       }
       ImGuiFileDialog::Instance()->Close();
       m_show_restart_files = false;
+    }
+  }
+  if (m_show_result_files) {
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgRestartResult")) {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        const fs::path resultPath(ImGuiFileDialog::Instance()->GetFilePathName());
+        m_result_base_name = resultPath.stem().string();
+        std::snprintf(m_result_base_name_buffer.data(), m_result_base_name_buffer.size(), "%s", m_result_base_name.c_str());
+      }
+      ImGuiFileDialog::Instance()->Close();
+      m_show_result_files = false;
     }
   }
 
@@ -323,6 +361,7 @@ void  JobDialog::Draw(){
       m_job->setCheckpointDir(m_checkpoint_dir);
       m_job->setCheckpointPrefix(m_checkpoint_prefix);
       m_job->setRestartFile(supportsRestart ? m_restart_file : std::string());
+      m_job->setResultBaseName(supportsRestart ? m_result_base_name : std::string());
       m_job->applyRestartSettingsToInput();
     }
     m_edit_mode = false;
