@@ -20,6 +20,17 @@
 
 using json = nlohmann::json;
 
+namespace {
+std::string persistedImplicitSolverType(const Step* step)
+{
+  if (step == nullptr)
+    return "picard";
+  if (step->m_implicitFormulation == ImplicitFormulation::J2Elastoplastic)
+    return "j2";
+  return step->m_implicitType;
+}
+}
+
 ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 
 
@@ -489,15 +500,13 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["axiSymmVol"] = step->m_axiSymmVol;
       jstep["elemLengthFraction"] = step->m_elemLengthFraction;
       jstep["implicit"]["formulation"] = implicitFormulationToConfigString(step->m_implicitFormulation);
-      jstep["implicit"]["type"] = step->m_implicitType;
-      if (step->m_implicitFormulation == ImplicitFormulation::RigidViscoplastic) {
-        jstep["implicit"]["velTol"] = step->m_velTol;
-        jstep["implicit"]["pressTol"] = step->m_pressTol;
-        jstep["implicit"]["forceTol"] = step->m_forceTol;
-        jstep["implicit"]["divTol"] = step->m_divTol;
-        jstep["implicit"]["omegaV"] = step->m_omegaV;
-        jstep["implicit"]["omegaP"] = step->m_omegaP;
-      }
+      jstep["implicit"]["type"] = persistedImplicitSolverType(step);
+      jstep["implicit"]["velTol"] = step->m_velTol;
+      jstep["implicit"]["pressTol"] = step->m_pressTol;
+      jstep["implicit"]["forceTol"] = step->m_forceTol;
+      jstep["implicit"]["divTol"] = step->m_divTol;
+      jstep["implicit"]["omegaV"] = step->m_omegaV;
+      jstep["implicit"]["omegaP"] = step->m_omegaP;
       jstep["implicit"]["maxIter"] = step->m_maxIter;
       jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
       jstep["implicit"]["useSprings"] = step->m_useWeakSprings;

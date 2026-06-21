@@ -100,7 +100,10 @@ Step *activeStep(Model *model) {
   return model->getStep(0);
 }
 
-std::string normalizeImplicitSolverType(const std::string& type) {
+std::string normalizeImplicitSolverType(const std::string& type, ImplicitFormulation formulation) {
+  if (formulation == ImplicitFormulation::J2Elastoplastic)
+    return "j2";
+
   if (type.empty())
     return "picard";
 
@@ -121,15 +124,13 @@ json makeImplicitSolverJson(const Step *step) {
   const ImplicitFormulation formulation =
       step ? step->m_implicitFormulation : ImplicitFormulation::RigidViscoplastic;
   implicit["formulation"] = implicitFormulationToConfigString(formulation);
-  implicit["type"] = normalizeImplicitSolverType(step ? step->m_implicitType : "");
-  if (formulation == ImplicitFormulation::RigidViscoplastic) {
-    implicit["velTol"] = step ? step->m_velTol : 5e-2;
-    implicit["pressTol"] = step ? step->m_pressTol : 10.0;
-    implicit["forceTol"] = step ? step->m_forceTol : 10.0;
-    implicit["divTol"] = step ? step->m_divTol : 1.0;
-    implicit["omegaV"] = step ? step->m_omegaV : 0.4;
-    implicit["omegaP"] = step ? step->m_omegaP : 0.1;
-  }
+  implicit["type"] = normalizeImplicitSolverType(step ? step->m_implicitType : "", formulation);
+  implicit["velTol"] = step ? step->m_velTol : 5e-2;
+  implicit["pressTol"] = step ? step->m_pressTol : 10.0;
+  implicit["forceTol"] = step ? step->m_forceTol : 10.0;
+  implicit["divTol"] = step ? step->m_divTol : 1.0;
+  implicit["omegaV"] = step ? step->m_omegaV : 0.4;
+  implicit["omegaP"] = step ? step->m_omegaP : 0.1;
   implicit["maxIter"] = step ? step->m_maxIter : 200;
   implicit["timeStepGrowthFactor"] = step ? step->m_timeStepGrowthFactor : 1.2;
   implicit["useSprings"] = step ? step->m_useWeakSprings : false;

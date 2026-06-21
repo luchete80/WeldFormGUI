@@ -16,6 +16,8 @@ int springModeFromComboIndex(int combo_index) {
 }
 
 int implicitSolverTypeComboIndex(const std::string& implicit_type) {
+  if (implicit_type == "j2" || implicit_type == "j2ep" || implicit_type == "implicit_ep_j2")
+    return 4;
   if (implicit_type == "hybrid")
     return 1;
   if (implicit_type == "newton")
@@ -27,6 +29,8 @@ int implicitSolverTypeComboIndex(const std::string& implicit_type) {
 
 const char* implicitSolverTypeFromComboIndex(int combo_index) {
   switch (combo_index) {
+    case 4:
+      return "j2";
     case 1:
       return "hybrid";
     case 2:
@@ -116,7 +120,6 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     m_step_type = ImplicitStep;
 
   const bool isImplicit = (m_step_type == ImplicitStep);
-  const bool isJ2Implicit = isImplicit && m_implicit_formulation == static_cast<int>(ImplicitFormulation::J2Elastoplastic);
 
   ImGui::InputInt("Nproc", &m_nproc);
   if (!isImplicit) {
@@ -141,23 +144,29 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     static const char* implicit_solver_items[] = {"Picard", "Hybrid", "Newton", "NR"};
     static const char* implicit_formulation_items[] = {"Rigid Viscoplastic", "J2 Elastoplastic"};
     int spring_mode_index = springModeComboIndex(m_springMode);
-    int implicit_solver_index = implicitSolverTypeComboIndex(m_implicit_type);
 
     ImGui::Combo("Formulation", &m_implicit_formulation, implicit_formulation_items, IM_ARRAYSIZE(implicit_formulation_items));
-    if (ImGui::Combo("Type", &implicit_solver_index, implicit_solver_items, IM_ARRAYSIZE(implicit_solver_items))) {
-      std::strncpy(m_implicit_type,
-                   implicitSolverTypeFromComboIndex(implicit_solver_index),
-                   IM_ARRAYSIZE(m_implicit_type) - 1);
+    const bool isJ2Implicit =
+        m_implicit_formulation == static_cast<int>(ImplicitFormulation::J2Elastoplastic);
+    if (isJ2Implicit) {
+      std::strncpy(m_implicit_type, "j2", IM_ARRAYSIZE(m_implicit_type) - 1);
       m_implicit_type[IM_ARRAYSIZE(m_implicit_type) - 1] = '\0';
+      ImGui::TextDisabled("Type: J2");
+    } else {
+      int implicit_solver_index = implicitSolverTypeComboIndex(m_implicit_type);
+      if (ImGui::Combo("Type", &implicit_solver_index, implicit_solver_items, IM_ARRAYSIZE(implicit_solver_items))) {
+        std::strncpy(m_implicit_type,
+                     implicitSolverTypeFromComboIndex(implicit_solver_index),
+                     IM_ARRAYSIZE(m_implicit_type) - 1);
+        m_implicit_type[IM_ARRAYSIZE(m_implicit_type) - 1] = '\0';
+      }
     }
-    if (!isJ2Implicit) {
-      ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
-      ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
-      ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
-      ImGui::InputDouble("Div Tol", &m_divTol, 0.0, 1.0, "%.4g");
-      ImGui::InputDouble("Omega V", &m_omegaV, 0.0, 1.0, "%.4f");
-      ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
-    }
+    ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
+    ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
+    ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
+    ImGui::InputDouble("Div Tol", &m_divTol, 0.0, 1.0, "%.4g");
+    ImGui::InputDouble("Omega V", &m_omegaV, 0.0, 1.0, "%.4f");
+    ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
     ImGui::Checkbox("Adaptive DT limiter", &m_adaptiveDtLimiter);
