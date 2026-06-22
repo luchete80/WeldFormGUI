@@ -62,6 +62,7 @@
 
 #ifndef _WIN32
 #include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 #include <gmsh.h>
@@ -184,6 +185,111 @@ fs::path resolveRuntimeExecutablePath(const std::vector<std::string>& candidates
   }
 
   return {};
+}
+
+int runProcessWithOutput(const fs::path& executablePath,
+                         const std::vector<std::string>& arguments,
+                         const fs::path& workingDirectory,
+                         const fs::path& outputPath)
+{
+#ifdef _WIN32
+  SECURITY_ATTRIBUTES sa{};
+  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+  sa.bInheritHandle = TRUE;
+
+  HANDLE outputHandle = CreateFileA(
+    outputPath.string().c_str(),
+    GENERIC_WRITE,
+    FILE_SHARE_READ | FILE_SHARE_WRITE,
+    &sa,
+    CREATE_ALWAYS,
+    FILE_ATTRIBUTE_NORMAL,
+    nullptr
+  );
+  if (outputHandle == INVALID_HANDLE_VALUE)
+    return -1;
+
+  STARTUPINFOA si{};
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = outputHandle;
+  si.hStdError = outputHandle;
+
+  PROCESS_INFORMATION pi{};
+  std::string commandLine = "\"" + executablePath.string() + "\"";
+  for (const std::string& argument : arguments)
+    commandLine += " \"" + argument + "\"";
+
+  std::vector<char> commandBuffer(commandLine.begin(), commandLine.end());
+  commandBuffer.push_back('\0');
+
+  const std::string workingDir =
+    workingDirectory.empty() ? std::string(".") : workingDirectory.string();
+
+  const BOOL created = CreateProcessA(
+    nullptr,
+    commandBuffer.data(),
+    nullptr,
+    nullptr,
+    TRUE,
+    0,
+    nullptr,
+    workingDir.c_str(),
+    &si,
+    &pi
+  );
+
+  CloseHandle(outputHandle);
+  if (!created)
+    return -1;
+
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  DWORD exitCode = 0;
+  GetExitCodeProcess(pi.hProcess, &exitCode);
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+  return static_cast<int>(exitCode);
+#else
+  pid_t pid = fork();
+  if (pid < 0)
+    return -1;
+
+  if (pid == 0) {
+    const std::string workingDir =
+      workingDirectory.empty() ? std::string(".") : workingDirectory.string();
+    (void)chdir(workingDir.c_str());
+
+    FILE* outputFile = std::fopen(outputPath.c_str(), "w");
+    if (outputFile == nullptr)
+      _exit(127);
+
+    const int fd = fileno(outputFile);
+    if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) {
+      std::fclose(outputFile);
+      _exit(127);
+    }
+    std::fclose(outputFile);
+
+    std::vector<std::string> ownedArguments = arguments;
+    std::vector<char*> argv;
+    const std::string executable = executablePath.string();
+    argv.push_back(const_cast<char*>(executable.c_str()));
+    for (std::string& argument : ownedArguments)
+      argv.push_back(const_cast<char*>(argument.c_str()));
+    argv.push_back(nullptr);
+
+    execv(executable.c_str(), argv.data());
+    _exit(127);
+  }
+
+  int status = 0;
+  if (waitpid(pid, &status, 0) < 0)
+    return -1;
+  if (WIFEXITED(status))
+    return WEXITSTATUS(status);
+  return -1;
+#endif
 }
 
 int curveNodeCountFromElementSize(int curveTag, double elementSize) {
@@ -4854,7 +4960,7 @@ void Editor::meshPart(Part* part){
     const fs::path remesh_log_path = fs::absolute(activeModelOutputPath(
       *m_model, activeModelStem(*m_model) + "_part_" + std::to_string(part_index) + "_mesh_adapt.tmp"));
     const fs::path remesher_path = resolveRuntimeExecutablePath({"mesh-adapt", "mesh-adapt_std"});
-    const std::string remesher = remesher_path.empty() ? std::string("mesh-adapt") : remesher_path.string();
+    const fs::path remesher = remesher_path.empty() ? fs::path("mesh-adapt") : remesher_path;
 
     std::error_code ec;
     fs::remove(output_bdf_path, ec);
@@ -4867,16 +4973,21 @@ void Editor::meshPart(Part* part){
       return;
     }
 
-    std::string remesh_cmd = "\"" + remesher + "\" \"" + step_path_abs.filename().string() + "\" " +
-                             std::to_string(element_size) + " > \"" +
-                             remesh_log_path.string() + "\" 2>&1";
-    const std::string mesher_log = "Meshing 2D part with mesh-adapt: " + remesher + "\n";
+    const std::vector<std::string> remesh_args = {
+      step_path_abs.filename().string(),
+      std::to_string(element_size)
+    };
+    const std::string mesher_log = "Meshing 2D part with mesh-adapt: " + remesher.string() + "\n";
     cout << mesher_log;
     appendToAppConsole(mesher_log);
-    cout << "Running 2D remesher: " << remesh_cmd << endl;
-    appendToAppConsole("Running 2D remesher: " + remesh_cmd + "\n");
+    const std::string remesh_log =
+      "Running 2D remesher in " + step_dir.string() + ": " + remesher.string() +
+      " " + step_path_abs.filename().string() + " " + std::to_string(element_size) + "\n";
+    cout << remesh_log;
+    appendToAppConsole(remesh_log);
 
-    int remesh_status = std::system(remesh_cmd.c_str());
+    const int remesh_status =
+      runProcessWithOutput(remesher, remesh_args, step_dir, remesh_log_path);
     fs::current_path(previous_cwd, ec);
     appendFileToAppConsole(remesh_log_path.string());
     std::error_code remesh_log_ec;
