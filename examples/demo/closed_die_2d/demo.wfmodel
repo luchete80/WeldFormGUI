@@ -2,6 +2,16 @@
     "BoundaryConditions": [
         {
             "amplitudeFactor": 1.0,
+            "amplitudeTime": [
+                0.0,
+                1.0,
+                2.0
+            ],
+            "amplitudeValue": [
+                0.0,
+                1.0,
+                1.0
+            ],
             "applyTo": "Part",
             "dofMask": [
                 false,
@@ -15,7 +25,7 @@
                 -0.10000000149011612,
                 0.0
             ],
-            "valueType": 0
+            "valueType": 1
         }
     ],
     "Configuration": {
@@ -25,161 +35,22 @@
         "analysisType": "Axisymmetric2D",
         "modelType": "SPH",
         "solver": "WeldForm",
-        "thermal": true
+        "thermal": true,
+        "twoDMeshGenerator": "mesh-adapt"
     },
     "Contact": [
         {
-            "fricCoeffStatic": 0.01,
-            "gapPenaltyScale": 1.0,
+            "auto": false,
+            "autoFactor": 0.5,
+            "fricCoeffStatic": 0.001,
+            "frictionRegularizationVelocity": 0.0,
+            "gapPenaltyScale": 5.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 0.1,
+            "penaltyFactor": 500.0,
             "useGapPenalty": true
-        }
-    ],
-    "ElementSets": [
-        {
-            "elementIds": [],
-            "id": 0,
-            "label": "elem_set_0",
-            "partId": 2
-        }
-    ],
-    "FaceSets": [
-        {
-            "faces": [
-                {
-                    "id": 0,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1368,
-                        1369
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 1,
-                    "localFaceIndex": 2,
-                    "nodeIds": [
-                        1523,
-                        1368
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 2,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1369,
-                        1370
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 3,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1370,
-                        1371
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 4,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1371,
-                        1372
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 5,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1372,
-                        1390
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 6,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1390,
-                        1516
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 7,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1516,
-                        1517
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 8,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1517,
-                        1518
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 9,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1518,
-                        1519
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 10,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1519,
-                        1520
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 11,
-                    "localFaceIndex": 0,
-                    "nodeIds": [
-                        1520,
-                        1521
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 12,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1521,
-                        1522
-                    ],
-                    "ownerElementId": 0
-                },
-                {
-                    "id": 13,
-                    "localFaceIndex": 1,
-                    "nodeIds": [
-                        1522,
-                        1523
-                    ],
-                    "ownerElementId": 0
-                }
-            ],
-            "id": 0,
-            "label": "elem_set_0_faces",
-            "partId": 2
         }
     ],
     "InitialConditions": [
@@ -491,25 +362,9 @@
         "yieldStress0": 190000000.0,
         "youngsModulus": 210000000000.0
     },
-    "NodeSets": [
-        {
-            "id": 0,
-            "label": "set_0",
-            "nodeIds": [
-                1540,
-                1062,
-                1063,
-                1064,
-                1539,
-                1080,
-                1081,
-                1082
-            ],
-            "partId": 2
-        }
-    ],
     "Remeshing": {
         "beta": 4.0,
+        "boundaryLayers": 2,
         "dampFactor": 0.02,
         "debug": true,
         "enabled": true,
@@ -523,6 +378,7 @@
         "minElemAngle": 30.0,
         "minFrac": 2.0,
         "minStrain": -1.0,
+        "refineOnlyBoundary": false,
         "transitionAngle": 15.0,
         "type": 0
     },
@@ -541,9 +397,14 @@
             "fixedTS": false,
             "id": 0,
             "implicit": {
+                "adaptiveDtLimiter": false,
+                "adaptiveDtMin": 1e-07,
                 "divTol": 1.0,
                 "forceTol": 10.0,
+                "formulation": "rigid_viscoplastic",
+                "maxEffectiveStrainIncrementPerStep": 0.02,
                 "maxIter": 200,
+                "maxNodalDisplacementPerStep": 0.0005,
                 "omegaP": 0.1,
                 "omegaV": 0.4,
                 "pressTol": 0.1,
