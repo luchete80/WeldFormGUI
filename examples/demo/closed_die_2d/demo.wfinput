@@ -23,7 +23,7 @@
             "id": 1,
             "value": [
                 0.0,
-                -0.10000000149011612,
+                -0.0005799999926239252,
                 0.0
             ],
             "valueType": 1,
@@ -42,8 +42,8 @@
         "elemLentghFraction": 0.2,
         "fixedTS": false,
         "kernelGradCorr": false,
-        "outTime": 0.01,
-        "simTime": 1.0,
+        "outTime": 1.0,
+        "simTime": 100.0,
         "solver": {
             "implicit": {
                 "adaptiveDtLimiter": false,
@@ -407,10 +407,10 @@
         "mapVel": false,
         "maxCount": 100,
         "maxElemAngle": 150.0,
-        "maxFrac": 2.0,
+        "maxFrac": 1.0,
         "maxStrain": 1000000.0,
         "minElemAngle": 30.0,
-        "minFrac": 2.0,
+        "minFrac": 1.0,
         "minStrain": -1.0,
         "refineOnlyBoundary": false,
         "transitionAngle": 15.0,
