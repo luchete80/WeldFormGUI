@@ -3202,7 +3202,9 @@ namespace IGFD
 				if (exploreByKey)
 				{
 					//float totalHeight = prFilteredFileList.size() * ImGui::GetTextLineHeightWithSpacing();
-					float p = (float)((double)prLocateFileByInputChar_lastFileIdx / (double)(countFiles - 1U)) * ImGui::GetScrollMaxY();// seems not udpated in tables version outside tables
+					float p = 0.0f;
+					if (countFiles > 1U)
+						p = (float)((double)prLocateFileByInputChar_lastFileIdx / (double)(countFiles - 1U)) * ImGui::GetScrollMaxY();// seems not udpated in tables version outside tables
 					//float p = ((float)locateFileByInputChar_lastFileIdx) * ImGui::GetTextLineHeightWithSpacing();
 					ImGui::SetScrollY(p);
 					prStartFlashItem(prLocateFileByInputChar_lastFileIdx);
@@ -4258,28 +4260,13 @@ namespace IGFD
 		{
 			if (vInfos->fileType == 'd')
 			{
-				// nav system, selectable cause open directory or select directory
-				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard)
+				if (ImGui::IsMouseDoubleClicked(0)) // 0 -> left mouse button double click
 				{
-					if (fdi.puDLGDirectoryMode) // directory chooser
-					{
-						fdi.SelectFileName(prFileDialogInternal, vInfos);
-					}
-					else
-					{
-						fdi.puPathClicked = fdi.SelectDirectory(vInfos);
-					}
+					fdi.puPathClicked = fdi.SelectDirectory(vInfos);
 				}
-				else // no nav system => classic behavior
+				else if (fdi.puDLGDirectoryMode) // directory chooser
 				{
-					if (ImGui::IsMouseDoubleClicked(0)) // 0 -> left mouse button double click
-					{
-						fdi.puPathClicked = fdi.SelectDirectory(vInfos);
-					}
-					else if (fdi.puDLGDirectoryMode) // directory chooser
-					{
-						fdi.SelectFileName(prFileDialogInternal, vInfos);
-					}
+					fdi.SelectFileName(prFileDialogInternal, vInfos);
 				}
 			}
 			else

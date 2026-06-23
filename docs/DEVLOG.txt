@@ -321,3 +321,6 @@
          - Default checkpointDir is now "." instead of "checkpoints".
          - "." means restart/checkpoint files are written in the run directory.
          - Re-enabled restart/checkpoint controls for the "From Model" job creation flow.
+20260623 - Added use exploration by keys. 
+         - Rollback to simple click in file navigation.
+         
