@@ -1,14 +1,31 @@
 {
     "BoundaryConditions": [
         {
+            "amplitudeFactor": 1.0,
+            "amplitudeTime": [
+                0.0,
+                1.0,
+                1000.0
+            ],
+            "amplitudeValue": [
+                0.0,
+                1.0,
+                1.0
+            ],
             "applyTo": "Part",
+            "dofMask": [
+                true,
+                true,
+                true
+            ],
             "targetId": 1,
             "type": "VelocityBC",
             "value": [
                 0.0,
                 4.999999873689376e-05,
                 0.0
-            ]
+            ],
+            "valueType": 1
         }
     ],
     "Configuration": {
@@ -17,17 +34,21 @@
         },
         "analysisType": "Axisymmetric2D",
         "modelType": "SPH",
-        "solver": "WeldForm"
+        "solver": "WeldForm",
+        "twoDMeshGenerator": "mesh-adapt"
     },
     "Contact": [
         {
-            "fricCoeffStatic": 0.0,
-            "gapPenaltyScale": 1.0,
+            "auto": true,
+            "autoFactor": 0.5,
+            "fricCoeffStatic": 0.15,
+            "frictionRegularizationVelocity": 0.0,
+            "gapPenaltyScale": 5.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 10000.0,
+            "penaltyFactor": 500.0,
             "useGapPenalty": true
         }
     ],
@@ -38,8 +59,33 @@
         ],
         "density0": 7850.0,
         "poissonsRatio": 0.3,
+        "strRange": [
+            0.0,
+            0.65
+        ],
         "type": "Hollomon",
+        "yieldStress0": 190000000.0,
         "youngsModulus": 210000000000.0
+    },
+    "Remeshing": {
+        "beta": 4.0,
+        "boundaryLayers": 2,
+        "dampFactor": 0.02,
+        "debug": true,
+        "enabled": true,
+        "epsRef": 1.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 100,
+        "maxElemAngle": 150.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 30.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "refineOnlyBoundary": false,
+        "transitionAngle": 15.0,
+        "type": 0
     },
     "Steps": [
         {
@@ -56,26 +102,30 @@
             "fixedTS": false,
             "id": 0,
             "implicit": {
+                "adaptiveDtLimiter": false,
+                "adaptiveDtMin": 1e-07,
                 "divTol": 1.0,
                 "forceTol": 10.0,
+                "formulation": "rigid_viscoplastic",
+                "maxEffectiveStrainIncrementPerStep": 0.02,
                 "maxIter": 500,
+                "maxNodalDisplacementPerStep": 0.0005,
                 "omegaP": 0.1,
                 "omegaV": 0.4,
-                "pressTol": 10.0,
+                "pressTol": 0.1,
+                "springFactor": 1e-07,
+                "springMode": 1,
+                "springStiffness": 0.0,
                 "timeStepGrowthFactor": 1.2,
                 "type": "Picard",
+                "useSprings": false,
                 "velTol": 0.05
             },
             "kernelGradCorr": false,
-            "meshing": {
-                "debug": true,
-                "maxElemAngle": 150.0,
-                "minElemAngle": 30.0
-            },
             "name": "Step-1",
             "nproc": 1,
             "outTime": 1.0,
-            "simTime": 50.0,
+            "simTime": 200.0,
             "type": "Implicit"
         }
     ],
@@ -95,7 +145,8 @@
                 "mesh": {
                     "source": "demo_part_0.bdf"
                 },
-                "name": ""
+                "name": "",
+                "sectionId": -1
             },
             {
                 "id": 1,
@@ -103,7 +154,8 @@
                 "mesh": {
                     "source": "demo_part_1.bdf"
                 },
-                "name": "test"
+                "name": "test",
+                "sectionId": -1
             },
             {
                 "id": 3,
@@ -111,7 +163,8 @@
                 "mesh": {
                     "source": "demo_part_3.bdf"
                 },
-                "name": "matriz_sup"
+                "name": "matriz_sup",
+                "sectionId": -1
             },
             {
                 "geometry": {
@@ -127,7 +180,8 @@
                 "mesh": {
                     "source": "demo_part_4.bdf"
                 },
-                "name": ""
+                "name": "",
+                "sectionId": -1
             }
         ]
     }
