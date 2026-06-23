@@ -323,4 +323,4 @@
          - Re-enabled restart/checkpoint controls for the "From Model" job creation flow.
 20260623 - Added use exploration by keys. 
          - Rollback to simple click in file navigation.
-         
+         - Fixed node nombre showing in results.

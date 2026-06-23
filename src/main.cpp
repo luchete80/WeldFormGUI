@@ -1507,12 +1507,12 @@ void drawViewportOverlay(VtkViewer& viewer,
         }
         if (editor != nullptr) {
             ImGui::SameLine();
-            if (drawToolbarButton("Ni", editor->getShowAllNodeLabels(), "Show all node ids")) {
-                editor->setShowAllNodeLabels(!editor->getShowAllNodeLabels());
+            if (drawToolbarButton("Ni", editor->getShowAllNodeLabelsForViewer(&viewer), "Show all node ids")) {
+                editor->setShowAllNodeLabelsForViewer(&viewer, !editor->getShowAllNodeLabelsForViewer(&viewer));
             }
             ImGui::SameLine();
-            if (drawToolbarButton("Ei", editor->getShowAllElementLabels(), "Show all element ids")) {
-                editor->setShowAllElementLabels(!editor->getShowAllElementLabels());
+            if (drawToolbarButton("Ei", editor->getShowAllElementLabelsForViewer(&viewer), "Show all element ids")) {
+                editor->setShowAllElementLabelsForViewer(&viewer, !editor->getShowAllElementLabelsForViewer(&viewer));
             }
             ImGui::SameLine();
             if (drawMeasureIconButton(editor->isMeasurementEnabled(), "Measure distance")) {

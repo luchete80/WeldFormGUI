@@ -94,6 +94,7 @@
 
 #include <vtkArrowSource.h>
 #include <vtkBillboardTextActor3D.h>
+#include <vtkCell.h>
 #include <vtkCellArray.h>
 #include <vtkCellPicker.h>
 #include <vtkCenterOfMass.h>
@@ -1207,6 +1208,36 @@ Mesh* findOwningMeshForNode(Model* model, Node* targetNode)
     return nullptr;
 }
 
+int findNodeIndexInMesh(Mesh* mesh, Node* targetNode)
+{
+    if (mesh == nullptr || targetNode == nullptr) {
+        return -1;
+    }
+
+    for (int n = 0; n < mesh->getNodeCount(); ++n) {
+        if (mesh->getNode(n) == targetNode) {
+            return n;
+        }
+    }
+
+    return -1;
+}
+
+int findNodeIndexInModel(Model* model, Node* targetNode)
+{
+    if (model == nullptr || targetNode == nullptr) {
+        return -1;
+    }
+
+    for (int n = 0; n < model->getNodeCount(); ++n) {
+        if (model->getNode(n) == targetNode) {
+            return n;
+        }
+    }
+
+    return -1;
+}
+
 Mesh* findCommonMeshForNodes(Model* model, const std::vector<Node*>& nodes)
 {
     if (model == nullptr || nodes.empty()) {
@@ -1885,8 +1916,38 @@ bool Editor::projectNodeToViewport(Node* node, double& x, double& y) const
   }
 
   auto renderer = viewer->getRenderer();
-  const Vector3f& pos = node->getPos();
-  renderer->SetWorldPoint(pos.x, pos.y, pos.z, 1.0);
+  double worldPoint[3] = {0.0, 0.0, 0.0};
+  bool useResultPoint = false;
+
+  ResultFrame* activeFrame = (viewer == res_viewer) ? getActiveResultFrame() : nullptr;
+  Mesh* resultMesh = findResultViewerTargetMesh();
+  if (activeFrame != nullptr && activeFrame->mesh != nullptr) {
+    Mesh* owningMesh = findOwningMeshForNode(m_model, node);
+    if (resultMesh != nullptr && owningMesh == resultMesh) {
+      const int nodeIndex = findNodeIndexInMesh(resultMesh, node);
+      if (nodeIndex >= 0 &&
+          static_cast<vtkIdType>(nodeIndex) < activeFrame->mesh->GetNumberOfPoints()) {
+        activeFrame->mesh->GetPoint(static_cast<vtkIdType>(nodeIndex), worldPoint);
+        useResultPoint = true;
+      }
+    } else {
+      const int nodeIndex = findNodeIndexInModel(m_model, node);
+      if (nodeIndex >= 0 &&
+          static_cast<vtkIdType>(nodeIndex) < activeFrame->mesh->GetNumberOfPoints()) {
+        activeFrame->mesh->GetPoint(static_cast<vtkIdType>(nodeIndex), worldPoint);
+        useResultPoint = true;
+      }
+    }
+  }
+
+  if (!useResultPoint) {
+    const Vector3f& pos = node->getPos();
+    worldPoint[0] = pos.x;
+    worldPoint[1] = pos.y;
+    worldPoint[2] = pos.z;
+  }
+
+  renderer->SetWorldPoint(worldPoint[0], worldPoint[1], worldPoint[2], 1.0);
   renderer->WorldToDisplay();
 
   double display[3] = {0.0, 0.0, 0.0};
@@ -1913,6 +1974,11 @@ bool Editor::projectElementCentroidToViewport(Element* element, double& x, doubl
 
   Vector3f centroid(0.0f, 0.0f, 0.0f);
   int validNodeCount = 0;
+  ResultFrame* activeFrame = (viewer == res_viewer) ? getActiveResultFrame() : nullptr;
+  Mesh* resultMesh = findResultViewerTargetMesh();
+  const bool useResultPoints =
+      activeFrame != nullptr &&
+      activeFrame->mesh != nullptr;
   for (int i = 0; i < element->getNodeCount(); ++i) {
     const int nodeId = element->getNodeId(i);
     Node* node = nullptr;
@@ -1928,7 +1994,24 @@ bool Editor::projectElementCentroidToViewport(Element* element, double& x, doubl
       continue;
     }
 
-    centroid += node->getPos();
+    if (useResultPoints) {
+      int nodeIndex = -1;
+      if (resultMesh != nullptr && owningMesh == resultMesh) {
+        nodeIndex = findNodeIndexInMesh(owningMesh, node);
+      } else {
+        nodeIndex = findNodeIndexInModel(m_model, node);
+      }
+      if (nodeIndex < 0 ||
+          static_cast<vtkIdType>(nodeIndex) >= activeFrame->mesh->GetNumberOfPoints()) {
+        continue;
+      }
+
+      double resultPoint[3] = {0.0, 0.0, 0.0};
+      activeFrame->mesh->GetPoint(static_cast<vtkIdType>(nodeIndex), resultPoint);
+      centroid += Vector3f(resultPoint[0], resultPoint[1], resultPoint[2]);
+    } else {
+      centroid += node->getPos();
+    }
     ++validNodeCount;
   }
 
@@ -1969,14 +2052,11 @@ Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) co
 
   Node* closest = nullptr;
   double bestDist2 = maxDistancePixels * maxDistancePixels;
-
-  for (int p = 0; p < m_model->getPartCount(); ++p) {
-    Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
-      continue;
+  auto tryClosestFromMesh = [&](Mesh* mesh) {
+    if (mesh == nullptr) {
+      return;
     }
 
-    Mesh* mesh = part->getMesh();
     for (int n = 0; n < mesh->getNodeCount(); ++n) {
       Node* node = mesh->getNode(n);
       double sx = 0.0;
@@ -1992,6 +2072,19 @@ Node* Editor::pickClosestNodeAt(double x, double y, double maxDistancePixels) co
         bestDist2 = dist2;
         closest = node;
       }
+    }
+  };
+
+  if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+    tryClosestFromMesh(resultMesh);
+  } else {
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part* part = m_model->getPart(p);
+      if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+        continue;
+      }
+
+      tryClosestFromMesh(part->getMesh());
     }
   }
 
@@ -2089,14 +2182,11 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
 
   std::vector<Node*> selectedNodes;
   std::unordered_set<Node*> seen;
-
-  for (int p = 0; p < m_model->getPartCount(); ++p) {
-    Part* part = m_model->getPart(p);
-    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
-      continue;
+  auto collectNodesFromMesh = [&](Mesh* mesh) {
+    if (mesh == nullptr) {
+      return;
     }
 
-    Mesh* mesh = part->getMesh();
     for (int n = 0; n < mesh->getNodeCount(); ++n) {
       Node* node = mesh->getNode(n);
       double sx = 0.0;
@@ -2108,6 +2198,19 @@ void Editor::selectNodesInBox(double x0, double y0, double x1, double y1)
       if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY && seen.insert(node).second) {
         selectedNodes.push_back(node);
       }
+    }
+  };
+
+  if (Mesh* resultMesh = findResultViewerTargetMesh()) {
+    collectNodesFromMesh(resultMesh);
+  } else {
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part* part = m_model->getPart(p);
+      if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
+        continue;
+      }
+
+      collectNodesFromMesh(part->getMesh());
     }
   }
 
@@ -2362,6 +2465,58 @@ void Editor::drawSelectionOverlay() const
     }
     return nullptr;
   };
+  const bool isResultsViewer = (viewer == res_viewer);
+  ResultFrame* activeResultFrame = isResultsViewer ? getActiveResultFrame() : nullptr;
+  const bool showAllNodeLabels =
+      isResultsViewer ? m_show_all_result_node_labels : m_show_all_node_labels;
+  const bool showAllElementLabels =
+      isResultsViewer ? m_show_all_result_element_labels : m_show_all_element_labels;
+  auto projectWorldPointToViewport = [&](const double worldPoint[3], double& x, double& y) -> bool {
+    if (viewer == nullptr || viewer->getRenderer() == nullptr) {
+      return false;
+    }
+
+    auto renderer = viewer->getRenderer();
+    renderer->SetWorldPoint(worldPoint[0], worldPoint[1], worldPoint[2], 1.0);
+    renderer->WorldToDisplay();
+
+    double display[3] = {0.0, 0.0, 0.0};
+    renderer->GetDisplayPoint(display);
+    if (display[2] < 0.0 || display[2] > 1.0) {
+      return false;
+    }
+
+    x = display[0];
+    y = static_cast<double>(viewer->getViewportHeight()) - display[1];
+    return true;
+  };
+  auto drawLabelAt = [&](double x,
+                         double y,
+                         const std::string& label,
+                         const ImU32 backgroundColor,
+                         const ImU32 borderColor,
+                         const ImU32 textColor) {
+    const ImVec2 textPos(
+      viewportMin.x + static_cast<float>(x) + 6.0f,
+      viewportMin.y + static_cast<float>(y) - 8.0f);
+    const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+    const ImVec2 bgMin(textPos.x - 3.0f, textPos.y - 2.0f);
+    const ImVec2 bgMax(textPos.x + textSize.x + 3.0f, textPos.y + textSize.y + 2.0f);
+    drawList->AddRectFilled(bgMin, bgMax, backgroundColor, 3.0f);
+    drawList->AddRect(bgMin, bgMax, borderColor, 3.0f, 0, 1.0f);
+    drawList->AddText(textPos, textColor, label.c_str());
+  };
+  auto resultNodeLabel = [&](vtkIdType pointId) -> std::string {
+    if (m_model != nullptr &&
+        pointId >= 0 &&
+        pointId < static_cast<vtkIdType>(m_model->getNodeCount())) {
+      Node* node = m_model->getNode(static_cast<int>(pointId));
+      if (node != nullptr) {
+        return std::to_string(node->getId());
+      }
+    }
+    return std::to_string(static_cast<long long>(pointId) + 1LL);
+  };
   if (m_selector.isBoxSelecting()) {
     const ImVec2 start(viewportMin.x + m_selector.getBoxStart().x, viewportMin.y + m_selector.getBoxStart().y);
     const ImVec2 end(viewportMin.x + m_selector.getBoxEnd().x, viewportMin.y + m_selector.getBoxEnd().y);
@@ -2369,7 +2524,7 @@ void Editor::drawSelectionOverlay() const
     drawList->AddRect(start, end, IM_COL32(70, 160, 255, 255), 0.0f, 0, 2.0f);
   }
 
-  if (m_show_all_node_labels && m_model != nullptr) {
+  if (showAllNodeLabels) {
     auto drawNodeLabelsForMesh = [&](Mesh* mesh) {
       if (mesh == nullptr) {
         return;
@@ -2387,22 +2542,37 @@ void Editor::drawSelectionOverlay() const
           continue;
         }
 
-        const std::string label = std::to_string(node->getId());
-        const ImVec2 textPos(
-          viewportMin.x + static_cast<float>(x) + 6.0f,
-          viewportMin.y + static_cast<float>(y) - 8.0f);
-        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
-        const ImVec2 bgMin(textPos.x - 3.0f, textPos.y - 2.0f);
-        const ImVec2 bgMax(textPos.x + textSize.x + 3.0f, textPos.y + textSize.y + 2.0f);
-        drawList->AddRectFilled(bgMin, bgMax, IM_COL32(18, 22, 28, 140), 3.0f);
-        drawList->AddRect(bgMin, bgMax, IM_COL32(255, 244, 196, 50), 3.0f, 0, 1.0f);
-        drawList->AddText(textPos, IM_COL32(255, 248, 220, 220), label.c_str());
+        drawLabelAt(x,
+                    y,
+                    std::to_string(node->getId()),
+                    IM_COL32(18, 22, 28, 140),
+                    IM_COL32(255, 244, 196, 50),
+                    IM_COL32(255, 248, 220, 220));
       }
     };
 
-    if (Mesh* resultMesh = findResultViewerTargetMesh()) {
-      drawNodeLabelsForMesh(resultMesh);
-    } else {
+    if (isResultsViewer) {
+      if (activeResultFrame != nullptr && activeResultFrame->mesh != nullptr) {
+        const vtkIdType pointCount = activeResultFrame->mesh->GetNumberOfPoints();
+        for (vtkIdType pointId = 0; pointId < pointCount; ++pointId) {
+          double point[3] = {0.0, 0.0, 0.0};
+          activeResultFrame->mesh->GetPoint(pointId, point);
+
+          double x = 0.0;
+          double y = 0.0;
+          if (!projectWorldPointToViewport(point, x, y)) {
+            continue;
+          }
+
+          drawLabelAt(x,
+                      y,
+                      resultNodeLabel(pointId),
+                      IM_COL32(18, 22, 28, 140),
+                      IM_COL32(255, 244, 196, 50),
+                      IM_COL32(255, 248, 220, 220));
+        }
+      }
+    } else if (m_model != nullptr) {
       for (int p = 0; p < m_model->getPartCount(); ++p) {
         Part* part = m_model->getPart(p);
         if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {
@@ -2413,7 +2583,7 @@ void Editor::drawSelectionOverlay() const
     }
   }
 
-  if (m_show_all_element_labels && m_model != nullptr) {
+  if (showAllElementLabels) {
     auto drawElementLabelsForMesh = [&](Mesh* mesh) {
       if (mesh == nullptr) {
         return;
@@ -2431,22 +2601,52 @@ void Editor::drawSelectionOverlay() const
           continue;
         }
 
-        const std::string label = std::to_string(element->getId());
-        const ImVec2 textPos(
-          viewportMin.x + static_cast<float>(x) + 6.0f,
-          viewportMin.y + static_cast<float>(y) - 8.0f);
-        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
-        const ImVec2 bgMin(textPos.x - 3.0f, textPos.y - 2.0f);
-        const ImVec2 bgMax(textPos.x + textSize.x + 3.0f, textPos.y + textSize.y + 2.0f);
-        drawList->AddRectFilled(bgMin, bgMax, IM_COL32(12, 20, 28, 140), 3.0f);
-        drawList->AddRect(bgMin, bgMax, IM_COL32(120, 235, 255, 50), 3.0f, 0, 1.0f);
-        drawList->AddText(textPos, IM_COL32(190, 240, 255, 220), label.c_str());
+        drawLabelAt(x,
+                    y,
+                    std::to_string(element->getId()),
+                    IM_COL32(12, 20, 28, 140),
+                    IM_COL32(120, 235, 255, 50),
+                    IM_COL32(190, 240, 255, 220));
       }
     };
 
-    if (Mesh* resultMesh = findResultViewerTargetMesh()) {
-      drawElementLabelsForMesh(resultMesh);
-    } else {
+    if (isResultsViewer) {
+      if (activeResultFrame != nullptr && activeResultFrame->mesh != nullptr) {
+        const vtkIdType cellCount = activeResultFrame->mesh->GetNumberOfCells();
+        for (vtkIdType cellId = 0; cellId < cellCount; ++cellId) {
+          vtkCell* cell = activeResultFrame->mesh->GetCell(cellId);
+          if (cell == nullptr || cell->GetNumberOfPoints() <= 0) {
+            continue;
+          }
+
+          double centroid[3] = {0.0, 0.0, 0.0};
+          for (vtkIdType pointIndex = 0; pointIndex < cell->GetNumberOfPoints(); ++pointIndex) {
+            double point[3] = {0.0, 0.0, 0.0};
+            activeResultFrame->mesh->GetPoint(cell->GetPointId(pointIndex), point);
+            centroid[0] += point[0];
+            centroid[1] += point[1];
+            centroid[2] += point[2];
+          }
+          const double invPointCount = 1.0 / static_cast<double>(cell->GetNumberOfPoints());
+          centroid[0] *= invPointCount;
+          centroid[1] *= invPointCount;
+          centroid[2] *= invPointCount;
+
+          double x = 0.0;
+          double y = 0.0;
+          if (!projectWorldPointToViewport(centroid, x, y)) {
+            continue;
+          }
+
+          drawLabelAt(x,
+                      y,
+                      std::to_string(static_cast<long long>(cellId) + 1LL),
+                      IM_COL32(12, 20, 28, 140),
+                      IM_COL32(120, 235, 255, 50),
+                      IM_COL32(190, 240, 255, 220));
+        }
+      }
+    } else if (m_model != nullptr) {
       for (int p = 0; p < m_model->getPartCount(); ++p) {
         Part* part = m_model->getPart(p);
         if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr || !isPartVisible(part)) {

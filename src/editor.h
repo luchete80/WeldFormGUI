@@ -164,6 +164,26 @@ public:
   void setShowAllNodeLabels(bool value) { m_show_all_node_labels = value; }
   bool getShowAllElementLabels() const { return m_show_all_element_labels; }
   void setShowAllElementLabels(bool value) { m_show_all_element_labels = value; }
+  bool getShowAllNodeLabelsForViewer(const VtkViewer* targetViewer) const {
+    return targetViewer == res_viewer ? m_show_all_result_node_labels : m_show_all_node_labels;
+  }
+  void setShowAllNodeLabelsForViewer(const VtkViewer* targetViewer, bool value) {
+    if (targetViewer == res_viewer) {
+      m_show_all_result_node_labels = value;
+    } else {
+      m_show_all_node_labels = value;
+    }
+  }
+  bool getShowAllElementLabelsForViewer(const VtkViewer* targetViewer) const {
+    return targetViewer == res_viewer ? m_show_all_result_element_labels : m_show_all_element_labels;
+  }
+  void setShowAllElementLabelsForViewer(const VtkViewer* targetViewer, bool value) {
+    if (targetViewer == res_viewer) {
+      m_show_all_result_element_labels = value;
+    } else {
+      m_show_all_element_labels = value;
+    }
+  }
   void setActiveViewer(VtkViewer* activeViewer) { viewer = activeViewer; }
   void clearBoundaryConditionOverlay();
   void clearPartSelectionState();
@@ -436,6 +456,8 @@ protected:
   bool m_show_selected_node_labels = false;
   bool m_show_all_node_labels = false;
   bool m_show_all_element_labels = false;
+  bool m_show_all_result_node_labels = false;
+  bool m_show_all_result_element_labels = false;
   enum class SidebarTab {
     Model,
     Results,
