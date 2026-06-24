@@ -256,6 +256,7 @@ protected:
   Element* pickClosestElementAt(double x, double y, double maxDistancePixels = 16.0) const;
   void selectNodesInBox(double x0, double y0, double x1, double y1);
   void selectElementsInBox(double x0, double y0, double x1, double y1);
+  bool deleteSelectedElements();
   void selectNodeSet(Mesh* mesh, int setIndex);
   void selectElementSet(Mesh* mesh, int setIndex);
   void selectFaceSet(Mesh* mesh, int setIndex);

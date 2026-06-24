@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <map>
+#include <algorithm>
+#include <unordered_set>
 
 #include <gmsh.h>
 #include <array>
@@ -67,6 +69,54 @@ void Mesh::addElement(Element *el, bool alloc){
     new_element->m_id = next_id;
     m_elem.push_back(new_element);
 
+}
+
+bool Mesh::removeElement(Element* element){
+  if (element == nullptr) {
+    return false;
+  }
+
+  std::vector<Element*> elements;
+  elements.push_back(element);
+  return removeElements(elements) > 0;
+}
+
+int Mesh::removeElements(const std::vector<Element*>& elements){
+  std::unordered_set<Element*> toRemove;
+  for (Element* element : elements) {
+    if (element != nullptr) {
+      toRemove.insert(element);
+    }
+  }
+
+  if (toRemove.empty()) {
+    return 0;
+  }
+
+  int removedCount = 0;
+  for (std::vector<Element*>::iterator it = m_elem.begin(); it != m_elem.end();) {
+    Element* element = *it;
+    if (toRemove.find(element) == toRemove.end()) {
+      ++it;
+      continue;
+    }
+
+    for (ElementSet& set : m_element_sets) {
+      set.remove(element);
+    }
+    for (FaceSet& set : m_face_sets) {
+      set.removeFacesForOwnerElementId(element->getId());
+    }
+    delete element;
+    it = m_elem.erase(it);
+    ++removedCount;
+  }
+
+  if (removedCount > 0) {
+    m_elem_count = static_cast<int>(m_elem.size());
+  }
+
+  return removedCount;
 }
 
 void Mesh::addQuad(int v0, int v1, int v2, int v3, int id){

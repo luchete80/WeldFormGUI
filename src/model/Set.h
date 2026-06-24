@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "Entity.h"
 #include "Face.h"
 
@@ -24,6 +25,9 @@ public:
 
   void add(T* item){ if (item != nullptr) m_item.push_back(item); }
   void clear(){ m_item.clear(); }
+  void remove(T* item){
+    m_item.erase(std::remove(m_item.begin(), m_item.end(), item), m_item.end());
+  }
   int getItemCount() const { return static_cast<int>(m_item.size()); }
   T* getItem(const int& i){ return m_item[i]; }
   const T* getItem(const int& i) const { return m_item[i]; }
@@ -50,6 +54,7 @@ public:
 
   void add(Node* node){ Set<Node>::add(node); }
   void clear(){ Set<Node>::clear(); }
+  void remove(Node* node){ Set<Node>::remove(node); }
   int getItemCount() const { return Set<Node>::getItemCount(); }
   Node* getItem(const int& i){ return Set<Node>::getItem(i); }
   const Node* getItem(const int& i) const { return Set<Node>::getItem(i); }
@@ -71,6 +76,7 @@ public:
 
   void add(Element* element){ Set<Element>::add(element); }
   void clear(){ Set<Element>::clear(); }
+  void remove(Element* element){ Set<Element>::remove(element); }
   int getItemCount() const { return Set<Element>::getItemCount(); }
   Element* getItem(const int& i){ return Set<Element>::getItem(i); }
   const Element* getItem(const int& i) const { return Set<Element>::getItem(i); }
@@ -99,6 +105,14 @@ public:
   Face* getItem(const int& i){ return &m_faces[i]; }
   const Face* getItem(const int& i) const { return &m_faces[i]; }
   void setEntityId(int id) { m_id = id; }
+  void removeFacesForOwnerElementId(int ownerElementId) {
+    m_faces.erase(
+      std::remove_if(m_faces.begin(), m_faces.end(),
+        [ownerElementId](const Face& face) {
+          return face.getOwnerElementId() == ownerElementId;
+        }),
+      m_faces.end());
+  }
 
   void setLabel(const std::string& label){ m_label = label; }
   const std::string& getLabel() const { return m_label; }

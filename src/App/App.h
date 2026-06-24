@@ -94,6 +94,7 @@ public:
     }
 
   void removeGraphicMeshForPart(Part* part);
+  void rebuildGraphicMeshForPart(Part* part);
   void removeVisualForPart(Part* part);
   void clearVisualsForModel(Model* model);
   std::vector<vtkSmartPointer<vtkProp>>& getPendingActorRemovals(){return m_pendingActorRemovals;}

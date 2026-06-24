@@ -267,6 +267,16 @@ void App::removeGraphicMeshForPart(Part* part) {
     _updateNeeded = true;
 }
 
+void App::rebuildGraphicMeshForPart(Part* part) {
+    if (!part || !part->isMeshed() || part->getMesh() == nullptr) {
+        return;
+    }
+
+    removeGraphicMeshForPart(part);
+    updateMeshes();
+    _updateNeeded = true;
+}
+
 void App::removeVisualForPart(Part* part) {
     if (!part) return;
 

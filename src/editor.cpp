@@ -1624,6 +1624,17 @@ void Editor::drawSelectionControls()
     m_show_set_dlg = true;
   }
 
+  if (m_selector.isElementTarget()) {
+    ImGui::SameLine();
+    const bool canDeleteElements = m_selector.getSelectedElementCount() > 0 &&
+                                   findResultViewerTargetMesh() == nullptr;
+    ImGui::BeginDisabled(!canDeleteElements);
+    if (ImGui::Button("Delete Elements")) {
+      deleteSelectedElements();
+    }
+    ImGui::EndDisabled();
+  }
+
   if (m_selector.isPickMode()) {
     ImGui::TextDisabled("Pick: Click = single select");
     ImGui::TextDisabled("Pick: Ctrl+Click = add/remove %s",
@@ -2289,6 +2300,60 @@ void Editor::selectElementsInBox(double x0, double y0, double x1, double y1)
   m_is_node_sel = false;
   m_sel_node = -1;
   cout << "Selected " << selectedElements.size() << " elements" << endl;
+}
+
+bool Editor::deleteSelectedElements()
+{
+  const std::vector<Element*>& selectedElements = m_selector.getSelectedElements();
+  if (m_model == nullptr || selectedElements.empty()) {
+    return false;
+  }
+
+  Mesh* mesh = findCommonMeshForElements(m_model, selectedElements);
+  if (mesh == nullptr) {
+    cout << "Delete Elements requires all selected elements to belong to one mesh." << endl;
+    return false;
+  }
+
+  Part* owningPart = nullptr;
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part != nullptr && part->getMesh() == mesh) {
+      owningPart = part;
+      break;
+    }
+  }
+
+  const int removedCount = mesh->removeElements(selectedElements);
+  if (removedCount <= 0) {
+    return false;
+  }
+
+  std::unordered_set<Element*> removedElements(selectedElements.begin(), selectedElements.end());
+  m_model->m_elem.erase(
+    std::remove_if(m_model->m_elem.begin(), m_model->m_elem.end(),
+      [&removedElements](Element* element) {
+        return removedElements.find(element) != removedElements.end();
+      }),
+    m_model->m_elem.end());
+
+  m_selector.getSelectedElements().clear();
+  m_selected_element_set_mesh = nullptr;
+  m_selected_element_set_index = -1;
+  m_selected_face_set_mesh = nullptr;
+  m_selected_face_set_index = -1;
+  m_sel_node = -1;
+  m_is_node_sel = false;
+
+  if (owningPart != nullptr) {
+    getApp().rebuildGraphicMeshForPart(owningPart);
+  } else {
+    getApp().Update();
+  }
+
+  markActiveModelDirty();
+  cout << "Deleted " << removedCount << " selected elements" << endl;
+  return true;
 }
 
 void Editor::handleSelectionInteraction()
