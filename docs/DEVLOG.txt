@@ -325,3 +325,6 @@
          - Rollback to simple click in file navigation.
          - Fixed node nombre showing in results.
 20260624 - retain last folder in file input/import
+         - Added plain strain example
+         - Fixed meshing visible by partially trnasparent geom at meshing
+         - Fixed not working closing button at single frame vtk result

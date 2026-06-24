@@ -2750,6 +2750,7 @@ int main(int argc, char* argv[])
           }
 
           // ================= TAB: Resultados =================
+          const bool results_tab_was_open = vtk_res_open;
           ImGuiTabItemFlags results_tab_flags = activate_results_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
           if (vtk_res_open && ImGui::BeginTabItem("Results Viewer", &vtk_res_open, results_tab_flags))
           {
@@ -3215,6 +3216,12 @@ int main(int argc, char* argv[])
 
               ImGui::PopFont();
               ImGui::EndTabItem();
+          }
+          if (results_tab_was_open && !vtk_res_open) {
+              editor->closeCurrentResults();
+              clearResultsViewerTransientProps();
+              detachResultsClipTools(vtkViewer_res, resultsToolState);
+              vtkViewer_res.setActor(nullptr);
           }
           if (editor->getResults() == nullptr && currentScalarBar != nullptr) {
               clearResultsViewerTransientProps();

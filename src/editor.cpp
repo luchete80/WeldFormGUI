@@ -2850,28 +2850,19 @@ bool Editor::openResultsFromPath(const std::string& filePathName)
       }
       return opened;
   } else if (ext == ".vtk") {
-    ResultFrame *frame = new ResultFrame(filePathName);
+    closeCurrentResults();
+
+    auto frame = std::make_unique<ResultFrame>(filePathName);
     frame->printAvailableFields();
+    frame->time = 0.0;
+    frame->setShowEdges(true);
 
-    std::string fieldName;
-    fieldName = "pl_strain";
-    //fieldName = "DISP";
-
-    //IF SCALAR
-    frame->setActiveScalarField(fieldName);   // Cambia "TEMP" por el nombre de tu campo escalar
-    //if cell data
-    //~ frame->actor->GetMapper()->SetScalarModeToUseCellFieldData();
-    //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
-    //~ frame->actor->GetMapper()->SelectColorArray(fieldName.c_str());
-
-    //IF VECTOR
-    frame->setActiveScalarField("DISP");
-    frame->setVectorComponent("DISP", 0); // 0=X, 1=Y, 2=Z
-
-    frame->actor->GetMapper()->ScalarVisibilityOn();
-    frame->actor->GetMapper()->Update();
-
-    res_viewer->addActor(frame->actor);
+    m_results = new MultiResult();
+    m_results->sourceDirectory = fs::path(filePathName).parent_path();
+    m_results->frames.push_back(std::move(frame));
+    m_pending_results_frame_index = 0;
+    rebuildResultsPartVisibility();
+    applyResultsPartVisibility();
     getApp().addRecentFile(filePathName);
   } else {
     return false;
