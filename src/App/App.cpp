@@ -6,12 +6,16 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include <vtkProperty.h>
 
 //#include "VtkViewer.h"
 
 using namespace std; 
 
 namespace {
+constexpr double kGeometryDefaultOpacity = 1.0;
+constexpr double kMeshedGeometryReferenceOpacity = 0.22;
+
 void removeGraphicMeshInstance(std::vector<GraphicMesh*>& graphicMeshes,
                                std::vector<GraphicMesh*>::iterator& it,
                                std::vector<vtkSmartPointer<vtkProp>>& pendingActorRemovals) {
@@ -23,6 +27,35 @@ void removeGraphicMeshInstance(std::vector<GraphicMesh*>& graphicMeshes,
         delete gmesh;
     }
     it = graphicMeshes.erase(it);
+}
+
+void applyPartGeometryDisplayStyle(Part* part, vtkOCCTGeom* visual) {
+    if (part == nullptr || visual == nullptr || visual->actor == nullptr) {
+        return;
+    }
+
+    vtkProperty* property = visual->actor->GetProperty();
+    if (property == nullptr) {
+        return;
+    }
+
+    const bool isSurfaceGeometry = visual->hasSurfaceCells();
+    if (!isSurfaceGeometry) {
+        return;
+    }
+
+    const bool hasMesh = part->isMeshed() && part->getMesh() != nullptr;
+    if (hasMesh) {
+        property->SetOpacity(kMeshedGeometryReferenceOpacity);
+        property->SetColor(0.82, 0.82, 0.82);
+        visual->actor->SetPickable(false);
+    } else {
+        property->SetOpacity(kGeometryDefaultOpacity);
+        property->SetColor(1.0, 1.0, 1.0);
+        visual->actor->SetPickable(true);
+    }
+
+    visual->actor->Modified();
 }
 }
 
@@ -131,6 +164,11 @@ void App::updateMeshes(){
       } else {
         ++gmIt;
       }
+    }
+
+    for (int p=0;p<_activeModel->getPartCount();p++){
+      Part* part = _activeModel->getPart(p);
+      applyPartGeometryDisplayStyle(part, getVisualForPart(part));
     }
   
       

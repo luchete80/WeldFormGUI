@@ -80,7 +80,7 @@ int vtkOCCTGeom::TestReader(const std::string& path, unsigned int format)
     actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(m_mapper);
     actor->GetProperty()->SetLineWidth(1.0);
-    actor->GetProperty()->SetOpacity(0.5);
+    actor->GetProperty()->SetOpacity(1.0);
 
     return 1;
 }
@@ -252,7 +252,7 @@ void vtkOCCTGeom::LoadFromShape(const TopoDS_Shape& shape, double deflection)
         actor->SetScale(1.0, 1.0, 1.0);
 
         actor->GetProperty()->SetRenderLinesAsTubes(false);
-        actor->GetProperty()->SetOpacity(0.5);
+        actor->GetProperty()->SetOpacity(1.0);
         actor->GetProperty()->SetLineWidth(1.0);
         actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
 
