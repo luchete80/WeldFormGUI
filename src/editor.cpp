@@ -116,6 +116,23 @@ using namespace std;
 namespace fs = std::filesystem;
 
 namespace {
+std::string g_last_file_dialog_path = ".";
+
+void OpenDialogFromLastFilePath(const std::string& key,
+                                const std::string& title,
+                                const char* filters)
+{
+  ImGuiFileDialog::Instance()->OpenDialog(
+      key, title, filters, g_last_file_dialog_path, "");
+}
+
+void RememberCurrentFileDialogPath()
+{
+  std::string current_path = ImGuiFileDialog::Instance()->GetCurrentPath();
+  if (!current_path.empty())
+    g_last_file_dialog_path = current_path;
+}
+
 fs::path executableDirectory()
 {
 #ifdef _WIN32
@@ -5504,7 +5521,7 @@ void ShowExampleMenuFile(Editor *editor)
     if (ImGui::MenuItem("Open", "Ctrl+O")) {
         // ////// open Dialog Simple
   // if (ImGui::Button("Open File Dialog"))
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".wfmodel", ".");
+      OpenDialogFromLastFilePath("ChooseFileDlgKey", "Choose File", ".wfmodel");
     }
     if (ImGui::MenuItem("Open Input")) {
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenInput", "Choose Input", ".wfinput,.json", ".");
@@ -5518,7 +5535,10 @@ void ShowExampleMenuFile(Editor *editor)
       }
     }
     if (ImGui::MenuItem("Import Geometry", "Ctrl+I")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.iges,.IGES,.igs,.IGS,.geo,.GEO",".");
+      OpenDialogFromLastFilePath(
+          "ChooseFileDlgImport",
+          "Choose File",
+          ".step,.STEP,.stp,.STP,.iges,.IGES,.igs,.IGS,.geo,.GEO");
     }
     if (ImGui::MenuItem("Import Mesh", "Ctrl+M")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
@@ -5926,7 +5946,10 @@ void Editor::drawGui() {
         if (ImGui::BeginPopupContextItem())
         {
           if (ImGui::MenuItem("New Geometry from file", "CTRL+Z")) {
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImport", "Choose File", ".step,.STEP,.stp,.STP,.geo", ".");
+            OpenDialogFromLastFilePath(
+                "ChooseFileDlgImport",
+                "Choose File",
+                ".step,.STEP,.stp,.STP,.geo");
             
             string test;
             cout << "Model part count "<<m_model->getPartCount()<<endl;
@@ -8341,6 +8364,7 @@ void Editor::drawGui() {
 
     if (ImGuiFileDialog::Instance()->IsOk())
     {
+      RememberCurrentFileDialogPath();
       openModelFromPath(filePathName);
     }
     ImGuiFileDialog::Instance()->Close();
@@ -8354,6 +8378,7 @@ void Editor::drawGui() {
     // action if OK
     if (ImGuiFileDialog::Instance()->IsOk())
     {
+      RememberCurrentFileDialogPath();
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       cout << "file path name "<<filePathName<<endl;
       cout << "Adding part "<<endl;

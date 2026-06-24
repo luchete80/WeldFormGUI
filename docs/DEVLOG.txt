@@ -324,3 +324,4 @@
 20260623 - Added use exploration by keys. 
          - Rollback to simple click in file navigation.
          - Fixed node nombre showing in results.
+20260624 - retain last folder in file input/import
