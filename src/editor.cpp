@@ -981,6 +981,20 @@ fs::path activeModelOutputPath(Model &model, const std::string &filename)
     return fs::path(model.getBaseDir()) / filename;
 }
 
+std::string normalizedJobPath(const std::string& path)
+{
+    if (path.empty()) {
+        return {};
+    }
+
+    std::error_code ec;
+    fs::path normalized = fs::absolute(fs::path(path), ec);
+    if (ec) {
+        normalized = fs::path(path);
+    }
+    return normalized.lexically_normal().generic_string();
+}
+
 std::vector<fs::path> existingJobArtifacts(Job* job)
 {
     std::vector<fs::path> artifacts;
@@ -3524,8 +3538,13 @@ bool Editor::createJobFromActiveModel(bool runJob)
   InputWriter writer(&model);
   writer.writeToFile(input_path.string());
 
-  Job *job = new Job(input_path.string());
-  m_jobs.push_back(job);
+  Job* job = findJobByPath(input_path.string());
+  if (job == nullptr) {
+    job = new Job(input_path.string());
+    m_jobs.push_back(job);
+  } else {
+    job->setPathFile(input_path.string());
+  }
 
   if (runJob) {
     requestJobRun(job);
@@ -3574,6 +3593,14 @@ bool Editor::runModelCheckBeforeJobRun(Model& model)
 void Editor::requestJobRun(Job* job)
 {
   if (job == nullptr) {
+    return;
+  }
+
+  if (job->isRunning()) {
+    cout << "[Editor] Job is already running: " << job->getPathFile() << endl;
+    m_jobshowdlg.m_job = job;
+    job->UpdateOutput();
+    m_jobshowdlg.m_show = true;
     return;
   }
 
@@ -4963,6 +4990,8 @@ void Editor::drawPendingJobRunConfirmation()
 
 void Editor::drawActiveJobsProgressSummary()
 {
+  removeDuplicateJobEntries();
+
   int runningCount = 0;
   for (Job* job : m_jobs) {
     if (job != nullptr && job->isRunning()) {
@@ -5031,6 +5060,36 @@ bool Editor::deleteJobAtIndex(int index)
   delete job;
   m_jobs.erase(m_jobs.begin() + index);
   return true;
+}
+
+Job* Editor::findJobByPath(const std::string& jobPath) const
+{
+  const std::string targetPath = normalizedJobPath(jobPath);
+  if (targetPath.empty()) {
+    return nullptr;
+  }
+
+  for (Job* job : m_jobs) {
+    if (job != nullptr && normalizedJobPath(job->getPathFile()) == targetPath) {
+      return job;
+    }
+  }
+
+  return nullptr;
+}
+
+void Editor::removeDuplicateJobEntries()
+{
+  std::set<std::string> seenPaths;
+  for (int i = 0; i < static_cast<int>(m_jobs.size());) {
+    Job* job = m_jobs[i];
+    const std::string path = job != nullptr ? normalizedJobPath(job->getPathFile()) : std::string();
+    if (!path.empty() && !seenPaths.insert(path).second) {
+      deleteJobAtIndex(i);
+      continue;
+    }
+    ++i;
+  }
 }
 
 bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
@@ -5164,6 +5223,8 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
 
 void Editor::drawJobsSidebar(bool expandOnce)
 {
+  removeDuplicateJobEntries();
+
   if (expandOnce) {
     ImGui::SetNextItemOpen(true, ImGuiCond_Always);
   }
@@ -9038,7 +9099,13 @@ void Editor::drawGui() {
   
   if (m_jobdlg.create_entity){
     cout << "Creating Job "<<m_jobdlg.m_filename<<endl;
-    Job* newJob = new Job(m_jobdlg.m_filename);
+    Job* newJob = findJobByPath(m_jobdlg.m_filename);
+    if (newJob == nullptr) {
+      newJob = new Job(m_jobdlg.m_filename);
+      m_jobs.push_back(newJob);
+    } else {
+      newJob->setPathFile(m_jobdlg.m_filename);
+    }
     newJob->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_jobdlg.m_solver_edition));
     newJob->setCheckpointEnabled(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_checkpoint_enabled : false);
     newJob->setCheckpointInterval(m_jobdlg.m_checkpoint_interval);
@@ -9047,7 +9114,6 @@ void Editor::drawGui() {
     newJob->setRestartFile(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_restart_file : std::string());
     newJob->setResultBaseName(m_jobdlg.inputSupportsImplicit3DRestart() ? m_jobdlg.m_result_base_name : std::string());
     newJob->applyRestartSettingsToInput();
-    m_jobs.push_back(newJob); 
     m_jobdlg.create_entity = false;
     m_jobdlg.m_show=false;
   }

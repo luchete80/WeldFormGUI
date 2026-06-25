@@ -522,6 +522,8 @@ protected:
   void executePendingJobRun(bool deleteExistingArtifacts);
   void drawJobsSidebar(bool expandOnce);
   bool drawJobTreeNode(Job* job, int index, bool expandOnce);
+  Job* findJobByPath(const std::string& jobPath) const;
+  void removeDuplicateJobEntries();
   bool deleteJobAtIndex(int index);
   bool runModelCheckBeforeJobRun(Model& model);
   void drawModelCheckPopup();
