@@ -26,7 +26,7 @@
                 0.0
             ],
             "valueType": 1,
-            "zoneId": 2
+            "zoneId": 5
         }
     ],
     "Configuration": {
@@ -41,18 +41,18 @@
         "elemLentghFraction": 0.2,
         "fixedTS": false,
         "kernelGradCorr": false,
-        "outTime": 0.01,
-        "simTime": 1.0,
+        "outTime": 0.001,
+        "simTime": 0.025,
         "solver": {
             "implicit": {
                 "adaptiveDtLimiter": true,
-                "adaptiveDtMin": 1e-05,
+                "adaptiveDtMin": 1.0,
                 "divTol": 10.0,
                 "forceTol": 10.0,
                 "formulation": "rigid_viscoplastic",
                 "maxEffectiveStrainIncrementPerStep": 0.02,
                 "maxIter": 200,
-                "maxNodalDisplacementPerStep": 0.0005,
+                "maxNodalDisplacementPerStep": 0.0001,
                 "omegaP": 0.1,
                 "omegaV": 0.4,
                 "pressTol": 0.1,
@@ -62,7 +62,7 @@
                 "timeStepGrowthFactor": 1.2,
                 "type": "picard",
                 "useSprings": false,
-                "velTol": 0.05
+                "velTol": 0.01
             }
         },
         "xSymm": true,
@@ -70,16 +70,16 @@
     },
     "Contact": [
         {
-            "auto": true,
-            "autoFactor": 0.5,
-            "fricCoeffStatic": 0.01,
+            "auto": false,
+            "autoFactor": 1.0,
+            "fricCoeffStatic": 0.0001,
             "frictionRegularizationVelocity": 0.0,
-            "gapPenaltyScale": 2.0,
+            "gapPenaltyScale": 100.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 5000.0,
+            "penaltyFactor": 10.0,
             "useGapPenalty": true
         }
     ],
@@ -109,12 +109,12 @@
                 0.65
             ],
             "strdotRange": [
-                0.001,
-                10.0
+                0.0,
+                10000000000.0
             ],
             "tempRange": [
-                20.0,
-                1000.0
+                0.0,
+                10000000000.0
             ],
             "thermalCond": 0.0,
             "thermalExp": 0.0,
@@ -146,7 +146,7 @@
     },
     "RigidBodies": [
         {
-            "fileName": "demo_part_2.bdf",
+            "fileName": "demo_part_4.bdf",
             "orientNormals": true,
             "start": [
                 0.0,
@@ -154,10 +154,10 @@
                 0.0
             ],
             "type": "File",
-            "zoneId": 2
+            "zoneId": 4
         },
         {
-            "fileName": "demo_part_3.bdf",
+            "fileName": "demo_part_5.bdf",
             "orientNormals": true,
             "start": [
                 0.0,
@@ -165,7 +165,7 @@
                 0.0
             ],
             "type": "File",
-            "zoneId": 3
+            "zoneId": 5
         }
     ],
     "Sets": []

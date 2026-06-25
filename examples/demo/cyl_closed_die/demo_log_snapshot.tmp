@@ -1,0 +1,3553 @@
+Log initialized: examples/demo/cyl_closed_die/log.txt
+Out file: examples/demo/cyl_closed_die/log.txt
+INPUT FILE NAME examples/demo/cyl_closed_die/demo
+-----------------------------------------------
+------------------ WELDFORM FEM -----------------
+------------- Version: ------------------
+------------- Commit:  a45c122-------------------
+------------- Build:   2026-06-25 07:26:31------------
+Opening WFINPUT format file
+Fixed time step: OFF
+Number of threads used: 1np 1
+Thread 
+Threads used: 1, np parameter (via [Config]{Nproc})
+DOMAIN TYPE: PLAIN STRAIN
+SYMMETRY ON AXIS X plane=0 tol=0.0001
+Reading Domain type
+Domain type: File
+Reading Domain from Input file examples/demo/cyl_closed_die/demo_part_1.bdf
+Extension bdf
+Creating domain from Nastran file examples/demo/cyl_closed_die/demo_part_1.bdf
+[I] Reading Nastran file: examples/demo/cyl_closed_die/demo_part_1.bdf
+386 nodes and 347 elements found.
+[I] 738 lines readed ...
+Allocating 386 nodes
+Allocating 347 Elements...
+Done.
+Setting Dimension for implicit domain
+m_dim
+setting deriv allocation size of 2776
+mdim: 2 , Nod x Elem 4 347 1
+Allocating 386 nodes 
+Allocating 347 elements, node x element: 4
+Setting elements per node 
+Node 12 found in element 16
+Node 12 found in element 20
+Node 12 found in element 21
+Node 12 found in element 215
+Allocating 347 and 4nodes x elem
+COPYING 1388 element nodes 
+Done
+Size of Nodal shared Elements vector 1388
+Total orphan nodes: 0
+Node Elemets set. 
+[Nastran] Orphan nodes: 0
+[Nastran] Bounding box: xmin=-4.34e-19 xmax=0.007994 ymin=-0.004911 ymax=0.01109
+Node Size: 386
+Element Size: 347
+Executable variant: full
+Node limit: none
+Solver params: velTol=0.01, pressTol=0.1, forceTol=10, divTol=10, omegaV=0.4, omegaP=0.1, betaH=1e-06, nrEntryDivTol=0.05, nrEntryMaxDiv=1, elemLengthFraction=0.2, timeStepGrowthFactor=1.2, adaptiveDtLimiter=true, adaptiveDtMin=1, maxNodalDisplacementPerStep=0.0001, maxEffectiveStrainIncrementPerStep=0.02, checkpointEnabled=false, checkpointInterval=0, checkpointDir=, checkpointPrefix=mini3d_checkpoint, checkpointStopTime=-1, restartFile=, useSprings=false, springFactor=1e-05, springStiffness=0, springMode=1, picardWarmupIter=3, maxIter=200
+Setting density
+Done.
+Creating Material..:
+Type: Hollomon
+eps_0, 9.05e-04 eps_1 9.86e-03
+Hollomon Material Constants, K: 3.87e+08, n: 0.154
+eps_0, 9.05e-04 eps_1 9.86e-03
+Strain Range: 0.001, 0.65
+Thermal Material Properties: k=0, cp=0, alpha_T=0
+Material Parameters K: 3.87e+08
+Done.
+Reading Boundary Conditions ...
+Done
+done. Face count: 732
+Total External Nodal Area: 4.1114e-02, external nodes: 76
+Searching external nodes
+Creating plane mesh...
+Mesh start: 0,0, 0
+Mesh dim: 0,0, 0
+[RigidBody] Loading Nastran file: examples/demo/cyl_closed_die/demo_part_4.bdf
+[I] Reading Nastran file: examples/demo/cyl_closed_die/demo_part_4.bdf
+38 nodes and 37 elements found.
+[I] 81 lines readed ...
+Allocating 38 nodes
+Allocating 37 Elements...
+Done.
+Mesh0 Start: 0, 0, 0
+Nastran Mesh NodeCount: 38
+Copying 38 nodes 
+Centroid of matrix: 0.00758632, -0.00239258, 0
+endl
+Element count: 37done. Creating elements... Global Centroid:0.00420684, 0.0028829, 0
+Writing elements...
+Done. 
+Reorienting normals...
+2D open polyline component detected. Using orient_pt (0.00420684, 0.0028829, 0) and orienting normals toward that point. Coherent orientation preserved.
+Element 0 normal -0.0350593, 0.999385, 0
+Element 1 normal -0.101258, 0.99486, 0
+Element 2 normal -0.171341, 0.985212, 0
+Element 3 normal -0.237944, 0.971279, 0
+Element 4 normal -0.301597, 0.953436, 0
+Element 5 normal -0.368364, 0.929682, 0
+Element 6 normal -0.430766, 0.902464, 0
+Element 7 normal -0.490261, 0.871576, 0
+Element 8 normal -0.549294, 0.835629, 0
+Element 9 normal -0.606219, 0.795297, 0
+Element 10 normal -0.658781, 0.752335, 0
+Element 11 normal -0.708079, 0.706133, 0
+Element 12 normal -0.755946, 0.654634, 0
+Element 13 normal -0.797659, 0.603108, 0
+Element 14 normal -0.837998, 0.545673, 0
+Element 15 normal -0.872406, 0.488781, 0
+Element 16 normal -0.904332, 0.426829, 0
+Element 17 normal -0.931272, 0.364326, 0
+Element 18 normal -0.954549, 0.298053, 0
+Element 19 normal -0.965914, 0.258865, 0
+Element 20 normal -0.707107, 0.707107, 0
+Element 21 normal -0.258865, 0.965914, 0
+Element 22 normal -0, 1, 0
+Element 23 normal -0, 1, 0
+Element 24 normal -0, 1, 0
+Element 25 normal -0, 1, 0
+Element 26 normal -0, 1, 0
+Element 27 normal -0, 1, 0
+Element 28 normal -0, 1, 0
+Element 29 normal -0, 1, 0
+Element 30 normal -0, 1, 0
+Element 31 normal -0, 1, 0
+Element 32 normal -0, 1, 0
+Element 33 normal -0, 1, 0
+Element 34 normal -0, 1, 0
+Element 35 normal -0, 1, 0
+Element 36 normal -0, 1, 0
+Done.
+Allocation success.
+MESH ID 4
+Searching bcs for ZoneID 4..
+FRICTION COEFFS 1.000e-04 5.277e-310
+CONTACT PENALTY FACTOR: 10
+CONTACT GAP PENALTY: ON, scale=100, dynamicWithGap=OFF
+CONTACT AUTO PENALTY FACTOR: OFF, autoFactor=1
+FRICTION REGULARIZATION VELOCITY: 0
+RECOMPUTE CONTACT DT EACH STEP: ON
+-------------------
+Done
+More than one Rigid Bodies found.
+Loading additional rigid body 1
+Start: 0, 0, 0
+[RigidBody] Loading Nastran file: examples/demo/cyl_closed_die/demo_part_5.bdf
+[I] Reading Nastran file: examples/demo/cyl_closed_die/demo_part_5.bdf
+73 nodes and 72 elements found.
+[I] 151 lines readed ...
+Allocating 73 nodes
+Allocating 72 Elements...
+Done.
+Contact Mesh 1. Oriented normals is set to true
+Mesh 1 Start: 0, 0, 0
+Nastran Mesh NodeCount: 73
+Copying 73 nodes 
+Centroid of matrix: 0.00757245, 0.00811936, 0
+endl
+Element count: 72done. Creating elements... Global Centroid:0.00420684, 0.0028829, 0
+Writing elements...
+Done. 
+Reorienting normals...
+2D open polyline component detected. Using orient_pt (0.00420684, 0.0028829, 0) and orienting normals toward that point. Applied global flip.
+Element 0 normal -0.037909, -0.999281, -0
+Element 1 normal -0.0379521, -0.99928, -0
+Element 2 normal -0.113461, -0.993542, -0
+Element 3 normal -0.114018, -0.993479, -0
+Element 4 normal -0.151488, -0.988459, -0
+Element 5 normal -0.190259, -0.981734, -0
+Element 6 normal -0.227349, -0.973813, -0
+Element 7 normal -0.264717, -0.964326, -0
+Element 8 normal -0.302579, -0.953124, -0
+Element 9 normal -0.305885, -0.952068, -0
+Element 10 normal -0.376579, -0.926384, -0
+Element 11 normal -0.381902, -0.924203, -0
+Element 12 normal -0.418094, -0.908404, -0
+Element 13 normal -0.456317, -0.889817, -0
+Element 14 normal -0.49044, -0.871475, -0
+Element 15 normal -0.528302, -0.849057, -0
+Element 16 normal -0.535143, -0.844761, -0
+Element 17 normal -0.597011, -0.802233, -0
+Element 18 normal -0.606043, -0.795432, -0
+Element 19 normal -0.61714, -0.786853, -0
+Element 20 normal -0.672673, -0.73994, -0
+Element 21 normal -0.683941, -0.729537, -0
+Element 22 normal -0.70901, -0.705198, -0
+Element 23 normal -0.734949, -0.678123, -0
+Element 24 normal -0.758185, -0.652039, -0
+Element 25 normal -0.782349, -0.622841, -0
+Element 26 normal -0.802276, -0.596954, -0
+Element 27 normal -0.823821, -0.56685, -0
+Element 28 normal -0.842409, -0.538838, -0
+Element 29 normal -0.861153, -0.508346, -0
+Element 30 normal -0.877896, -0.478852, -0
+Element 31 normal -0.894427, -0.447214, -0
+Element 32 normal -0.909065, -0.416655, -0
+Element 33 normal -0.923971, -0.382463, -0
+Element 34 normal -0.937106, -0.349044, -0
+Element 35 normal -0.947922, -0.318502, -0
+Element 36 normal -0.959787, -0.280728, -0
+Element 37 normal -0.991428, -0.130653, -0
+Element 38 normal -0.924203, -0.381902, -0
+Element 39 normal -0.793051, -0.609155, -0
+Element 40 normal -0.609155, -0.793051, -0
+Element 41 normal -0.378633, -0.925547, -0
+Element 42 normal -0.134428, -0.990923, -0
+Element 43 normal 0, -1, -0
+Element 44 normal 0, -1, -0
+Element 45 normal 0, -1, -0
+Element 46 normal 0, -1, -0
+Element 47 normal 0, -1, -0
+Element 48 normal 0, -1, -0
+Element 49 normal 0, -1, -0
+Element 50 normal 0, -1, -0
+Element 51 normal 0, -1, -0
+Element 52 normal 0, -1, -0
+Element 53 normal 0, -1, -0
+Element 54 normal 0, -1, -0
+Element 55 normal 0, -1, -0
+Element 56 normal 0, -1, -0
+Element 57 normal 0, -1, -0
+Element 58 normal 0, -1, -0
+Element 59 normal 0, -1, -0
+Element 60 normal 0, -1, -0
+Element 61 normal 0, -1, -0
+Element 62 normal 0, -1, -0
+Element 63 normal 0, -1, -0
+Element 64 normal 0, -1, -0
+Element 65 normal 0, -1, -0
+Element 66 normal 0, -1, -0
+Element 67 normal 0, -1, -0
+Element 68 normal 0, -1, -0
+Element 69 normal 0, -1, -0
+Element 70 normal 0, -1, -0
+Element 71 normal 0, -1, -0
+Done.
+Allocation success.
+MESH ID 5
+Searching bcs for ZoneID 5..
+BC Found for Zone ID: 5
+Applying Velocity 0.000e+00 -1.000e-01 0.000e+00
+-------------------
+Resizing storage
+Allocated meshes: 1
+assigning 
+done 
+New Mesh capacity: 2
+Resizing Node Data
+Old Node count 38, New node count 111, current_node_capacity 0
+New capacity 111
+copying 38 nodes 
+assigning 
+Resizing Element Data
+Copying memory
+Copying 72 elements to offset 37
+Setting vel
+new_nodes_start 38, new_nodes_end 111
+new_elem_start 38, new_elem_end 111
+Updating metadata..
+Done.
+MESH NODE COUNT 111
+Setting contact...
+Done.
+Calulating min element size ...
+Setting remesh size at AVERAGE EDGE SIZE:0.000514898 (min edge 0.000196756)
+Min length: 0.000196756
+Time Step 0.04
+End Time: 0.04
+MESH INTERVAL: 0
+REMESH ENABLED: true
+REMESH TRANSITION ANGLE: 30 deg
+REMESH STRAIN RANGE: -1 to 1e+06
+REMESH SIZE FRACTIONS: min=1 max=1 epsRef=1 beta=4 type=0 refineOnlyBoundary=false boundaryLayers=2 baseSize=0.000514898
+FIXED 0 NODES
+VEL  0 NODES
+SYMMETRY BCs total=22 x=22 y=0 z=0 symtol=0.0001
+Allocated BCS: 
+X 22
+Y 0
+Z 0
+Element Count 347
+Reading Solver type
+Solving..
+Using Martins Picard solver
+[Nastran] 2D rigid body mesh source: examples/demo/cyl_closed_die/demo_part_4.bdf, nodes=111, elements=109
+Initialization
+End.
+Calc Derivatives
+Initial Vol: 1.0024e-04
+[ImplicitMass] initial total_mass=0.27868 total_vol=0.000100245 nodal_mass_range=[0.000107249, 0.00177738] nodal_vol_range=[3.85789e-08, 6.39347e-07] elem_vol_range=[5.3718e-08, 7.14462e-07] rho_range=[2780, 2780]
+done. Face count: 732
+Total External Nodal Area: 4.1114e-02, external nodes: 76
+======================================================================
+SIMULACIÓN AXISIMÉTRICA DE FORJA - ESQUEMA MARTINS
+======================================================================
+Material model: 1, BulkMod=1.75e+11
+Elementos: 347, Nodos: 386
+DOFs: 1119 (772 velocidades + 347 presiones P0)
+Esquema: Martins (4.55-4.56)
+Integración: P(4 puntos) + Q(1 punto reducido)
+Vref0.1
+Ckecking
+Inititalizing original bcs
+Writing VTK output examples/demo/cyl_closed_die/demo_00000.vtk
+DONE writing VTK.
+Output control: outTime=0.001 s, next_output_time=0.001 s, end_time=0.04 s
+MAX Contact Surfaces 5
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 1/1 (dt=0.000787025 s) --- (Time=0 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 0
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.33467e+10
+   Flow stress min/max/avg: 0 / 0 / 0
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0, dp=0, div(v)=0, fres2=skip, fresInf=skip
+Mesh position -0.006491
+Calculating dt 
+vref = 0.0393512, dt = 0.000787025
+Step Energy 
+Total Internal Energy 0
+  v_r: [0, 0] m/s
+  v_z: [0, 0] m/s
+  Presión: [0, 0] MPa
+  Presión media: 0 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 0
+Area 0
+Step Time 0.0201547 seconds
+CPU Overall Time 0.0201547 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 2/1 (dt=0.000440411 s) --- (Time=0.000787025 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 0
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.33467e+10
+   Flow stress min/max/avg: 1.9e+08 / 1.9e+08 / 1.9e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0, dp=0, div(v)=0, fres2=skip, fresInf=skip
+Mesh position -0.006491
+Calculating dt 
+vref = 0.0893512, dt = 0.000440411
+Step Energy 
+Total Internal Energy 0
+  v_r: [0, 0] m/s
+  v_z: [0, 0] m/s
+  Presión: [0, 0] MPa
+  Presión media: 0 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 0
+Area 0
+Step Time 0.0109859 seconds
+CPU Overall Time 0.0311405 seconds
+DONE.
+Writing scheduled VTK output: time=0.00122744 s, configured outTime=0.001 s, target_output_time=0.001 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00002.vtk
+DONE writing VTK.
+Next scheduled output time=0.002 s
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 3/1 (dt=0.000393512 s) --- (Time=0.00122744 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.05446e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.3348e+10
+   Flow stress min/max/avg: 1.9e+08 / 1.9e+08 / 1.9e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=1, dp=1, div(v)=0, fres2=0.667551, fresInf=0.643087
+Max kcontact: 2.05446e+12
+    Iter 2: dv=0.339126, dp=0.515643, div(v)=4.236e-07, fres2=0.532428, fresInf=0.490686
+Max kcontact: 2.05446e+12
+    Iter 3: dv=0.0388052, dp=0.0844526, div(v)=4.94099e-07, fres2=0.377497, fresInf=0.355159
+Max kcontact: 2.05446e+12
+    Iter 4: dv=0.109911, dp=0.0629131, div(v)=4.59025e-07, fres2=0.24413, fresInf=0.230611
+Max kcontact: 2.05446e+12
+    Iter 5: dv=0.0864718, dp=0.0794986, div(v)=3.61626e-07, fres2=0.153399, fresInf=0.143568
+Max kcontact: 2.05446e+12
+    Iter 6: dv=0.0602396, dp=0.083935, div(v)=2.69328e-07, fres2=0.0972212, fresInf=0.0892821
+Max kcontact: 2.05446e+12
+    Iter 7: dv=0.0402524, dp=0.0850592, div(v)=2.28728e-07, fres2=0.0632997, fresInf=0.0559948
+Max kcontact: 2.05446e+12
+    Iter 8: dv=0.0263835, dp=0.0847859, div(v)=1.79495e-07, fres2=0.0431423, fresInf=0.0356876
+Max kcontact: 2.05446e+12
+    Iter 9: dv=0.0171499, dp=0.0838391, div(v)=1.59091e-07, fres2=0.0313519, fresInf=0.0233253
+Max kcontact: 2.05446e+12
+    Iter 10: dv=0.0111281, dp=0.0824758, div(v)=1.42998e-07, fres2=0.0245818, fresInf=0.0158069
+Max kcontact: 2.05446e+12
+    Iter 11: dv=0.00725812, dp=0.0807422, div(v)=1.21952e-07, fres2=0.0207901, fresInf=0.0112361
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393512
+Step Energy 
+Total Internal Energy 1.44207
+  v_r: [-0.0238371, 0.0103687] m/s
+  v_z: [-0.0132327, 0.00605405] m/s
+  Presión: [-694.461, 733.864] MPa
+  Presión media: 19.7014 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000828099
+Step Time 0.0875665 seconds
+CPU Overall Time 0.118707 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 4/1 (dt=0.000393512 s) --- (Time=0.00162095 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.2222e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.2559e+10
+   Flow stress min/max/avg: 1.9e+08 / 2.0633e+08 / 1.90158e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.705853, dp=0.177889, div(v)=0.00188358, fres2=0.416909, fresInf=0.387542
+Max kcontact: 2.2222e+12
+    Iter 2: dv=0.298917, dp=0.118008, div(v)=0.00113066, fres2=0.250669, fresInf=0.232138
+Max kcontact: 2.2222e+12
+    Iter 3: dv=0.15293, dp=0.0788027, div(v)=0.00067932, fres2=0.151085, fresInf=0.139161
+Max kcontact: 2.2222e+12
+    Iter 4: dv=0.0844444, dp=0.0718234, div(v)=0.00040782, fres2=0.0911661, fresInf=0.0833963
+Max kcontact: 2.2222e+12
+    Iter 5: dv=0.0485082, dp=0.0684913, div(v)=0.000245159, fres2=0.0552148, fresInf=0.0499416
+Max kcontact: 2.2222e+12
+    Iter 6: dv=0.0285034, dp=0.0656283, div(v)=0.000147349, fres2=0.0337267, fresInf=0.0298719
+Max kcontact: 2.2222e+12
+    Iter 7: dv=0.0169916, dp=0.0627283, div(v)=8.85764e-05, fres2=0.0209982, fresInf=0.0178334
+Max kcontact: 2.2222e+12
+    Iter 8: dv=0.0102358, dp=0.0596972, div(v)=5.33347e-05, fres2=0.0136152, fresInf=0.0106136
+Max kcontact: 2.2222e+12
+    Iter 9: dv=0.00622102, dp=0.056522, div(v)=3.21272e-05, fres2=0.00951484, fresInf=0.00628492
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393512
+Step Energy 
+Total Internal Energy 5.0508
+  v_r: [-0.0361444, 0.0292633] m/s
+  v_z: [-0.0721159, -0.0323458] m/s
+  Presión: [-354.621, 535.328] MPa
+  Presión media: 90.3537 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000830692
+Step Time 0.0655204 seconds
+CPU Overall Time 0.184227 seconds
+DONE.
+Writing scheduled VTK output: time=0.00201446 s, configured outTime=0.001 s, target_output_time=0.002 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00004.vtk
+DONE writing VTK.
+Next scheduled output time=0.003 s
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 5/1 (dt=0.000393512 s) --- (Time=0.00201446 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.53428e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.25194e+10
+   Flow stress min/max/avg: 1.9e+08 / 2.48124e+08 / 1.90697e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.221957, dp=0.497909, div(v)=0.0138268, fres2=0.275992, fresInf=0.213655
+Max kcontact: 2.53428e+12
+    Iter 2: dv=0.226535, dp=0.220491, div(v)=0.00829623, fres2=0.164866, fresInf=0.124314
+Max kcontact: 2.53428e+12
+    Iter 3: dv=0.207589, dp=0.106281, div(v)=0.00497812, fres2=0.0984118, fresInf=0.0720231
+Max kcontact: 2.53428e+12
+    Iter 4: dv=0.149146, dp=0.0636766, div(v)=0.00298715, fres2=0.0585742, fresInf=0.0409884
+Max kcontact: 2.53428e+12
+    Iter 5: dv=0.0891586, dp=0.0456464, div(v)=0.00179258, fres2=0.034903, fresInf=0.0236799
+Max kcontact: 2.53428e+12
+    Iter 6: dv=0.0418553, dp=0.0370243, div(v)=0.00107578, fres2=0.021075, fresInf=0.014579
+Max kcontact: 2.53428e+12
+    Iter 7: dv=0.0197498, dp=0.0325494, div(v)=0.000645801, fres2=0.0133284, fresInf=0.00906973
+Max kcontact: 2.53428e+12
+    Iter 8: dv=0.032988, dp=0.0301269, div(v)=0.000387695, fres2=0.00936811, fresInf=0.00594124
+Max kcontact: 2.53428e+12
+    Iter 9: dv=0.0483976, dp=0.0288779, div(v)=0.00023283, fres2=0.00760747, fresInf=0.00438629
+Max kcontact: 2.53428e+12
+    Iter 10: dv=0.0592032, dp=0.0283439, div(v)=0.000139869, fres2=0.00689728, fresInf=0.00344741
+Max kcontact: 2.53428e+12
+    Iter 11: dv=0.0660854, dp=0.0282398, div(v)=8.41621e-05, fres2=0.00659467, fresInf=0.00288141
+Max kcontact: 2.53428e+12
+    Iter 12: dv=0.0701134, dp=0.0282882, div(v)=5.07116e-05, fres2=0.00642346, fresInf=0.00294455
+Max kcontact: 2.53428e+12
+    Iter 13: dv=0.0721369, dp=0.0283025, div(v)=3.06051e-05, fres2=0.00628696, fresInf=0.00310702
+Max kcontact: 2.53428e+12
+    Iter 14: dv=0.072677, dp=0.0281904, div(v)=1.85543e-05, fres2=0.00615453, fresInf=0.00316309
+Max kcontact: 2.53428e+12
+    Iter 15: dv=0.0719318, dp=0.027928, div(v)=1.12619e-05, fres2=0.00602984, fresInf=0.00316176
+Max kcontact: 2.53428e+12
+    Iter 16: dv=0.069893, dp=0.0275307, div(v)=7.12032e-06, fres2=0.00591639, fresInf=0.00313155
+Max kcontact: 2.53428e+12
+    Iter 17: dv=0.0665267, dp=0.0270169, div(v)=4.28758e-06, fres2=0.00581222, fresInf=0.00308857
+Max kcontact: 2.53428e+12
+    Iter 18: dv=0.0619331, dp=0.0264222, div(v)=3.14398e-06, fres2=0.00571297, fresInf=0.00304156
+Max kcontact: 2.53428e+12
+    Iter 19: dv=0.0563965, dp=0.0257388, div(v)=1.96362e-06, fres2=0.00561645, fresInf=0.002995
+Max kcontact: 2.53428e+12
+    Iter 20: dv=0.0503209, dp=0.0250022, div(v)=1.29682e-06, fres2=0.00552423, fresInf=0.00295105
+Max kcontact: 2.53428e+12
+    Iter 21: dv=0.0441166, dp=0.0242185, div(v)=1.07058e-06, fres2=0.00543999, fresInf=0.00291069
+Max kcontact: 2.53428e+12
+    Iter 22: dv=0.0381132, dp=0.0234058, div(v)=7.93202e-07, fres2=0.00536534, fresInf=0.00287429
+Max kcontact: 2.53428e+12
+    Iter 23: dv=0.0325278, dp=0.0225901, div(v)=7.55997e-07, fres2=0.00530116, fresInf=0.0028419
+Max kcontact: 2.53428e+12
+    Iter 24: dv=0.0274821, dp=0.0217678, div(v)=8.69561e-07, fres2=0.0052476, fresInf=0.00281342
+Max kcontact: 2.53428e+12
+    Iter 25: dv=0.02306, dp=0.0210026, div(v)=8.31061e-07, fres2=0.00520405, fresInf=0.00278879
+Max kcontact: 2.53428e+12
+    Iter 26: dv=0.0193276, dp=0.0202359, div(v)=8.1357e-07, fres2=0.00517057, fresInf=0.00276813
+Max kcontact: 2.53428e+12
+    Iter 27: dv=0.0162139, dp=0.019379, div(v)=1.06589e-06, fres2=0.00514414, fresInf=0.0027513
+Max kcontact: 2.53428e+12
+    Iter 28: dv=0.0135866, dp=0.0184952, div(v)=5.14501e-07, fres2=0.00512031, fresInf=0.0027377
+Max kcontact: 2.53428e+12
+    Iter 29: dv=0.0113571, dp=0.0176109, div(v)=8.32714e-07, fres2=0.00509764, fresInf=0.00272668
+Max kcontact: 2.53428e+12
+    Iter 30: dv=0.009468, dp=0.0167703, div(v)=1.04429e-06, fres2=0.00507734, fresInf=0.00271769
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393512
+Step Energy 
+Total Internal Energy 24.0285
+  v_r: [-0.0496427, 0.154777] m/s
+  v_z: [-0.322736, -0.0635941] m/s
+  Presión: [-117.818, 540.406] MPa
+  Presión media: 211.294 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000838717
+Step Time 0.224257 seconds
+CPU Overall Time 0.408484 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 6/1 (dt=0.000393512 s) --- (Time=0.00240797 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.04312e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.2276e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.07786e+08 / 1.91774e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.181482, dp=0.105187, div(v)=0.179993, fres2=0.514328, fresInf=0.61593
+Max kcontact: 3.04312e+12
+    Iter 2: dv=0.105273, dp=0.103079, div(v)=0.107997, fres2=0.309146, fresInf=0.370327
+Max kcontact: 3.04312e+12
+    Iter 3: dv=0.0748636, dp=0.122203, div(v)=0.0647985, fres2=0.186377, fresInf=0.22334
+Max kcontact: 3.04312e+12
+    Iter 4: dv=0.128762, dp=0.457331, div(v)=0.0388799, fres2=0.114082, fresInf=0.135658
+Max kcontact: 3.04312e+12
+    Iter 5: dv=0.0295319, dp=0.145222, div(v)=0.0233309, fres2=0.0708732, fresInf=0.085315
+Max kcontact: 3.04312e+12
+    Iter 6: dv=0.00818584, dp=0.0989653, div(v)=0.013998, fres2=0.0439518, fresInf=0.0529334
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393512
+Step Energy 
+Total Internal Energy 28.9954
+  v_r: [-0.0291919, 0.0256019] m/s
+  v_z: [-0.190795, -0.151514] m/s
+  Presión: [-284.754, 511.79] MPa
+  Presión media: 113.518 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000820559
+Step Time 0.0450823 seconds
+CPU Overall Time 0.453566 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 7/1 (dt=0.000393512 s) --- (Time=0.00280148 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.10594e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.22539e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.12446e+08 / 1.91967e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.0706743, dp=0.0698241, div(v)=0.0125756, fres2=0.040553, fresInf=0.0355768
+Max kcontact: 3.10594e+12
+    Iter 2: dv=0.0526781, dp=0.0636811, div(v)=0.00754544, fres2=0.0246729, fresInf=0.0217881
+Max kcontact: 3.10594e+12
+    Iter 3: dv=0.0397667, dp=0.0584481, div(v)=0.0045285, fres2=0.015047, fresInf=0.0133293
+Max kcontact: 3.10594e+12
+    Iter 4: dv=0.0299498, dp=0.0546123, div(v)=0.00271707, fres2=0.00940392, fresInf=0.00816924
+Max kcontact: 3.10594e+12
+    Iter 5: dv=0.0222337, dp=0.0521938, div(v)=0.00163046, fres2=0.00629532, fresInf=0.00502412
+Max kcontact: 3.10594e+12
+    Iter 6: dv=0.0161496, dp=0.0509748, div(v)=0.000979428, fres2=0.00476603, fresInf=0.00310232
+Max kcontact: 3.10594e+12
+    Iter 7: dv=0.0114424, dp=0.0505153, div(v)=0.000587829, fres2=0.00412105, fresInf=0.00215619
+Max kcontact: 3.10594e+12
+    Iter 8: dv=0.00789758, dp=0.0502371, div(v)=0.000353651, fres2=0.00388161, fresInf=0.00182236
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393512
+Step Energy 
+Total Internal Energy 31.7631
+  v_r: [-0.0302213, 0.00725369] m/s
+  v_z: [-0.134762, -0.116032] m/s
+  Presión: [-343.096, 339.705] MPa
+  Presión media: -1.69561 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000814852
+Step Time 0.0582114 seconds
+CPU Overall Time 0.511778 seconds
+DONE.
+Writing scheduled VTK output: time=0.003195 s, configured outTime=0.001 s, target_output_time=0.003 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00007.vtk
+DONE writing VTK.
+Next scheduled output time=0.004 s
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 8/1 (dt=0.000393513 s) --- (Time=0.003195 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.13059e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.23488e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.15742e+08 / 1.92056e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.040298, dp=0.0620956, div(v)=0.00262431, fres2=0.0525675, fresInf=0.0556471
+Max kcontact: 3.13059e+12
+    Iter 2: dv=0.024889, dp=0.0546484, div(v)=0.00157489, fres2=0.031895, fresInf=0.0335562
+Max kcontact: 3.13059e+12
+    Iter 3: dv=0.0152056, dp=0.0498717, div(v)=0.000945255, fres2=0.0191502, fresInf=0.0198759
+Max kcontact: 3.13059e+12
+    Iter 4: dv=0.00918964, dp=0.0470864, div(v)=0.00056748, fres2=0.0114782, fresInf=0.0114649
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 33.5649
+  v_r: [-0.0196464, 0.00478001] m/s
+  v_z: [-0.122125, -0.110516] m/s
+  Presión: [-319.617, 268.394] MPa
+  Presión media: -25.6114 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000812278
+Step Time 0.0366252 seconds
+CPU Overall Time 0.548403 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 9/1 (dt=0.000393513 s) --- (Time=0.00358851 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.1422e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.23662e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.17689e+08 / 1.92124e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.0309058, dp=0.0598437, div(v)=0.00128188, fres2=0.0433465, fresInf=0.0456772
+Max kcontact: 3.1422e+12
+    Iter 2: dv=0.0188698, dp=0.0500786, div(v)=0.000769035, fres2=0.026208, fresInf=0.0274814
+Max kcontact: 3.1422e+12
+    Iter 3: dv=0.0114178, dp=0.0440298, div(v)=0.000461731, fres2=0.0157204, fresInf=0.0162242
+Max kcontact: 3.1422e+12
+    Iter 4: dv=0.00685644, dp=0.0412813, div(v)=0.000277589, fres2=0.00948204, fresInf=0.0092854
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 34.6404
+  v_r: [-0.0115081, 0.00275491] m/s
+  v_z: [-0.113026, -0.106434] m/s
+  Presión: [-296.855, 216.705] MPa
+  Presión media: -40.0753 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000811087
+Step Time 0.0295232 seconds
+CPU Overall Time 0.577926 seconds
+DONE.
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 10/1 (dt=0.000393513 s) --- (Time=0.00398202 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.14784e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.24805e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.1878e+08 / 1.92167e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.0201758, dp=0.0535683, div(v)=0.0004749, fres2=0.0279654, fresInf=0.0292219
+Max kcontact: 3.14784e+12
+    Iter 2: dv=0.0122656, dp=0.0424902, div(v)=0.000285031, fres2=0.016821, fresInf=0.0174396
+Max kcontact: 3.14784e+12
+    Iter 3: dv=0.00742129, dp=0.0359296, div(v)=0.000171736, fres2=0.0101353, fresInf=0.0101483
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 35.3078
+  v_r: [-0.00705156, 0.00165501] m/s
+  v_z: [-0.107977, -0.103992] m/s
+  Presión: [-278.131, 186.256] MPa
+  Presión media: -45.9376 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000810442
+Step Time 0.0217012 seconds
+CPU Overall Time 0.599627 seconds
+DONE.
+Writing scheduled VTK output: time=0.00437554 s, configured outTime=0.001 s, target_output_time=0.004 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00010.vtk
+DONE writing VTK.
+Next scheduled output time=0.005 s
+Min Element Length0.000196756
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 11/1 (dt=0.000393513 s) --- (Time=0.00437554 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.15103e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.25184e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.19434e+08 / 1.92193e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.195042, dp=1.02595, div(v)=0.000216987, fres2=0.263529, fresInf=0.273752
+Max kcontact: 3.15103e+12
+    Iter 2: dv=0.110695, dp=0.378197, div(v)=0.000130295, fres2=0.171928, fresInf=0.17432
+Max kcontact: 3.15103e+12
+    Iter 3: dv=0.0692184, dp=0.204134, div(v)=7.851e-05, fres2=0.10936, fresInf=0.109071
+Max kcontact: 3.15103e+12
+    Iter 4: dv=0.0622005, dp=0.12749, div(v)=4.75658e-05, fres2=0.069027, fresInf=0.0673903
+Max kcontact: 3.15103e+12
+    Iter 5: dv=0.0601864, dp=0.0875036, div(v)=2.95525e-05, fres2=0.0440685, fresInf=0.0414207
+Max kcontact: 3.15103e+12
+    Iter 6: dv=0.0476849, dp=0.0579835, div(v)=1.82346e-05, fres2=0.0290504, fresInf=0.025457
+Max kcontact: 3.15103e+12
+    Iter 7: dv=0.0306429, dp=0.0335096, div(v)=1.13804e-05, fres2=0.0201946, fresInf=0.0157378
+Max kcontact: 3.15103e+12
+    Iter 8: dv=0.0168126, dp=0.019578, div(v)=7.64755e-06, fres2=0.0150945, fresInf=0.00985118
+Max kcontact: 3.15103e+12
+    Iter 9: dv=0.00734922, dp=0.0156065, div(v)=5.1476e-06, fres2=0.0121815, fresInf=0.00681054
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 45.9541
+  v_r: [-0.0313114, 0.0902844] m/s
+  v_z: [-0.157105, -0.0398853] m/s
+  Presión: [-157.073, 859.859] MPa
+  Presión media: 351.393 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000821037
+Step Time 0.0726862 seconds
+CPU Overall Time 0.672314 seconds
+DONE.
+Min Element Length0.000196758
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 12/1 (dt=0.000393513 s) --- (Time=0.00476905 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.99732e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.00792e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.32959e+08 / 1.92401e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.0949439, dp=0.112029, div(v)=0.041374, fres2=0.0349976, fresInf=0.0347257
+Max kcontact: 2.99732e+12
+    Iter 2: dv=0.0341178, dp=0.112768, div(v)=0.0248244, fres2=0.0242568, fresInf=0.0223231
+Max kcontact: 2.99732e+12
+    Iter 3: dv=0.0106754, dp=0.11229, div(v)=0.0148946, fres2=0.0188531, fresInf=0.0149562
+Max kcontact: 2.99732e+12
+    Iter 4: dv=0.0149981, dp=0.109468, div(v)=0.00893691, fres2=0.0162132, fresInf=0.0106447
+Max kcontact: 2.99732e+12
+    Iter 5: dv=0.0151625, dp=0.105401, div(v)=0.00536226, fres2=0.0147693, fresInf=0.00812851
+Max kcontact: 2.99732e+12
+    Iter 6: dv=0.0130218, dp=0.100294, div(v)=0.00321762, fres2=0.0139444, fresInf=0.00663458
+Max kcontact: 2.99732e+12
+    Iter 7: dv=0.0106165, dp=0.0947147, div(v)=0.00193072, fres2=0.0134075, fresInf=0.00633628
+Max kcontact: 2.99732e+12
+    Iter 8: dv=0.00837436, dp=0.0890964, div(v)=0.00115857, fres2=0.0131279, fresInf=0.00625861
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 53.5629
+  v_r: [-0.0302177, 0.0907511] m/s
+  v_z: [-0.104712, -0.0380318] m/s
+  Presión: [-179.243, 376.745] MPa
+  Presión media: 98.7508 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 1
+Area 0.000351598
+Step Time 0.0586499 seconds
+CPU Overall Time 0.730963 seconds
+DONE.
+Writing scheduled VTK output: time=0.00516256 s, configured outTime=0.001 s, target_output_time=0.005 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00012.vtk
+DONE writing VTK.
+Next scheduled output time=0.006 s
+Min Element Length0.000196758
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 13/1 (dt=0.000393515 s) --- (Time=0.00516256 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.97485e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.24829e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.4131e+08 / 1.92511e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.038747, dp=0.0838119, div(v)=0.0247406, fres2=0.0126227, fresInf=0.00696332
+Max kcontact: 2.97485e+12
+    Iter 2: dv=0.025297, dp=0.0779588, div(v)=0.0148452, fres2=0.0123205, fresInf=0.00658686
+Max kcontact: 2.97485e+12
+    Iter 3: dv=0.0176911, dp=0.0707504, div(v)=0.00890732, fres2=0.0121872, fresInf=0.00633314
+Max kcontact: 2.97485e+12
+    Iter 4: dv=0.0123897, dp=0.0643516, div(v)=0.00534456, fres2=0.0121199, fresInf=0.00617176
+Max kcontact: 2.97485e+12
+    Iter 5: dv=0.00874622, dp=0.0582873, div(v)=0.00320691, fres2=0.0120083, fresInf=0.0060633
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393515
+Step Energy 
+Total Internal Energy 61.356
+  v_r: [-0.0305072, 0.0929476] m/s
+  v_z: [-0.105409, -0.043827] m/s
+  Presión: [-198.733, 389.123] MPa
+  Presión media: 95.195 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 1
+Area 0.000375284
+Step Time 0.043201 seconds
+CPU Overall Time 0.774165 seconds
+DONE.
+Min Element Length0.000196758
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 14/1 (dt=0.000393515 s) --- (Time=0.00555608 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 2.92805e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.26516e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.48326e+08 / 1.92616e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.21413, dp=0.848699, div(v)=0.0245829, fres2=0.36288, fresInf=0.402569
+Max kcontact: 2.92805e+12
+    Iter 2: dv=0.123209, dp=0.155735, div(v)=0.0147499, fres2=0.220324, fresInf=0.247132
+Max kcontact: 2.92805e+12
+    Iter 3: dv=0.115627, dp=0.0722584, div(v)=0.00885022, fres2=0.134511, fresInf=0.152544
+Max kcontact: 2.92805e+12
+    Iter 4: dv=0.0881738, dp=0.0519765, div(v)=0.00531104, fres2=0.0826343, fresInf=0.0943695
+Max kcontact: 2.92805e+12
+    Iter 5: dv=0.0612502, dp=0.0486401, div(v)=0.00318828, fres2=0.0515002, fresInf=0.0586143
+Max kcontact: 2.92805e+12
+    Iter 6: dv=0.0407146, dp=0.0474936, div(v)=0.00191353, fres2=0.033038, fresInf=0.0367753
+Max kcontact: 2.92805e+12
+    Iter 7: dv=0.026614, dp=0.0460383, div(v)=0.00114882, fres2=0.022349, fresInf=0.0234794
+Max kcontact: 2.92805e+12
+    Iter 8: dv=0.0172627, dp=0.0441045, div(v)=0.000689892, fres2=0.0164147, fresInf=0.0153966
+Max kcontact: 2.92805e+12
+    Iter 9: dv=0.0111367, dp=0.0418155, div(v)=0.000414991, fres2=0.0132891, fresInf=0.010486
+Max kcontact: 2.92805e+12
+    Iter 10: dv=0.00714075, dp=0.0393301, div(v)=0.000249747, fres2=0.0117137, fresInf=0.00834014
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393515
+Step Energy 
+Total Internal Energy 96.4597
+  v_r: [-0.252864, 0.071792] m/s
+  v_z: [-0.148499, 0.187633] m/s
+  Presión: [-1221.22, 147.048] MPa
+  Presión media: -537.084 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.00068246
+Step Time 0.0728466 seconds
+CPU Overall Time 0.847011 seconds
+DONE.
+Min Element Length0.000196757
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 15/1 (dt=0.000393514 s) --- (Time=0.00594959 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.25753e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.90993e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.93364e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.318023, dp=0.104939, div(v)=0.486589, fres2=0.342241, fresInf=0.363447
+Max kcontact: 3.25753e+12
+    Iter 2: dv=0.207555, dp=0.100956, div(v)=0.291953, fres2=0.231806, fresInf=0.255396
+Max kcontact: 3.25753e+12
+    Iter 3: dv=0.111313, dp=0.095708, div(v)=0.175172, fres2=0.150325, fresInf=0.170856
+Max kcontact: 3.25753e+12
+    Iter 4: dv=0.0530694, dp=0.0873438, div(v)=0.105103, fres2=0.0949108, fresInf=0.110074
+Max kcontact: 3.25753e+12
+    Iter 5: dv=0.0210951, dp=0.0780308, div(v)=0.0630622, fres2=0.0593735, fresInf=0.0690122
+Max kcontact: 3.25753e+12
+    Iter 6: dv=0.0111893, dp=0.0758562, div(v)=0.0378374, fres2=0.0371431, fresInf=0.0418289
+Max kcontact: 3.25753e+12
+    Iter 7: dv=0.00946752, dp=0.0704469, div(v)=0.0227026, fres2=0.0236841, fresInf=0.0249044
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393514
+Step Energy 
+Total Internal Energy 105.204
+  v_r: [-0.0425719, 0.0419677] m/s
+  v_z: [-0.0912038, -0.0256168] m/s
+  Presión: [-783.332, 144.731] MPa
+  Presión media: -319.3 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000680414
+Step Time 0.0506106 seconds
+CPU Overall Time 0.897622 seconds
+DONE.
+Writing scheduled VTK output: time=0.0063431 s, configured outTime=0.001 s, target_output_time=0.006 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00015.vtk
+DONE writing VTK.
+Next scheduled output time=0.007 s
+Min Element Length0.000196757
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 16/1 (dt=0.000393513 s) --- (Time=0.0063431 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.23173e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.20977e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.93526e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.452904, dp=0.158224, div(v)=0.0462933, fres2=0.347315, fresInf=0.405493
+Max kcontact: 3.23173e+12
+    Iter 2: dv=0.439652, dp=0.148901, div(v)=0.0277761, fres2=0.230532, fresInf=0.253684
+Max kcontact: 3.23173e+12
+    Iter 3: dv=0.426266, dp=0.137101, div(v)=0.0166657, fres2=0.146535, fresInf=0.156356
+Max kcontact: 3.23173e+12
+    Iter 4: dv=0.384988, dp=0.137804, div(v)=0.00999942, fres2=0.0913281, fresInf=0.0957284
+Max kcontact: 3.23173e+12
+    Iter 5: dv=0.340571, dp=0.137096, div(v)=0.00599967, fres2=0.0562469, fresInf=0.0581235
+Max kcontact: 3.23173e+12
+    Iter 6: dv=0.292953, dp=0.135248, div(v)=0.0035998, fres2=0.0346439, fresInf=0.0349399
+Max kcontact: 3.23173e+12
+    Iter 7: dv=0.244118, dp=0.131118, div(v)=0.00215988, fres2=0.0218359, fresInf=0.0207557
+Max kcontact: 3.23173e+12
+    Iter 8: dv=0.196701, dp=0.123966, div(v)=0.00129595, fres2=0.0147494, fresInf=0.0121052
+Max kcontact: 3.23173e+12
+    Iter 9: dv=0.152211, dp=0.113904, div(v)=0.000777573, fres2=0.0113121, fresInf=0.00687323
+Max kcontact: 3.23173e+12
+    Iter 10: dv=0.113773, dp=0.10418, div(v)=0.000466554, fres2=0.00995412, fresInf=0.00482099
+Max kcontact: 3.23173e+12
+    Iter 11: dv=0.0825398, dp=0.0948256, div(v)=0.000279952, fres2=0.0095515, fresInf=0.0048781
+Max kcontact: 3.23173e+12
+    Iter 12: dv=0.0576314, dp=0.0859434, div(v)=0.000167998, fres2=0.00949621, fresInf=0.00492555
+Max kcontact: 3.23173e+12
+    Iter 13: dv=0.0376132, dp=0.0777159, div(v)=0.000100825, fres2=0.00954752, fresInf=0.00495738
+Max kcontact: 3.23173e+12
+    Iter 14: dv=0.0213894, dp=0.0702065, div(v)=6.0517e-05, fres2=0.00962385, fresInf=0.00497124
+Max kcontact: 3.23173e+12
+    Iter 15: dv=0.00969023, dp=0.0634377, div(v)=3.63362e-05, fres2=0.0096987, fresInf=0.00496707
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 110.465
+  v_r: [-0.0367784, 0.0421938] m/s
+  v_z: [-0.0360412, -0.00111303] m/s
+  Presión: [-282.354, 321.57] MPa
+  Presión media: 19.608 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.000680812
+Step Time 0.116291 seconds
+CPU Overall Time 1.01391 seconds
+DONE.
+Min Element Length0.000196757
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 17/1 (dt=0.000393513 s) --- (Time=0.00673662 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.25895e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.26767e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.93574e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.933684, dp=0.845842, div(v)=0.00745478, fres2=0.375841, fresInf=0.339085
+Max kcontact: 3.25895e+12
+    Iter 2: dv=0.357658, dp=0.0478219, div(v)=0.00447445, fres2=0.227655, fresInf=0.203721
+Max kcontact: 3.25895e+12
+    Iter 3: dv=0.194012, dp=0.0348366, div(v)=0.00268515, fres2=0.13702, fresInf=0.122575
+Max kcontact: 3.25895e+12
+    Iter 4: dv=0.118355, dp=0.0404315, div(v)=0.00161166, fres2=0.0825448, fresInf=0.0738763
+Max kcontact: 3.25895e+12
+    Iter 5: dv=0.0775508, dp=0.0426241, div(v)=0.00096751, fres2=0.0498687, fresInf=0.0446431
+Max kcontact: 3.25895e+12
+    Iter 6: dv=0.0538672, dp=0.0428229, div(v)=0.000580692, fres2=0.0303189, fresInf=0.0270961
+Max kcontact: 3.25895e+12
+    Iter 7: dv=0.0394189, dp=0.041934, div(v)=0.000348856, fres2=0.0186923, fresInf=0.0165655
+Max kcontact: 3.25895e+12
+    Iter 8: dv=0.0303912, dp=0.0403286, div(v)=0.000209696, fres2=0.0118849, fresInf=0.010248
+Max kcontact: 3.25895e+12
+    Iter 9: dv=0.0243953, dp=0.0384348, div(v)=0.00012636, fres2=0.00802347, fresInf=0.00645864
+Max kcontact: 3.25895e+12
+    Iter 10: dv=0.0199126, dp=0.0367724, div(v)=7.67193e-05, fres2=0.00593995, fresInf=0.00417625
+Max kcontact: 3.25895e+12
+    Iter 11: dv=0.0168415, dp=0.0348634, div(v)=4.6672e-05, fres2=0.0048905, fresInf=0.00280638
+Max kcontact: 3.25895e+12
+    Iter 12: dv=0.0145755, dp=0.0328087, div(v)=2.89677e-05, fres2=0.00438071, fresInf=0.00223658
+Max kcontact: 3.25895e+12
+    Iter 13: dv=0.0127783, dp=0.0307328, div(v)=1.78563e-05, fres2=0.00412052, fresInf=0.0019419
+Max kcontact: 3.25895e+12
+    Iter 14: dv=0.0112525, dp=0.02875, div(v)=1.10134e-05, fres2=0.00398105, fresInf=0.00176473
+Max kcontact: 3.25895e+12
+    Iter 15: dv=0.0103396, dp=0.0271381, div(v)=6.81545e-06, fres2=0.00390139, fresInf=0.0016714
+Max kcontact: 3.25895e+12
+    Iter 16: dv=0.00940929, dp=0.0255064, div(v)=4.50479e-06, fres2=0.00385052, fresInf=0.00164781
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 119.819
+  v_r: [-0.0454352, 0.066149] m/s
+  v_z: [-0.128164, -0.0464655] m/s
+  Presión: [-292.948, 419.799] MPa
+  Presión media: 63.4258 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 2
+Area 0.00066795
+Step Time 0.115533 seconds
+CPU Overall Time 1.12945 seconds
+DONE.
+Writing scheduled VTK output: time=0.00713013 s, configured outTime=0.001 s, target_output_time=0.007 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00017.vtk
+DONE writing VTK.
+Next scheduled output time=0.008 s
+Min Element Length0.000196757
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 18/1 (dt=0.000393513 s) --- (Time=0.00713013 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.5351e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.25664e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.93734e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.50309, dp=0.951171, div(v)=0.0269815, fres2=0.398251, fresInf=0.50213
+Max kcontact: 3.5351e+12
+    Iter 2: dv=0.278288, dp=0.30346, div(v)=0.0161918, fres2=0.278585, fresInf=0.329262
+Max kcontact: 3.5351e+12
+    Iter 3: dv=0.114082, dp=0.117122, div(v)=0.00972075, fres2=0.184854, fresInf=0.208744
+Max kcontact: 3.5351e+12
+    Iter 4: dv=0.0292944, dp=0.0447632, div(v)=0.0058326, fres2=0.12001, fresInf=0.131641
+Max kcontact: 3.5351e+12
+    Iter 5: dv=0.0629121, dp=0.0301801, div(v)=0.00350034, fres2=0.0776844, fresInf=0.0837599
+Max kcontact: 3.5351e+12
+    Iter 6: dv=0.0867174, dp=0.0377845, div(v)=0.00210099, fres2=0.0507786, fresInf=0.0540864
+Max kcontact: 3.5351e+12
+    Iter 7: dv=0.0908994, dp=0.0452961, div(v)=0.00126111, fres2=0.0339421, fresInf=0.0356442
+Max kcontact: 3.5351e+12
+    Iter 8: dv=0.0838029, dp=0.0503304, div(v)=0.000756794, fres2=0.0235342, fresInf=0.024147
+Max kcontact: 3.5351e+12
+    Iter 9: dv=0.0695968, dp=0.0530885, div(v)=0.000454204, fres2=0.0171942, fresInf=0.0169567
+Max kcontact: 3.5351e+12
+    Iter 10: dv=0.0598083, dp=0.054623, div(v)=0.000272527, fres2=0.0133688, fresInf=0.0124387
+Max kcontact: 3.5351e+12
+    Iter 11: dv=0.0478141, dp=0.0549518, div(v)=0.000163535, fres2=0.0110794, fresInf=0.00957268
+Max kcontact: 3.5351e+12
+    Iter 12: dv=0.0375201, dp=0.0545065, div(v)=9.83119e-05, fres2=0.00971099, fresInf=0.00774446
+Max kcontact: 3.5351e+12
+    Iter 13: dv=0.0291614, dp=0.0534991, div(v)=6.00299e-05, fres2=0.00887612, fresInf=0.00656782
+Max kcontact: 3.5351e+12
+    Iter 14: dv=0.0226758, dp=0.0519638, div(v)=3.61693e-05, fres2=0.00836065, fresInf=0.00580339
+Max kcontact: 3.5351e+12
+    Iter 15: dv=0.0178105, dp=0.0500435, div(v)=2.19017e-05, fres2=0.00804216, fresInf=0.00530139
+Max kcontact: 3.5351e+12
+    Iter 16: dv=0.0142651, dp=0.0478616, div(v)=1.32491e-05, fres2=0.00783751, fresInf=0.00496796
+Max kcontact: 3.5351e+12
+    Iter 17: dv=0.0117097, dp=0.0454339, div(v)=8.18131e-06, fres2=0.00770434, fresInf=0.00474451
+Max kcontact: 3.5351e+12
+    Iter 18: dv=0.00984402, dp=0.0428106, div(v)=5.12667e-06, fres2=0.00761122, fresInf=0.00459376
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 139.864
+  v_r: [-0.00847489, 0.0803927] m/s
+  v_z: [-0.167872, -0.0694656] m/s
+  Presión: [-309.698, 1062.35] MPa
+  Presión media: 376.325 MPa
+Suraface 4, Contact Faces Count: 0
+Area 0
+Suraface 5, Contact Faces Count: 4
+Area 0.00156393
+Step Time 0.13793 seconds
+CPU Overall Time 1.26737 seconds
+DONE.
+Min Element Length0.000196879
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 19/1 (dt=0.000393513 s) --- (Time=0.00752364 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.53893e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.60737e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.94191e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=1.01147, dp=0.800404, div(v)=0.0662555, fres2=0.298339, fresInf=0.283132
+Max kcontact: 3.53893e+12
+    Iter 2: dv=1.5932, dp=0.38231, div(v)=0.0397618, fres2=0.216517, fresInf=0.230387
+Max kcontact: 3.53893e+12
+    Iter 3: dv=0.76693, dp=0.14063, div(v)=0.0239044, fres2=0.143592, fresInf=0.166739
+Max kcontact: 3.53893e+12
+    Iter 4: dv=0.216889, dp=0.0702121, div(v)=0.0149786, fres2=0.0916118, fresInf=0.107634
+Max kcontact: 3.53893e+12
+    Iter 5: dv=0.459198, dp=0.0606909, div(v)=0.00903731, fres2=0.0587563, fresInf=0.0680712
+Max kcontact: 3.53893e+12
+    Iter 6: dv=0.36999, dp=0.0616045, div(v)=0.00546709, fres2=0.0386918, fresInf=0.0432253
+Max kcontact: 3.53893e+12
+    Iter 7: dv=0.261411, dp=0.0621095, div(v)=0.00332216, fres2=0.0267724, fresInf=0.0278359
+Max kcontact: 3.53893e+12
+    Iter 8: dv=0.184394, dp=0.0615016, div(v)=0.00203111, fres2=0.0199357, fresInf=0.0183555
+Max kcontact: 3.53893e+12
+    Iter 9: dv=0.133174, dp=0.0601099, div(v)=0.00125768, fres2=0.0161772, fresInf=0.0125193
+Max kcontact: 3.53893e+12
+    Iter 10: dv=0.0993184, dp=0.0580956, div(v)=0.000790359, fres2=0.0141241, fresInf=0.00892407
+Max kcontact: 3.53893e+12
+    Iter 11: dv=0.0758203, dp=0.0557748, div(v)=0.000493242, fres2=0.0129694, fresInf=0.00670441
+Max kcontact: 3.53893e+12
+    Iter 12: dv=0.0589066, dp=0.0532587, div(v)=0.000312317, fres2=0.0123045, fresInf=0.00564664
+Max kcontact: 3.53893e+12
+    Iter 13: dv=0.0461404, dp=0.0506567, div(v)=0.000200867, fres2=0.0118979, fresInf=0.00561373
+Max kcontact: 3.53893e+12
+    Iter 14: dv=0.0363621, dp=0.0480218, div(v)=0.000131052, fres2=0.0116313, fresInf=0.00558072
+Max kcontact: 3.53893e+12
+    Iter 15: dv=0.0288585, dp=0.0453843, div(v)=8.72987e-05, fres2=0.0114381, fresInf=0.00554934
+Max kcontact: 3.53893e+12
+    Iter 16: dv=0.0231458, dp=0.0427612, div(v)=5.94385e-05, fres2=0.0112961, fresInf=0.00552041
+Max kcontact: 3.53893e+12
+    Iter 17: dv=0.0188322, dp=0.0401678, div(v)=4.16561e-05, fres2=0.0111895, fresInf=0.0054942
+Max kcontact: 3.53893e+12
+    Iter 18: dv=0.0155769, dp=0.037619, div(v)=2.97184e-05, fres2=0.0111113, fresInf=0.00547079
+Max kcontact: 3.53893e+12
+    Iter 19: dv=0.0130988, dp=0.035143, div(v)=2.14761e-05, fres2=0.0110524, fresInf=0.00545019
+Max kcontact: 3.53893e+12
+    Iter 20: dv=0.0111825, dp=0.0327699, div(v)=1.56894e-05, fres2=0.0109975, fresInf=0.00543234
+Max kcontact: 3.53893e+12
+    Iter 21: dv=0.00967242, dp=0.0305071, div(v)=1.15752e-05, fres2=0.010938, fresInf=0.00541706
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000393513
+Step Energy 
+Total Internal Energy 167.579
+  v_r: [-0.0699828, 0.0757057] m/s
+  v_z: [-0.15639, -0.0328196] m/s
+  Presión: [-775.77, 806.588] MPa
+  Presión media: 15.4089 MPa
+Suraface 4, Contact Faces Count: 2
+Area 0.000825814
+Suraface 5, Contact Faces Count: 4
+Area 0.00155598
+Step Time 0.14779 seconds
+CPU Overall Time 1.41517 seconds
+DONE.
+Min Element Length0.000186701
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 20/1 (dt=0.000373401 s) --- (Time=0.00791716 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.53352e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.19507e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.95332e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.143426, dp=0.0922514, div(v)=0.101226, fres2=0.284425, fresInf=0.291536
+Max kcontact: 3.53352e+12
+    Iter 2: dv=0.0897316, dp=0.0695801, div(v)=0.0607367, fres2=0.171615, fresInf=0.173341
+Max kcontact: 3.53352e+12
+    Iter 3: dv=0.0614769, dp=0.0504855, div(v)=0.0364433, fres2=0.103724, fresInf=0.102353
+Max kcontact: 3.53352e+12
+    Iter 4: dv=0.0412945, dp=0.0408831, div(v)=0.0218673, fres2=0.0629087, fresInf=0.0605998
+Max kcontact: 3.53352e+12
+    Iter 5: dv=0.0287806, dp=0.0361304, div(v)=0.0131211, fres2=0.0385563, fresInf=0.0375735
+Max kcontact: 3.53352e+12
+    Iter 6: dv=0.0209013, dp=0.0330664, div(v)=0.00787382, fres2=0.0242979, fresInf=0.0236182
+Max kcontact: 3.53352e+12
+    Iter 7: dv=0.0157501, dp=0.0306529, div(v)=0.00472505, fres2=0.0162878, fresInf=0.0151581
+Max kcontact: 3.53352e+12
+    Iter 8: dv=0.0122979, dp=0.0285729, div(v)=0.00283611, fres2=0.0121408, fresInf=0.0100227
+Max kcontact: 3.53352e+12
+    Iter 9: dv=0.00991196, dp=0.0267291, div(v)=0.00170225, fres2=0.0102286, fresInf=0.00689947
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000373401
+Step Energy 
+Total Internal Energy 193.895
+  v_r: [-0.015103, 0.099782] m/s
+  v_z: [-0.172471, 0.0229617] m/s
+  Presión: [-572.808, 739.644] MPa
+  Presión media: 83.418 MPa
+Suraface 4, Contact Faces Count: 2
+Area 0.000859877
+Suraface 5, Contact Faces Count: 4
+Area 0.00153546
+Step Time 0.063708 seconds
+CPU Overall Time 1.47887 seconds
+DONE.
+Writing scheduled VTK output: time=0.00829056 s, configured outTime=0.001 s, target_output_time=0.008 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00020.vtk
+DONE writing VTK.
+Next scheduled output time=0.009 s
+Min Element Length0.00017499
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 21/1 (dt=0.00034998 s) --- (Time=0.00829056 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.53574e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.46606e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.96434e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.018852, dp=0.0221973, div(v)=0.0765693, fres2=0.0200074, fresInf=0.0245023
+Max kcontact: 3.53574e+12
+    Iter 2: dv=0.0128694, dp=0.0205207, div(v)=0.0459428, fres2=0.0127501, fresInf=0.01288
+Max kcontact: 3.53574e+12
+    Iter 3: dv=0.00924554, dp=0.0193222, div(v)=0.0275667, fres2=0.00971079, fresInf=0.00581108
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.00034998
+Step Energy 
+Total Internal Energy 220.196
+  v_r: [-0.0157683, 0.100868] m/s
+  v_z: [-0.16943, 0.0211008] m/s
+  Presión: [-586.057, 732.222] MPa
+  Presión media: 73.0822 MPa
+Suraface 4, Contact Faces Count: 2
+Area 0.000891781
+Suraface 5, Contact Faces Count: 4
+Area 0.00151786
+Step Time 0.028144 seconds
+CPU Overall Time 1.50702 seconds
+DONE.
+Min Element Length0.000163952
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 22/1 (dt=0.000327905 s) --- (Time=0.00864054 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.52712e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.49968e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.9719e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.265511, dp=0.0770552, div(v)=0.0844479, fres2=0.412597, fresInf=0.570798
+Max kcontact: 3.52712e+12
+    Iter 2: dv=0.221647, dp=0.0879213, div(v)=0.0506692, fres2=0.247891, fresInf=0.343012
+Max kcontact: 3.52712e+12
+    Iter 3: dv=0.169224, dp=0.0980091, div(v)=0.030402, fres2=0.149194, fresInf=0.206304
+Max kcontact: 3.52712e+12
+    Iter 4: dv=0.122881, dp=0.0942201, div(v)=0.0182416, fres2=0.0903588, fresInf=0.124774
+Max kcontact: 3.52712e+12
+    Iter 5: dv=0.0924704, dp=0.0912548, div(v)=0.0109459, fres2=0.0551172, fresInf=0.075771
+Max kcontact: 3.52712e+12
+    Iter 6: dv=0.0792946, dp=0.0821224, div(v)=0.00656814, fres2=0.0340716, fresInf=0.0462704
+Max kcontact: 3.52712e+12
+    Iter 7: dv=0.0740969, dp=0.0706854, div(v)=0.00394165, fres2=0.0216232, fresInf=0.0285047
+Max kcontact: 3.52712e+12
+    Iter 8: dv=0.0737084, dp=0.0607088, div(v)=0.00236556, fres2=0.0144281, fresInf=0.0178015
+Max kcontact: 3.52712e+12
+    Iter 9: dv=0.0741043, dp=0.053119, div(v)=0.00141992, fres2=0.0104583, fresInf=0.0113527
+Max kcontact: 3.52712e+12
+    Iter 10: dv=0.0751923, dp=0.0468628, div(v)=0.000852596, fres2=0.00839867, fresInf=0.00746552
+Max kcontact: 3.52712e+12
+    Iter 11: dv=0.0767444, dp=0.041506, div(v)=0.000512119, fres2=0.00738333, fresInf=0.0051195
+Max kcontact: 3.52712e+12
+    Iter 12: dv=0.0784955, dp=0.0369056, div(v)=0.000307823, fres2=0.00688833, fresInf=0.00370017
+Max kcontact: 3.52712e+12
+    Iter 13: dv=0.0802161, dp=0.0329746, div(v)=0.000185148, fres2=0.00663347, fresInf=0.00304807
+Max kcontact: 3.52712e+12
+    Iter 14: dv=0.081702, dp=0.0296478, div(v)=0.000111574, fres2=0.00648268, fresInf=0.00297736
+Max kcontact: 3.52712e+12
+    Iter 15: dv=0.0827801, dp=0.0269023, div(v)=6.74009e-05, fres2=0.00638398, fresInf=0.0029316
+Max kcontact: 3.52712e+12
+    Iter 16: dv=0.0833009, dp=0.0247312, div(v)=4.08035e-05, fres2=0.0063092, fresInf=0.00290035
+Max kcontact: 3.52712e+12
+    Iter 17: dv=0.0831384, dp=0.0231371, div(v)=2.49525e-05, fres2=0.00624137, fresInf=0.00287747
+Max kcontact: 3.52712e+12
+    Iter 18: dv=0.0821932, dp=0.0221754, div(v)=1.52311e-05, fres2=0.00617359, fresInf=0.00285937
+Max kcontact: 3.52712e+12
+    Iter 19: dv=0.0803975, dp=0.0219007, div(v)=9.4527e-06, fres2=0.00611235, fresInf=0.00284399
+Max kcontact: 3.52712e+12
+    Iter 20: dv=0.0777153, dp=0.0224295, div(v)=5.93732e-06, fres2=0.00606555, fresInf=0.00283014
+Max kcontact: 3.52712e+12
+    Iter 21: dv=0.0741419, dp=0.0240702, div(v)=3.7841e-06, fres2=0.00603829, fresInf=0.00281719
+Max kcontact: 3.52712e+12
+    Iter 22: dv=0.0698789, dp=0.0267332, div(v)=2.45512e-06, fres2=0.00604677, fresInf=0.00280486
+Max kcontact: 3.52712e+12
+    Iter 23: dv=0.0656052, dp=0.028711, div(v)=1.55996e-06, fres2=0.00608699, fresInf=0.00279315
+Max kcontact: 3.52712e+12
+    Iter 24: dv=0.0617139, dp=0.0285379, div(v)=1.01273e-06, fres2=0.00611386, fresInf=0.00278213
+Max kcontact: 3.52712e+12
+    Iter 25: dv=0.0578259, dp=0.0279729, div(v)=6.36788e-07, fres2=0.00613986, fresInf=0.00277168
+Max kcontact: 3.52712e+12
+    Iter 26: dv=0.0540295, dp=0.0272401, div(v)=3.75427e-07, fres2=0.00616482, fresInf=0.00276176
+Max kcontact: 3.52712e+12
+    Iter 27: dv=0.0502997, dp=0.026386, div(v)=2.43885e-07, fres2=0.00618121, fresInf=0.0027523
+Max kcontact: 3.52712e+12
+    Iter 28: dv=0.0466181, dp=0.0254454, div(v)=1.63803e-07, fres2=0.00619256, fresInf=0.00274327
+Max kcontact: 3.52712e+12
+    Iter 29: dv=0.0430135, dp=0.0244396, div(v)=2.0118e-07, fres2=0.0062016, fresInf=0.00273463
+Max kcontact: 3.52712e+12
+    Iter 30: dv=0.039525, dp=0.0234074, div(v)=2.26111e-07, fres2=0.006209, fresInf=0.00272638
+Max kcontact: 3.52712e+12
+    Iter 31: dv=0.0361862, dp=0.0223586, div(v)=2.06288e-07, fres2=0.00621567, fresInf=0.00271851
+Max kcontact: 3.52712e+12
+    Iter 32: dv=0.0330238, dp=0.021315, div(v)=2.38516e-07, fres2=0.00622143, fresInf=0.00271101
+Max kcontact: 3.52712e+12
+    Iter 33: dv=0.0300546, dp=0.0202824, div(v)=2.47504e-07, fres2=0.00622529, fresInf=0.00270388
+Max kcontact: 3.52712e+12
+    Iter 34: dv=0.0272701, dp=0.0192752, div(v)=2.59901e-07, fres2=0.00622782, fresInf=0.00269713
+Max kcontact: 3.52712e+12
+    Iter 35: dv=0.024735, dp=0.0183434, div(v)=2.69281e-07, fres2=0.0062299, fresInf=0.00269074
+Max kcontact: 3.52712e+12
+    Iter 36: dv=0.0223808, dp=0.017451, div(v)=2.87862e-07, fres2=0.00623178, fresInf=0.0026847
+Max kcontact: 3.52712e+12
+    Iter 37: dv=0.0202243, dp=0.0165974, div(v)=2.97343e-07, fres2=0.00623285, fresInf=0.00267901
+Max kcontact: 3.52712e+12
+    Iter 38: dv=0.0182605, dp=0.0157797, div(v)=3.00727e-07, fres2=0.00623307, fresInf=0.00267366
+Max kcontact: 3.52712e+12
+    Iter 39: dv=0.0164791, dp=0.0150011, div(v)=3.02246e-07, fres2=0.00623305, fresInf=0.00266862
+Max kcontact: 3.52712e+12
+    Iter 40: dv=0.0148682, dp=0.0142579, div(v)=3.08623e-07, fres2=0.00623265, fresInf=0.00266389
+Max kcontact: 3.52712e+12
+    Iter 41: dv=0.0134155, dp=0.0135517, div(v)=3.13483e-07, fres2=0.00623154, fresInf=0.00265946
+Max kcontact: 3.52712e+12
+    Iter 42: dv=0.0121084, dp=0.0128776, div(v)=3.08125e-07, fres2=0.00623011, fresInf=0.00265529
+Max kcontact: 3.52712e+12
+    Iter 43: dv=0.010934, dp=0.0122361, div(v)=3.1014e-07, fres2=0.00622859, fresInf=0.0026514
+Max kcontact: 3.52712e+12
+    Iter 44: dv=0.00988052, dp=0.0116314, div(v)=3.05558e-07, fres2=0.00622719, fresInf=0.00264774
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000327905
+Step Energy 
+Total Internal Energy 239.003
+  v_r: [-0.0531561, 0.0533031] m/s
+  v_z: [-0.0773996, 0.136437] m/s
+  Presión: [-559.668, 386.134] MPa
+  Presión media: -86.767 MPa
+Suraface 4, Contact Faces Count: 2
+Area 0.000892355
+Suraface 5, Contact Faces Count: 4
+Area 0.00154592
+Step Time 0.309501 seconds
+CPU Overall Time 1.81652 seconds
+DONE.
+Min Element Length0.000185803
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 23/1 (dt=0.000327905 s) --- (Time=0.00896844 s) ---
+BCs activas: X=22 Y=0 Z=0 Total=22
+BulkMod 1.75e+11
+Max kcontact: 3.40433e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.7332e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.97548e+08
+   Flow stress invalid: 0/347
+   Zeros: 347/347
+   Rango dinámico: 0
+    Iter 1: dv=0.556321, dp=0.476534, div(v)=0.064741, fres2=0.289423, fresInf=0.383021
+Max kcontact: 3.40433e+12
+    Iter 2: dv=0.265417, dp=0.211429, div(v)=0.0388447, fres2=0.17481, fresInf=0.230864
+Max kcontact: 3.40433e+12
+    Iter 3: dv=0.156995, dp=0.0988974, div(v)=0.0233067, fres2=0.103855, fresInf=0.138953
+Max kcontact: 3.40433e+12
+    Iter 4: dv=0.0985635, dp=0.0601079, div(v)=0.0139842, fres2=0.0617505, fresInf=0.0836238
+Max kcontact: 3.40433e+12
+    Iter 5: dv=0.0632509, dp=0.0446056, div(v)=0.00839064, fres2=0.036854, fresInf=0.0502722
+Max kcontact: 3.40433e+12
+    Iter 6: dv=0.041741, dp=0.0372339, div(v)=0.0050345, fres2=0.0224195, fresInf=0.0301772
+Max kcontact: 3.40433e+12
+    Iter 7: dv=0.0286779, dp=0.0327716, div(v)=0.00302079, fres2=0.0144944, fresInf=0.0180726
+Max kcontact: 3.40433e+12
+    Iter 8: dv=0.0207803, dp=0.0294589, div(v)=0.00181256, fres2=0.0106492, fresInf=0.010781
+Max kcontact: 3.40433e+12
+    Iter 9: dv=0.0161329, dp=0.0267319, div(v)=0.00108762, fres2=0.00914079, fresInf=0.00638828
+Max kcontact: 3.40433e+12
+    Iter 10: dv=0.0135024, dp=0.0243477, div(v)=0.000652651, fres2=0.00869074, fresInf=0.00417272
+Max kcontact: 3.40433e+12
+    Iter 11: dv=0.0120806, dp=0.0222242, div(v)=0.000391673, fres2=0.00861074, fresInf=0.00418331
+Max kcontact: 3.40433e+12
+    Iter 12: dv=0.0113569, dp=0.0203147, div(v)=0.000235076, fres2=0.00862364, fresInf=0.00440389
+Max kcontact: 3.40433e+12
+    Iter 13: dv=0.0110293, dp=0.0185975, div(v)=0.000141118, fres2=0.0086448, fresInf=0.0045324
+Max kcontact: 3.40433e+12
+    Iter 14: dv=0.0109273, dp=0.0170597, div(v)=8.47441e-05, fres2=0.00865598, fresInf=0.00460723
+Max kcontact: 3.40433e+12
+    Iter 15: dv=0.010957, dp=0.0156876, div(v)=5.09194e-05, fres2=0.00865551, fresInf=0.00465077
+Max kcontact: 3.40433e+12
+    Iter 16: dv=0.0110651, dp=0.0144741, div(v)=3.06218e-05, fres2=0.00864786, fresInf=0.00467608
+Max kcontact: 3.40433e+12
+    Iter 17: dv=0.0112216, dp=0.0134092, div(v)=1.84382e-05, fres2=0.00863618, fresInf=0.00469075
+Max kcontact: 3.40433e+12
+    Iter 18: dv=0.0114093, dp=0.0124694, div(v)=1.11271e-05, fres2=0.00862244, fresInf=0.00469923
+Max kcontact: 3.40433e+12
+    Iter 19: dv=0.0116164, dp=0.0116428, div(v)=6.74202e-06, fres2=0.00860643, fresInf=0.00470409
+Max kcontact: 3.40433e+12
+    Iter 20: dv=0.0118351, dp=0.0109209, div(v)=4.10763e-06, fres2=0.00859083, fresInf=0.00470684
+Max kcontact: 3.40433e+12
+    Iter 21: dv=0.012061, dp=0.0102765, div(v)=2.52854e-06, fres2=0.00857486, fresInf=0.00470834
+Max kcontact: 3.40433e+12
+    Iter 22: dv=0.0122899, dp=0.00969278, div(v)=1.57084e-06, fres2=0.00855911, fresInf=0.00470911
+Max kcontact: 3.40433e+12
+    Iter 23: dv=0.0125179, dp=0.00918258, div(v)=9.9965e-07, fres2=0.00854456, fresInf=0.00470944
+Max kcontact: 3.40433e+12
+    Iter 24: dv=0.0127432, dp=0.00873439, div(v)=6.50274e-07, fres2=0.00853042, fresInf=0.0047095
+Max kcontact: 3.40433e+12
+    Iter 25: dv=0.0129626, dp=0.00834375, div(v)=4.31627e-07, fres2=0.00851646, fresInf=0.0047094
+Max kcontact: 3.40433e+12
+    Iter 26: dv=0.0131735, dp=0.0080163, div(v)=3.07294e-07, fres2=0.00850311, fresInf=0.00470921
+Max kcontact: 3.40433e+12
+    Iter 27: dv=0.0133737, dp=0.00774772, div(v)=2.31577e-07, fres2=0.00849003, fresInf=0.00470895
+Max kcontact: 3.40433e+12
+    Iter 28: dv=0.0135607, dp=0.00753955, div(v)=1.59906e-07, fres2=0.00847682, fresInf=0.00470866
+Max kcontact: 3.40433e+12
+    Iter 29: dv=0.0137319, dp=0.00739375, div(v)=1.27098e-07, fres2=0.00846417, fresInf=0.00470836
+Max kcontact: 3.40433e+12
+    Iter 30: dv=0.0138847, dp=0.00731082, div(v)=1.10678e-07, fres2=0.00845178, fresInf=0.00470804
+Max kcontact: 3.40433e+12
+    Iter 31: dv=0.0140161, dp=0.00729454, div(v)=7.51887e-08, fres2=0.00843957, fresInf=0.00470773
+Max kcontact: 3.40433e+12
+    Iter 32: dv=0.0141229, dp=0.00735002, div(v)=6.65321e-08, fres2=0.00842753, fresInf=0.00470744
+Max kcontact: 3.40433e+12
+    Iter 33: dv=0.0142018, dp=0.00748845, div(v)=6.57045e-08, fres2=0.0084159, fresInf=0.00470716
+Max kcontact: 3.40433e+12
+    Iter 34: dv=0.0142493, dp=0.00772025, div(v)=7.31117e-08, fres2=0.0084046, fresInf=0.00470691
+Max kcontact: 3.40433e+12
+    Iter 35: dv=0.0142622, dp=0.00806025, div(v)=1.12389e-07, fres2=0.00839379, fresInf=0.0047067
+Max kcontact: 3.40433e+12
+    Iter 36: dv=0.0142372, dp=0.00852444, div(v)=1.13656e-07, fres2=0.00838338, fresInf=0.00470653
+Max kcontact: 3.40433e+12
+    Iter 37: dv=0.0141726, dp=0.00911505, div(v)=1.33577e-07, fres2=0.00837133, fresInf=0.00470642
+Max kcontact: 3.40433e+12
+    Iter 38: dv=0.0140808, dp=0.0097593, div(v)=1.73334e-07, fres2=0.00835775, fresInf=0.00470635
+Max kcontact: 3.40433e+12
+    Iter 39: dv=0.0139827, dp=0.0102679, div(v)=2.2217e-07, fres2=0.00834484, fresInf=0.00470631
+Max kcontact: 3.40433e+12
+    Iter 40: dv=0.0138664, dp=0.0107241, div(v)=2.37412e-07, fres2=0.00833575, fresInf=0.00470632
+Max kcontact: 3.40433e+12
+    Iter 41: dv=0.0137323, dp=0.0111294, div(v)=2.8215e-07, fres2=0.00832962, fresInf=0.00470635
+Max kcontact: 3.40433e+12
+    Iter 42: dv=0.0135867, dp=0.0114155, div(v)=3.04203e-07, fres2=0.00832622, fresInf=0.00470642
+Max kcontact: 3.40433e+12
+    Iter 43: dv=0.013432, dp=0.0115688, div(v)=3.16043e-07, fres2=0.00832456, fresInf=0.00470652
+Max kcontact: 3.40433e+12
+    Iter 44: dv=0.0132648, dp=0.0116796, div(v)=3.61753e-07, fres2=0.00832326, fresInf=0.00470664
+Max kcontact: 3.40433e+12
+    Iter 45: dv=0.0130992, dp=0.011696, div(v)=3.80426e-07, fres2=0.00832281, fresInf=0.00470678
+Max kcontact: 3.40433e+12
+    Iter 46: dv=0.0129362, dp=0.0116678, div(v)=4.45858e-07, fres2=0.00832443, fresInf=0.00470694
+Max kcontact: 3.40433e+12
+    Iter 47: dv=0.01278, dp=0.0115883, div(v)=4.47643e-07, fres2=0.00832765, fresInf=0.00470711
+Max kcontact: 3.40433e+12
+    Iter 48: dv=0.0126362, dp=0.0114247, div(v)=4.76327e-07, fres2=0.00833148, fresInf=0.00470728
+Max kcontact: 3.40433e+12
+    Iter 49: dv=0.0125103, dp=0.0111575, div(v)=5.14138e-07, fres2=0.0083356, fresInf=0.00470744
+Max kcontact: 3.40433e+12
+    Iter 50: dv=0.0124083, dp=0.0107859, div(v)=5.23908e-07, fres2=0.00833991, fresInf=0.00470759
+Max kcontact: 3.40433e+12
+    Iter 51: dv=0.012336, dp=0.0103005, div(v)=5.54913e-07, fres2=0.00834394, fresInf=0.00470771
+Max kcontact: 3.40433e+12
+    Iter 52: dv=0.0122986, dp=0.00971248, div(v)=5.73195e-07, fres2=0.00834735, fresInf=0.00470781
+Max kcontact: 3.40433e+12
+    Iter 53: dv=0.0122976, dp=0.00901745, div(v)=5.99327e-07, fres2=0.00834965, fresInf=0.00470786
+Max kcontact: 3.40433e+12
+    Iter 54: dv=0.0123321, dp=0.0082287, div(v)=5.96387e-07, fres2=0.00835036, fresInf=0.00470787
+Max kcontact: 3.40433e+12
+    Iter 55: dv=0.0123956, dp=0.00738761, div(v)=6.3375e-07, fres2=0.00834966, fresInf=0.00470784
+Max kcontact: 3.40433e+12
+    Iter 56: dv=0.0124782, dp=0.00653004, div(v)=6.32282e-07, fres2=0.00834765, fresInf=0.00470779
+Max kcontact: 3.40433e+12
+    Iter 57: dv=0.0125675, dp=0.00569718, div(v)=6.48394e-07, fres2=0.00834458, fresInf=0.00470773
+Max kcontact: 3.40433e+12
+    Iter 58: dv=0.0126495, dp=0.00492788, div(v)=6.15579e-07, fres2=0.00834074, fresInf=0.0047077
+Max kcontact: 3.40433e+12
+    Iter 59: dv=0.01271, dp=0.00425325, div(v)=6.41953e-07, fres2=0.00833646, fresInf=0.00470773
+Max kcontact: 3.40433e+12
+    Iter 60: dv=0.0127361, dp=0.00369361, div(v)=6.48141e-07, fres2=0.00833201, fresInf=0.00470788
+Max kcontact: 3.40433e+12
+    Iter 61: dv=0.0127214, dp=0.00325722, div(v)=6.82384e-07, fres2=0.00832756, fresInf=0.00470822
+Max kcontact: 3.40433e+12
+    Iter 62: dv=0.0126758, dp=0.00294015, div(v)=6.54291e-07, fres2=0.00832327, fresInf=0.00470881
+Max kcontact: 3.40433e+12
+    Iter 63: dv=0.0126216, dp=0.00272554, div(v)=6.0704e-07, fres2=0.00831929, fresInf=0.00470964
+Max kcontact: 3.40433e+12
+    Iter 64: dv=0.0125539, dp=0.00258645, div(v)=6.42723e-07, fres2=0.00831565, fresInf=0.00471058
+Max kcontact: 3.40433e+12
+    Iter 65: dv=0.0124675, dp=0.00249743, div(v)=6.14814e-07, fres2=0.00831237, fresInf=0.00471158
+Max kcontact: 3.40433e+12
+    Iter 66: dv=0.0123715, dp=0.00243715, div(v)=6.12558e-07, fres2=0.00830941, fresInf=0.00471265
+Max kcontact: 3.40433e+12
+    Iter 67: dv=0.0122484, dp=0.00239085, div(v)=6.43153e-07, fres2=0.00830672, fresInf=0.00471372
+Max kcontact: 3.40433e+12
+    Iter 68: dv=0.0121629, dp=0.00234589, div(v)=6.02428e-07, fres2=0.00830428, fresInf=0.00471491
+Max kcontact: 3.40433e+12
+    Iter 69: dv=0.0118409, dp=0.00231909, div(v)=6.0916e-07, fres2=0.00830206, fresInf=0.00471582
+Max kcontact: 3.40433e+12
+    Iter 70: dv=0.0125216, dp=0.00221884, div(v)=6.3707e-07, fres2=0.00830002, fresInf=0.00471815
+Max kcontact: 3.40433e+12
+    Iter 71: dv=0.0115705, dp=0.00223219, div(v)=5.95147e-07, fres2=0.00829787, fresInf=0.00471591
+Max kcontact: 3.40433e+12
+    Iter 72: dv=0.0383624, dp=0.0110735, div(v)=6.32847e-07, fres2=0.0083135, fresInf=0.0046423
+Max kcontact: 3.40433e+12
+    Iter 73: dv=0.0211577, dp=0.00279381, div(v)=6.66417e-07, fres2=0.00829756, fresInf=0.00483199
+Max kcontact: 3.40433e+12
+    Iter 74: dv=0.0173827, dp=0.0024379, div(v)=6.3918e-07, fres2=0.00829271, fresInf=0.00477369
+Max kcontact: 3.40433e+12
+    Iter 75: dv=0.0153743, dp=0.00219954, div(v)=6.22813e-07, fres2=0.00828986, fresInf=0.00474054
+Max kcontact: 3.40433e+12
+    Iter 76: dv=0.0141703, dp=0.00201624, div(v)=6.83851e-07, fres2=0.00828799, fresInf=0.00472195
+Max kcontact: 3.40433e+12
+    Iter 77: dv=0.0126784, dp=0.00180051, div(v)=6.56446e-07, fres2=0.00828669, fresInf=0.00471209
+Max kcontact: 3.40433e+12
+    Iter 78: dv=0.0134176, dp=0.00183731, div(v)=6.11618e-07, fres2=0.00828556, fresInf=0.00471072
+Max kcontact: 3.40433e+12
+    Iter 79: dv=0.0133835, dp=0.00179235, div(v)=6.21949e-07, fres2=0.00828416, fresInf=0.00470684
+Max kcontact: 3.40433e+12
+    Iter 80: dv=0.0132732, dp=0.00173996, div(v)=6.26378e-07, fres2=0.00828279, fresInf=0.00470421
+Max kcontact: 3.40433e+12
+    Iter 81: dv=0.013173, dp=0.00169217, div(v)=6.27452e-07, fres2=0.00828147, fresInf=0.00470275
+Max kcontact: 3.40433e+12
+    Iter 82: dv=0.0130849, dp=0.00164953, div(v)=6.81661e-07, fres2=0.0082802, fresInf=0.00470205
+Max kcontact: 3.40433e+12
+    Iter 83: dv=0.013004, dp=0.00161115, div(v)=7.42065e-07, fres2=0.00827895, fresInf=0.00470179
+Max kcontact: 3.40433e+12
+    Iter 84: dv=0.0129261, dp=0.00157557, div(v)=7.20688e-07, fres2=0.00827767, fresInf=0.0047018
+Max kcontact: 3.40433e+12
+    Iter 85: dv=0.0128486, dp=0.00154288, div(v)=7.28452e-07, fres2=0.00827642, fresInf=0.00470195
+Max kcontact: 3.40433e+12
+    Iter 86: dv=0.0127699, dp=0.0015128, div(v)=6.5294e-07, fres2=0.00827516, fresInf=0.00470219
+Max kcontact: 3.40433e+12
+    Iter 87: dv=0.0126891, dp=0.00148546, div(v)=7.35409e-07, fres2=0.00827386, fresInf=0.00470249
+Max kcontact: 3.40433e+12
+    Iter 88: dv=0.0126057, dp=0.00145985, div(v)=6.89068e-07, fres2=0.00827261, fresInf=0.00470283
+Max kcontact: 3.40433e+12
+    Iter 89: dv=0.0125192, dp=0.00143564, div(v)=6.58945e-07, fres2=0.0082714, fresInf=0.00470322
+Max kcontact: 3.40433e+12
+    Iter 90: dv=0.0124294, dp=0.00141248, div(v)=6.59161e-07, fres2=0.00827026, fresInf=0.00470368
+Max kcontact: 3.40433e+12
+    Iter 91: dv=0.0123359, dp=0.00139023, div(v)=7.20723e-07, fres2=0.00826918, fresInf=0.00470421
+Max kcontact: 3.40433e+12
+    Iter 92: dv=0.0122382, dp=0.00136913, div(v)=6.70266e-07, fres2=0.00826817, fresInf=0.00470485
+Max kcontact: 3.40433e+12
+    Iter 93: dv=0.0121361, dp=0.00134867, div(v)=7.36111e-07, fres2=0.00826722, fresInf=0.00470563
+Max kcontact: 3.40433e+12
+    Iter 94: dv=0.0120289, dp=0.00132905, div(v)=7.86032e-07, fres2=0.00826635, fresInf=0.00470659
+Max kcontact: 3.40433e+12
+    Iter 95: dv=0.0119164, dp=0.00131029, div(v)=8.38317e-07, fres2=0.00826556, fresInf=0.00470779
+Max kcontact: 3.40433e+12
+    Iter 96: dv=0.0117993, dp=0.00129262, div(v)=7.51384e-07, fres2=0.00826484, fresInf=0.00470921
+Max kcontact: 3.40433e+12
+    Iter 97: dv=0.0116792, dp=0.00127599, div(v)=7.74274e-07, fres2=0.00826421, fresInf=0.00471084
+Max kcontact: 3.40433e+12
+    Iter 98: dv=0.0115584, dp=0.00125968, div(v)=8.7871e-07, fres2=0.00826362, fresInf=0.00471257
+Max kcontact: 3.40433e+12
+    Iter 99: dv=0.0114377, dp=0.00124355, div(v)=8.01082e-07, fres2=0.00826308, fresInf=0.00471433
+Max kcontact: 3.40433e+12
+    Iter 100: dv=0.0113164, dp=0.00122766, div(v)=8.16724e-07, fres2=0.00826257, fresInf=0.00471609
+Max kcontact: 3.40433e+12
+    Iter 101: dv=0.0111941, dp=0.00121207, div(v)=7.23479e-07, fres2=0.0082621, fresInf=0.00471786
+Max kcontact: 3.40433e+12
+    Iter 102: dv=0.011071, dp=0.00119665, div(v)=7.47465e-07, fres2=0.00826164, fresInf=0.00471962
+Max kcontact: 3.40433e+12
+    Iter 103: dv=0.0109471, dp=0.00118142, div(v)=6.93001e-07, fres2=0.00826121, fresInf=0.00472139
+Max kcontact: 3.40433e+12
+    Iter 104: dv=0.0108225, dp=0.00116661, div(v)=7.65436e-07, fres2=0.00826081, fresInf=0.00472317
+Max kcontact: 3.40433e+12
+    Iter 105: dv=0.0106972, dp=0.00115191, div(v)=7.9124e-07, fres2=0.00826044, fresInf=0.00472496
+Max kcontact: 3.40433e+12
+    Iter 106: dv=0.0105715, dp=0.0011375, div(v)=8.3064e-07, fres2=0.00826008, fresInf=0.00472675
+Max kcontact: 3.40433e+12
+    Iter 107: dv=0.0104447, dp=0.00112351, div(v)=7.52831e-07, fres2=0.00825974, fresInf=0.00472857
+Max kcontact: 3.40433e+12
+    Iter 108: dv=0.0103171, dp=0.00111069, div(v)=7.56314e-07, fres2=0.00825935, fresInf=0.00473037
+Max kcontact: 3.40433e+12
+    Iter 109: dv=0.0101902, dp=0.00109513, div(v)=7.01795e-07, fres2=0.00825907, fresInf=0.00473226
+Max kcontact: 3.40433e+12
+    Iter 110: dv=0.0100729, dp=0.00107729, div(v)=7.38425e-07, fres2=0.00825871, fresInf=0.00473387
+Max kcontact: 3.40433e+12
+    Iter 111: dv=0.00990778, dp=0.00107915, div(v)=7.96118e-07, fres2=0.0082587, fresInf=0.0047367
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000327905
+Step Energy 
+Total Internal Energy 265.096
+  v_r: [-0.0273808, 0.0659601] m/s
+  v_z: [-0.185442, 0.00316809] m/s
+  Presión: [-617.446, 654.504] MPa
+  Presión media: 18.5287 MPa
+Suraface 4, Contact Faces Count: 2
+Area 0.000898223
+Suraface 5, Contact Faces Count: 4
+Area 0.00154617
+Step Time 0.773135 seconds
+CPU Overall Time 2.58965 seconds
+DONE.
+Writing scheduled VTK output: time=0.00929635 s, configured outTime=0.001 s, target_output_time=0.009 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00023.vtk
+DONE writing VTK.
+Next scheduled output time=0.01 s
+WARNING: Max Angle > 165 on element 324, remeshing
+REMESHING  at step 23
+MDIM2
+Generate 2D remesh
+[mesh_adapt] commit=13cca80
+Element Size: 0.00051347
+[mesh_adapt] remesh sizing: m_tgt_elsize=0.00051347045859574268
+Generating Nodes ...
+Generating Quads
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_in_msh.vtk
+  - Nodes: 386
+  - Quads: 347
+  - Node flag distribution:
+    * UNKNOWN: 386 (100%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+[mesh_adapt] remesh sizing: SimpleRemesher2D.element_size=0.00051347045859574268, m_remesh_length=0.00051489808683963289, scalar_size_base=0.00051489808683963289
+[mesh_adapt] scalar refinement: OFF, reason=min_frac == max_frac, law=hyperbolic, boundary_only=false, min_frac=1, max_frac=1, min_size=0.000514898, max_size=0.000514898
+
+[mesh_adapt] running SimpleRemesher2D workflow
+   orphan nodes removed = 0
+[remove_nodes_near_contour]
+   original nodes  = 365
+   original quads  = 320
+   nodes kept      = 340
+   quads kept      = 296
+   quads removed   = 24
+   orphan removed  = 0
+   final nodes     = 340
+   final quads     = 296
+
+=== CONTOUR POINTS ===
+0 : (-4.34e-19, -0.00553069)
+1 : (0, -0.00478068)
+2 : (0, -0.00403068)
+3 : (0, -0.00328068)
+4 : (0, -0.00253068)
+5 : (0, -0.00178067)
+6 : (0, -0.00103067)
+7 : (0, -0.000280671)
+8 : (0, 0.00046933)
+9 : (0, 0.00121933)
+10 : (0, 0.00196933)
+11 : (0, 0.00271933)
+12 : (0, 0.00346933)
+13 : (0, 0.00421933)
+14 : (0, 0.00496933)
+15 : (0, 0.00571933)
+16 : (0, 0.00646933)
+17 : (0, 0.00721932)
+18 : (0, 0.00796932)
+19 : (0, 0.00871931)
+20 : (0, 0.0094703)
+21 : (1.301e-18, 0.0104703)
+22 : (0.000750013, 0.0104303)
+23 : (0.00150003, 0.0103303)
+24 : (0.00225004, 0.0101503)
+25 : (0.00262505, 0.0100102)
+26 : (0.00300006, 0.00988023)
+27 : (0.00337507, 0.0097102)
+28 : (0.00375009, 0.00953016)
+29 : (0.00412511, 0.00930809)
+30 : (0.00450013, 0.00908297)
+31 : (0.00487518, 0.00879274)
+32 : (0.00525023, 0.00850232)
+33 : (0.00552817, 0.0082345)
+34 : (0.00580702, 0.00796691)
+35 : (0.0063545, 0.00715996)
+36 : (0.00700035, 0.00635919)
+37 : (0.00720898, 0.0060403)
+38 : (0.00733572, 0.00543384)
+39 : (0.00747026, 0.00525221)
+40 : (0.00766684, 0.00500034)
+41 : (0.00772361, 0.00457022)
+42 : (0.00783068, 0.00420251)
+43 : (0.0078869, 0.00383159)
+44 : (0.00794517, 0.00346119)
+45 : (0.00796903, 0.00309073)
+46 : (0.00799524, 0.00271832)
+47 : (0.00798862, 0.00234406)
+48 : (0.00798255, 0.00196953)
+49 : (0.00794256, 0.00159573)
+50 : (0.00790467, 0.00122311)
+51 : (0.0078311, 0.000851258)
+52 : (0.00775966, 0.00047946)
+53 : (0.00772952, 0.00015358)
+54 : (0.00750114, -0.0001718)
+55 : (0.00734291, -0.000572987)
+56 : (0.00717078, -0.00100707)
+57 : (0.00699093, -0.00142322)
+58 : (0.00677806, -0.00178529)
+59 : (0.00650916, -0.00215751)
+60 : (0.00624198, -0.00253142)
+61 : (0.00574596, -0.00304795)
+62 : (0.00524997, -0.00356478)
+63 : (0.00487498, -0.00385474)
+64 : (0.00449998, -0.00414472)
+65 : (0.00412498, -0.00436971)
+66 : (0.00374999, -0.0045947)
+67 : (0.00337499, -0.0047697)
+68 : (0.00299999, -0.00494469)
+69 : (0.00262499, -0.00507569)
+70 : (0.00224999, -0.00520669)
+71 : (0.00187499, -0.00529769)
+72 : (0.0015, -0.00538769)
+73 : (0.001125, -0.00544169)
+74 : (0.000749998, -0.00549569)
+75 : (0.000374999, -0.00551269)
+76 : (-4.34e-19, -0.00553069)
+
+First point: -4.34e-19, -0.00553069
+Last point:  -4.34e-19, -0.00553069
+Critical nodes inserted: 3
+[DEBUG] Total candidates passing Qmin=5: 73
+[DEBUG] Quads accepted: 67, triangles left: 25
+
+[VERIFY] MeshToSub consistency check:
+====================================
+  - Patch points: 254
+  - Mesh nodes: 508
+  - Local_to_global size: 254
+  - Missing global IDs: 0
+  - Quad reference errors: 0
+====================================
+
+Subdivided edges (global indices):
+(2, 409)
+(2, 410)
+(8, 406)
+(8, 407)
+(16, 404)
+(16, 405)
+(25, 403)
+(25, 404)
+(35, 401)
+(35, 402)
+(35, 403)
+(46, 400)
+(46, 401)
+(58, 399)
+(58, 400)
+(71, 398)
+(71, 399)
+(111, 395)
+(111, 396)
+(168, 391)
+(168, 392)
+(198, 388)
+(198, 389)
+(239, 240)
+(239, 253)
+(240, 253)
+(240, 385)
+(240, 386)
+(253, 266)
+(253, 384)
+(266, 384)
+(279, 382)
+(279, 383)
+(291, 381)
+(291, 382)
+(301, 302)
+(301, 312)
+(302, 312)
+(302, 381)
+(311, 312)
+(311, 321)
+(312, 321)
+(312, 380)
+(312, 381)
+(321, 380)
+(329, 379)
+(329, 380)
+(335, 377)
+(335, 378)
+(339, 375)
+(339, 376)
+(375, 376)
+(377, 378)
+(379, 380)
+(380, 381)
+(381, 382)
+(382, 383)
+(385, 386)
+(388, 389)
+(391, 392)
+(395, 396)
+(398, 399)
+(399, 400)
+(400, 401)
+(401, 402)
+(402, 403)
+(403, 404)
+(404, 405)
+(406, 407)
+(409, 410)
+Init edge: (2,409) -> 505
+Init edge: (2,410) -> 506
+Init edge: (8,406) -> 501
+Init edge: (8,407) -> 502
+Init edge: (16,404) -> 497
+Init edge: (16,405) -> 498
+Init edge: (25,403) -> 493
+Init edge: (25,404) -> 494
+Init edge: (35,401) -> 486
+Init edge: (35,402) -> 487
+Init edge: (35,403) -> 490
+Init edge: (46,400) -> 482
+Init edge: (46,401) -> 483
+Init edge: (58,399) -> 478
+Init edge: (58,400) -> 479
+Init edge: (71,398) -> 474
+Init edge: (71,399) -> 475
+Init edge: (111,395) -> 470
+Init edge: (111,396) -> 471
+Init edge: (168,391) -> 466
+Init edge: (168,392) -> 467
+Init edge: (198,388) -> 462
+Init edge: (198,389) -> 463
+Init edge: (239,240) -> 414
+Init edge: (239,253) -> 416
+Init edge: (240,253) -> 415
+Init edge: (240,385) -> 458
+Init edge: (240,386) -> 459
+Init edge: (253,266) -> 454
+Init edge: (253,384) -> 455
+Init edge: (266,384) -> 456
+Init edge: (279,382) -> 450
+Init edge: (279,383) -> 451
+Init edge: (291,381) -> 446
+Init edge: (291,382) -> 447
+Init edge: (301,302) -> 418
+Init edge: (301,312) -> 420
+Init edge: (302,312) -> 419
+Init edge: (302,381) -> 441
+Init edge: (311,312) -> 422
+Init edge: (311,321) -> 424
+Init edge: (312,321) -> 423
+Init edge: (312,380) -> 434
+Init edge: (312,381) -> 442
+Init edge: (321,380) -> 435
+Init edge: (329,379) -> 437
+Init edge: (329,380) -> 438
+Init edge: (335,377) -> 430
+Init edge: (335,378) -> 431
+Init edge: (339,375) -> 426
+Init edge: (339,376) -> 427
+Init edge: (375,376) -> 428
+Init edge: (377,378) -> 432
+Init edge: (379,380) -> 439
+Init edge: (380,381) -> 444
+Init edge: (381,382) -> 448
+Init edge: (382,383) -> 452
+Init edge: (385,386) -> 460
+Init edge: (388,389) -> 464
+Init edge: (391,392) -> 468
+Init edge: (395,396) -> 472
+Init edge: (398,399) -> 476
+Init edge: (399,400) -> 480
+Init edge: (400,401) -> 484
+Init edge: (401,402) -> 488
+Init edge: (402,403) -> 491
+Init edge: (403,404) -> 495
+Init edge: (404,405) -> 499
+Init edge: (406,407) -> 503
+Init edge: (409,410) -> 507
+
+--- Iteration 0 ---
+Edges marked for subdivision: 70 (ext=0, int=70, refined_quads=0, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=9 int=83 refined_quads=34 blocked_by_min_size=0
+
+--- Iteration 1 ---
+Edges marked for subdivision: 92 (ext=9, int=83, refined_quads=34, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=11 int=96 refined_quads=42 blocked_by_min_size=0
+
+--- Iteration 2 ---
+Edges marked for subdivision: 107 (ext=11, int=96, refined_quads=42, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=14 int=103 refined_quads=49 blocked_by_min_size=0
+
+--- Iteration 3 ---
+Edges marked for subdivision: 117 (ext=14, int=103, refined_quads=49, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=15 int=109 refined_quads=52 blocked_by_min_size=0
+
+--- Iteration 4 ---
+Edges marked for subdivision: 124 (ext=15, int=109, refined_quads=52, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=15 int=114 refined_quads=55 blocked_by_min_size=0
+
+--- Iteration 5 ---
+Edges marked for subdivision: 129 (ext=15, int=114, refined_quads=55, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=15 int=119 refined_quads=57 blocked_by_min_size=0
+
+--- Iteration 6 ---
+Edges marked for subdivision: 134 (ext=15, int=119, refined_quads=57, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=120 refined_quads=59 blocked_by_min_size=0
+
+--- Iteration 7 ---
+Edges marked for subdivision: 137 (ext=17, int=120, refined_quads=59, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=121 refined_quads=59 blocked_by_min_size=0
+
+--- Iteration 8 ---
+Edges marked for subdivision: 138 (ext=17, int=121, refined_quads=59, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=122 refined_quads=60 blocked_by_min_size=0
+
+--- Iteration 9 ---
+Edges marked for subdivision: 139 (ext=17, int=122, refined_quads=60, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=124 refined_quads=61 blocked_by_min_size=0
+
+--- Iteration 10 ---
+Edges marked for subdivision: 141 (ext=17, int=124, refined_quads=61, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=126 refined_quads=62 blocked_by_min_size=0
+
+--- Iteration 11 ---
+Edges marked for subdivision: 143 (ext=17, int=126, refined_quads=62, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=128 refined_quads=63 blocked_by_min_size=0
+
+--- Iteration 12 ---
+Edges marked for subdivision: 145 (ext=17, int=128, refined_quads=63, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=130 refined_quads=64 blocked_by_min_size=0
+
+--- Iteration 13 ---
+Edges marked for subdivision: 147 (ext=17, int=130, refined_quads=64, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=131 refined_quads=64 blocked_by_min_size=0
+
+--- Iteration 14 ---
+Edges marked for subdivision: 148 (ext=17, int=131, refined_quads=64, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=132 refined_quads=65 blocked_by_min_size=0
+
+--- Iteration 15 ---
+Edges marked for subdivision: 149 (ext=17, int=132, refined_quads=65, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=133 refined_quads=65 blocked_by_min_size=0
+
+--- Iteration 16 ---
+Edges marked for subdivision: 150 (ext=17, int=133, refined_quads=65, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=134 refined_quads=66 blocked_by_min_size=0
+
+--- Iteration 17 ---
+Edges marked for subdivision: 151 (ext=17, int=134, refined_quads=66, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=136 refined_quads=67 blocked_by_min_size=0
+
+--- Iteration 18 ---
+Edges marked for subdivision: 153 (ext=17, int=136, refined_quads=67, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=138 refined_quads=68 blocked_by_min_size=0
+
+--- Iteration 19 ---
+Edges marked for subdivision: 155 (ext=17, int=138, refined_quads=68, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=139 refined_quads=68 blocked_by_min_size=0
+
+--- Iteration 20 ---
+Edges marked for subdivision: 156 (ext=17, int=139, refined_quads=68, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=141 refined_quads=69 blocked_by_min_size=0
+
+--- Iteration 21 ---
+Edges marked for subdivision: 158 (ext=17, int=141, refined_quads=69, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=142 refined_quads=70 blocked_by_min_size=0
+
+--- Iteration 22 ---
+Edges marked for subdivision: 159 (ext=17, int=142, refined_quads=70, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=145 refined_quads=71 blocked_by_min_size=0
+
+--- Iteration 23 ---
+Edges marked for subdivision: 162 (ext=17, int=145, refined_quads=71, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=147 refined_quads=72 blocked_by_min_size=0
+
+--- Iteration 24 ---
+Edges marked for subdivision: 164 (ext=17, int=147, refined_quads=72, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=149 refined_quads=73 blocked_by_min_size=0
+
+--- Iteration 25 ---
+Edges marked for subdivision: 166 (ext=17, int=149, refined_quads=73, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=151 refined_quads=74 blocked_by_min_size=0
+
+--- Iteration 26 ---
+Edges marked for subdivision: 168 (ext=17, int=151, refined_quads=74, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=153 refined_quads=75 blocked_by_min_size=0
+
+--- Iteration 27 ---
+Edges marked for subdivision: 170 (ext=17, int=153, refined_quads=75, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=155 refined_quads=76 blocked_by_min_size=0
+
+--- Iteration 28 ---
+Edges marked for subdivision: 172 (ext=17, int=155, refined_quads=76, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=157 refined_quads=77 blocked_by_min_size=0
+
+--- Iteration 29 ---
+Edges marked for subdivision: 174 (ext=17, int=157, refined_quads=77, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=158 refined_quads=77 blocked_by_min_size=0
+
+--- Iteration 30 ---
+Edges marked for subdivision: 175 (ext=17, int=158, refined_quads=77, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=159 refined_quads=78 blocked_by_min_size=0
+
+--- Iteration 31 ---
+Edges marked for subdivision: 176 (ext=17, int=159, refined_quads=78, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=160 refined_quads=79 blocked_by_min_size=0
+
+--- Iteration 32 ---
+Edges marked for subdivision: 177 (ext=17, int=160, refined_quads=79, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=161 refined_quads=79 blocked_by_min_size=0
+
+--- Iteration 33 ---
+Edges marked for subdivision: 178 (ext=17, int=161, refined_quads=79, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=164 refined_quads=80 blocked_by_min_size=0
+
+--- Iteration 34 ---
+Edges marked for subdivision: 181 (ext=17, int=164, refined_quads=80, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=165 refined_quads=81 blocked_by_min_size=0
+
+--- Iteration 35 ---
+Edges marked for subdivision: 182 (ext=17, int=165, refined_quads=81, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=166 refined_quads=82 blocked_by_min_size=0
+
+--- Iteration 36 ---
+Edges marked for subdivision: 183 (ext=17, int=166, refined_quads=82, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=167 refined_quads=82 blocked_by_min_size=0
+
+--- Iteration 37 ---
+Edges marked for subdivision: 184 (ext=17, int=167, refined_quads=82, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=17 int=169 refined_quads=83 blocked_by_min_size=0
+
+--- Iteration 38 ---
+Edges marked for subdivision: 186 (ext=17, int=169, refined_quads=83, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=18 int=169 refined_quads=84 blocked_by_min_size=0
+
+--- Iteration 39 ---
+Edges marked for subdivision: 187 (ext=18, int=169, refined_quads=84, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=18 int=169 refined_quads=84 blocked_by_min_size=0
+
+--- Iteration 40 ---
+Edges marked for subdivision: 187 (ext=18, int=169, refined_quads=84, blocked_by_min_size=0)
+[scalar_refine] after mark_edges_for_subdivision ext=18 int=169 refined_quads=84 blocked_by_min_size=0
+[scalar_refine] refine_to_conform final_nonconforming_edges=0 blocked_by_min_size=0
+[INFO] Edge (239,240) already has node 414
+[INFO] Edge (239,253) already has node 416
+[INFO] Edge (253,266) already has node 454
+[INFO] Edge (301,302) already has node 418
+[INFO] Edge (301,312) already has node 420
+[INFO] Edge (311,312) already has node 422
+[INFO] Edge (311,321) already has node 424
+[INFO] Edge (58,399) already has node 478
+[INFO] Edge (71,399) already has node 475
+[INFO] Edge (279,382) already has node 450
+[INFO] Edge (291,382) already has node 447
+[INFO] Edge (16,404) already has node 497
+[INFO] Edge (25,404) already has node 494
+[INFO] Edge (111,395) already has node 470
+[INFO] Edge (291,381) already has node 446
+[INFO] Edge (302,381) already has node 441
+[INFO] Edge (240,386) already has node 459
+[INFO] Edge (46,400) already has node 482
+[INFO] Edge (58,400) already has node 479
+[INFO] Edge (321,380) already has node 435
+[INFO] Edge (329,380) already has node 438
+[INFO] Edge (339,376) already has node 427
+[INFO] Edge (8,406) already has node 501
+[INFO] Edge (25,403) already has node 493
+[INFO] Edge (35,403) already has node 490
+[INFO] Edge (2,410) already has node 506
+[INFO] Edge (35,401) already has node 486
+[INFO] Edge (46,401) already has node 483
+[INFO] Edge (335,377) already has node 430
+[INFO] Edge (198,388) already has node 462
+[INFO] Edge (8,407) already has node 502
+[INFO] Edge (111,396) already has node 471
+[INFO] Edge (240,253) already has node 415
+[INFO] Edge (240,385) already has node 458
+[INFO] Edge (253,384) already has node 455
+[INFO] Edge (2,409) already has node 505
+[INFO] Edge (339,375) already has node 426
+[INFO] Edge (335,378) already has node 431
+[INFO] Edge (168,392) already has node 467
+[INFO] Edge (266,384) already has node 456
+[INFO] Edge (279,383) already has node 451
+[INFO] Edge (168,391) already has node 466
+[INFO] Edge (329,379) already has node 437
+[INFO] Edge (198,389) already has node 463
+[INFO] Edge (71,398) already has node 474
+[INFO] Edge (16,405) already has node 498
+Laplacian smoothing: 597 nodos internos
+  iter 0 → ratio = 0.00459495
+  iter 1 → ratio = 0.00251629
+  iter 2 → ratio = 0.00192736
+  iter 3 → ratio = 0.00168587
+  iter 4 → ratio = 0.00149716
+  iter 5 → ratio = 0.00139017
+  iter 6 → ratio = 0.00129298
+  iter 7 → ratio = 0.00122874
+  iter 8 → ratio = 0.00116647
+  iter 9 → ratio = 0.0011204
+  iter 10 → ratio = 0.00107484
+  iter 11 → ratio = 0.0010383
+  iter 12 → ratio = 0.00100212
+  iter 13 → ratio = 0.000971468
+[cleanup_orphan_nodes]
+   total nodes   = 707
+   total quads   = 651
+   orphan nodes  = 0
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_background.vtk
+  - Nodes: 720
+  - Quads: 665
+  - Node flag distribution:
+    * UNKNOWN: 720 (100%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_inside.vtk
+  - Nodes: 365
+  - Quads: 320
+  - Node flag distribution:
+    * UNKNOWN: 365 (100%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_band_mesh.vtk
+  - Nodes: 340
+  - Quads: 296
+  - Node flag distribution:
+    * UNKNOWN: 340 (100%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_prev_smoothed.vtk
+  - Nodes: 707
+  - Quads: 651
+  - Node flag distribution:
+    * PROJECTED: 70 (9.90099%)
+    * CRITICAL: 3 (0.424328%)
+    * EXTERNAL: 18 (2.54597%)
+    * SUBDIVIDED: 169 (23.9038%)
+    * CENTER: 107 (15.1344%)
+    * UNKNOWN: 340 (48.0905%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+
+[VTK] Mesh exported to examples/demo/cyl_closed_die/_smoothed.vtk
+  - Nodes: 707
+  - Quads: 651
+  - Node flag distribution:
+    * PROJECTED: 70 (9.90099%)
+    * CRITICAL: 3 (0.424328%)
+    * EXTERNAL: 18 (2.54597%)
+    * SUBDIVIDED: 169 (23.9038%)
+    * CENTER: 107 (15.1344%)
+    * UNKNOWN: 340 (48.0905%)
+  - Boundary nodes: 0
+  - Constrained nodes: 0
+[mesh_adapt] scalar refinement iterations=0, triggered=false, converged=false, input_fallback=false
+[mesh_adapt] projected symmetry nodes: X=32 max_dx=1.301e-18 Y=0 max_dy=0 tol=0.0001
+WRITING DOMAIN 707 NODES 651ELEMS
+MAP NODAL
+MAP NODAL VECTOR RAW (MMG), dim=2
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=2
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+MAP NODAL VECTOR RAW (MMG), dim=2
+Not inside element: 0 (0%)
+Not same node: 0 (0%)
+DONE. Setting Volumes for 651 elements
+New Element Volume: 0.000100024
+Remesh geometry summary: dim=2 domtype=0 axisymm_vol_weight=1
+Elements INSIDE old mesh: 0 (0%)
+Elements NOT inside old mesh: 651 (100%)
+foundelem closrsrt
+map pressure
+Map eleme 
+Map done
+Deleting BCs
+Done
+Clearing Domain
+Deleting Derivs
+Deleting Conn
+Deleting elemental fields
+Done 
+creating domain
+Setting explicit dimensions for 707nodes and 2dim
+setting deriv allocation size of 5208
+mdim2 4 651 1
+ ALLOCATING HOURGLASS 5208
+SETTING DENSITY TO 2780
+Copied remesh volume summary: sum=0.000100024 min=2.10374e-08 max=2.99268e-07
+G 8.07692e+10
+copying
+Setting conn
+Node 12 found in element 11
+Node 12 found in element 13
+Node 12 found in element 14
+Node 12 found in element 16
+Node 12 found in element 23
+Node 12 found in element 24
+Allocating 651 and 4nodes x elem
+COPYING 2604 element nodes 
+Done
+Size of Nodal shared Elements vector 2604
+Total orphan nodes: 0
+Node Elemets set. 
+Calculating Volumes
+Total Volume 0.000100024
+Calculating mass from Vols
+recovering velocities
+deleting 
+MESH CHANGED
+DOF TOTAL2065
+Calc Derivatives
+Initial Vol: 1.0002e-04
+[ImplicitMass] after_remesh total_mass=0.278067 total_vol=0.000100024 nodal_mass_range=[3.29425e-05, 0.000801211] nodal_vol_range=[1.18498e-08, 2.88205e-07] elem_vol_range=[2.10374e-08, 2.99268e-07] rho_range=[2780, 2780]
+done. Face count: 1357
+Total External Nodal Area: 4.1118e-02, external nodes: 110
+Allocated BCS: 
+X 32
+Y 0
+Z 0
+Reapplied symmetry BCs after remesh: X=32 Y=0 Z=0 Total=32 symtol=0.0001
+Projected symmetry nodes after remesh: X=32 max_dx=0 Y=0 max_dy=0
+Min Element Length0.00012586
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 24/1 (dt=0.00025172 s) --- (Time=0.00929635 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.29225e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 2.00183e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 1.99991e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.64345, dp=0.996593, div(v)=0.514946, fres2=0.712483, fresInf=0.474935
+Max kcontact: 4.29225e+12
+    Iter 2: dv=0.109104, dp=0.109042, div(v)=0.373282, fres2=0.309329, fresInf=0.324164
+Max kcontact: 4.29225e+12
+    Iter 3: dv=0.147317, dp=0.108082, div(v)=0.224555, fres2=0.189747, fresInf=0.199654
+Max kcontact: 4.29225e+12
+    Iter 4: dv=0.120591, dp=0.10866, div(v)=0.134088, fres2=0.114843, fresInf=0.121218
+Max kcontact: 4.29225e+12
+    Iter 5: dv=0.0859327, dp=0.108869, div(v)=0.0817624, fres2=0.0697639, fresInf=0.0738903
+Max kcontact: 4.29225e+12
+    Iter 6: dv=0.0618637, dp=0.108882, div(v)=0.0491643, fres2=0.0426322, fresInf=0.0453048
+Max kcontact: 4.29225e+12
+    Iter 7: dv=0.0448086, dp=0.108785, div(v)=0.0295882, fres2=0.0263318, fresInf=0.0280244
+Max kcontact: 4.29225e+12
+    Iter 8: dv=0.0330678, dp=0.108621, div(v)=0.0178283, fres2=0.0165855, fresInf=0.0175827
+Max kcontact: 4.29225e+12
+    Iter 9: dv=0.0250834, dp=0.109877, div(v)=0.0107455, fres2=0.0108898, fresInf=0.0112735
+Max kcontact: 4.29225e+12
+    Iter 10: dv=0.0196574, dp=0.107809, div(v)=0.00953529, fres2=0.00749007, fresInf=0.00745995
+Max kcontact: 4.29225e+12
+    Iter 11: dv=0.0158962, dp=0.108394, div(v)=0.00579586, fres2=0.0056415, fresInf=0.0051535
+Max kcontact: 4.29225e+12
+    Iter 12: dv=0.0132401, dp=0.108988, div(v)=0.00368029, fres2=0.00485129, fresInf=0.00375699
+Max kcontact: 4.29225e+12
+    Iter 13: dv=0.0113102, dp=0.115227, div(v)=0.00415352, fres2=0.0115295, fresInf=0.00714893
+Max kcontact: 4.29225e+12
+    Iter 14: dv=0.00985895, dp=0.124277, div(v)=0.0039423, fres2=0.00613759, fresInf=0.00239482
+Max kcontact: 4.29225e+12
+    Iter 15: dv=0.00874307, dp=0.105539, div(v)=0.00831169, fres2=0.00385094, fresInf=0.00208054
+Max kcontact: 4.29225e+12
+    Iter 16: dv=0.00785379, dp=0.133223, div(v)=0.00497487, fres2=0.0101756, fresInf=0.00649739
+Max kcontact: 4.29225e+12
+    Iter 17: dv=0.00712894, dp=0.106381, div(v)=0.0117052, fres2=0.00385501, fresInf=0.00176919
+Max kcontact: 4.29225e+12
+    Iter 18: dv=0.00650884, dp=0.105991, div(v)=0.00744815, fres2=0.00469008, fresInf=0.00235963
+Max kcontact: 4.29225e+12
+    Iter 19: dv=0.00597351, dp=0.109375, div(v)=0.0056731, fres2=0.00384252, fresInf=0.00165452
+Max kcontact: 4.29225e+12
+    Iter 20: dv=0.00551281, dp=0.259448, div(v)=0.00473085, fres2=0.0312323, fresInf=0.0210172
+Max kcontact: 4.29225e+12
+    Iter 21: dv=0.00506695, dp=0.0996311, div(v)=0.0199998, fres2=0.00399271, fresInf=0.00163655
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.00025172
+Step Energy 
+Total Internal Energy 286.182
+  v_r: [-0.0974155, 0.0639464] m/s
+  v_z: [-0.25193, -0.102699] m/s
+  Presión: [-3946.97, 2755.2] MPa
+  Presión media: -595.889 MPa
+Suraface 4, Contact Faces Count: 1
+Area 0.00027935
+Suraface 5, Contact Faces Count: 3
+Area 0.00113415
+Step Time 0.670119 seconds
+CPU Overall Time 3.25977 seconds
+DONE.
+Min Element Length0.000125862
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 25/1 (dt=0.00025172 s) --- (Time=0.00954807 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.2704e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.1282e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.00514e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0564248, dp=0.235386, div(v)=0.182403, fres2=0.0862558, fresInf=0.0893825
+Max kcontact: 4.2704e+12
+    Iter 2: dv=0.0346628, dp=0.10413, div(v)=0.148158, fres2=0.0527615, fresInf=0.0550255
+Max kcontact: 4.2704e+12
+    Iter 3: dv=0.0208047, dp=0.0947872, div(v)=0.0874653, fres2=0.0320717, fresInf=0.0331
+Max kcontact: 4.2704e+12
+    Iter 4: dv=0.0120945, dp=0.0916713, div(v)=0.0522634, fres2=0.0193454, fresInf=0.01942
+Max kcontact: 4.2704e+12
+    Iter 5: dv=0.00674599, dp=0.101446, div(v)=0.0317478, fres2=0.0120831, fresInf=0.0110045
+Max kcontact: 4.2704e+12
+    Iter 6: dv=0.00346682, dp=0.104727, div(v)=0.0219567, fres2=0.00769382, fresInf=0.00587186
+Max kcontact: 4.2704e+12
+    Iter 7: dv=0.00249157, dp=0.58625, div(v)=0.0152094, fres2=0.0255186, fresInf=0.0119541
+Max kcontact: 4.2704e+12
+    Iter 8: dv=0.000843257, dp=0.0802556, div(v)=0.0516512, fres2=0.00446998, fresInf=0.00212192
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.00025172
+Step Energy 
+Total Internal Energy 303.116
+  v_r: [-0.073066, 0.0515001] m/s
+  v_z: [-0.210095, -0.102172] m/s
+  Presión: [-1112.7, 900.614] MPa
+  Presión media: -106.044 MPa
+Suraface 4, Contact Faces Count: 1
+Area 0.000282576
+Suraface 5, Contact Faces Count: 3
+Area 0.00112867
+Step Time 0.242739 seconds
+CPU Overall Time 3.50251 seconds
+DONE.
+Min Element Length0.000125863
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 26/1 (dt=0.000251724 s) --- (Time=0.00979979 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.25351e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.37035e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.0094e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.047977, dp=0.0866259, div(v)=0.131291, fres2=0.0734474, fresInf=0.07786
+Max kcontact: 4.25351e+12
+    Iter 2: dv=0.0297883, dp=0.0818262, div(v)=0.0789873, fres2=0.0450702, fresInf=0.0474982
+Max kcontact: 4.25351e+12
+    Iter 3: dv=0.018246, dp=0.286804, div(v)=0.0482847, fres2=0.0323373, fresInf=0.0282519
+Max kcontact: 4.25351e+12
+    Iter 4: dv=0.0110454, dp=0.0692621, div(v)=0.030821, fres2=0.016556, fresInf=0.01629
+Max kcontact: 4.25351e+12
+    Iter 5: dv=0.00658769, dp=0.061796, div(v)=0.0188226, fres2=0.0102332, fresInf=0.00894451
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251724
+Step Energy 
+Total Internal Energy 316.73
+  v_r: [-0.0562681, 0.0384989] m/s
+  v_z: [-0.177472, -0.101286] m/s
+  Presión: [-1028.71, 508.33] MPa
+  Presión media: -260.189 MPa
+Suraface 4, Contact Faces Count: 1
+Area 0.000285613
+Suraface 5, Contact Faces Count: 3
+Area 0.00112454
+Step Time 0.151142 seconds
+CPU Overall Time 3.65365 seconds
+DONE.
+Writing scheduled VTK output: time=0.0100515 s, configured outTime=0.001 s, target_output_time=0.01 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00026.vtk
+DONE writing VTK.
+Next scheduled output time=0.011 s
+Min Element Length0.000125863
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 27/1 (dt=0.000251725 s) --- (Time=0.0100515 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.34236e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.48745e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.01281e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.333612, dp=0.526304, div(v)=0.072678, fres2=0.398906, fresInf=0.436453
+Max kcontact: 4.34236e+12
+    Iter 2: dv=0.048832, dp=0.0614608, div(v)=0.0438751, fres2=0.244067, fresInf=0.278524
+Max kcontact: 4.34236e+12
+    Iter 3: dv=0.0203169, dp=0.0555356, div(v)=0.0264085, fres2=0.147764, fresInf=0.171898
+Max kcontact: 4.34236e+12
+    Iter 4: dv=0.0201822, dp=0.256324, div(v)=0.0159873, fres2=0.0902095, fresInf=0.10536
+Max kcontact: 4.34236e+12
+    Iter 5: dv=0.0182215, dp=0.083645, div(v)=0.0121635, fres2=0.0546907, fresInf=0.0645375
+Max kcontact: 4.34236e+12
+    Iter 6: dv=0.0152444, dp=0.133691, div(v)=0.00911819, fres2=0.0354105, fresInf=0.0396927
+Max kcontact: 4.34236e+12
+    Iter 7: dv=0.0122823, dp=0.0507154, div(v)=0.00647314, fres2=0.0213486, fresInf=0.0246395
+Max kcontact: 4.34236e+12
+    Iter 8: dv=0.00970174, dp=0.240309, div(v)=0.0043926, fres2=0.0183692, fresInf=0.0155274
+Max kcontact: 4.34236e+12
+    Iter 9: dv=0.00769256, dp=0.0508228, div(v)=0.00760002, fres2=0.010091, fresInf=0.0100319
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251725
+Step Energy 
+Total Internal Energy 337.926
+  v_r: [-0.162816, 0.038878] m/s
+  v_z: [-0.158734, -0.0190863] m/s
+  Presión: [-1112.74, 435.494] MPa
+  Presión media: -338.621 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00114275
+Suraface 5, Contact Faces Count: 3
+Area 0.0011245
+Step Time 0.282852 seconds
+CPU Overall Time 3.9365 seconds
+DONE.
+Min Element Length0.000125866
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 28/1 (dt=0.000251726 s) --- (Time=0.0103032 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.49557e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.08069e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.02175e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.113441, dp=0.0751013, div(v)=0.149464, fres2=0.120136, fresInf=0.117055
+Max kcontact: 4.49557e+12
+    Iter 2: dv=0.0671784, dp=0.190684, div(v)=0.0892678, fres2=0.0743841, fresInf=0.0728547
+Max kcontact: 4.49557e+12
+    Iter 3: dv=0.0331789, dp=0.0660807, div(v)=0.0575806, fres2=0.0451158, fresInf=0.0453222
+Max kcontact: 4.49557e+12
+    Iter 4: dv=0.0169354, dp=0.0590694, div(v)=0.0362466, fres2=0.0276752, fresInf=0.028209
+Max kcontact: 4.49557e+12
+    Iter 5: dv=0.00904859, dp=0.390134, div(v)=0.0221228, fres2=0.0261553, fresInf=0.017737
+Max kcontact: 4.49557e+12
+    Iter 6: dv=0.00545394, dp=0.0991537, div(v)=0.0363181, fres2=0.0142586, fresInf=0.0113457
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251726
+Step Energy 
+Total Internal Energy 355.069
+  v_r: [-0.0477587, 0.0678174] m/s
+  v_z: [-0.126509, 0.0106564] m/s
+  Presión: [-1082.88, 522.46] MPa
+  Presión media: -280.208 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00115969
+Suraface 5, Contact Faces Count: 3
+Area 0.00112582
+Step Time 0.182182 seconds
+CPU Overall Time 4.11869 seconds
+DONE.
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 29/1 (dt=0.000251733 s) --- (Time=0.010555 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.54587e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.30327e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.02756e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0234525, dp=0.0725502, div(v)=0.0827795, fres2=0.0602426, fresInf=0.0688183
+Max kcontact: 4.54587e+12
+    Iter 2: dv=0.0117628, dp=0.119185, div(v)=0.0499846, fres2=0.0375721, fresInf=0.0423223
+Max kcontact: 4.54587e+12
+    Iter 3: dv=0.00542558, dp=0.0608679, div(v)=0.0300224, fres2=0.0224294, fresInf=0.0259085
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251733
+Step Energy 
+Total Internal Energy 374.313
+  v_r: [-0.0559392, 0.0678186] m/s
+  v_z: [-0.154552, 0.0148469] m/s
+  Presión: [-1126.62, 381.034] MPa
+  Presión media: -372.791 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00117908
+Suraface 5, Contact Faces Count: 3
+Area 0.00112342
+Step Time 0.0910733 seconds
+CPU Overall Time 4.20976 seconds
+DONE.
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 30/1 (dt=0.000251734 s) --- (Time=0.0108067 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.60051e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.39494e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.03269e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0503009, dp=0.13985, div(v)=0.0942078, fres2=0.0426518, fresInf=0.0426598
+Max kcontact: 4.60051e+12
+    Iter 2: dv=0.0304268, dp=0.564086, div(v)=0.0600141, fres2=0.0379897, fresInf=0.0249753
+Max kcontact: 4.60051e+12
+    Iter 3: dv=0.018598, dp=0.0900677, div(v)=0.0682593, fres2=0.0157081, fresInf=0.0139932
+Max kcontact: 4.60051e+12
+    Iter 4: dv=0.0112894, dp=0.0921906, div(v)=0.0545485, fres2=0.0117558, fresInf=0.0072418
+Max kcontact: 4.60051e+12
+    Iter 5: dv=0.00691744, dp=0.0461014, div(v)=0.0340566, fres2=0.00714109, fresInf=0.00440081
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251734
+Step Energy 
+Total Internal Energy 389.159
+  v_r: [-0.0261836, 0.0568691] m/s
+  v_z: [-0.107397, 0.012735] m/s
+  Presión: [-960.717, 564.146] MPa
+  Presión media: -198.286 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00119713
+Suraface 5, Contact Faces Count: 3
+Area 0.00112477
+Step Time 0.152263 seconds
+CPU Overall Time 4.36202 seconds
+DONE.
+Writing scheduled VTK output: time=0.0110584 s, configured outTime=0.001 s, target_output_time=0.011 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00030.vtk
+DONE writing VTK.
+Next scheduled output time=0.012 s
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 31/1 (dt=0.000251734 s) --- (Time=0.0110584 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.64527e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.43023e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.03693e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0145135, dp=0.0769468, div(v)=0.0597308, fres2=0.0245736, fresInf=0.027166
+Max kcontact: 4.64527e+12
+    Iter 2: dv=0.00861124, dp=0.136381, div(v)=0.0404122, fres2=0.0163847, fresInf=0.0153812
+Max kcontact: 4.64527e+12
+    Iter 3: dv=0.00514549, dp=0.0519241, div(v)=0.025534, fres2=0.00929753, fresInf=0.00812653
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251734
+Step Energy 
+Total Internal Energy 403.163
+  v_r: [-0.0212042, 0.0525777] m/s
+  v_z: [-0.0990874, 0.0102128] m/s
+  Presión: [-879.293, 467.94] MPa
+  Presión media: -205.676 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00121484
+Suraface 5, Contact Faces Count: 3
+Area 0.0011263
+Step Time 0.102995 seconds
+CPU Overall Time 4.46502 seconds
+DONE.
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 32/1 (dt=0.000251734 s) --- (Time=0.0113102 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.68415e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.46695e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.04094e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0944013, dp=0.16612, div(v)=0.0529596, fres2=0.0885321, fresInf=0.101168
+Max kcontact: 4.68415e+12
+    Iter 2: dv=0.0498099, dp=0.0822798, div(v)=0.0325066, fres2=0.0555618, fresInf=0.0638629
+Max kcontact: 4.68415e+12
+    Iter 3: dv=0.0344081, dp=0.0577633, div(v)=0.0196178, fres2=0.0347795, fresInf=0.039822
+Max kcontact: 4.68415e+12
+    Iter 4: dv=0.0270408, dp=0.90006, div(v)=0.011803, fres2=0.0990788, fresInf=0.0676522
+Max kcontact: 4.68415e+12
+    Iter 5: dv=0.0228004, dp=0.0990766, div(v)=0.0326156, fres2=0.0151015, fresInf=0.0157509
+Max kcontact: 4.68415e+12
+    Iter 6: dv=0.0202315, dp=0.132127, div(v)=0.0193094, fres2=0.0123791, fresInf=0.0101554
+Max kcontact: 4.68415e+12
+    Iter 7: dv=0.0184054, dp=0.0994837, div(v)=0.0184049, fres2=0.010354, fresInf=0.00673114
+Max kcontact: 4.68415e+12
+    Iter 8: dv=0.0171379, dp=0.0876994, div(v)=0.0124089, fres2=0.0079666, fresInf=0.00464031
+Max kcontact: 4.68415e+12
+    Iter 9: dv=0.0161398, dp=0.0848227, div(v)=0.00752456, fres2=0.00741849, fresInf=0.00358777
+Max kcontact: 4.68415e+12
+    Iter 10: dv=0.0152978, dp=0.0788878, div(v)=0.00466846, fres2=0.00784103, fresInf=0.00308255
+Max kcontact: 4.68415e+12
+    Iter 11: dv=0.01453, dp=0.149559, div(v)=0.00380743, fres2=0.0164687, fresInf=0.0111078
+Max kcontact: 4.68415e+12
+    Iter 12: dv=0.013864, dp=0.372658, div(v)=0.00321085, fres2=0.0280765, fresInf=0.0166731
+Max kcontact: 4.68415e+12
+    Iter 13: dv=0.0131245, dp=0.0693092, div(v)=0.00886024, fres2=0.00741423, fresInf=0.00292431
+Max kcontact: 4.68415e+12
+    Iter 14: dv=0.01249, dp=0.0761956, div(v)=0.00551191, fres2=0.00720003, fresInf=0.00293797
+Max kcontact: 4.68415e+12
+    Iter 15: dv=0.0118605, dp=0.0961224, div(v)=0.00420784, fres2=0.0108813, fresInf=0.00582336
+Max kcontact: 4.68415e+12
+    Iter 16: dv=0.0113326, dp=0.298664, div(v)=0.0041467, fres2=0.0207224, fresInf=0.0109557
+Max kcontact: 4.68415e+12
+    Iter 17: dv=0.0107847, dp=0.259922, div(v)=0.00476686, fres2=0.0211938, fresInf=0.0132351
+Max kcontact: 4.68415e+12
+    Iter 18: dv=0.0101919, dp=0.0682491, div(v)=0.0110072, fres2=0.00708614, fresInf=0.00297276
+Max kcontact: 4.68415e+12
+    Iter 19: dv=0.00967959, dp=0.0740086, div(v)=0.00648081, fres2=0.00750891, fresInf=0.00297838
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251734
+Step Energy 
+Total Internal Energy 416.675
+  v_r: [-0.0202088, 0.0325226] m/s
+  v_z: [-0.0853907, 0.00661687] m/s
+  Presión: [-585.975, 901.118] MPa
+  Presión media: 157.571 MPa
+Suraface 4, Contact Faces Count: 4
+Area 0.00122621
+Suraface 5, Contact Faces Count: 4
+Area 0.0014511
+Step Time 0.573475 seconds
+CPU Overall Time 5.03849 seconds
+DONE.
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 33/1 (dt=0.000251735 s) --- (Time=0.0115619 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.70735e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.62807e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.0453e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.266738, dp=0.185123, div(v)=0.0296408, fres2=0.187317, fresInf=0.1943
+Max kcontact: 4.70735e+12
+    Iter 2: dv=0.193201, dp=0.208183, div(v)=0.0172257, fres2=0.117906, fresInf=0.119167
+Max kcontact: 4.70735e+12
+    Iter 3: dv=0.11287, dp=0.0822858, div(v)=0.014167, fres2=0.073456, fresInf=0.0733428
+Max kcontact: 4.70735e+12
+    Iter 4: dv=0.0714296, dp=0.0754362, div(v)=0.0105687, fres2=0.0461586, fresInf=0.0452102
+Max kcontact: 4.70735e+12
+    Iter 5: dv=0.0503164, dp=0.0730216, div(v)=0.00730012, fres2=0.0297703, fresInf=0.0280925
+Max kcontact: 4.70735e+12
+    Iter 6: dv=0.0403154, dp=0.0903593, div(v)=0.00512045, fres2=0.0211696, fresInf=0.0176793
+Max kcontact: 4.70735e+12
+    Iter 7: dv=0.0361901, dp=0.0523933, div(v)=0.00359245, fres2=0.0146402, fresInf=0.0113354
+Max kcontact: 4.70735e+12
+    Iter 8: dv=0.0349869, dp=0.0585787, div(v)=0.0023304, fres2=0.0114329, fresInf=0.00746376
+Max kcontact: 4.70735e+12
+    Iter 9: dv=0.0352033, dp=0.477168, div(v)=0.00158271, fres2=0.0319215, fresInf=0.0145666
+Max kcontact: 4.70735e+12
+    Iter 10: dv=0.0358114, dp=0.0621868, div(v)=0.00462028, fres2=0.00882284, fresInf=0.00452903
+Max kcontact: 4.70735e+12
+    Iter 11: dv=0.0368567, dp=0.0632258, div(v)=0.00276622, fres2=0.00919717, fresInf=0.00456752
+Max kcontact: 4.70735e+12
+    Iter 12: dv=0.0378281, dp=0.0568836, div(v)=0.00184689, fres2=0.00841408, fresInf=0.00454987
+Max kcontact: 4.70735e+12
+    Iter 13: dv=0.038584, dp=0.0844678, div(v)=0.00132186, fres2=0.00895618, fresInf=0.00450399
+Max kcontact: 4.70735e+12
+    Iter 14: dv=0.0390097, dp=0.0656334, div(v)=0.00118357, fres2=0.00870531, fresInf=0.00444594
+Max kcontact: 4.70735e+12
+    Iter 15: dv=0.0392573, dp=0.0448703, div(v)=0.000996459, fres2=0.00783489, fresInf=0.00438481
+Max kcontact: 4.70735e+12
+    Iter 16: dv=0.0392691, dp=0.178844, div(v)=0.000648426, fres2=0.0151196, fresInf=0.00725188
+Max kcontact: 4.70735e+12
+    Iter 17: dv=0.0389602, dp=0.115299, div(v)=0.00143898, fres2=0.00982882, fresInf=0.00453263
+Max kcontact: 4.70735e+12
+    Iter 18: dv=0.038539, dp=0.0373371, div(v)=0.00158636, fres2=0.00761848, fresInf=0.00421951
+Max kcontact: 4.70735e+12
+    Iter 19: dv=0.0380744, dp=0.0346276, div(v)=0.000946587, fres2=0.00744094, fresInf=0.00417148
+Max kcontact: 4.70735e+12
+    Iter 20: dv=0.0370985, dp=0.446534, div(v)=0.000570337, fres2=0.0291042, fresInf=0.0187613
+Max kcontact: 4.70735e+12
+    Iter 21: dv=0.0361437, dp=0.0613251, div(v)=0.00304018, fres2=0.00778819, fresInf=0.00410299
+Max kcontact: 4.70735e+12
+    Iter 22: dv=0.0351735, dp=0.0564627, div(v)=0.00184503, fres2=0.00759162, fresInf=0.00407284
+Max kcontact: 4.70735e+12
+    Iter 23: dv=0.0341145, dp=0.0558138, div(v)=0.00110895, fres2=0.00740047, fresInf=0.00404643
+Max kcontact: 4.70735e+12
+    Iter 24: dv=0.0329649, dp=0.138611, div(v)=0.000667837, fres2=0.0158663, fresInf=0.00903595
+Max kcontact: 4.70735e+12
+    Iter 25: dv=0.0318143, dp=0.0657321, div(v)=0.00160603, fres2=0.00879015, fresInf=0.00400318
+Max kcontact: 4.70735e+12
+    Iter 26: dv=0.030616, dp=0.140484, div(v)=0.00141219, fres2=0.00953921, fresInf=0.00398553
+Max kcontact: 4.70735e+12
+    Iter 27: dv=0.0293609, dp=0.0761015, div(v)=0.00169336, fres2=0.00775867, fresInf=0.00397007
+Max kcontact: 4.70735e+12
+    Iter 28: dv=0.0280647, dp=0.246308, div(v)=0.0013208, fres2=0.0171208, fresInf=0.00782655
+Max kcontact: 4.70735e+12
+    Iter 29: dv=0.0268407, dp=0.0584137, div(v)=0.00251084, fres2=0.00735627, fresInf=0.00394626
+Max kcontact: 4.70735e+12
+    Iter 30: dv=0.0256275, dp=0.0585835, div(v)=0.00151665, fres2=0.00807138, fresInf=0.00393754
+Max kcontact: 4.70735e+12
+    Iter 31: dv=0.0244274, dp=0.0484119, div(v)=0.00114113, fres2=0.00751064, fresInf=0.00392965
+Max kcontact: 4.70735e+12
+    Iter 32: dv=0.0232386, dp=0.265818, div(v)=0.000805408, fres2=0.0153035, fresInf=0.0069314
+Max kcontact: 4.70735e+12
+    Iter 33: dv=0.0220665, dp=0.0549093, div(v)=0.00156771, fres2=0.00717967, fresInf=0.00391598
+Max kcontact: 4.70735e+12
+    Iter 34: dv=0.0209443, dp=0.0829337, div(v)=0.000961746, fres2=0.00838199, fresInf=0.00391008
+Max kcontact: 4.70735e+12
+    Iter 35: dv=0.0198184, dp=0.0537723, div(v)=0.000997405, fres2=0.00720664, fresInf=0.00390469
+Max kcontact: 4.70735e+12
+    Iter 36: dv=0.0187442, dp=0.343614, div(v)=0.000574206, fres2=0.0209995, fresInf=0.0110819
+Max kcontact: 4.70735e+12
+    Iter 37: dv=0.0177031, dp=0.0498173, div(v)=0.00157535, fres2=0.00792061, fresInf=0.00389532
+Max kcontact: 4.70735e+12
+    Iter 38: dv=0.0167371, dp=0.0429847, div(v)=0.00133246, fres2=0.00730962, fresInf=0.00389125
+Max kcontact: 4.70735e+12
+    Iter 39: dv=0.0157842, dp=0.0593405, div(v)=0.000810346, fres2=0.00786576, fresInf=0.00388752
+Max kcontact: 4.70735e+12
+    Iter 40: dv=0.0148745, dp=0.0560763, div(v)=0.000648288, fres2=0.00737678, fresInf=0.00388412
+Max kcontact: 4.70735e+12
+    Iter 41: dv=0.0139836, dp=0.390007, div(v)=0.000510145, fres2=0.0236034, fresInf=0.0149178
+Max kcontact: 4.70735e+12
+    Iter 42: dv=0.0131536, dp=0.0507631, div(v)=0.00129936, fres2=0.00747975, fresInf=0.00387812
+Max kcontact: 4.70735e+12
+    Iter 43: dv=0.0123858, dp=0.0447895, div(v)=0.00089478, fres2=0.00728568, fresInf=0.0038755
+Max kcontact: 4.70735e+12
+    Iter 44: dv=0.0116434, dp=0.0423443, div(v)=0.000558166, fres2=0.00724147, fresInf=0.00387309
+Max kcontact: 4.70735e+12
+    Iter 45: dv=0.0109309, dp=0.0377912, div(v)=0.000385446, fres2=0.00715281, fresInf=0.00387087
+Max kcontact: 4.70735e+12
+    Iter 46: dv=0.0102617, dp=0.113054, div(v)=0.00028807, fres2=0.00956341, fresInf=0.00386883
+Max kcontact: 4.70735e+12
+    Iter 47: dv=0.00961173, dp=0.107269, div(v)=0.000554988, fres2=0.00902767, fresInf=0.00387602
+Max kcontact: 4.70735e+12
+    Iter 48: dv=0.0090457, dp=0.0522204, div(v)=0.000699653, fres2=0.00758667, fresInf=0.00386522
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251735
+Step Energy 
+Total Internal Energy 441.97
+  v_r: [-0.0904481, 0.0902258] m/s
+  v_z: [-0.197484, 0.0978129] m/s
+  Presión: [-858.881, 515.097] MPa
+  Presión media: -171.892 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181661
+Suraface 5, Contact Faces Count: 4
+Area 0.00146046
+Step Time 1.44885 seconds
+CPU Overall Time 6.48734 seconds
+DONE.
+Min Element Length0.000125867
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 34/1 (dt=0.000251735 s) --- (Time=0.0118136 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.71263e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.72505e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.04959e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.233051, dp=0.111672, div(v)=0.27493, fres2=0.344063, fresInf=0.382488
+Max kcontact: 4.71263e+12
+    Iter 2: dv=0.131392, dp=0.139386, div(v)=0.164958, fres2=0.207481, fresInf=0.230732
+Max kcontact: 4.71263e+12
+    Iter 3: dv=0.0767673, dp=0.0963757, div(v)=0.0992779, fres2=0.12525, fresInf=0.139345
+Max kcontact: 4.71263e+12
+    Iter 4: dv=0.0519629, dp=0.0350949, div(v)=0.0598834, fres2=0.0757918, fresInf=0.0843946
+Max kcontact: 4.71263e+12
+    Iter 5: dv=0.0376009, dp=0.0301884, div(v)=0.0359772, fres2=0.0461358, fresInf=0.0513227
+Max kcontact: 4.71263e+12
+    Iter 6: dv=0.0275819, dp=0.491843, div(v)=0.021608, fres2=0.0325255, fresInf=0.031448
+Max kcontact: 4.71263e+12
+    Iter 7: dv=0.021104, dp=0.0488337, div(v)=0.0142894, fres2=0.0179203, fresInf=0.0194975
+Max kcontact: 4.71263e+12
+    Iter 8: dv=0.0166785, dp=0.0517971, div(v)=0.00863663, fres2=0.0119583, fresInf=0.0123135
+Max kcontact: 4.71263e+12
+    Iter 9: dv=0.0136335, dp=0.111591, div(v)=0.0054043, fres2=0.00880592, fresInf=0.00799002
+Max kcontact: 4.71263e+12
+    Iter 10: dv=0.0114414, dp=0.0812092, div(v)=0.00370174, fres2=0.00702409, fresInf=0.00538885
+Max kcontact: 4.71263e+12
+    Iter 11: dv=0.00978266, dp=0.0518247, div(v)=0.00246503, fres2=0.00582317, fresInf=0.00382398
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000251735
+Step Energy 
+Total Internal Energy 485.921
+  v_r: [-0.125199, 0.106929] m/s
+  v_z: [-0.313716, 0.112116] m/s
+  Presión: [-865.677, 528.587] MPa
+  Presión media: -168.545 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181774
+Suraface 5, Contact Faces Count: 4
+Area 0.00145498
+Step Time 0.334057 seconds
+CPU Overall Time 6.8214 seconds
+DONE.
+Writing scheduled VTK output: time=0.0120654 s, configured outTime=0.001 s, target_output_time=0.012 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00034.vtk
+DONE writing VTK.
+Next scheduled output time=0.013 s
+Min Element Length0.000121234
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 35/1 (dt=0.000242469 s) --- (Time=0.0120654 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.71683e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.70009e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.05632e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.495763, dp=0.110686, div(v)=0.638412, fres2=0.557154, fresInf=0.751415
+Max kcontact: 4.71683e+12
+    Iter 2: dv=0.353666, dp=0.174871, div(v)=0.383181, fres2=0.33654, fresInf=0.453314
+Max kcontact: 4.71683e+12
+    Iter 3: dv=0.224616, dp=0.13589, div(v)=0.230452, fres2=0.204688, fresInf=0.275008
+Max kcontact: 4.71683e+12
+    Iter 4: dv=0.152623, dp=0.12057, div(v)=0.138634, fres2=0.125865, fresInf=0.168034
+Max kcontact: 4.71683e+12
+    Iter 5: dv=0.110775, dp=0.123751, div(v)=0.0832454, fres2=0.0793612, fresInf=0.103602
+Max kcontact: 4.71683e+12
+    Iter 6: dv=0.0838537, dp=0.082411, div(v)=0.0504648, fres2=0.0505222, fresInf=0.0647478
+Max kcontact: 4.71683e+12
+    Iter 7: dv=0.064896, dp=0.0686932, div(v)=0.0302871, fres2=0.0340204, fresInf=0.0413237
+Max kcontact: 4.71683e+12
+    Iter 8: dv=0.0509759, dp=0.106438, div(v)=0.0182123, fres2=0.0256986, fresInf=0.0272036
+Max kcontact: 4.71683e+12
+    Iter 9: dv=0.0406903, dp=0.0545776, div(v)=0.0110832, fres2=0.0194727, fresInf=0.0186881
+Max kcontact: 4.71683e+12
+    Iter 10: dv=0.0331815, dp=0.061681, div(v)=0.00669821, fres2=0.0166202, fresInf=0.0135472
+Max kcontact: 4.71683e+12
+    Iter 11: dv=0.0277954, dp=0.0898445, div(v)=0.00403686, fres2=0.0173116, fresInf=0.0104382
+Max kcontact: 4.71683e+12
+    Iter 12: dv=0.0240049, dp=0.128816, div(v)=0.00263373, fres2=0.0188014, fresInf=0.00887248
+Max kcontact: 4.71683e+12
+    Iter 13: dv=0.0213528, dp=0.042407, div(v)=0.00171733, fres2=0.0139951, fresInf=0.00740433
+Max kcontact: 4.71683e+12
+    Iter 14: dv=0.0194874, dp=0.0377822, div(v)=0.00103737, fres2=0.0137365, fresInf=0.00670005
+Max kcontact: 4.71683e+12
+    Iter 15: dv=0.0181381, dp=0.082996, div(v)=0.000649827, fres2=0.0141745, fresInf=0.00626368
+Max kcontact: 4.71683e+12
+    Iter 16: dv=0.0171167, dp=0.134629, div(v)=0.000472254, fres2=0.0185869, fresInf=0.00882153
+Max kcontact: 4.71683e+12
+    Iter 17: dv=0.0162999, dp=0.0453026, div(v)=0.000468637, fres2=0.0137781, fresInf=0.00581272
+Max kcontact: 4.71683e+12
+    Iter 18: dv=0.0156081, dp=0.0411979, div(v)=0.000357731, fres2=0.0133765, fresInf=0.00569595
+Max kcontact: 4.71683e+12
+    Iter 19: dv=0.0149947, dp=0.0274442, div(v)=0.000191444, fres2=0.013089, fresInf=0.00561579
+Max kcontact: 4.71683e+12
+    Iter 20: dv=0.0144311, dp=0.0228117, div(v)=0.000124119, fres2=0.0130287, fresInf=0.00555835
+Max kcontact: 4.71683e+12
+    Iter 21: dv=0.0139001, dp=0.019856, div(v)=9.37124e-05, fres2=0.0129525, fresInf=0.00551528
+Max kcontact: 4.71683e+12
+    Iter 22: dv=0.0133934, dp=0.0198623, div(v)=6.99241e-05, fres2=0.0129179, fresInf=0.00548154
+Max kcontact: 4.71683e+12
+    Iter 23: dv=0.0129059, dp=0.0160546, div(v)=5.54691e-05, fres2=0.0129345, fresInf=0.00545405
+Max kcontact: 4.71683e+12
+    Iter 24: dv=0.0124346, dp=0.017653, div(v)=6.03006e-05, fres2=0.0130243, fresInf=0.00543093
+Max kcontact: 4.71683e+12
+    Iter 25: dv=0.0119779, dp=0.0135559, div(v)=6.65975e-05, fres2=0.0129835, fresInf=0.00541102
+Max kcontact: 4.71683e+12
+    Iter 26: dv=0.0115351, dp=0.0132311, div(v)=6.27329e-05, fres2=0.0128929, fresInf=0.00539357
+Max kcontact: 4.71683e+12
+    Iter 27: dv=0.0111055, dp=0.0126324, div(v)=5.32932e-05, fres2=0.0129008, fresInf=0.00537807
+Max kcontact: 4.71683e+12
+    Iter 28: dv=0.0106887, dp=0.0182548, div(v)=7.31001e-05, fres2=0.0128903, fresInf=0.00536419
+Max kcontact: 4.71683e+12
+    Iter 29: dv=0.0102842, dp=0.0164335, div(v)=7.15575e-05, fres2=0.0129244, fresInf=0.00535169
+Max kcontact: 4.71683e+12
+    Iter 30: dv=0.00989168, dp=0.0127567, div(v)=6.56132e-05, fres2=0.0129402, fresInf=0.00534036
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000242469
+Step Energy 
+Total Internal Energy 501.849
+  v_r: [-0.0678358, 0.0294728] m/s
+  v_z: [-0.176924, 0.0272355] m/s
+  Presión: [-858.548, 363.603] MPa
+  Presión media: -247.473 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181805
+Suraface 5, Contact Faces Count: 3
+Area 0.000952163
+Step Time 0.916007 seconds
+CPU Overall Time 7.73741 seconds
+DONE.
+Min Element Length0.000121428
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 36/1 (dt=0.000242469 s) --- (Time=0.0123078 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.71897e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.76939e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.06192e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.407024, dp=0.25164, div(v)=0.0713572, fres2=0.473751, fresInf=0.576282
+Max kcontact: 4.71897e+12
+    Iter 2: dv=0.190289, dp=0.0832941, div(v)=0.0428781, fres2=0.287102, fresInf=0.349397
+Max kcontact: 4.71897e+12
+    Iter 3: dv=0.0963794, dp=0.0359002, div(v)=0.0257672, fres2=0.173842, fresInf=0.21165
+Max kcontact: 4.71897e+12
+    Iter 4: dv=0.0566826, dp=0.0328705, div(v)=0.0154618, fres2=0.105606, fresInf=0.12843
+Max kcontact: 4.71897e+12
+    Iter 5: dv=0.037861, dp=0.0578749, div(v)=0.00933674, fres2=0.0646106, fresInf=0.0782802
+Max kcontact: 4.71897e+12
+    Iter 6: dv=0.0282309, dp=0.0333572, div(v)=0.00568638, fres2=0.0399699, fresInf=0.0480833
+Max kcontact: 4.71897e+12
+    Iter 7: dv=0.0225989, dp=0.0358244, div(v)=0.00343934, fres2=0.0252812, fresInf=0.0299061
+Max kcontact: 4.71897e+12
+    Iter 8: dv=0.0187899, dp=0.120222, div(v)=0.00210244, fres2=0.0175648, fresInf=0.0189649
+Max kcontact: 4.71897e+12
+    Iter 9: dv=0.0159226, dp=0.0304643, div(v)=0.0016857, fres2=0.0117011, fresInf=0.0123785
+Max kcontact: 4.71897e+12
+    Iter 10: dv=0.0136475, dp=0.0432115, div(v)=0.00109356, fres2=0.00893128, fresInf=0.00841275
+Max kcontact: 4.71897e+12
+    Iter 11: dv=0.0118073, dp=0.0721811, div(v)=0.000729801, fres2=0.00778045, fresInf=0.00602397
+Max kcontact: 4.71897e+12
+    Iter 12: dv=0.0103154, dp=0.0267315, div(v)=0.000540551, fres2=0.00651896, fresInf=0.00458432
+Max kcontact: 4.71897e+12
+    Iter 13: dv=0.00910817, dp=0.0521179, div(v)=0.000353628, fres2=0.00620999, fresInf=0.00371602
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000242469
+Step Energy 
+Total Internal Energy 527.572
+  v_r: [-0.123615, 0.0534346] m/s
+  v_z: [-0.173552, 0.0290751] m/s
+  Presión: [-868.963, 391.938] MPa
+  Presión media: -238.513 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181837
+Suraface 5, Contact Faces Count: 4
+Area 0.00143307
+Step Time 0.391399 seconds
+CPU Overall Time 8.12881 seconds
+DONE.
+Min Element Length0.00012188
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 37/1 (dt=0.000242857 s) --- (Time=0.0125503 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.72072e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.67035e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.07185e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.0889666, dp=0.0506284, div(v)=0.119274, fres2=0.0910372, fresInf=0.0994607
+Max kcontact: 4.72072e+12
+    Iter 2: dv=0.060252, dp=0.0779305, div(v)=0.0716429, fres2=0.0556577, fresInf=0.0612438
+Max kcontact: 4.72072e+12
+    Iter 3: dv=0.0404683, dp=0.0803314, div(v)=0.0431103, fres2=0.0333617, fresInf=0.0366687
+Max kcontact: 4.72072e+12
+    Iter 4: dv=0.0273386, dp=0.0150312, div(v)=0.0260196, fres2=0.0193922, fresInf=0.021265
+Max kcontact: 4.72072e+12
+    Iter 5: dv=0.0188061, dp=0.0312242, div(v)=0.015615, fres2=0.0114269, fresInf=0.0117637
+Max kcontact: 4.72072e+12
+    Iter 6: dv=0.0133516, dp=0.0167752, div(v)=0.00940563, fres2=0.00725129, fresInf=0.00596032
+Max kcontact: 4.72072e+12
+    Iter 7: dv=0.00997515, dp=0.0137655, div(v)=0.00565948, fres2=0.00573758, fresInf=0.00243673
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.000242857
+Step Energy 
+Total Internal Energy 556.885
+  v_r: [-0.0976241, 0.0472075] m/s
+  v_z: [-0.272597, 0.049542] m/s
+  Presión: [-900.328, 471.281] MPa
+  Presión media: -214.524 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181865
+Suraface 5, Contact Faces Count: 4
+Area 0.00141521
+Step Time 0.210847 seconds
+CPU Overall Time 8.33965 seconds
+DONE.
+Min Element Length0.000119015
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 38/1 (dt=0.00023803 s) --- (Time=0.0127932 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.7221e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.69566e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.07985e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.117012, dp=0.0415412, div(v)=0.150354, fres2=0.0854741, fresInf=0.0934437
+Max kcontact: 4.7221e+12
+    Iter 2: dv=0.0790391, dp=0.0451299, div(v)=0.0902657, fres2=0.0520145, fresInf=0.0572045
+Max kcontact: 4.7221e+12
+    Iter 3: dv=0.0537192, dp=0.0307588, div(v)=0.0542019, fres2=0.0312251, fresInf=0.0339806
+Max kcontact: 4.7221e+12
+    Iter 4: dv=0.0371174, dp=0.0245257, div(v)=0.0325344, fres2=0.0186916, fresInf=0.0194488
+Max kcontact: 4.7221e+12
+    Iter 5: dv=0.0262691, dp=0.0231587, div(v)=0.0195486, fres2=0.0115296, fresInf=0.0104908
+Max kcontact: 4.7221e+12
+    Iter 6: dv=0.0191594, dp=0.0179017, div(v)=0.0117486, fres2=0.00795251, fresInf=0.0067194
+Max kcontact: 4.7221e+12
+    Iter 7: dv=0.014478, dp=0.0170877, div(v)=0.00705974, fres2=0.00661279, fresInf=0.00497073
+Max kcontact: 4.7221e+12
+    Iter 8: dv=0.011378, dp=0.0216791, div(v)=0.00425305, fres2=0.00640195, fresInf=0.00392342
+Max kcontact: 4.7221e+12
+    Iter 9: dv=0.00931082, dp=0.0161704, div(v)=0.00258964, fres2=0.00645332, fresInf=0.00329664
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.00023803
+Step Energy 
+Total Internal Energy 577.452
+  v_r: [-0.0771747, 0.0384907] m/s
+  v_z: [-0.14948, 0.0137891] m/s
+  Presión: [-856.485, 360.056] MPa
+  Presión media: -248.214 MPa
+Suraface 4, Contact Faces Count: 6
+Area 0.00181891
+Suraface 5, Contact Faces Count: 5
+Area 0.00181905
+Step Time 0.272063 seconds
+CPU Overall Time 8.61172 seconds
+DONE.
+Writing scheduled VTK output: time=0.0130312 s, configured outTime=0.001 s, target_output_time=0.013 s
+Writing VTK output examples/demo/cyl_closed_die/demo_00038.vtk
+DONE writing VTK.
+Next scheduled output time=0.014 s
+Min Element Length0.00011623
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 39/1 (dt=0.00023246 s) --- (Time=0.0130312 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.73091e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.73621e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.08599e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.430742, dp=1.05414, div(v)=0.0717295, fres2=0.309875, fresInf=0.420701
+Max kcontact: 4.73091e+12
+    Iter 2: dv=0.297913, dp=0.250115, div(v)=0.0434891, fres2=0.201376, fresInf=0.297827
+Max kcontact: 4.73091e+12
+    Iter 3: dv=0.286414, dp=0.113491, div(v)=0.026108, fres2=0.123092, fresInf=0.187388
+Max kcontact: 4.73091e+12
+    Iter 4: dv=0.199864, dp=0.123448, div(v)=0.0161897, fres2=0.074843, fresInf=0.1147
+Max kcontact: 4.73091e+12
+    Iter 5: dv=0.148444, dp=0.124984, div(v)=0.0102502, fres2=0.0459602, fresInf=0.0698104
+Max kcontact: 4.73091e+12
+    Iter 6: dv=0.116221, dp=0.0994883, div(v)=0.00638334, fres2=0.0285119, fresInf=0.0424558
+Max kcontact: 4.73091e+12
+    Iter 7: dv=0.0920336, dp=0.521908, div(v)=0.00386265, fres2=0.0445939, fresInf=0.0271154
+Max kcontact: 4.73091e+12
+    Iter 8: dv=0.0731935, dp=0.0994796, div(v)=0.00484889, fres2=0.0132519, fresInf=0.0158776
+Max kcontact: 4.73091e+12
+    Iter 9: dv=0.0583852, dp=0.101439, div(v)=0.00302846, fres2=0.0106355, fresInf=0.00985923
+Max kcontact: 4.73091e+12
+    Iter 10: dv=0.0473414, dp=0.181612, div(v)=0.00199009, fres2=0.0118766, fresInf=0.00624792
+Max kcontact: 4.73091e+12
+    Iter 11: dv=0.0392328, dp=0.0924661, div(v)=0.00240295, fres2=0.0090828, fresInf=0.00414789
+Max kcontact: 4.73091e+12
+    Iter 12: dv=0.0332212, dp=0.0839976, div(v)=0.00186566, fres2=0.00838177, fresInf=0.00367117
+Max kcontact: 4.73091e+12
+    Iter 13: dv=0.0288231, dp=0.0879499, div(v)=0.00113568, fres2=0.00850726, fresInf=0.00367249
+Max kcontact: 4.73091e+12
+    Iter 14: dv=0.0254935, dp=0.233168, div(v)=0.000936917, fres2=0.0139137, fresInf=0.0095881
+Max kcontact: 4.73091e+12
+    Iter 15: dv=0.0229138, dp=0.0733667, div(v)=0.00190654, fres2=0.0086715, fresInf=0.00381762
+Max kcontact: 4.73091e+12
+    Iter 16: dv=0.0206846, dp=0.0906841, div(v)=0.00136608, fres2=0.00952894, fresInf=0.00449106
+Max kcontact: 4.73091e+12
+    Iter 17: dv=0.0187606, dp=0.106463, div(v)=0.00112203, fres2=0.0104892, fresInf=0.00725208
+Max kcontact: 4.73091e+12
+    Iter 18: dv=0.0170118, dp=0.0830373, div(v)=0.00110369, fres2=0.00833577, fresInf=0.00389006
+Max kcontact: 4.73091e+12
+    Iter 19: dv=0.0155651, dp=0.282749, div(v)=0.000735392, fres2=0.0162401, fresInf=0.00947769
+Max kcontact: 4.73091e+12
+    Iter 20: dv=0.0143166, dp=0.246303, div(v)=0.00117244, fres2=0.0150974, fresInf=0.00793622
+Max kcontact: 4.73091e+12
+    Iter 21: dv=0.0129416, dp=0.0757151, div(v)=0.00196008, fres2=0.00966522, fresInf=0.00496451
+Max kcontact: 4.73091e+12
+    Iter 22: dv=0.0117696, dp=0.0502748, div(v)=0.00167852, fres2=0.00800409, fresInf=0.00391745
+Max kcontact: 4.73091e+12
+    Iter 23: dv=0.0107076, dp=0.129834, div(v)=0.00127784, fres2=0.00868994, fresInf=0.00392124
+Max kcontact: 4.73091e+12
+    Iter 24: dv=0.0098493, dp=0.0696353, div(v)=0.00101958, fres2=0.00881186, fresInf=0.00392432
+Mesh position -0.006491
+Calculating dt 
+vref = 0.1, dt = 0.00023246
+Step Energy 
+Total Internal Energy 599.778
+  v_r: [-0.0709614, 0.135408] m/s
+  v_z: [-0.0872873, 0.136028] m/s
+  Presión: [-873.761, 754.4] MPa
+  Presión media: -59.6805 MPa
+Suraface 4, Contact Faces Count: 7
+Area 0.00217123
+Suraface 5, Contact Faces Count: 5
+Area 0.00182614
+Step Time 0.734821 seconds
+CPU Overall Time 9.34654 seconds
+DONE.
+Min Element Length0.000114969
+Calculating step
+capturing trimesh snapshot
+Done.
+Calculating
+
+--- PASO 40/1 (dt=0.000229939 s) --- (Time=0.0132637 s) ---
+BCs activas: X=32 Y=0 Z=0 Total=32
+BulkMod 1.75e+11
+Max kcontact: 4.84835e+12
+
+🔍 DIAGNÓSTICO DE PENALIZACIÓN:
+   Min K_pp: 0
+   Max K_pp: 0
+   Avg K_pp: 0
+   Avg K_vv: 1.36035e+10
+   Flow stress min/max/avg: 1.9e+08 / 3.62237e+08 / 2.0906e+08
+   Flow stress invalid: 0/651
+   Zeros: 651/651
+   Rango dinámico: 0
+    Iter 1: dv=0.396591, dp=0.639991, div(v)=0.0680431, fres2=0.666378, fresInf=1.0769
+Max kcontact: 4.84835e+12
+    Iter 2: dv=0.271128, dp=0.192607, div(v)=0.0471214, fres2=0.401545, fresInf=0.650096
+Max kcontact: 4.84835e+12
+    Iter 3: dv=0.150412, dp=0.172582, div(v)=0.0287153, fres2=0.242966, fresInf=0.392935
+Max kcontact: 4.84835e+12
+    Iter 4: dv=0.174464, dp=0.119462, div(v)=0.0201338, fres2=0.147314, fresInf=0.238043
+Max kcontact: 4.84835e+12
+    Iter 5: dv=0.177826, dp=0.0985778, div(v)=0.0127844, fres2=0.0898565, fresInf=0.144681
+Max kcontact: 4.84835e+12
+    Iter 6: dv=0.165294, dp=0.219098, div(v)=0.00770539, fres2=0.0573157, fresInf=0.0884386
+Max kcontact: 4.84835e+12
+    Iter 7: dv=0.147735, dp=0.0751543, div(v)=0.0129894, fres2=0.0350869, fresInf=0.0545621
+Max kcontact: 4.84835e+12
+    Iter 8: dv=0.128089, dp=0.0572595, div(v)=0.00888913, fres2=0.0230466, fresInf=0.0341554
+Max kcontact: 4.84835e+12
+    Iter 9: dv=0.110585, dp=0.0638579, div(v)=0.00564772, fres2=0.0163993, fresInf=0.021859
+Max kcontact: 4.84835e+12
+    Iter 10: dv=0.0940817, dp=0.0521035, div(v)=0.00359439, fres2=0.0124397, fresInf=0.0144448
+Max kcontact: 4.84835e+12
+    Iter 11: dv=0.07999, dp=0.0402891, div(v)=0.00256111, fres2=0.010543, fresInf=0.00996989
+Max kcontact: 4.84835e+12
+    Iter 12: dv=0.0685946, dp=0.0376294, div(v)=0.00172965, fres2=0.00935666, fresInf=0.00726595
+Max kcontact: 4.84835e+12
+    Iter 13: dv=0.0589853, dp=0.490247, div(v)=0.00160284, fres2=0.0650851, fresInf=0.0642437
+Max kcontact: 4.84835e+12
+    Iter 14: dv=0.0510821, dp=0.0941076, div(v)=0.00545752, fres2=0.0103355, fresInf=0.00560544
+Max kcontact: 4.84835e+12
+    Iter 15: dv=0.0447746, dp=0.0481216, div(v)=0.00741071, fres2=0.00850546, fresInf=0.0040313
+Max kcontact: 4.84835e+12
+    Iter 16: dv=0.0391694, dp=0.0798313, div(v)=0.00482044, fres2=0.0113783, fresInf=0.00802386
+Max kcontact: 4.84835e+12
+    Iter 17: dv=0.0345704, dp=0.0435024, div(v)=0.00556816, fres2=0.00818809, fresInf=0.00386816
+Max kcontact: 4.84835e+12
+    Iter 18: dv=0.0307954, dp=0.0426637, div(v)=0.00384598, fres2=0.00795371, fresInf=0.00381159
+Max kcontact: 4.84835e+12
+    Iter 19: dv=0.0275277, dp=0.0609378, div(v)=0.00247443, fres2=0.00837199, fresInf=0.00376528
+Max kcontact: 4.84835e+12
+    Iter 20: dv=0.0249487, dp=0.0452156, div(v)=0.00498565, fres2=0.00803749, fresInf=0.00372803
+Max kcontact: 4.84835e+12
+    Iter 21: dv=0.0224719, dp=0.0304807, div(v)=0.00297109, fres2=0.00776244, fresInf=0.00369793
+Max kcontact: 4.84835e+12
+    Iter 22: dv=0.0203578, dp=0.0279859, div(v)=0.00180468, fres2=0.0076989, fresInf=0.00367373
+Max kcontact: 4.84835e+12
+    Iter 23: dv=0.0185275, dp=0.0396094, div(v)=0.00111378, fres2=0.00791928, fresInf=0.00366996
+Max kcontact: 4.84835e+12
+    Iter 24: dv=0.0169004, dp=0.0302763, div(v)=0.00107426, fres2=0.00774446, fresInf=0.00366944
+Max kcontact: 4.84835e+12
+    Iter 25: dv=0.0154526, dp=0.14634, div(v)=0.000685147, fres2=0.0161664, fresInf=0.0123388
+Max kcontact: 4.84835e+12
+    Iter 26: dv=0.0141579, dp=0.0248007, div(v)=0.00212417, fres2=0.00785603, fresInf=0.0036703
+Max kcontact: 4.84835e+12

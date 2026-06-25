@@ -18,7 +18,7 @@
                 true,
                 true
             ],
-            "targetId": 2,
+            "targetId": 5,
             "type": "VelocityBC",
             "value": [
                 0.0,
@@ -40,15 +40,15 @@
     "Contact": [
         {
             "auto": false,
-            "autoFactor": 0.5,
-            "fricCoeffStatic": 0.01,
+            "autoFactor": 1.0,
+            "fricCoeffStatic": 0.0001,
             "frictionRegularizationVelocity": 0.0,
-            "gapPenaltyScale": 5.0,
+            "gapPenaltyScale": 100.0,
             "heatCondCoeff": 0.5,
             "heatConductance": false,
             "maxAccel": 100000.0,
             "maxPenetRatio": 0.05,
-            "penaltyFactor": 500.0,
+            "penaltyFactor": 10.0,
             "useGapPenalty": true
         }
     ],
@@ -103,13 +103,13 @@
             "id": 0,
             "implicit": {
                 "adaptiveDtLimiter": true,
-                "adaptiveDtMin": 1e-05,
+                "adaptiveDtMin": 1.0,
                 "divTol": 10.0,
                 "forceTol": 10.0,
                 "formulation": "rigid_viscoplastic",
                 "maxEffectiveStrainIncrementPerStep": 0.02,
                 "maxIter": 200,
-                "maxNodalDisplacementPerStep": 0.0005,
+                "maxNodalDisplacementPerStep": 0.0001,
                 "omegaP": 0.1,
                 "omegaV": 0.4,
                 "pressTol": 0.1,
@@ -119,13 +119,13 @@
                 "timeStepGrowthFactor": 1.2,
                 "type": "Picard",
                 "useSprings": false,
-                "velTol": 0.05
+                "velTol": 0.01
             },
             "kernelGradCorr": false,
             "name": "Step-1",
             "nproc": 1,
             "outTime": 0.001,
-            "simTime": 0.1,
+            "simTime": 0.02,
             "type": "Implicit"
         }
     ],
@@ -159,34 +159,34 @@
                 "geometry": {
                     "origin": [
                         0.0,
-                        0.005580384832910328,
+                        0.0,
                         0.0
                     ],
-                    "source": "demo_part_2.step"
+                    "source": "demo_part_4.step"
                 },
-                "id": 2,
+                "id": 4,
                 "isRigid": true,
                 "mesh": {
-                    "source": "demo_part_2.bdf"
+                    "source": "demo_part_4.bdf"
                 },
-                "name": "top_die",
+                "name": "bot_die",
                 "sectionId": -1
             },
             {
                 "geometry": {
                     "origin": [
                         0.0,
-                        0.0005994028362509294,
+                        0.005735481238139691,
                         0.0
                     ],
-                    "source": "demo_part_3.step"
+                    "source": "demo_part_5.step"
                 },
-                "id": 3,
+                "id": 5,
                 "isRigid": true,
                 "mesh": {
-                    "source": "demo_part_3.bdf"
+                    "source": "demo_part_5.bdf"
                 },
-                "name": "bot_die",
+                "name": "top_die",
                 "sectionId": -1
             }
         ]
