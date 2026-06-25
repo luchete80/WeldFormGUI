@@ -4994,14 +4994,7 @@ void Editor::drawActiveJobsProgressSummary()
 
   int visibleCount = 0;
   for (Job* job : m_jobs) {
-    if (job == nullptr) {
-      continue;
-    }
-    const double simTime = job->getExpectedSimTime();
-    const double currentTime = job->getCurrentResultTime();
-    const bool hasPid = job->getPid() > 0;
-    const bool progressIncomplete = simTime > 0.0 && currentTime < simTime;
-    if (job->isRunning() || (hasPid && progressIncomplete)) {
+    if (job != nullptr && job->isRunning()) {
       ++visibleCount;
     }
   }
@@ -5022,9 +5015,7 @@ void Editor::drawActiveJobsProgressSummary()
     const double simTime = job->getExpectedSimTime();
     const float progress = job->getEstimatedProgress();
     const bool running = job->isRunning();
-    const bool hasPid = job->getPid() > 0;
-    const bool progressIncomplete = simTime > 0.0 && currentTime < simTime;
-    if (!running && (!hasPid || !progressIncomplete)) {
+    if (!running) {
       continue;
     }
 
@@ -5033,7 +5024,7 @@ void Editor::drawActiveJobsProgressSummary()
 
     ImGui::TextUnformatted(job->getDisplayName().c_str());
     ImGui::SameLine();
-    ImGui::TextDisabled("%s", running ? "Running" : "Finishing");
+    ImGui::TextDisabled("Running");
     ImGui::SameLine();
     ImGui::ProgressBar(progress, ImVec2(180.0f, ImGui::GetFrameHeight() * 0.55f), overlay);
     ImGui::SameLine();

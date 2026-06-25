@@ -76,7 +76,7 @@ protected:
                                SolverEdition edition,
                                const std::string& solverName) const;
   std::string m_path_file;
-  int m_pid = -1;
+  mutable int m_pid = -1;
   std::string m_filename;
   std::string m_log;
   SolverEdition m_solver_edition_override = SolverEdition::Auto;

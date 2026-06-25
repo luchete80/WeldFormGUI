@@ -399,13 +399,38 @@ bool Job::isRunning() const
       GetExitCodeProcess(processHandle, &exitCode) &&
       exitCode == STILL_ACTIVE;
   CloseHandle(processHandle);
+  if (!running) {
+    std::remove(getPidFilePath().string().c_str());
+    m_pid = -1;
+  }
   return running;
 #else
+  const fs::path proc_stat_path = fs::path("/proc") / std::to_string(pid) / "stat";
+  if (fs::exists(proc_stat_path)) {
+    std::ifstream stat_file(proc_stat_path);
+    std::string stat_line;
+    std::getline(stat_file, stat_line);
+    const std::size_t close_paren = stat_line.rfind(')');
+    if (close_paren != std::string::npos && close_paren + 2 < stat_line.size()) {
+      const char state = stat_line[close_paren + 2];
+      if (state == 'Z' || state == 'X') {
+        std::remove(getPidFilePath().string().c_str());
+        m_pid = -1;
+        return false;
+      }
+    }
+  }
+
   const int result = kill(pid, 0);
   if (result == 0) {
     return true;
   }
-  return errno != ESRCH;
+  const bool running = errno != ESRCH;
+  if (!running) {
+    std::remove(getPidFilePath().string().c_str());
+    m_pid = -1;
+  }
+  return running;
 #endif
 }
 
