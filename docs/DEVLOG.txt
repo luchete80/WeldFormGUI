@@ -329,3 +329,4 @@
          - Fixed meshing visible by partially trnasparent geom at meshing
          - Fixed not working closing button at single frame vtk result
          - Added delete element button.
+20260625 - Added Job bar at top when running, and add close job button

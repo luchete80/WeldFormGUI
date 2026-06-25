@@ -2569,6 +2569,7 @@ int main(int argc, char* argv[])
     ImGui::SetNextWindowSize(ImVec2(400, 200),ImGuiCond_FirstUseEver);
     
     ImGui::Begin("VTK Viewers"); // ventana padre para los tabs
+    editor->drawActiveJobsProgressSummary();
 
       if (ImGui::BeginTabBar("##ViewersTabBar", ImGuiTabBarFlags_None))
       {
@@ -3294,6 +3295,7 @@ int main(int argc, char* argv[])
         std::cout << "[main] removing pending actor " << actor.GetPointer()
                   << " class=" << actor->GetClassName() << std::endl;
         vtkViewer2.removeActor(actor);
+        vtkViewer_res.removeActor(actor);
       } else {
         std::cout << "[main] pending actor is null" << std::endl;
       }

@@ -4961,6 +4961,78 @@ void Editor::drawPendingJobRunConfirmation()
   }
 }
 
+void Editor::drawActiveJobsProgressSummary()
+{
+  int runningCount = 0;
+  for (Job* job : m_jobs) {
+    if (job != nullptr && job->isRunning()) {
+      ++runningCount;
+    }
+  }
+
+  if (runningCount == 0) {
+    return;
+  }
+
+  ImGui::Separator();
+  ImGui::TextDisabled("%s", runningCount == 1 ? "Active Job" : "Active Jobs");
+  for (int i = 0; i < static_cast<int>(m_jobs.size()); ++i) {
+    Job* job = m_jobs[i];
+    if (job == nullptr || !job->isRunning()) {
+      continue;
+    }
+
+    const double currentTime = job->getCurrentResultTime();
+    const double simTime = job->getExpectedSimTime();
+    const float progress = job->getEstimatedProgress();
+    char overlay[32];
+    std::snprintf(overlay, sizeof(overlay), "%.0f%%", progress * 100.0f);
+
+    ImGui::TextUnformatted(job->getDisplayName().c_str());
+    ImGui::SameLine();
+    ImGui::TextDisabled("PID: %d", job->getPid());
+    ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f), overlay);
+    if (simTime > 0.0) {
+      ImGui::TextDisabled("%.4f / %.4f", currentTime, simTime);
+    } else {
+      ImGui::TextDisabled("Progress unavailable");
+    }
+  }
+  ImGui::Separator();
+}
+
+bool Editor::deleteJobAtIndex(int index)
+{
+  if (index < 0 || index >= static_cast<int>(m_jobs.size())) {
+    return false;
+  }
+
+  Job* job = m_jobs[index];
+  if (job == nullptr) {
+    m_jobs.erase(m_jobs.begin() + index);
+    return true;
+  }
+
+  if (m_jobdlg.m_job == job) {
+    m_jobdlg.m_job = nullptr;
+    m_jobdlg.m_edit_mode = false;
+    m_jobdlg.m_show = false;
+  }
+  if (m_jobshowdlg.m_job == job) {
+    m_jobshowdlg.m_job = nullptr;
+    m_jobshowdlg.m_last_job = nullptr;
+    m_jobshowdlg.m_last_refresh_time = -1.0;
+    m_jobshowdlg.m_show = false;
+  }
+  if (m_pending_job_run_confirmation.job == job) {
+    m_pending_job_run_confirmation = PendingJobRunConfirmation{};
+  }
+
+  delete job;
+  m_jobs.erase(m_jobs.begin() + index);
+  return true;
+}
+
 bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
 {
   if (job == nullptr) {
@@ -4973,6 +5045,8 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
 
   const std::string jobLabel = job->getDisplayName() + "##job_" + std::to_string(index);
   const bool nodeOpen = ImGui::TreeNode(jobLabel.c_str());
+  static int blockedDeleteJobIndex = -1;
+  bool deleteRequested = false;
 
   if (ImGui::BeginPopupContextItem()) {
     if (ImGui::MenuItem("Edit")) {
@@ -4996,28 +5070,41 @@ bool Editor::drawJobTreeNode(Job* job, int index, bool expandOnce)
       openResultsForJob(job);
     }
     if (ImGui::MenuItem("Delete")) {
-      if (m_jobdlg.m_job == job) {
-        m_jobdlg.m_job = nullptr;
-        m_jobdlg.m_edit_mode = false;
-        m_jobdlg.m_show = false;
+      if (job->isRunning()) {
+        blockedDeleteJobIndex = index;
+      } else {
+        deleteRequested = true;
       }
-      if (m_jobshowdlg.m_job == job) {
-        m_jobshowdlg.m_job = nullptr;
-        m_jobshowdlg.m_last_job = nullptr;
-        m_jobshowdlg.m_last_refresh_time = -1.0;
-        m_jobshowdlg.m_show = false;
-      }
-      if (m_pending_job_run_confirmation.job == job) {
-        m_pending_job_run_confirmation = PendingJobRunConfirmation{};
-      }
-      delete job;
-      m_jobs.erase(m_jobs.begin() + index);
-      if (nodeOpen) {
-        ImGui::TreePop();
-      }
-      return true;
     }
     ImGui::EndPopup();
+  }
+
+  ImGui::SameLine();
+  if (ImGui::SmallButton(("X##delete_job_" + std::to_string(index)).c_str())) {
+    if (job->isRunning()) {
+      blockedDeleteJobIndex = index;
+    } else {
+      deleteRequested = true;
+    }
+  }
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("Delete job");
+  }
+
+  if (blockedDeleteJobIndex == index) {
+    ImGui::OpenPopup("Cannot Delete Running Job");
+    blockedDeleteJobIndex = -1;
+  }
+  if (ImGui::BeginPopup("Cannot Delete Running Job")) {
+    ImGui::TextWrapped("This job is still running. Stop it or wait until it finishes before deleting it.");
+    ImGui::EndPopup();
+  }
+
+  if (deleteRequested) {
+    if (nodeOpen) {
+      ImGui::TreePop();
+    }
+    return deleteJobAtIndex(index);
   }
 
   if (nodeOpen) {

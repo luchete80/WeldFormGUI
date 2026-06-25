@@ -141,6 +141,7 @@ public:
   bool openResultsForModel();
   bool openResultsForJob(Job* job);
   void requestJobRun(Job* job);
+  void drawActiveJobsProgressSummary();
   bool refreshOpenResults(int preferredFrameIndex = -1);
   int consumePendingResultsFrameIndex();
   bool scalePartGeometry(Part* part, double factor);
@@ -521,6 +522,7 @@ protected:
   void executePendingJobRun(bool deleteExistingArtifacts);
   void drawJobsSidebar(bool expandOnce);
   bool drawJobTreeNode(Job* job, int index, bool expandOnce);
+  bool deleteJobAtIndex(int index);
   bool runModelCheckBeforeJobRun(Model& model);
   void drawModelCheckPopup();
   void clearBoundaryConditionOverlayForViewer(VtkViewer* targetViewer,
