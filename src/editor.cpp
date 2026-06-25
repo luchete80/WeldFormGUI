@@ -4992,35 +4992,51 @@ void Editor::drawActiveJobsProgressSummary()
 {
   removeDuplicateJobEntries();
 
-  int runningCount = 0;
+  int visibleCount = 0;
   for (Job* job : m_jobs) {
-    if (job != nullptr && job->isRunning()) {
-      ++runningCount;
+    if (job == nullptr) {
+      continue;
+    }
+    const double simTime = job->getExpectedSimTime();
+    const double currentTime = job->getCurrentResultTime();
+    const bool hasPid = job->getPid() > 0;
+    const bool progressIncomplete = simTime > 0.0 && currentTime < simTime;
+    if (job->isRunning() || (hasPid && progressIncomplete)) {
+      ++visibleCount;
     }
   }
 
-  if (runningCount == 0) {
+  if (visibleCount == 0) {
     return;
   }
 
   ImGui::Separator();
-  ImGui::TextDisabled("%s", runningCount == 1 ? "Active Job" : "Active Jobs");
+  ImGui::TextDisabled("%s", visibleCount == 1 ? "Active Job" : "Active Jobs");
   for (int i = 0; i < static_cast<int>(m_jobs.size()); ++i) {
     Job* job = m_jobs[i];
-    if (job == nullptr || !job->isRunning()) {
+    if (job == nullptr) {
       continue;
     }
 
     const double currentTime = job->getCurrentResultTime();
     const double simTime = job->getExpectedSimTime();
     const float progress = job->getEstimatedProgress();
+    const bool running = job->isRunning();
+    const bool hasPid = job->getPid() > 0;
+    const bool progressIncomplete = simTime > 0.0 && currentTime < simTime;
+    if (!running && (!hasPid || !progressIncomplete)) {
+      continue;
+    }
+
     char overlay[32];
     std::snprintf(overlay, sizeof(overlay), "%.0f%%", progress * 100.0f);
 
     ImGui::TextUnformatted(job->getDisplayName().c_str());
     ImGui::SameLine();
-    ImGui::TextDisabled("PID: %d", job->getPid());
-    ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f), overlay);
+    ImGui::TextDisabled("%s", running ? "Running" : "Finishing");
+    ImGui::SameLine();
+    ImGui::ProgressBar(progress, ImVec2(180.0f, ImGui::GetFrameHeight() * 0.55f), overlay);
+    ImGui::SameLine();
     if (simTime > 0.0) {
       ImGui::TextDisabled("%.4f / %.4f", currentTime, simTime);
     } else {
