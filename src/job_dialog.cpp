@@ -408,6 +408,7 @@ void JobShowDialog::Draw(){
   if (m_job != m_last_job) {
     m_last_job = m_job;
     m_last_refresh_time = now;
+    m_follow_log = true;
     m_job->UpdateOutput(m_max_visible_lines);
   } else if (m_last_refresh_time < 0.0 || (now - m_last_refresh_time) >= 1.0) {
     m_last_refresh_time = now;
@@ -451,14 +452,34 @@ void JobShowDialog::Draw(){
   //ImGui::Text("State %s", str.c_str()  );  
 
   ImGui::BeginChild("JobLogBuffer", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), true, ImGuiWindowFlags_HorizontalScrollbar);
+  const float scrollY = ImGui::GetScrollY();
+  const float scrollMaxY = ImGui::GetScrollMaxY();
+  const bool wasAtBottom = scrollMaxY <= 0.0f || scrollY >= (scrollMaxY - 5.0f);
+  const bool userInteractingWithScroll =
+      ImGui::IsWindowHovered() &&
+      (ImGui::GetIO().MouseWheel != 0.0f || ImGui::IsMouseDragging(ImGuiMouseButton_Left));
+
+  if (userInteractingWithScroll && !wasAtBottom)
+    m_follow_log = false;
+
   ImGui::PushTextWrapPos();
   ImGui::TextUnformatted(str.c_str());
   ImGui::PopTextWrapPos();
-  ImGui::SetScrollHereY(1.0f);
+
+  if (m_follow_log && !userInteractingWithScroll) {
+    ImGui::SetScrollHereY(1.0f);
+  } else if (!userInteractingWithScroll) {
+    const float currentScrollY = ImGui::GetScrollY();
+    const float currentScrollMaxY = ImGui::GetScrollMaxY();
+    if (currentScrollMaxY <= 0.0f || currentScrollY >= (currentScrollMaxY - 5.0f))
+      m_follow_log = true;
+  }
+
   ImGui::EndChild();
   
   if (ImGui::Button("Close")){
     m_last_refresh_time = -1.0;
+    m_follow_log = true;
     m_show=false;
   }
   ImGui::SameLine();

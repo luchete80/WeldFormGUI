@@ -63,12 +63,14 @@ public ObjDialog{
     m_last_job = nullptr;
     m_last_refresh_time = -1.0;
     m_max_visible_lines = 100;
+    m_follow_log = true;
   }
   Job *m_job;
   Job *m_last_job;
   std::function<bool(Job*)> m_open_results;
   double m_last_refresh_time;
   int m_max_visible_lines;
+  bool m_follow_log;
   
   const bool & isEntityCreated()const{return create_entity;}  
   void Draw(const char* title, bool* p_open = NULL,  Job* entity = NULL); 
