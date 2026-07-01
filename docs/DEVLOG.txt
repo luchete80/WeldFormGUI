@@ -331,3 +331,4 @@
          - Added delete element button.
 20260625 - Added Job bar at top when running, and add close job button
 20260630 - fixed slider in job progress (now allows to move in log)
+20260701 - Separated Adaptive DT min from Adaptive DT limiter in StepDialog.
