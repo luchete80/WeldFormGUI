@@ -12,6 +12,12 @@
 using namespace std;
 
 namespace {
+struct GmshElementRecord
+{
+  int dim = 0;
+  std::vector<int> connectivity;
+};
+
 void assignSequentialEntityIds(std::vector<Node*>& nodes, int start_id = 1)
 {
   for (std::size_t i = 0; i < nodes.size(); ++i) {
@@ -684,7 +690,7 @@ void Mesh::genFromGmshModel() {
     // Mapa para relacionar tags de Gmsh con índices locales
     std::map<std::size_t, int> gmshToLocalIndex;
     std::vector<std::array<float, 3>> pts;
-    std::vector<std::vector<int>> elnodes;
+    std::vector<GmshElementRecord> elements;
 
     // Primera pasada: recoger todos los puntos
     int nodeCount = 0;
@@ -738,24 +744,23 @@ void Mesh::genFromGmshModel() {
             for(std::size_t j = 0; j < elemTags[i].size(); j++) {
                 if (elemDim == 0)
                     continue;
-                if (max_dim == 3 && elemDim < 3)
-                    continue;
 
-                std::vector<int> connectivity;
+                GmshElementRecord elementRecord;
+                elementRecord.dim = elemDim;
                 
                 // Establecer la conectividad de la celda
                 for(int k = 0; k < numNodes; k++) {
                     std::size_t nodeTag = elemNodeTags[i][j * numNodes + k];
                     if(gmshToLocalIndex.find(nodeTag) != gmshToLocalIndex.end()) {
                         int localIndex = gmshToLocalIndex[nodeTag];
-                        connectivity.push_back(localIndex);
+                        elementRecord.connectivity.push_back(localIndex);
                     } else {
                         std::cerr << "Error: Node tag " << nodeTag << " not found in mapping!" << std::endl;
                     }
                 }
                 
                 // Guardar conectividad
-                elnodes.push_back(connectivity);
+                elements.push_back(elementRecord);
                 elementCount++;
             }
         }
@@ -770,12 +775,16 @@ void Mesh::genFromGmshModel() {
     }
 
     // Crear elementos - INSERCIÓN SEGÚN EL TIPO DE ELEMENTO
-    for(std::size_t e = 0; e < elnodes.size(); e++) {
-        int numNodes = elnodes[e].size();
+    for(std::size_t e = 0; e < elements.size(); e++) {
+        const int elementDim = elements[e].dim;
+        if (elementDim != max_mesh_dim) {
+            continue;
+        }
+        int numNodes = elements[e].connectivity.size();
         std::vector<Node*> elementNodes;
         
         // Crear vector de nodos para el elemento
-        for(int nodeIndex : elnodes[e]) {
+        for(int nodeIndex : elements[e].connectivity) {
             if(nodeIndex >= 0 && nodeIndex < m_node.size()) {
                 elementNodes.push_back(m_node[nodeIndex]);
             } else {
@@ -787,11 +796,11 @@ void Mesh::genFromGmshModel() {
             Line* line = new Line(elementNodes);
             line->m_id = static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(line);
-        } else if(numNodes == 3 && max_dim == 2) {
+        } else if(numNodes == 3 && elementDim == 2) {
             Tria* tria = new Tria(elementNodes);
             tria->m_id = static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(tria);
-        } else if(numNodes == 4 && max_dim == 2) {
+        } else if(numNodes == 4 && elementDim == 2) {
             Quad* quad = new Quad(elementNodes);
             quad->m_id = static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(quad);
