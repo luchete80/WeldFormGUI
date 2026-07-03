@@ -1,6 +1,7 @@
 #include "Geom.h"
 #include <TopoDS_Shape.hxx> // OpenCascade shape
 #include <TopoDS_Compound.hxx>
+#include <TopoDS_Face.hxx>
 
 #include <TopoDS_Shape.hxx>
 
@@ -34,12 +35,15 @@
 #include <GProp_GProps.hxx>
 
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeHalfSpace.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
+#include <BRepAlgoAPI_Common.hxx>
 
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Dir.hxx>
+#include <gp_Pln.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 
@@ -78,6 +82,29 @@ TopoDS_Shape buildTransferredShape(STEPControl_Reader& reader)
     }
 
     return compound;
+}
+
+bool extractFiniteBounds(const TopoDS_Shape& shape,
+                         double& xMin,
+                         double& yMin,
+                         double& zMin,
+                         double& xMax,
+                         double& yMax,
+                         double& zMax)
+{
+    if (shape.IsNull()) {
+        return false;
+    }
+
+    Bnd_Box bbox;
+    BRepBndLib::Add(shape, bbox);
+    if (bbox.IsVoid()) {
+        return false;
+    }
+
+    bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    return std::isfinite(xMin) && std::isfinite(yMin) && std::isfinite(zMin) &&
+           std::isfinite(xMax) && std::isfinite(yMax) && std::isfinite(zMax);
 }
 }
 
@@ -248,6 +275,17 @@ bool Geom::getBoundingBoxCenter(double& centerX, double& centerY, double& center
     return true;
 }
 
+bool Geom::SetShape(const TopoDS_Shape& shape)
+{
+    if (shape.IsNull()) {
+        return false;
+    }
+
+    delete m_shape;
+    m_shape = new TopoDS_Shape(shape);
+    return true;
+}
+
 bool Geom::getMassCenter(double& centerX, double& centerY, double& centerZ) const
 {
     if (!m_shape || m_shape->IsNull()) {
@@ -273,6 +311,111 @@ bool Geom::getMassCenter(double& centerX, double& centerY, double& centerZ) cons
     centerX = center.X();
     centerY = center.Y();
     centerZ = center.Z();
+    return true;
+}
+
+bool Geom::SplitByPlane(double originX,
+                        double originY,
+                        double originZ,
+                        double normalX,
+                        double normalY,
+                        double normalZ,
+                        TopoDS_Shape& positiveShape,
+                        TopoDS_Shape& negativeShape) const
+{
+    positiveShape.Nullify();
+    negativeShape.Nullify();
+
+    if (m_shape == nullptr || m_shape->IsNull()) {
+        std::cerr << "Error: no shape available to split." << std::endl;
+        return false;
+    }
+
+    const double normalNorm = std::sqrt(normalX * normalX +
+                                        normalY * normalY +
+                                        normalZ * normalZ);
+    if (normalNorm <= 1.0e-12) {
+        std::cerr << "Error: split plane normal must be non-zero." << std::endl;
+        return false;
+    }
+
+    double xMin = 0.0;
+    double yMin = 0.0;
+    double zMin = 0.0;
+    double xMax = 0.0;
+    double yMax = 0.0;
+    double zMax = 0.0;
+    if (!extractFiniteBounds(*m_shape, xMin, yMin, zMin, xMax, yMax, zMax)) {
+        std::cerr << "Error: failed to compute bounds for split operation." << std::endl;
+        return false;
+    }
+
+    const double diagonal = std::sqrt((xMax - xMin) * (xMax - xMin) +
+                                      (yMax - yMin) * (yMax - yMin) +
+                                      (zMax - zMin) * (zMax - zMin));
+    const double offsetDistance = std::max(1.0, diagonal * 2.0);
+    const double invNormalNorm = 1.0 / normalNorm;
+
+    const gp_Dir planeNormal(normalX * invNormalNorm,
+                             normalY * invNormalNorm,
+                             normalZ * invNormalNorm);
+    const gp_Pnt planeOrigin(originX, originY, originZ);
+    const TopoDS_Face planeFace =
+        BRepBuilderAPI_MakeFace(gp_Pln(planeOrigin, planeNormal)).Face();
+
+    const gp_Pnt positiveReference(originX + planeNormal.X() * offsetDistance,
+                                   originY + planeNormal.Y() * offsetDistance,
+                                   originZ + planeNormal.Z() * offsetDistance);
+    const gp_Pnt negativeReference(originX - planeNormal.X() * offsetDistance,
+                                   originY - planeNormal.Y() * offsetDistance,
+                                   originZ - planeNormal.Z() * offsetDistance);
+
+    BRepPrimAPI_MakeHalfSpace positiveHalfSpaceBuilder(planeFace, positiveReference);
+    BRepPrimAPI_MakeHalfSpace negativeHalfSpaceBuilder(planeFace, negativeReference);
+
+    BRepAlgoAPI_Common positiveCommon(*m_shape, positiveHalfSpaceBuilder.Shape());
+    positiveCommon.Build();
+    if (!positiveCommon.IsDone()) {
+        std::cerr << "Error: failed to compute positive split half." << std::endl;
+        return false;
+    }
+
+    BRepAlgoAPI_Common negativeCommon(*m_shape, negativeHalfSpaceBuilder.Shape());
+    negativeCommon.Build();
+    if (!negativeCommon.IsDone()) {
+        std::cerr << "Error: failed to compute negative split half." << std::endl;
+        return false;
+    }
+
+    positiveShape = positiveCommon.Shape();
+    negativeShape = negativeCommon.Shape();
+
+    double positiveBounds[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    double negativeBounds[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    const bool hasPositive =
+        extractFiniteBounds(positiveShape,
+                            positiveBounds[0],
+                            positiveBounds[1],
+                            positiveBounds[2],
+                            positiveBounds[3],
+                            positiveBounds[4],
+                            positiveBounds[5]);
+    const bool hasNegative =
+        extractFiniteBounds(negativeShape,
+                            negativeBounds[0],
+                            negativeBounds[1],
+                            negativeBounds[2],
+                            negativeBounds[3],
+                            negativeBounds[4],
+                            negativeBounds[5]);
+
+    if (!hasPositive || !hasNegative) {
+        std::cerr << "Error: split plane does not generate two valid parts." << std::endl;
+        positiveShape.Nullify();
+        negativeShape.Nullify();
+        return false;
+    }
+
     return true;
 }
 

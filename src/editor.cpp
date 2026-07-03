@@ -3728,6 +3728,115 @@ bool Editor::rotatePartGeometry(Part* part,
   return true;
 }
 
+bool Editor::splitPartGeometryWithPlane(Part* part,
+                                        double originX,
+                                        double originY,
+                                        double originZ,
+                                        double normalX,
+                                        double normalY,
+                                        double normalZ)
+{
+  if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
+    cout << "Plane split is only available for geometry parts." << endl;
+    return false;
+  }
+
+  TopoDS_Shape positiveShape;
+  TopoDS_Shape negativeShape;
+  if (!part->getGeom()->SplitByPlane(originX,
+                                     originY,
+                                     originZ,
+                                     normalX,
+                                     normalY,
+                                     normalZ,
+                                     positiveShape,
+                                     negativeShape)) {
+    cout << "Plane split failed." << endl;
+    return false;
+  }
+
+  Geom* positiveGeom = new Geom();
+  Geom* negativeGeom = new Geom();
+  if (!positiveGeom->SetShape(positiveShape) || !negativeGeom->SetShape(negativeShape)) {
+    delete positiveGeom;
+    delete negativeGeom;
+    cout << "Plane split produced invalid geometry." << endl;
+    return false;
+  }
+
+  positiveGeom->setOrigin(part->getGeom()->getOrigin());
+  negativeGeom->setOrigin(part->getGeom()->getOrigin());
+
+  Part* positivePart = new Part(positiveGeom);
+  Part* negativePart = new Part(negativeGeom);
+
+  const std::string baseName = part->getName() != nullptr && part->getName()[0] != '\0'
+    ? part->getName()
+    : ("Part_" + std::to_string(part->getId()));
+  positivePart->setName((baseName + "_A").c_str());
+  negativePart->setName((baseName + "_B").c_str());
+  positivePart->setType(part->getType());
+  negativePart->setType(part->getType());
+  positivePart->setSectionId(part->getSectionId());
+  negativePart->setSectionId(part->getSectionId());
+
+  vtkOCCTGeom* positiveVisual = new vtkOCCTGeom();
+  positiveVisual->SetGeometry(positiveGeom);
+  positiveVisual->BuildVTKData();
+  getApp().registerGeometry(positiveGeom, positiveVisual);
+  getApp().registerPartVisual(positivePart, positiveVisual);
+
+  vtkOCCTGeom* negativeVisual = new vtkOCCTGeom();
+  negativeVisual->SetGeometry(negativeGeom);
+  negativeVisual->BuildVTKData();
+  getApp().registerGeometry(negativeGeom, negativeVisual);
+  getApp().registerPartVisual(negativePart, negativeVisual);
+
+  if (viewer != nullptr) {
+    if (positiveVisual->actor != nullptr) {
+      viewer->addActor(positiveVisual->actor);
+    }
+    if (negativeVisual->actor != nullptr) {
+      viewer->addActor(negativeVisual->actor);
+    }
+  }
+
+  const bool wasVisible = isPartVisible(part);
+
+  int partIndex = -1;
+  for (int i = 0; i < m_model->getPartCount(); ++i) {
+    if (m_model->getPart(i) == part) {
+      partIndex = i;
+      break;
+    }
+  }
+
+  if (partIndex < 0) {
+    cout << "Failed to locate source part for plane split." << endl;
+    return false;
+  }
+
+  clearStateForDeletedPart(part);
+  getApp().removeGraphicMeshForPart(part);
+  getApp().removeVisualForPart(part);
+
+  m_model->delPart(partIndex);
+  m_model->addPart(positivePart);
+  m_model->addPart(negativePart);
+
+  if (!wasVisible) {
+    setPartVisible(positivePart, false);
+    setPartVisible(negativePart, false);
+  }
+
+  selected_prt = positivePart;
+  highlighted_prt = positivePart;
+
+  getApp().Update();
+  markActiveModelDirty();
+  return true;
+}
+
 bool Editor::openResultsForModel()
 {
   const std::string& modelFilePath = m_model->getFilePath();
@@ -5374,6 +5483,14 @@ void Editor::meshPart(Part* part){
   double element_size = m_model->getElementSize();
   cout << "Geometry dimension: "<<gmsh_dim<<endl;
   cout << "Analysis type: "<<analysis_type<<endl;
+  const bool rigid_3d_surface_only = is_rigid_part && gmsh_dim == 3;
+  const int target_gmsh_mesh_dim = rigid_3d_surface_only ? 2 : gmsh_dim;
+  if (rigid_3d_surface_only) {
+    const std::string rigidSurfaceLog =
+      "Rigid 3D part detected. Meshing only the exterior surface with 2D triangular elements.\n";
+    cout << rigidSurfaceLog;
+    appendToAppConsole(rigidSurfaceLog);
+  }
 
   bool mesh_ready = false;
   const bool use_mesh_adapt_for_2d =
@@ -5480,8 +5597,8 @@ void Editor::meshPart(Part* part){
         applyHexaTransfiniteConstraintsToCurrentGmshModel(element_size, &m_mshdlg);
       }
 
-	      if (gmsh_dim > -1) {
-	        gmsh::model::mesh::generate(gmsh_dim);
+	      if (target_gmsh_mesh_dim > -1) {
+	        gmsh::model::mesh::generate(target_gmsh_mesh_dim);
 	      }
 	    };
 
@@ -6185,6 +6302,13 @@ void Editor::drawGui() {
         static double rotate_angle_deg = 0.0;
         static int rotate_axis = 4;
         static Part* rotate_part = nullptr;
+        static bool show_cut_plane_popup = false;
+        static Part* cut_plane_part = nullptr;
+        static bool cut_plane_use_custom_normal = false;
+        static int cut_plane_normal_axis = 0;
+        static bool cut_plane_use_custom_origin = false;
+        static double cut_plane_origin[3] = {0.0, 0.0, 0.0};
+        static double cut_plane_custom_normal[3] = {1.0, 0.0, 0.0};
                 
         /////////////////////// PART TREE
         if (open_){ 
@@ -6341,6 +6465,29 @@ void Editor::drawGui() {
 	                rotate_angle_deg = 0.0;
 	                rotate_axis = 4;
 	                rotate_part = treePart;
+              }
+	              else if (treePart->isGeom() && ImGui::MenuItem("Cut with plane")) {
+	                show_cut_plane_popup = true;
+	                cut_plane_part = treePart;
+	                cut_plane_use_custom_normal = false;
+	                cut_plane_normal_axis = 0;
+	                cut_plane_use_custom_origin = false;
+	                cut_plane_custom_normal[0] = 1.0;
+	                cut_plane_custom_normal[1] = 0.0;
+	                cut_plane_custom_normal[2] = 0.0;
+	                double defaultOrigin[3] = {0.0, 0.0, 0.0};
+	                if (!getPartVisualCenter(treePart, defaultOrigin)) {
+	                  if (!treePart->getGeom()->getMassCenter(defaultOrigin[0],
+	                                                         defaultOrigin[1],
+	                                                         defaultOrigin[2])) {
+	                    treePart->getGeom()->getBoundingBoxCenter(defaultOrigin[0],
+	                                                              defaultOrigin[1],
+	                                                              defaultOrigin[2]);
+	                  }
+	                }
+	                cut_plane_origin[0] = defaultOrigin[0];
+	                cut_plane_origin[1] = defaultOrigin[1];
+	                cut_plane_origin[2] = defaultOrigin[2];
               }
                
               ImGui::EndPopup();
@@ -6679,6 +6826,94 @@ void Editor::drawGui() {
             ImGui::SameLine();
             if (ImGui::Button("Cancel", ImVec2(120, 0))) {
                 rotate_part = nullptr;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (show_cut_plane_popup) {
+            ImGui::OpenPopup("Cut Geometry With Plane");
+            show_cut_plane_popup = false;
+        }
+
+        if (ImGui::BeginPopupModal("Cut Geometry With Plane", NULL,
+                                   ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            static const char* cut_plane_axis_items[] = {
+                "+X", "-X", "+Y", "-Y", "+Z", "-Z"
+            };
+            ImGui::Checkbox("Custom plane origin", &cut_plane_use_custom_origin);
+            ImGui::InputDouble("Origin X", &cut_plane_origin[0], 0.0, 0.0, "%.6f");
+            ImGui::InputDouble("Origin Y", &cut_plane_origin[1], 0.0, 0.0, "%.6f");
+            ImGui::InputDouble("Origin Z", &cut_plane_origin[2], 0.0, 0.0, "%.6f");
+            if (!cut_plane_use_custom_origin) {
+              ImGui::TextDisabled("Default origin: part center");
+            }
+
+            ImGui::Separator();
+            ImGui::Checkbox("Custom normal", &cut_plane_use_custom_normal);
+            if (cut_plane_use_custom_normal) {
+              ImGui::InputDouble("Normal X", &cut_plane_custom_normal[0], 0.0, 0.0, "%.6f");
+              ImGui::InputDouble("Normal Y", &cut_plane_custom_normal[1], 0.0, 0.0, "%.6f");
+              ImGui::InputDouble("Normal Z", &cut_plane_custom_normal[2], 0.0, 0.0, "%.6f");
+            } else {
+              ImGui::Combo("Normal axis",
+                           &cut_plane_normal_axis,
+                           cut_plane_axis_items,
+                           IM_ARRAYSIZE(cut_plane_axis_items));
+            }
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                bool close_popup = true;
+                if (cut_plane_part != nullptr) {
+                    double origin[3] = {
+                      cut_plane_origin[0],
+                      cut_plane_origin[1],
+                      cut_plane_origin[2]
+                    };
+                    if (!cut_plane_use_custom_origin) {
+                      if (!getPartVisualCenter(cut_plane_part, origin)) {
+                        close_popup =
+                          cut_plane_part->getGeom()->getMassCenter(origin[0], origin[1], origin[2]) ||
+                          cut_plane_part->getGeom()->getBoundingBoxCenter(origin[0], origin[1], origin[2]);
+                      }
+                    }
+
+                    double normal[3] = {1.0, 0.0, 0.0};
+                    if (cut_plane_use_custom_normal) {
+                      normal[0] = cut_plane_custom_normal[0];
+                      normal[1] = cut_plane_custom_normal[1];
+                      normal[2] = cut_plane_custom_normal[2];
+                    } else {
+                      switch (cut_plane_normal_axis) {
+                        case 0: normal[0] = 1.0; normal[1] = 0.0; normal[2] = 0.0; break;
+                        case 1: normal[0] = -1.0; normal[1] = 0.0; normal[2] = 0.0; break;
+                        case 2: normal[0] = 0.0; normal[1] = 1.0; normal[2] = 0.0; break;
+                        case 3: normal[0] = 0.0; normal[1] = -1.0; normal[2] = 0.0; break;
+                        case 4: normal[0] = 0.0; normal[1] = 0.0; normal[2] = 1.0; break;
+                        case 5: normal[0] = 0.0; normal[1] = 0.0; normal[2] = -1.0; break;
+                        default: break;
+                      }
+                    }
+
+                    if (close_popup) {
+                      close_popup = splitPartGeometryWithPlane(cut_plane_part,
+                                                               origin[0],
+                                                               origin[1],
+                                                               origin[2],
+                                                               normal[0],
+                                                               normal[1],
+                                                               normal[2]);
+                    }
+                }
+                if (close_popup) {
+                    cut_plane_part = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                cut_plane_part = nullptr;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();

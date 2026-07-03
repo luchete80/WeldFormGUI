@@ -150,6 +150,13 @@ public:
                           double axisDirX,
                           double axisDirY,
                           double axisDirZ);
+  bool splitPartGeometryWithPlane(Part* part,
+                                  double originX,
+                                  double originY,
+                                  double originZ,
+                                  double normalX,
+                                  double normalY,
+                                  double normalZ);
   void adoptModelFromScript(Model* model);
   bool consumeModelViewerActivationRequest();
   bool consumeResultsViewerActivationRequest();

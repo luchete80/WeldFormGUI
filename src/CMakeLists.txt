@@ -139,6 +139,8 @@ target_link_libraries(${EXEC_NAME}
   TKGeomAlgo     # Geometry algorithms
   TKBRep         # Boundary representation
   TKPrim         # Primitives (like cylinders)
+  TKBO           # Boolean operations
+  TKBool         # Boolean algorithms
   TKTopAlgo      # Topological algorithms
   TKShHealing    # Shape healing
   TKBinL         # Binary streaming

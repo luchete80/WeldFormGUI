@@ -36,6 +36,7 @@ public:
   bool LoadClosedPolylineFace(const std::vector<double3>& points);
   bool LoadSTEP(const std::string& fname);
   bool LoadSTEP(const std::string& fname, double targetOriginX, double targetOriginY, double targetOriginZ) ;
+  bool SetShape(const TopoDS_Shape& shape);
   
   void Move(const double &x, const double &y, const double &z);
   bool Scale(const double &factor);
@@ -90,6 +91,14 @@ public:
   void setOrigin(double x, double y, double z){m_origin = make_double3(x, y, z);}
   bool getMassCenter(double& centerX, double& centerY, double& centerZ) const;
   bool getBoundingBoxCenter(double& centerX, double& centerY, double& centerZ) const;
+  bool SplitByPlane(double originX,
+                    double originY,
+                    double originZ,
+                    double normalX,
+                    double normalY,
+                    double normalZ,
+                    TopoDS_Shape& positiveShape,
+                    TopoDS_Shape& negativeShape) const;
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
   bool prefersHexaTransfinite() const { return m_preferHexaTransfinite; }

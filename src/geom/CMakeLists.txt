@@ -79,6 +79,8 @@ target_link_libraries(geom
   TKGeomAlgo     # Geometry algorithms
   TKBRep         # Boundary representation
   TKPrim         # Primitives (like cylinders)
+  TKBO           # Boolean operations
+  TKBool         # Boolean algorithms
   TKTopAlgo      # Topological algorithms
   TKShHealing    # Shape healing
   #TKStdL         # Standard library with implementation (needed for Standard::Free and others)
