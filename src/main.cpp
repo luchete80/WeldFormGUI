@@ -2,7 +2,9 @@
 #include <algorithm>
 #include <iostream>
 #include <array>
+#include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <limits>
 #include <map>
@@ -49,6 +51,7 @@
 #include <vtkDataSet.h>
 #include <vtkExtractCells.h>
 #include <vtkMapper.h>
+#include <vtkLookupTable.h>
 #include <vtkPlane.h>
 #include <vtkProperty.h>
 #include <vtkSphereSource.h>
@@ -80,6 +83,8 @@
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include <nlohmann/json.hpp>
 
 #ifdef BUILD_PYTHON
 #include <Python.h>
@@ -141,6 +146,8 @@ bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_textu
 }
 
 namespace {
+using json = nlohmann::json;
+
 enum class UIFontChoice {
     ImGuiDefault,
     Ubuntu
@@ -182,6 +189,310 @@ struct ResultsPlaybackOverlayState {
     ImVec2 lastMin = ImVec2(0.0f, 0.0f);
     ImVec2 lastMax = ImVec2(0.0f, 0.0f);
 };
+
+struct ColorMapControlPoint {
+    float t = 0.0f;
+    ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+};
+
+std::filesystem::path resultsColorMapPresetPath()
+{
+    return std::filesystem::current_path() / ".weldform_results_colormap.json";
+}
+
+std::vector<ColorMapControlPoint> makeDefaultResultsColorMap()
+{
+    std::vector<ColorMapControlPoint> points;
+    const std::array<float, 5> positions = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+    points.reserve(positions.size());
+    for (float t : positions) {
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 0.0f;
+        ImGui::ColorConvertHSVtoRGB(0.66667f * (1.0f - t), 1.0f, 1.0f, r, g, b);
+        points.push_back({t, ImVec4(r, g, b, 1.0f)});
+    }
+    return points;
+}
+
+void sanitizeColorMapControlPoints(std::vector<ColorMapControlPoint>& points)
+{
+    if (points.size() < 2) {
+        points = makeDefaultResultsColorMap();
+        return;
+    }
+
+    for (ColorMapControlPoint& point : points) {
+        point.t = std::max(0.0f, std::min(1.0f, point.t));
+        point.color.x = std::max(0.0f, std::min(1.0f, point.color.x));
+        point.color.y = std::max(0.0f, std::min(1.0f, point.color.y));
+        point.color.z = std::max(0.0f, std::min(1.0f, point.color.z));
+        point.color.w = 1.0f;
+    }
+
+    std::sort(points.begin(), points.end(), [](const ColorMapControlPoint& a, const ColorMapControlPoint& b) {
+        return a.t < b.t;
+    });
+
+    points.front().t = 0.0f;
+    points.back().t = 1.0f;
+
+    const float minSpacing = 1.0e-4f;
+    for (std::size_t i = 1; i + 1 < points.size(); ++i) {
+        points[i].t = std::max(points[i].t, points[i - 1].t + minSpacing);
+        points[i].t = std::min(points[i].t, points[i + 1].t - minSpacing);
+    }
+}
+
+ImVec4 sampleColorMap(const std::vector<ColorMapControlPoint>& points, float t)
+{
+    if (points.empty()) {
+        return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    if (t <= points.front().t) {
+        return points.front().color;
+    }
+    if (t >= points.back().t) {
+        return points.back().color;
+    }
+
+    for (std::size_t i = 1; i < points.size(); ++i) {
+        if (t <= points[i].t) {
+            const ColorMapControlPoint& a = points[i - 1];
+            const ColorMapControlPoint& b = points[i];
+            const float span = std::max(1.0e-6f, b.t - a.t);
+            const float u = (t - a.t) / span;
+            return ImVec4(a.color.x + (b.color.x - a.color.x) * u,
+                          a.color.y + (b.color.y - a.color.y) * u,
+                          a.color.z + (b.color.z - a.color.z) * u,
+                          1.0f);
+        }
+    }
+
+    return points.back().color;
+}
+
+bool loadResultsColorMapPreset(std::vector<ColorMapControlPoint>& points)
+{
+    const std::filesystem::path path = resultsColorMapPresetPath();
+    std::ifstream input(path);
+    if (!input.is_open()) {
+        return false;
+    }
+
+    try {
+        json root;
+        input >> root;
+        if (!root.contains("points") || !root["points"].is_array()) {
+            return false;
+        }
+
+        std::vector<ColorMapControlPoint> loadedPoints;
+        for (const json& pointJson : root["points"]) {
+            if (!pointJson.is_object()) {
+                continue;
+            }
+
+            ColorMapControlPoint point;
+            point.t = pointJson.value("t", 0.0f);
+            point.color.x = pointJson.value("r", 1.0f);
+            point.color.y = pointJson.value("g", 1.0f);
+            point.color.z = pointJson.value("b", 1.0f);
+            point.color.w = 1.0f;
+            loadedPoints.push_back(point);
+        }
+
+        sanitizeColorMapControlPoints(loadedPoints);
+        points = std::move(loadedPoints);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+void saveResultsColorMapPreset(const std::vector<ColorMapControlPoint>& points)
+{
+    json root;
+    root["version"] = 1;
+    root["points"] = json::array();
+    for (const ColorMapControlPoint& point : points) {
+        root["points"].push_back({
+            {"t", point.t},
+            {"r", point.color.x},
+            {"g", point.color.y},
+            {"b", point.color.z}
+        });
+    }
+
+    const std::filesystem::path path = resultsColorMapPresetPath();
+    std::ofstream output(path);
+    if (output.is_open()) {
+        output << root.dump(2) << '\n';
+    }
+}
+
+vtkSmartPointer<vtkLookupTable> buildResultsLookupTable(const std::vector<ColorMapControlPoint>& points,
+                                                        double minValue,
+                                                        double maxValue)
+{
+    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+    lut->SetNumberOfTableValues(256);
+    lut->SetRange(minValue, maxValue);
+    lut->Build();
+
+    for (int i = 0; i < 256; ++i) {
+        const float t = static_cast<float>(i) / 255.0f;
+        const ImVec4 color = sampleColorMap(points, t);
+        lut->SetTableValue(i, color.x, color.y, color.z, 1.0);
+    }
+
+    return lut;
+}
+
+bool drawResultsColorMapEditor(std::vector<ColorMapControlPoint>& points,
+                               int& selectedIndex,
+                               bool& resetRequested)
+{
+    bool changed = false;
+    sanitizeColorMapControlPoints(points);
+
+    if (selectedIndex < 0 || selectedIndex >= static_cast<int>(points.size())) {
+        selectedIndex = 0;
+    }
+
+    const ImVec2 canvasSize(190.0f, 46.0f);
+    ImGui::InvisibleButton("##results_colormap_canvas", canvasSize);
+    const bool hovered = ImGui::IsItemHovered();
+    const bool active = ImGui::IsItemActive();
+    const ImVec2 rectMin = ImGui::GetItemRectMin();
+    const ImVec2 rectMax = ImGui::GetItemRectMax();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    const float radius = 6.0f;
+
+    for (int segment = 0; segment < 128; ++segment) {
+        const float t0 = static_cast<float>(segment) / 128.0f;
+        const float t1 = static_cast<float>(segment + 1) / 128.0f;
+        const ImVec4 c0 = sampleColorMap(points, t0);
+        const ImVec4 c1 = sampleColorMap(points, t1);
+        const float x0 = rectMin.x + (rectMax.x - rectMin.x) * t0;
+        const float x1 = rectMin.x + (rectMax.x - rectMin.x) * t1;
+        drawList->AddRectFilledMultiColor(ImVec2(x0, rectMin.y),
+                                          ImVec2(x1, rectMax.y),
+                                          ImGui::ColorConvertFloat4ToU32(c0),
+                                          ImGui::ColorConvertFloat4ToU32(c1),
+                                          ImGui::ColorConvertFloat4ToU32(c1),
+                                          ImGui::ColorConvertFloat4ToU32(c0));
+    }
+    drawList->AddRect(rectMin, rectMax, IM_COL32(255, 255, 255, 70), 4.0f);
+
+    if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        const ImVec2 mouse = ImGui::GetIO().MousePos;
+        float bestDistance = 12.0f;
+        int bestIndex = -1;
+        for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+            const float x = rectMin.x + points[i].t * (rectMax.x - rectMin.x);
+            const float y = 0.5f * (rectMin.y + rectMax.y);
+            const float dx = mouse.x - x;
+            const float dy = mouse.y - y;
+            const float distance = std::sqrt(dx * dx + dy * dy);
+            if (distance <= bestDistance) {
+                bestDistance = distance;
+                bestIndex = i;
+            }
+        }
+        if (bestIndex >= 0) {
+            selectedIndex = bestIndex;
+        }
+    }
+
+    if (active && selectedIndex > 0 && selectedIndex + 1 < static_cast<int>(points.size()) &&
+        ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        const float width = std::max(1.0f, rectMax.x - rectMin.x);
+        float t = (ImGui::GetIO().MousePos.x - rectMin.x) / width;
+        t = std::max(points[selectedIndex - 1].t + 1.0e-4f,
+                     std::min(points[selectedIndex + 1].t - 1.0e-4f, t));
+        t = std::max(0.0f, std::min(1.0f, t));
+        if (std::abs(points[selectedIndex].t - t) > 1.0e-6f) {
+            points[selectedIndex].t = t;
+            changed = true;
+        }
+    }
+
+    for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+        const float x = rectMin.x + points[i].t * (rectMax.x - rectMin.x);
+        const ImVec2 center(x, 0.5f * (rectMin.y + rectMax.y));
+        const ImU32 fillColor = ImGui::ColorConvertFloat4ToU32(points[i].color);
+        const ImU32 strokeColor = (i == selectedIndex) ? IM_COL32(255, 255, 255, 255) : IM_COL32(30, 30, 30, 255);
+        drawList->AddCircleFilled(center, radius, fillColor, 16);
+        drawList->AddCircle(center, radius + (i == selectedIndex ? 2.0f : 1.0f), strokeColor, 16, 2.0f);
+    }
+
+    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(points.size())) {
+        if (selectedIndex > 0 && selectedIndex + 1 < static_cast<int>(points.size())) {
+            ImGui::SetNextItemWidth(168.0f);
+            float selectedT = points[selectedIndex].t;
+            if (ImGui::SliderFloat("Position", &selectedT, points[selectedIndex - 1].t + 1.0e-4f,
+                                   points[selectedIndex + 1].t - 1.0e-4f, "%.3f")) {
+                points[selectedIndex].t = selectedT;
+                changed = true;
+            }
+        } else {
+            ImGui::TextDisabled("End points stay fixed at 0 and 1.");
+        }
+
+        float rgb[3] = {
+            points[selectedIndex].color.x,
+            points[selectedIndex].color.y,
+            points[selectedIndex].color.z
+        };
+        if (ImGui::ColorEdit3("RGB", rgb, ImGuiColorEditFlags_NoInputs)) {
+            points[selectedIndex].color.x = rgb[0];
+            points[selectedIndex].color.y = rgb[1];
+            points[selectedIndex].color.z = rgb[2];
+            changed = true;
+        }
+    }
+
+    if (ImGui::Button("Add point")) {
+        float insertT = 0.5f;
+        if (selectedIndex >= 0 && selectedIndex + 1 < static_cast<int>(points.size())) {
+            insertT = 0.5f * (points[selectedIndex].t + points[selectedIndex + 1].t);
+        }
+        const ImVec4 color = sampleColorMap(points, insertT);
+        points.push_back({insertT, color});
+        sanitizeColorMapControlPoints(points);
+        for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+            if (std::abs(points[i].t - insertT) < 1.0e-4f) {
+                selectedIndex = i;
+                break;
+            }
+        }
+        changed = true;
+    }
+    ImGui::SameLine();
+    const bool canDeletePoint = selectedIndex > 0 && selectedIndex + 1 < static_cast<int>(points.size());
+    if (!canDeletePoint) {
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Delete")) {
+        points.erase(points.begin() + selectedIndex);
+        selectedIndex = std::max(0, selectedIndex - 1);
+        changed = true;
+    }
+    if (!canDeletePoint) {
+        ImGui::EndDisabled();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) {
+        points = makeDefaultResultsColorMap();
+        selectedIndex = 0;
+        resetRequested = true;
+        changed = true;
+    }
+
+    sanitizeColorMapControlPoints(points);
+    return changed;
+}
 
 double distancePointToSegment2D(double px, double py,
                                 double ax, double ay,
@@ -1563,7 +1874,11 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                                 bool& vectorGlyphVisibilityChanged,
                                 double& manualMin,
                                 double& manualMax,
-                                bool& manualRangeChanged)
+                                bool& manualRangeChanged,
+                                std::vector<ColorMapControlPoint>& colorMapPoints,
+                                int& selectedColorMapPoint,
+                                bool& colorMapChanged,
+                                bool& colorMapReset)
 {
     const ImVec2 viewportMin = viewer.getViewportScreenMin();
     const ImVec2 viewportMax = viewer.getViewportScreenMax();
@@ -1730,6 +2045,12 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                 ImGui::SliderFloat("Height", &overlayState.scalarBarHeightPx, 60.0f, 260.0f, "%.0f px");
                 ImGui::SetNextItemWidth(168.0f);
                 ImGui::SliderFloat("Width", &overlayState.scalarBarWidthPx, 45.0f, 140.0f, "%.0f px");
+                ImGui::Separator();
+                colorMapChanged |= drawResultsColorMapEditor(colorMapPoints,
+                                                             selectedColorMapPoint,
+                                                             colorMapReset);
+                ImGui::TextDisabled("Auto-saved to %s",
+                                    resultsColorMapPresetPath().filename().string().c_str());
             }
         } else {
             ImGui::TextDisabled("No fields available");
@@ -2598,6 +2919,14 @@ int main(int argc, char* argv[])
           static int selectedField = 0;
           static int selectedFieldComponent = -2;
           static bool showVectorGlyphs = false;
+          static std::vector<ColorMapControlPoint> colorMapPoints = makeDefaultResultsColorMap();
+          static int selectedColorMapPoint = 0;
+          static bool colorMapPresetLoaded = false;
+          if (!colorMapPresetLoaded) {
+              loadResultsColorMapPreset(colorMapPoints);
+              sanitizeColorMapControlPoints(colorMapPoints);
+              colorMapPresetLoaded = true;
+          }
           auto clearResultsViewerTransientProps = [&]() {
               auto resultsRenderer = vtkViewer_res.getRenderer();
               if (resultsRenderer != nullptr) {
@@ -2819,16 +3148,26 @@ int main(int argc, char* argv[])
 	                  if (!mapper || !array)
 	                      return;
 
+                      vtkSmartPointer<vtkLookupTable> lut =
+                          buildResultsLookupTable(colorMapPoints, globalMin, globalMax);
+                      mapper->SetLookupTable(lut);
+
 	                  if (array->GetNumberOfComponents() == 3 && selectedFieldComponent == 3) {
 	                      resultFrame.setActiveScalarField(activeFieldName);
                         mapper->SetScalarRange(globalMin, globalMax);
                         mapper->ScalarVisibilityOn();
                         mapper->Update();
                         resultFrame.updateVectorGlyphs(activeFieldName, isCellField, showVectorGlyphs);
-	                      resultFrame.updateScalarBar(
-                            buildActiveFieldDisplayName(activeFieldName, array->GetNumberOfComponents(), selectedFieldComponent),
-                            globalMin,
-                            globalMax);
+                        const std::string scalarBarTitle =
+                            buildActiveFieldDisplayName(activeFieldName,
+                                                        array->GetNumberOfComponents(),
+                                                        selectedFieldComponent);
+                        if (vtkScalarBarActor* scalarBar = resultFrame.getScalarBarActor()) {
+                            scalarBar->SetLookupTable(lut);
+                            scalarBar->SetTitle(scalarBarTitle.c_str());
+                            scalarBar->SetVisibility(true);
+                            scalarBar->Modified();
+                        }
 	                      return;
 	                  }
 
@@ -2846,10 +3185,16 @@ int main(int argc, char* argv[])
 	                  mapper->ScalarVisibilityOn();
 	                  mapper->Update();
                     resultFrame.updateVectorGlyphs(activeFieldName, isCellField, showVectorGlyphs);
-	                  resultFrame.updateScalarBar(
-                        buildActiveFieldDisplayName(activeFieldName, array->GetNumberOfComponents(), selectedFieldComponent),
-                        globalMin,
-                        globalMax);
+                      const std::string scalarBarTitle =
+                          buildActiveFieldDisplayName(activeFieldName,
+                                                      array->GetNumberOfComponents(),
+                                                      selectedFieldComponent);
+                      if (vtkScalarBarActor* scalarBar = resultFrame.getScalarBarActor()) {
+                          scalarBar->SetLookupTable(lut);
+                          scalarBar->SetTitle(scalarBarTitle.c_str());
+                          scalarBar->SetVisibility(true);
+                          scalarBar->Modified();
+                      }
 	              };
 	              auto applyActiveFieldSelectionToAllFrames = [&]() {
 	                  if (!editor->getResults() || activeFieldName.empty())
@@ -3105,6 +3450,8 @@ int main(int argc, char* argv[])
                   bool componentChanged = false;
                   bool vectorGlyphVisibilityChanged = false;
                   bool manualRangeChanged = false;
+                  bool colorMapChanged = false;
+                  bool colorMapReset = false;
                   vtkDataArray* overlayActiveArray = getActiveArray(overlayFrame);
                   if (overlayActiveArray)
                       activeFieldComponents = overlayActiveArray->GetNumberOfComponents();
@@ -3130,7 +3477,11 @@ int main(int argc, char* argv[])
                                              vectorGlyphVisibilityChanged,
                                              manualMin,
                                              manualMax,
-                                             manualRangeChanged);
+                                             manualRangeChanged,
+                                             colorMapPoints,
+                                             selectedColorMapPoint,
+                                             colorMapChanged,
+                                             colorMapReset);
                   positionResultsScalarBar(vtkViewer_res, currentScalarBar, resultsPlaybackOverlayState);
 
                   if (fieldSelectionChanged &&
@@ -3172,6 +3523,16 @@ int main(int argc, char* argv[])
 	                  }
 
                     if (vectorGlyphVisibilityChanged) {
+                        applyActiveFieldSelectionToAllFrames();
+                        syncCurrentVectorFieldActor(overlayFrame);
+                        vtkViewer_res.render();
+                    }
+
+                    if (colorMapChanged) {
+                        if (colorMapReset) {
+                            selectedColorMapPoint = 0;
+                        }
+                        saveResultsColorMapPreset(colorMapPoints);
                         applyActiveFieldSelectionToAllFrames();
                         syncCurrentVectorFieldActor(overlayFrame);
                         vtkViewer_res.render();
