@@ -54,7 +54,9 @@
 #include <vtkLookupTable.h>
 #include <vtkPlane.h>
 #include <vtkProperty.h>
-#include <vtkSphereSource.h>
+#include <vtkCellArray.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
 
 
 #include "graphics/axis.h" //test
@@ -2299,23 +2301,6 @@ std::string buildActiveFieldDisplayName(const std::string& activeFieldName,
     return activeFieldName;
 }
 
-double computeProbeMarkerRadius(vtkUnstructuredGrid* mesh) {
-    if (mesh == nullptr) {
-        return 1.0;
-    }
-
-    double bounds[6];
-    mesh->GetBounds(bounds);
-    const double dx = bounds[1] - bounds[0];
-    const double dy = bounds[3] - bounds[2];
-    const double dz = bounds[5] - bounds[4];
-    const double diag = std::sqrt(dx * dx + dy * dy + dz * dz);
-    if (diag <= 1.0e-12) {
-        return 1.0;
-    }
-    return diag * 0.008;
-}
-
 vtkSmartPointer<vtkActor> buildProbeHighlightActor(ResultFrame& frame, const ResultProbeInfo& probe) {
     if (!probe.valid || frame.mesh == nullptr) {
         return nullptr;
@@ -2325,14 +2310,19 @@ vtkSmartPointer<vtkActor> buildProbeHighlightActor(ResultFrame& frame, const Res
         double point[3];
         frame.mesh->GetPoint(probe.pointId, point);
 
-        vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
-        sphere->SetCenter(point);
-        sphere->SetRadius(computeProbeMarkerRadius(frame.mesh));
-        sphere->SetThetaResolution(18);
-        sphere->SetPhiResolution(18);
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        points->InsertNextPoint(point);
+
+        vtkSmartPointer<vtkCellArray> verts = vtkSmartPointer<vtkCellArray>::New();
+        verts->InsertNextCell(1);
+        verts->InsertCellPoint(0);
+
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetVerts(verts);
 
         vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        mapper->SetInputConnection(sphere->GetOutputPort());
+        mapper->SetInputData(polyData);
 
         vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(mapper);
@@ -2340,6 +2330,10 @@ vtkSmartPointer<vtkActor> buildProbeHighlightActor(ResultFrame& frame, const Res
         actor->GetProperty()->SetAmbient(1.0);
         actor->GetProperty()->SetDiffuse(0.0);
         actor->GetProperty()->SetSpecular(0.0);
+        actor->GetProperty()->LightingOff();
+        actor->GetProperty()->SetRepresentationToPoints();
+        actor->GetProperty()->SetPointSize(11.0);
+        actor->GetProperty()->RenderPointsAsSpheresOn();
         actor->PickableOff();
         return actor;
     }
