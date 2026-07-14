@@ -42,6 +42,7 @@ private:
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
   bool tryPickGlobalOrigin(double x, double y, MeasurementPoint& outPoint) const;
+  bool tryPickGeometryEdge(double x, double y, MeasurementPoint& outPoint) const;
   bool tryPickPoint(double x, double y, MeasurementPoint& outPoint) const;
   void rebuildOverlay();
   void clearOverlay();

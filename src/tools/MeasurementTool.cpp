@@ -8,13 +8,17 @@
 
 #include "model/Model.h"
 #include "model/Mesh.h"
+#include "App/App.h"
 #include "Node.h"
 #include "Part.h"
 #include "VtkViewer.h"
+#include "geom/vtkOCCTGeom.h"
 
 #include <vtkActor.h>
+#include <vtkCellArray.h>
 #include <vtkDataSet.h>
 #include <vtkLineSource.h>
+#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderer.h>
@@ -228,6 +232,93 @@ bool MeasurementTool::tryPickGlobalOrigin(double x, double y, MeasurementPoint& 
   return true;
 }
 
+bool MeasurementTool::tryPickGeometryEdge(double x, double y, MeasurementPoint& outPoint) const
+{
+  if (m_viewer == nullptr || m_model == nullptr) {
+    return false;
+  }
+
+  double bestDist2 = 10.0 * 10.0;
+  bool found = false;
+
+  for (int p = 0; p < m_model->getPartCount(); ++p) {
+    Part* part = m_model->getPart(p);
+    if (part == nullptr || !part->isGeom()) {
+      continue;
+    }
+
+    vtkOCCTGeom* visual = getApp().getVisualForPart(part);
+    if (visual == nullptr || visual->actor == nullptr || visual->getPolydata() == nullptr) {
+      continue;
+    }
+    if (visual->actor->GetVisibility() == 0) {
+      continue;
+    }
+
+    vtkPolyData* polyData = visual->getPolydata();
+    vtkCellArray* lines = polyData->GetLines();
+    if (lines == nullptr || lines->GetNumberOfCells() <= 0) {
+      continue;
+    }
+
+    lines->InitTraversal();
+    vtkIdType numIds = 0;
+    const vtkIdType* ids = nullptr;
+    while (lines->GetNextCell(numIds, ids)) {
+      if (numIds < 2) {
+        continue;
+      }
+
+      for (vtkIdType i = 1; i < numIds; ++i) {
+        double p0[3] = {0.0, 0.0, 0.0};
+        double p1[3] = {0.0, 0.0, 0.0};
+        polyData->GetPoint(ids[i - 1], p0);
+        polyData->GetPoint(ids[i], p1);
+
+        double sx0 = 0.0;
+        double sy0 = 0.0;
+        double sx1 = 0.0;
+        double sy1 = 0.0;
+        if (!projectWorldToViewport({p0[0], p0[1], p0[2]}, sx0, sy0) ||
+            !projectWorldToViewport({p1[0], p1[1], p1[2]}, sx1, sy1)) {
+          continue;
+        }
+
+        const double vx = sx1 - sx0;
+        const double vy = sy1 - sy0;
+        const double segLen2 = vx * vx + vy * vy;
+        double t = 0.0;
+        if (segLen2 > 1.0e-12) {
+          t = ((x - sx0) * vx + (y - sy0) * vy) / segLen2;
+          t = std::max(0.0, std::min(1.0, t));
+        }
+
+        const double closestX = sx0 + t * vx;
+        const double closestY = sy0 + t * vy;
+        const double dx = closestX - x;
+        const double dy = closestY - y;
+        const double dist2 = dx * dx + dy * dy;
+        if (dist2 > bestDist2) {
+          continue;
+        }
+
+        bestDist2 = dist2;
+        found = true;
+        outPoint.node = nullptr;
+        outPoint.pointId = -1;
+        outPoint.isGlobalOrigin = false;
+        outPoint.world = {
+          p0[0] + (p1[0] - p0[0]) * t,
+          p0[1] + (p1[1] - p0[1]) * t,
+          p0[2] + (p1[2] - p0[2]) * t
+        };
+      }
+    }
+  }
+
+  return found;
+}
+
 Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistancePixels) const
 {
   if (m_model == nullptr) {
@@ -302,6 +393,10 @@ Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistanceP
 bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoint) const
 {
   if (tryPickGlobalOrigin(x, y, outPoint)) {
+    return true;
+  }
+
+  if (tryPickGeometryEdge(x, y, outPoint)) {
     return true;
   }
 
