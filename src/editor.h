@@ -129,6 +129,8 @@ public:
   void drawSelectionOverlay() const;
   void handleMeasurementInteraction();
   void drawMeasurementOverlay() const;
+  bool isGlobalOriginSelected() const { return m_global_origin_selected; }
+  void clearGlobalOriginSelection();
   bool isMeasurementEnabled() const;
   void setMeasurementEnabled(bool enabled);
   virtual void RenderPass(){}; //ADD ANOTHER CALLBACK
@@ -149,7 +151,11 @@ public:
                           double angleDeg,
                           double axisDirX,
                           double axisDirY,
-                          double axisDirZ);
+                          double axisDirZ,
+                          bool useCustomPivot = false,
+                          double pivotX = 0.0,
+                          double pivotY = 0.0,
+                          double pivotZ = 0.0);
   bool splitPartGeometryWithPlane(Part* part,
                                   double originX,
                                   double originY,
@@ -254,6 +260,8 @@ protected:
   bool isSelectorInteractionEnabled() const;
   bool shouldDrawSelectionOverlay() const;
   bool handleMeshSeedInteraction();
+  bool trySelectGlobalOriginAt(double x, double y);
+  void syncGlobalOriginSelectionHighlight();
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   bool projectElementCentroidToViewport(Element* element, double& x, double& y) const;
   Mesh* findResultViewerTargetMesh() const;
@@ -467,6 +475,7 @@ protected:
   bool m_show_all_element_labels = false;
   bool m_show_all_result_node_labels = false;
   bool m_show_all_result_element_labels = false;
+  bool m_global_origin_selected = false;
   enum class SidebarTab {
     Model,
     Results,

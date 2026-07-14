@@ -40,6 +40,8 @@
 #include <GLFW/glfw3.h>
 #include <vtkCamera.h>
 #include <vtkPNGWriter.h>
+#include <vtkProperty.h>
+#include <vtkTextProperty.h>
 #include <vtkWindowToImageFilter.h>
 
 //#include <vtkArrowSource.h>
@@ -107,8 +109,14 @@ VtkViewer::VtkViewer(const VtkViewer& vtkViewer)
 	interactorStyle(vtkViewer.interactorStyle), renderer(vtkViewer.renderer), tex(vtkViewer.tex),
 	firstRender(vtkViewer.firstRender){
   axesActor = vtkViewer.axesActor;
+  globalOriginSource = vtkViewer.globalOriginSource;
+  globalOriginMapper = vtkViewer.globalOriginMapper;
+  globalOriginActor = vtkViewer.globalOriginActor;
+  globalOriginLabelActor = vtkViewer.globalOriginLabelActor;
   projectionMode = vtkViewer.projectionMode;
   axesVisible = vtkViewer.axesVisible;
+  globalOriginVisible = vtkViewer.globalOriginVisible;
+  globalOriginSelected = vtkViewer.globalOriginSelected;
 }
 
 VtkViewer::VtkViewer(VtkViewer&& vtkViewer) noexcept 
@@ -116,8 +124,14 @@ VtkViewer::VtkViewer(VtkViewer&& vtkViewer) noexcept
 	interactor(std::move(vtkViewer.interactor)), interactorStyle(std::move(vtkViewer.interactorStyle)),
 	renderer(std::move(vtkViewer.renderer)), tex(vtkViewer.tex), firstRender(vtkViewer.firstRender){
   axesActor = std::move(vtkViewer.axesActor);
+  globalOriginSource = std::move(vtkViewer.globalOriginSource);
+  globalOriginMapper = std::move(vtkViewer.globalOriginMapper);
+  globalOriginActor = std::move(vtkViewer.globalOriginActor);
+  globalOriginLabelActor = std::move(vtkViewer.globalOriginLabelActor);
   projectionMode = vtkViewer.projectionMode;
   axesVisible = vtkViewer.axesVisible;
+  globalOriginVisible = vtkViewer.globalOriginVisible;
+  globalOriginSelected = vtkViewer.globalOriginSelected;
 }
 
 VtkViewer::~VtkViewer(){
@@ -139,8 +153,14 @@ VtkViewer& VtkViewer::operator=(const VtkViewer& vtkViewer){
 	tex = vtkViewer.tex;
 	firstRender = vtkViewer.firstRender;
   axesActor = vtkViewer.axesActor;
+  globalOriginSource = vtkViewer.globalOriginSource;
+  globalOriginMapper = vtkViewer.globalOriginMapper;
+  globalOriginActor = vtkViewer.globalOriginActor;
+  globalOriginLabelActor = vtkViewer.globalOriginLabelActor;
   projectionMode = vtkViewer.projectionMode;
   axesVisible = vtkViewer.axesVisible;
+  globalOriginVisible = vtkViewer.globalOriginVisible;
+  globalOriginSelected = vtkViewer.globalOriginSelected;
 	return *this;
 }
 
@@ -183,6 +203,34 @@ void VtkViewer::init(){
   axesActor->SetPickable(0);
   axesActor->SetVisibility(0);
   renderer->AddActor(axesActor);
+
+  globalOriginSource = vtkSmartPointer<vtkSphereSource>::New();
+  globalOriginSource->SetCenter(0.0, 0.0, 0.0);
+  globalOriginSource->SetRadius(0.03);
+  globalOriginSource->SetThetaResolution(24);
+  globalOriginSource->SetPhiResolution(24);
+
+  globalOriginMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  globalOriginMapper->SetInputConnection(globalOriginSource->GetOutputPort());
+
+  globalOriginActor = vtkSmartPointer<vtkActor>::New();
+  globalOriginActor->SetMapper(globalOriginMapper);
+  globalOriginActor->SetPickable(1);
+  globalOriginActor->SetDragable(1);
+  globalOriginActor->SetVisibility(0);
+  globalOriginActor->GetProperty()->SetColor(1.0, 0.78, 0.16);
+  globalOriginActor->GetProperty()->LightingOff();
+  globalOriginActor->GetProperty()->SetAmbient(1.0);
+  renderer->AddActor(globalOriginActor);
+
+  globalOriginLabelActor = vtkSmartPointer<vtkBillboardTextActor3D>::New();
+  globalOriginLabelActor->SetPosition(0.05, 0.05, 0.05);
+  globalOriginLabelActor->SetInput("O (0,0,0)");
+  globalOriginLabelActor->PickableOff();
+  globalOriginLabelActor->SetVisibility(0);
+  globalOriginLabelActor->GetTextProperty()->SetFontSize(16);
+  globalOriginLabelActor->GetTextProperty()->SetColor(1.0, 0.92, 0.55);
+  renderer->AddActor(globalOriginLabelActor);
 
 	if (!renderer || !interactorStyle || !renderWindow || !interactor){
 		throw VtkViewerError("Couldn't initialize VtkViewer");
@@ -313,6 +361,35 @@ void VtkViewer::setAxesVisible(bool visible){
   axesVisible = visible;
   if (axesActor) {
     axesActor->SetVisibility(visible ? 1 : 0);
+  }
+}
+
+void VtkViewer::setGlobalOriginVisible(bool visible)
+{
+  globalOriginVisible = visible;
+  if (globalOriginActor) {
+    globalOriginActor->SetVisibility(visible ? 1 : 0);
+  }
+  if (globalOriginLabelActor) {
+    globalOriginLabelActor->SetVisibility(visible ? 1 : 0);
+  }
+}
+
+void VtkViewer::setGlobalOriginSelected(bool selected)
+{
+  globalOriginSelected = selected;
+  if (globalOriginActor) {
+    if (selected) {
+      globalOriginActor->GetProperty()->SetColor(1.0, 0.96, 0.55);
+      globalOriginActor->GetProperty()->SetEdgeVisibility(1);
+      globalOriginActor->GetProperty()->SetLineWidth(2.0);
+    } else {
+      globalOriginActor->GetProperty()->SetColor(1.0, 0.78, 0.16);
+      globalOriginActor->GetProperty()->SetEdgeVisibility(0);
+    }
+  }
+  if (globalOriginLabelActor) {
+    globalOriginLabelActor->SetInput(selected ? "O* (0,0,0)" : "O (0,0,0)");
   }
 }
 

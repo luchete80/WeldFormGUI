@@ -50,6 +50,30 @@
 namespace {
 constexpr double kPi = 3.14159265358979323846;
 
+double3 normalizeOrDefault(const double3& direction, const double3& fallback)
+{
+    const double len = length(direction);
+    if (len <= 1.0e-12) {
+        return fallback;
+    }
+
+    return direction / len;
+}
+
+void resetLocalAxes(double3& axisX, double3& axisY, double3& axisZ)
+{
+    axisX = make_double3(1.0, 0.0, 0.0);
+    axisY = make_double3(0.0, 1.0, 0.0);
+    axisZ = make_double3(0.0, 0.0, 1.0);
+}
+
+double3 transformDirection(const gp_Trsf& transform, const double3& direction)
+{
+    gp_Vec vector(direction.x, direction.y, direction.z);
+    vector.Transform(transform);
+    return make_double3(vector.X(), vector.Y(), vector.Z());
+}
+
 gp_Dir makeDirectionOrDefault(double x, double y, double z)
 {
     const double norm = std::sqrt(x * x + y * y + z * z);
@@ -105,6 +129,16 @@ bool extractFiniteBounds(const TopoDS_Shape& shape,
     bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
     return std::isfinite(xMin) && std::isfinite(yMin) && std::isfinite(zMin) &&
            std::isfinite(xMax) && std::isfinite(yMax) && std::isfinite(zMax);
+}
+
+void updateLocalAxesFromRotation(const gp_Trsf& transform,
+                                 double3& axisX,
+                                 double3& axisY,
+                                 double3& axisZ)
+{
+    axisX = normalizeOrDefault(transformDirection(transform, axisX), make_double3(1.0, 0.0, 0.0));
+    axisY = normalizeOrDefault(transformDirection(transform, axisY), make_double3(0.0, 1.0, 0.0));
+    axisZ = normalizeOrDefault(transformDirection(transform, axisZ), make_double3(0.0, 0.0, 1.0));
 }
 }
 
@@ -210,6 +244,7 @@ bool Geom::Rotate(double angleDeg,
     }
 
     *m_shape = rotatedShape;
+    updateLocalAxesFromRotation(tr, m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -253,6 +288,7 @@ bool Geom::RotateAroundPoint(double angleDeg,
     m_origin.x = originPoint.X();
     m_origin.y = originPoint.Y();
     m_origin.z = originPoint.Z();
+    updateLocalAxesFromRotation(tr, m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -283,6 +319,7 @@ bool Geom::SetShape(const TopoDS_Shape& shape)
 
     delete m_shape;
     m_shape = new TopoDS_Shape(shape);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -448,6 +485,7 @@ bool Geom::SplitByPlane(double originX,
     TopoDS_Face face = BRepBuilderAPI_MakeFace(wire.Wire());
     // Crear face a partir del wire
     m_shape = new TopoDS_Shape (face);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
   }
 
 void Geom::LoadCylinder(double radius,
@@ -469,6 +507,7 @@ void Geom::LoadCylinder(double radius,
     delete m_shape;
     m_shape = new TopoDS_Shape(cyl);
     m_origin = make_double3(0.0, 0.0, 0.0);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
 }
 
 void Geom::LoadBox(double dx, double dy, double dz)
@@ -477,6 +516,7 @@ void Geom::LoadBox(double dx, double dy, double dz)
     delete m_shape;
     m_shape = new TopoDS_Shape(box);
     m_origin = make_double3(0.0, 0.0, 0.0);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
 }
 
 bool Geom::LoadRevolvedSTEPProfile(const std::string& fname,
@@ -604,6 +644,7 @@ bool Geom::LoadRevolvedShape(const TopoDS_Shape& profileShape,
     delete m_shape;
     m_shape = new TopoDS_Shape(revolvedShape);
     m_origin = make_double3(axisOriginX, axisOriginY, axisOriginZ);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -652,6 +693,7 @@ bool Geom::LoadExtrudedShape(const TopoDS_Shape& profileShape,
     delete m_shape;
     m_shape = new TopoDS_Shape(extrudedShape);
     m_origin = make_double3(0.0, 0.0, 0.0);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -667,6 +709,7 @@ void Geom::LoadLine(double dx, double dy, double ox, double oy) {
 
     // Guardar como shape
     m_shape = new TopoDS_Shape(edge.Shape());
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
 }
 
 bool Geom::LoadClosedPolylineFace(const std::vector<double3>& points)
@@ -704,6 +747,7 @@ bool Geom::LoadClosedPolylineFace(const std::vector<double3>& points)
     delete m_shape;
     m_shape = new TopoDS_Shape(face);
     m_origin = points.front();
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -769,6 +813,7 @@ bool Geom::LoadSTEP(const std::string& fname) {
     m_shape = new TopoDS_Shape(shape);
     m_fileName = fname;
     m_origin = make_double3(0.0, 0.0, 0.0);
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     return true;
 }
 
@@ -840,6 +885,7 @@ bool Geom::LoadSTEP(const std::string& fname, double targetOriginX, double targe
     m_origin.x = targetOriginX;
     m_origin.y = targetOriginY;
     m_origin.z = targetOriginZ;
+    resetLocalAxes(m_localAxisX, m_localAxisY, m_localAxisZ);
     
     return true;
 }

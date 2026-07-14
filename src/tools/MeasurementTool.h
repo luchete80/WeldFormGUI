@@ -34,12 +34,14 @@ private:
   struct MeasurementPoint {
     Node* node = nullptr;
     vtkIdType pointId = -1;
+    bool isGlobalOrigin = false;
     std::array<double, 3> world = {0.0, 0.0, 0.0};
   };
 
   bool projectWorldToViewport(const std::array<double, 3>& world, double& x, double& y) const;
   bool projectNodeToViewport(Node* node, double& x, double& y) const;
   Node* pickClosestNodeAt(double x, double y, double maxDistancePixels = 12.0) const;
+  bool tryPickGlobalOrigin(double x, double y, MeasurementPoint& outPoint) const;
   bool tryPickPoint(double x, double y, MeasurementPoint& outPoint) const;
   void rebuildOverlay();
   void clearOverlay();

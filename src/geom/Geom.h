@@ -12,14 +12,24 @@ protected:
   TopoDS_Shape *m_shape;       // Lógica CAD
   std::string m_fileName;   // el STEP/IGES original
   double3 m_origin;
+  double3 m_localAxisX;
+  double3 m_localAxisY;
+  double3 m_localAxisZ;
   bool m_preferHexaTransfinite = false;
   
   
 public:
-  Geom() : m_shape(nullptr), m_origin(make_double3(0.0, 0.0, 0.0)) {}
+  Geom() : m_shape(nullptr),
+           m_origin(make_double3(0.0, 0.0, 0.0)),
+           m_localAxisX(make_double3(1.0, 0.0, 0.0)),
+           m_localAxisY(make_double3(0.0, 1.0, 0.0)),
+           m_localAxisZ(make_double3(0.0, 0.0, 1.0)) {}
   Geom(std::string fname){
     m_shape = nullptr;
     m_origin = make_double3(0.0, 0.0, 0.0);
+    m_localAxisX = make_double3(1.0, 0.0, 0.0);
+    m_localAxisY = make_double3(0.0, 1.0, 0.0);
+    m_localAxisZ = make_double3(0.0, 0.0, 1.0);
     m_fileName = fname;
     LoadSTEP(fname);}
   void readFile(std::string file){}  
@@ -89,6 +99,9 @@ public:
   const double3 & getOrigin()const{return m_origin;}
   void setOrigin(const double3 &origin){m_origin = origin;}
   void setOrigin(double x, double y, double z){m_origin = make_double3(x, y, z);}
+  double3 getLocalAxisX() const { return m_localAxisX; }
+  double3 getLocalAxisY() const { return m_localAxisY; }
+  double3 getLocalAxisZ() const { return m_localAxisZ; }
   bool getMassCenter(double& centerX, double& centerY, double& centerZ) const;
   bool getBoundingBoxCenter(double& centerX, double& centerY, double& centerZ) const;
   bool SplitByPlane(double originX,

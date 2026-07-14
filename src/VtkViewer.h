@@ -3,9 +3,11 @@
 #include <iostream>
 #include <string>
 #include <exception>
+#include <array>
 
 #include "imgui.h"
 
+#include <vtkBillboardTextActor3D.h>
 #include <vtkProp.h>
 #include <vtkPropCollection.h>
 #include <vtkSmartPointer.h>
@@ -23,6 +25,7 @@
 //#include <vtkArrowSource.h>
 #include <vtkNamedColors.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkSphereSource.h>
 
 #include "vtkOCCTReader.h" //If do not treat geometry
 
@@ -66,8 +69,14 @@ private:
   ImVec2 viewportScreenMax = ImVec2(0, 0);
   bool viewportItemHovered = false;
   vtkSmartPointer<vtkAxesActor> axesActor;
+  vtkSmartPointer<vtkSphereSource> globalOriginSource;
+  vtkSmartPointer<vtkPolyDataMapper> globalOriginMapper;
+  vtkSmartPointer<vtkActor> globalOriginActor;
+  vtkSmartPointer<vtkBillboardTextActor3D> globalOriginLabelActor;
   ProjectionMode projectionMode = ProjectionMode::Perspective;
   bool axesVisible = false;
+  bool globalOriginVisible = false;
+  bool globalOriginSelected = false;
   
   vtkSmartPointer<vtkActor> currentActor = nullptr;
 
@@ -97,6 +106,12 @@ public:
 	  ProjectionMode getProjectionMode() const { return projectionMode; }
 	  void setAxesVisible(bool visible);
 	  bool areAxesVisible() const { return axesVisible; }
+    void setGlobalOriginVisible(bool visible);
+    bool isGlobalOriginVisible() const { return globalOriginVisible; }
+    void setGlobalOriginSelected(bool selected);
+    bool isGlobalOriginSelected() const { return globalOriginSelected; }
+    std::array<double, 3> getGlobalOriginWorldPoint() const { return {0.0, 0.0, 0.0}; }
+    vtkActor* getGlobalOriginActor() const { return globalOriginActor.GetPointer(); }
 	  void orientCameraToAxis(int axis);
 	  bool saveScreenshot() const;
 	public:

@@ -2407,6 +2407,18 @@ void Editor::handleSelectionInteraction()
   const bool hovered = viewer->isViewportHovered();
   const ImVec2 localMouse(io.MousePos.x - viewportMin.x, io.MousePos.y - viewportMin.y);
 
+  if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    if (trySelectGlobalOriginAt(localMouse.x, localMouse.y)) {
+      if (m_selector.isBoxSelecting()) {
+        m_selector.finishBoxSelection();
+      }
+      return;
+    }
+    if (m_global_origin_selected) {
+      clearGlobalOriginSelection();
+    }
+  }
+
   if (m_selector.isPickMode()) {
     if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
       if (m_selector.isElementTarget()) {
@@ -2535,6 +2547,50 @@ bool Editor::handleMeshSeedInteraction()
   return true;
 }
 
+bool Editor::trySelectGlobalOriginAt(double x, double y)
+{
+  if (viewer == nullptr || !viewer->isGlobalOriginVisible()) {
+    return false;
+  }
+
+  auto renderer = viewer->getRenderer();
+  if (renderer == nullptr) {
+    return false;
+  }
+
+  renderer->SetWorldPoint(0.0, 0.0, 0.0, 1.0);
+  renderer->WorldToDisplay();
+
+  double display[3] = {0.0, 0.0, 0.0};
+  renderer->GetDisplayPoint(display);
+  if (display[2] < 0.0 || display[2] > 1.0) {
+    return false;
+  }
+
+  const double sx = display[0];
+  const double sy = static_cast<double>(viewer->getViewportHeight()) - display[1];
+  const double dx = sx - x;
+  const double dy = sy - y;
+  if ((dx * dx + dy * dy) > 14.0 * 14.0) {
+    return false;
+  }
+
+  m_global_origin_selected = true;
+  syncGlobalOriginSelectionHighlight();
+  cout << "Selected global origin (0,0,0)" << endl;
+  return true;
+}
+
+void Editor::syncGlobalOriginSelectionHighlight()
+{
+  if (model_viewer != nullptr) {
+    model_viewer->setGlobalOriginSelected(m_global_origin_selected);
+  }
+  if (res_viewer != nullptr && res_viewer != model_viewer) {
+    res_viewer->setGlobalOriginSelected(m_global_origin_selected);
+  }
+}
+
 void Editor::drawSelectionOverlay() const
 {
   if (m_moving_mode || viewer == nullptr) {
@@ -2618,6 +2674,33 @@ void Editor::drawSelectionOverlay() const
     const ImVec2 end(viewportMin.x + m_selector.getBoxEnd().x, viewportMin.y + m_selector.getBoxEnd().y);
     drawList->AddRectFilled(start, end, IM_COL32(70, 160, 255, 35));
     drawList->AddRect(start, end, IM_COL32(70, 160, 255, 255), 0.0f, 0, 2.0f);
+  }
+
+  if (m_global_origin_selected && viewer != nullptr && viewer->isGlobalOriginVisible()) {
+    auto renderer = viewer->getRenderer();
+    if (renderer != nullptr) {
+      renderer->SetWorldPoint(0.0, 0.0, 0.0, 1.0);
+      renderer->WorldToDisplay();
+
+      double display[3] = {0.0, 0.0, 0.0};
+      renderer->GetDisplayPoint(display);
+      if (display[2] >= 0.0 && display[2] <= 1.0) {
+        const float x = static_cast<float>(display[0]);
+        const float y = static_cast<float>(viewer->getViewportHeight() - display[1]);
+        drawList->AddCircle(
+          ImVec2(viewportMin.x + x, viewportMin.y + y),
+          14.0f,
+          IM_COL32(255, 240, 120, 255),
+          0,
+          2.0f
+        );
+        drawList->AddText(
+          ImVec2(viewportMin.x + x + 12.0f, viewportMin.y + y - 18.0f),
+          IM_COL32(255, 240, 120, 255),
+          "Origin"
+        );
+      }
+    }
   }
 
   if (showAllNodeLabels) {
@@ -2902,6 +2985,16 @@ void Editor::drawMeasurementOverlay() const
 bool Editor::isMeasurementEnabled() const
 {
   return m_measurement_tool != nullptr && m_measurement_tool->isEnabled();
+}
+
+void Editor::clearGlobalOriginSelection()
+{
+  if (!m_global_origin_selected) {
+    return;
+  }
+
+  m_global_origin_selected = false;
+  syncGlobalOriginSelectionHighlight();
 }
 
 void Editor::setMeasurementEnabled(bool enabled)
@@ -3671,7 +3764,11 @@ bool Editor::rotatePartGeometry(Part* part,
                                 double angleDeg,
                                 double axisDirX,
                                 double axisDirY,
-                                double axisDirZ)
+                                double axisDirZ,
+                                bool useCustomPivot,
+                                double pivotX,
+                                double pivotY,
+                                double pivotZ)
 {
   if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
     cout << "Rotate is only available for geometry parts." << endl;
@@ -3688,15 +3785,23 @@ bool Editor::rotatePartGeometry(Part* part,
                                                    rotationCenter[1],
                                                    rotationCenter[2]);
   }
-  const bool rotated = hasRotationCenter
+  const bool rotated = useCustomPivot
     ? geom->RotateAroundPoint(angleDeg,
                               axisDirX,
                               axisDirY,
                               axisDirZ,
-                              rotationCenter[0],
-                              rotationCenter[1],
-                              rotationCenter[2])
-    : geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ);
+                              pivotX,
+                              pivotY,
+                              pivotZ)
+    : (hasRotationCenter
+        ? geom->RotateAroundPoint(angleDeg,
+                                  axisDirX,
+                                  axisDirY,
+                                  axisDirZ,
+                                  rotationCenter[0],
+                                  rotationCenter[1],
+                                  rotationCenter[2])
+        : geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ));
   if (!rotated) {
     return false;
   }
@@ -6795,28 +6900,34 @@ void Editor::drawGui() {
             ImGui::Combo("Axis", &rotate_axis,
                          rotate_axis_items,
                          IM_ARRAYSIZE(rotate_axis_items));
-            ImGui::TextDisabled("Pivot: part center");
+            ImGui::TextDisabled("%s",
+                                m_global_origin_selected
+                                  ? "Pivot: global origin (0,0,0)"
+                                  : "Pivot: part center");
 
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 bool close_popup = true;
                 if (rotate_part != nullptr) {
-                    double axis_dir_x = 0.0;
-                    double axis_dir_y = 0.0;
-                    double axis_dir_z = 1.0;
+                    double3 axis_dir = make_double3(0.0, 0.0, 1.0);
+                    Geom* geom = rotate_part->getGeom();
                     switch (rotate_axis) {
-                      case 0: axis_dir_x = 1.0; break;
-                      case 1: axis_dir_x = -1.0; break;
-                      case 2: axis_dir_y = 1.0; break;
-                      case 3: axis_dir_y = -1.0; break;
-                      case 4: axis_dir_z = 1.0; break;
-                      case 5: axis_dir_z = -1.0; break;
+                      case 0: axis_dir = geom->getLocalAxisX(); break;
+                      case 1: axis_dir = -1.0 * geom->getLocalAxisX(); break;
+                      case 2: axis_dir = geom->getLocalAxisY(); break;
+                      case 3: axis_dir = -1.0 * geom->getLocalAxisY(); break;
+                      case 4: axis_dir = geom->getLocalAxisZ(); break;
+                      case 5: axis_dir = -1.0 * geom->getLocalAxisZ(); break;
                       default: break;
                     }
                     close_popup = rotatePartGeometry(rotate_part,
                                                      rotate_angle_deg,
-                                                     axis_dir_x,
-                                                     axis_dir_y,
-                                                     axis_dir_z);
+                                                     axis_dir.x,
+                                                     axis_dir.y,
+                                                     axis_dir.z,
+                                                     m_global_origin_selected,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0);
                 }
                 if (close_popup) {
                     rotate_part = nullptr;

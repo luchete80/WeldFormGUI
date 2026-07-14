@@ -164,6 +164,7 @@ struct ModelViewportOverlayState {
     ModelDisplayMode displayMode = ModelDisplayMode::Surface;
     bool showEdges = true;
     bool axesVisible = false;
+    bool globalOriginVisible = false;
     bool orthographic = false;
 };
 
@@ -1754,6 +1755,14 @@ void drawViewportOverlay(VtkViewer& viewer,
                 state.axesVisible = !state.axesVisible;
                 viewer.setAxesVisible(state.axesVisible);
             }
+            ImGui::SameLine();
+            if (drawToolbarButton("O", state.globalOriginVisible, "Global origin")) {
+                state.globalOriginVisible = !state.globalOriginVisible;
+                viewer.setGlobalOriginVisible(state.globalOriginVisible);
+                if (!state.globalOriginVisible && editor != nullptr) {
+                    editor->clearGlobalOriginSelection();
+                }
+            }
         }
 
         drawOverlaySeparator();
@@ -1853,6 +1862,7 @@ void drawViewportOverlay(VtkViewer& viewer,
         : VtkViewer::ProjectionMode::Perspective);
     if (allowAxes) {
         viewer.setAxesVisible(state.axesVisible);
+        viewer.setGlobalOriginVisible(state.globalOriginVisible);
     }
 }
 

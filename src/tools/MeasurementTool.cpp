@@ -113,7 +113,11 @@ void MeasurementTool::drawOverlay() const
     drawList->AddCircle(center, 9.0f, IM_COL32(255, 220, 80, 255), 0, 2.0f);
 
     char tag[8];
-    std::snprintf(tag, sizeof(tag), "%c", static_cast<char>('A' + i));
+    if (m_points[i].isGlobalOrigin) {
+      std::snprintf(tag, sizeof(tag), "O");
+    } else {
+      std::snprintf(tag, sizeof(tag), "%c", static_cast<char>('A' + i));
+    }
     drawList->AddText(ImVec2(center.x + 10.0f, center.y - 16.0f),
                       IM_COL32(255, 230, 140, 255), tag);
   }
@@ -198,6 +202,32 @@ bool MeasurementTool::projectNodeToViewport(Node* node, double& x, double& y) co
   return projectWorldToViewport({pos.x, pos.y, pos.z}, x, y);
 }
 
+bool MeasurementTool::tryPickGlobalOrigin(double x, double y, MeasurementPoint& outPoint) const
+{
+  if (m_viewer == nullptr || !m_viewer->isGlobalOriginVisible()) {
+    return false;
+  }
+
+  double sx = 0.0;
+  double sy = 0.0;
+  if (!projectWorldToViewport(m_viewer->getGlobalOriginWorldPoint(), sx, sy)) {
+    return false;
+  }
+
+  const double dx = sx - x;
+  const double dy = sy - y;
+  const double dist2 = dx * dx + dy * dy;
+  if (dist2 > 14.0 * 14.0) {
+    return false;
+  }
+
+  outPoint.node = nullptr;
+  outPoint.pointId = -1;
+  outPoint.isGlobalOrigin = true;
+  outPoint.world = m_viewer->getGlobalOriginWorldPoint();
+  return true;
+}
+
 Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistancePixels) const
 {
   if (m_model == nullptr) {
@@ -271,6 +301,10 @@ Node* MeasurementTool::pickClosestNodeAt(double x, double y, double maxDistanceP
 
 bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoint) const
 {
+  if (tryPickGlobalOrigin(x, y, outPoint)) {
+    return true;
+  }
+
   if (m_target_data_set != nullptr) {
     vtkIdType closestPointId = -1;
     double bestDist2 = 12.0 * 12.0;
@@ -301,6 +335,7 @@ bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoin
 
     outPoint.node = nullptr;
     outPoint.pointId = closestPointId;
+    outPoint.isGlobalOrigin = false;
     return true;
   }
 
@@ -312,6 +347,7 @@ bool MeasurementTool::tryPickPoint(double x, double y, MeasurementPoint& outPoin
   const Vector3f& pos = node->getPos();
   outPoint.node = node;
   outPoint.pointId = -1;
+  outPoint.isGlobalOrigin = false;
   outPoint.world = {pos.x, pos.y, pos.z};
   return true;
 }
