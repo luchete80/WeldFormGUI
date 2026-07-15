@@ -22,6 +22,7 @@ void RemeshDialog::InitFromModel(Model* model)
   m_maxFrac = remesh.maxFrac;
   m_epsRef = remesh.epsRef;
   m_beta = remesh.beta;
+  m_hausdorffTolerance = remesh.hausdorffTolerance;
   m_type = remesh.type;
   m_refineOnlyBoundary = remesh.refineOnlyBoundary;
   m_boundaryLayers = remesh.boundaryLayers;
@@ -57,6 +58,11 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
     ImGui::InputDouble("Max Frac", &m_maxFrac, 0.0, 0.0, "%.6g");
     ImGui::InputDouble("Eps Ref", &m_epsRef, 0.0, 0.0, "%.6g");
     ImGui::InputDouble("Beta", &m_beta, 0.0, 0.0, "%.6g");
+    ImGui::InputDouble("Hausdorff Tolerance (0 = 0.50*h0)",
+                       &m_hausdorffTolerance, 0.0, 0.0, "%.6g");
+    if (m_hausdorffTolerance < 0.0) {
+      m_hausdorffTolerance = 0.0;
+    }
     ImGui::InputInt("Type", &m_type);
     ImGui::Checkbox("Refine Only On Boundary", &m_refineOnlyBoundary);
     ImGui::BeginDisabled(!m_refineOnlyBoundary);
@@ -97,6 +103,7 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
       remesh.maxFrac = m_maxFrac;
       remesh.epsRef = m_epsRef;
       remesh.beta = m_beta;
+      remesh.hausdorffTolerance = m_hausdorffTolerance;
       remesh.type = m_type;
       remesh.refineOnlyBoundary = m_refineOnlyBoundary;
       remesh.boundaryLayers = m_boundaryLayers < 0 ? 0 : m_boundaryLayers;

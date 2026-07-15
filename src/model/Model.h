@@ -67,6 +67,7 @@ struct RemeshingSettings {
   double maxFrac = 2.0;
   double epsRef = 1.0;
   double beta = 4.0;
+  double hausdorffTolerance = 0.0; // 0: solver default (0.50*h0)
   int type = 0;
   bool refineOnlyBoundary = false;
   int boundaryLayers = 2;

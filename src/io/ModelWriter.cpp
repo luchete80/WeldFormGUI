@@ -534,6 +534,7 @@ void ModelWriter::writeToFile(std::string fname){
     m_json["Remeshing"]["maxFrac"] = remeshing.maxFrac;
     m_json["Remeshing"]["epsRef"] = remeshing.epsRef;
     m_json["Remeshing"]["beta"] = remeshing.beta;
+    m_json["Remeshing"]["hausdorffTolerance"] = remeshing.hausdorffTolerance;
     m_json["Remeshing"]["type"] = remeshing.type;
     m_json["Remeshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
     m_json["Remeshing"]["boundaryLayers"] = remeshing.boundaryLayers;

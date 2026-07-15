@@ -142,6 +142,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
         settings.maxFrac = remeshing.value("maxFrac", settings.maxFrac);
         settings.epsRef = remeshing.value("epsRef", settings.epsRef);
         settings.beta = remeshing.value("beta", settings.beta);
+        settings.hausdorffTolerance = remeshing.value("hausdorffTolerance", settings.hausdorffTolerance);
         settings.type = remeshing.value("type", settings.type);
         settings.refineOnlyBoundary = remeshing.value("refineOnlyBoundary", settings.refineOnlyBoundary);
         settings.boundaryLayers = std::max(0, remeshing.value("boundaryLayers", settings.boundaryLayers));

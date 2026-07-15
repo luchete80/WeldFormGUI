@@ -187,6 +187,7 @@ void readMeshing(const json& root, Model* model)
   settings.maxFrac = meshing.value("maxFrac", settings.maxFrac);
   settings.epsRef = meshing.value("epsRef", settings.epsRef);
   settings.beta = meshing.value("beta", settings.beta);
+  settings.hausdorffTolerance = meshing.value("hausdorffTolerance", settings.hausdorffTolerance);
   settings.type = meshing.value("type", settings.type);
   settings.refineOnlyBoundary = meshing.value("refineOnlyBoundary", settings.refineOnlyBoundary);
   settings.boundaryLayers = std::max(0, meshing.value("boundaryLayers", settings.boundaryLayers));

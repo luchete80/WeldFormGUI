@@ -19,6 +19,7 @@ struct RemeshDialog {
   double m_maxFrac = 2.0;
   double m_epsRef = 1.0;
   double m_beta = 4.0;
+  double m_hausdorffTolerance = 0.0;
   int m_type = 0;
   bool m_refineOnlyBoundary = false;
   int m_boundaryLayers = 2;

@@ -441,6 +441,7 @@ void InputWriter::writeToFile(std::string fname) {
   m_json["Meshing"]["maxFrac"] = remeshing.maxFrac;
   m_json["Meshing"]["epsRef"] = remeshing.epsRef;
   m_json["Meshing"]["beta"] = remeshing.beta;
+  m_json["Meshing"]["hausdorffTolerance"] = remeshing.hausdorffTolerance;
   m_json["Meshing"]["type"] = remeshing.type;
   m_json["Meshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
   m_json["Meshing"]["boundaryLayers"] = remeshing.boundaryLayers;
@@ -619,6 +620,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Meshing"]["maxFrac"] = remeshing.maxFrac;
   m_json["Meshing"]["epsRef"] = remeshing.epsRef;
   m_json["Meshing"]["beta"] = remeshing.beta;
+  m_json["Meshing"]["hausdorffTolerance"] = remeshing.hausdorffTolerance;
   m_json["Meshing"]["type"] = remeshing.type;
   m_json["Meshing"]["refineOnlyBoundary"] = remeshing.refineOnlyBoundary;
   m_json["Meshing"]["boundaryLayers"] = remeshing.boundaryLayers;
