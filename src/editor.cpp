@@ -51,6 +51,7 @@
 #include <cstdio>
 #include <exception>
 #include <filesystem>
+#include <iomanip>
 #include <system_error>
 #include <chrono>
 #include <cmath>
@@ -2601,6 +2602,25 @@ void Editor::drawSelectionOverlay() const
   const ImVec2 viewportMax = viewer->getViewportScreenMax();
   if (viewportMax.x <= viewportMin.x || viewportMax.y <= viewportMin.y) {
     return;
+  }
+
+  // Show node information on hover in the Model Viewer even when node labels
+  // are disabled.  Picking is based on the projected model nodes, so this
+  // remains available independently of the node rendering toggle.
+  if (viewer == model_viewer && viewer->isViewportHovered() && m_model != nullptr) {
+    const ImGuiIO& io = ImGui::GetIO();
+    const double localX = io.MousePos.x - viewportMin.x;
+    const double localY = io.MousePos.y - viewportMin.y;
+    if (Node* hoveredNode = pickClosestNodeAt(localX, localY)) {
+      const Vector3f& pos = hoveredNode->getPos();
+      ImGui::BeginTooltip();
+      ImGui::Text("Node ID: %d", hoveredNode->getId());
+      ImGui::Text("Position: (%.*f, %.*f, %.*f)",
+                  6, static_cast<double>(pos.x),
+                  6, static_cast<double>(pos.y),
+                  6, static_cast<double>(pos.z));
+      ImGui::EndTooltip();
+    }
   }
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
