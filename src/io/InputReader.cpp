@@ -120,8 +120,31 @@ void readStep(const json& root, Model* model)
   step->m_axiSymmVol = conf.value("AxiSymmVol", step->m_axiSymmVol);
   step->m_artifViscAlpha = conf.value("artifViscAlpha", step->m_artifViscAlpha);
   step->m_artifViscBeta = conf.value("artifViscBeta", step->m_artifViscBeta);
+  if (conf.contains("artifViscCoeffs") && conf["artifViscCoeffs"].is_array()) {
+    const json &coeffs = conf["artifViscCoeffs"];
+    if (coeffs.size() > 0)
+      step->m_artifViscAlpha = coeffs[0].get<double>();
+    if (coeffs.size() > 1)
+      step->m_artifViscBeta = coeffs[1].get<double>();
+  }
   step->m_elemLengthFraction = conf.value("elemLengthFraction",
     conf.value("elemLentghFraction", step->m_elemLengthFraction));
+
+  if (root.contains("Stabilization") && root["Stabilization"].is_object()) {
+    const json &stab = root["Stabilization"];
+    step->m_stabAlphaFree = stab.value("alpha_free", step->m_stabAlphaFree);
+    step->m_stabAlphaContact = stab.value("alpha_contact", step->m_stabAlphaContact);
+    step->m_stabHgCoeffFree = stab.value("hg_coeff_free", step->m_stabHgCoeffFree);
+    step->m_stabHgCoeffContact = stab.value("hg_coeff_contact", step->m_stabHgCoeffContact);
+    step->m_stabAvCoeffDiv = stab.value("av_coeff_div", step->m_stabAvCoeffDiv);
+    step->m_stabAvCoeffBulk = stab.value("av_coeff_bulk", step->m_stabAvCoeffBulk);
+    step->m_stabLogFactor = stab.value("log_factor", step->m_stabLogFactor);
+    step->m_stabPspgScale = stab.value("pspg_scale", step->m_stabPspgScale);
+    step->m_stabPspgBulkFactor = stab.value("p_pspg_bulkfac", step->m_stabPspgBulkFactor);
+    step->m_stabJMin = stab.value("J_min", step->m_stabJMin);
+    step->m_stabHgVisc = stab.value("hg_visc", step->m_stabHgVisc);
+    step->m_stabHgStiff = stab.value("hg_stiff", step->m_stabHgStiff);
+  }
 
   if (conf.contains("autoTS") && conf["autoTS"].is_array()) {
     for (int i = 0; i < 3 && i < static_cast<int>(conf["autoTS"].size()); ++i)

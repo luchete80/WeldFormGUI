@@ -71,6 +71,18 @@ void StepDialog::InitFromStep(Step *step) {
   m_simTime = step->m_simTime;
   m_artifViscAlpha = step->m_artifViscAlpha;
   m_artifViscBeta = step->m_artifViscBeta;
+  m_stabAlphaFree = step->m_stabAlphaFree;
+  m_stabAlphaContact = step->m_stabAlphaContact;
+  m_stabHgCoeffFree = step->m_stabHgCoeffFree;
+  m_stabHgCoeffContact = step->m_stabHgCoeffContact;
+  m_stabAvCoeffDiv = step->m_stabAvCoeffDiv;
+  m_stabAvCoeffBulk = step->m_stabAvCoeffBulk;
+  m_stabLogFactor = step->m_stabLogFactor;
+  m_stabPspgScale = step->m_stabPspgScale;
+  m_stabPspgBulkFactor = step->m_stabPspgBulkFactor;
+  m_stabJMin = step->m_stabJMin;
+  m_stabHgVisc = step->m_stabHgVisc;
+  m_stabHgStiff = step->m_stabHgStiff;
   m_outTime = step->m_outTime;
   m_fixedTS = step->m_fixedTS;
   m_axiSymmVol = step->m_axiSymmVol;
@@ -133,6 +145,21 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
   if (!isImplicit) {
     ImGui::InputDouble("Artif Visc Alpha", &m_artifViscAlpha, 0.0, 1.0, "%.3f");
     ImGui::InputDouble("Artif Visc Beta", &m_artifViscBeta, 0.0, 1.0, "%.3f");
+    if (ImGui::TreeNode("Stabilization")) {
+      ImGui::InputDouble("Alpha free", &m_stabAlphaFree, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("Alpha contact", &m_stabAlphaContact, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("HG coeff free", &m_stabHgCoeffFree, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("HG coeff contact", &m_stabHgCoeffContact, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("AV coeff div", &m_stabAvCoeffDiv, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("AV coeff bulk", &m_stabAvCoeffBulk, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("Log factor", &m_stabLogFactor, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("PSPG scale", &m_stabPspgScale, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("PSPG bulk factor", &m_stabPspgBulkFactor, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("J min", &m_stabJMin, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("HG visc", &m_stabHgVisc, 0.0, 0.0, "%.4g");
+      ImGui::InputDouble("HG stiff", &m_stabHgStiff, 0.0, 0.0, "%.4g");
+      ImGui::TreePop();
+    }
   }
   ImGui::InputDouble("Elem Length Fraction", &m_elemLengthFraction, 0.0, 1.0, "%.3f");
   ImGui::Checkbox("Auto TS X", &m_autoTS[0]);
@@ -201,6 +228,18 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_simTime = m_simTime;
       step->m_artifViscAlpha = m_artifViscAlpha;
       step->m_artifViscBeta = m_artifViscBeta;
+      step->m_stabAlphaFree = m_stabAlphaFree;
+      step->m_stabAlphaContact = m_stabAlphaContact;
+      step->m_stabHgCoeffFree = m_stabHgCoeffFree;
+      step->m_stabHgCoeffContact = m_stabHgCoeffContact;
+      step->m_stabAvCoeffDiv = m_stabAvCoeffDiv;
+      step->m_stabAvCoeffBulk = m_stabAvCoeffBulk;
+      step->m_stabLogFactor = m_stabLogFactor;
+      step->m_stabPspgScale = m_stabPspgScale;
+      step->m_stabPspgBulkFactor = m_stabPspgBulkFactor;
+      step->m_stabJMin = m_stabJMin;
+      step->m_stabHgVisc = m_stabHgVisc;
+      step->m_stabHgStiff = m_stabHgStiff;
       step->m_outTime = m_outTime;
       step->m_fixedTS = m_fixedTS;
       step->m_axiSymmVol = m_axiSymmVol;

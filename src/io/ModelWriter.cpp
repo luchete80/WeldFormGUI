@@ -495,6 +495,20 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["simTime"] = step->m_simTime;
       jstep["artifViscAlpha"] = step->m_artifViscAlpha;
       jstep["artifViscBeta"] = step->m_artifViscBeta;
+      jstep["stabilization"] = {
+        {"alpha_free", step->m_stabAlphaFree},
+        {"alpha_contact", step->m_stabAlphaContact},
+        {"hg_coeff_free", step->m_stabHgCoeffFree},
+        {"hg_coeff_contact", step->m_stabHgCoeffContact},
+        {"av_coeff_div", step->m_stabAvCoeffDiv},
+        {"av_coeff_bulk", step->m_stabAvCoeffBulk},
+        {"log_factor", step->m_stabLogFactor},
+        {"pspg_scale", step->m_stabPspgScale},
+        {"p_pspg_bulkfac", step->m_stabPspgBulkFactor},
+        {"J_min", step->m_stabJMin},
+        {"hg_visc", step->m_stabHgVisc},
+        {"hg_stiff", step->m_stabHgStiff}
+      };
       jstep["outTime"] = step->m_outTime;
       jstep["fixedTS"] = step->m_fixedTS;
       jstep["axiSymmVol"] = step->m_axiSymmVol;

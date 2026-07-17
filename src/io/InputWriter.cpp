@@ -424,10 +424,30 @@ void InputWriter::writeToFile(std::string fname) {
   m_json["Configuration"]["solver"] = "WeldForm";
   m_json["Configuration"]["simTime"] = step ? step->m_simTime : 1.0;
   m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0e-4;
+  m_json["Configuration"]["artifViscCoeffs"] = {
+    step ? step->m_artifViscAlpha : 1.0,
+    step ? step->m_artifViscBeta : 0.0,
+    0.0
+  };
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
+
+  m_json["Stabilization"] = {
+    {"alpha_free", step ? step->m_stabAlphaFree : 0.0},
+    {"alpha_contact", step ? step->m_stabAlphaContact : 0.0},
+    {"hg_coeff_free", step ? step->m_stabHgCoeffFree : 0.0},
+    {"hg_coeff_contact", step ? step->m_stabHgCoeffContact : 0.0},
+    {"av_coeff_div", step ? step->m_stabAvCoeffDiv : 0.0},
+    {"av_coeff_bulk", step ? step->m_stabAvCoeffBulk : 0.0},
+    {"log_factor", step ? step->m_stabLogFactor : 0.0},
+    {"pspg_scale", step ? step->m_stabPspgScale : 0.0},
+    {"p_pspg_bulkfac", step ? step->m_stabPspgBulkFactor : 0.0},
+    {"J_min", step ? step->m_stabJMin : 0.0},
+    {"hg_visc", step ? step->m_stabHgVisc : 0.1},
+    {"hg_stiff", step ? step->m_stabHgStiff : 0.1}
+  };
 
   const RemeshingSettings &remeshing = m_model->remeshing();
   m_json["Meshing"]["enabled"] = remeshing.enabled;

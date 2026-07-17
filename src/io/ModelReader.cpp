@@ -614,6 +614,21 @@ bool ModelReader::readFromFile(const std::string& fname) {
             step->m_simTime = jstep.value("simTime", 200.0);
             step->m_artifViscAlpha = jstep.value("artifViscAlpha", 1.0);
             step->m_artifViscBeta = jstep.value("artifViscBeta", 0.0);
+            if (jstep.contains("stabilization") && jstep["stabilization"].is_object()) {
+                const auto &stab = jstep["stabilization"];
+                step->m_stabAlphaFree = stab.value("alpha_free", step->m_stabAlphaFree);
+                step->m_stabAlphaContact = stab.value("alpha_contact", step->m_stabAlphaContact);
+                step->m_stabHgCoeffFree = stab.value("hg_coeff_free", step->m_stabHgCoeffFree);
+                step->m_stabHgCoeffContact = stab.value("hg_coeff_contact", step->m_stabHgCoeffContact);
+                step->m_stabAvCoeffDiv = stab.value("av_coeff_div", step->m_stabAvCoeffDiv);
+                step->m_stabAvCoeffBulk = stab.value("av_coeff_bulk", step->m_stabAvCoeffBulk);
+                step->m_stabLogFactor = stab.value("log_factor", step->m_stabLogFactor);
+                step->m_stabPspgScale = stab.value("pspg_scale", step->m_stabPspgScale);
+                step->m_stabPspgBulkFactor = stab.value("p_pspg_bulkfac", step->m_stabPspgBulkFactor);
+                step->m_stabJMin = stab.value("J_min", step->m_stabJMin);
+                step->m_stabHgVisc = stab.value("hg_visc", step->m_stabHgVisc);
+                step->m_stabHgStiff = stab.value("hg_stiff", step->m_stabHgStiff);
+            }
             step->m_outTime = jstep.value("outTime", 1.0);
             step->m_fixedTS = jstep.value("fixedTS", false);
             step->m_axiSymmVol = jstep.value("axiSymmVol", false);

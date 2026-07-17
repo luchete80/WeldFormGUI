@@ -52,6 +52,19 @@ public:
   double m_simTime = 200.0;
   double m_artifViscAlpha = 1.0;
   double m_artifViscBeta = 0.0;
+  // Explicit solver stabilization. Defaults match weldform-engine/Domain_d.h.
+  double m_stabAlphaFree = 0.0;
+  double m_stabAlphaContact = 0.0;
+  double m_stabHgCoeffFree = 0.0;
+  double m_stabHgCoeffContact = 0.0;
+  double m_stabAvCoeffDiv = 0.0;
+  double m_stabAvCoeffBulk = 0.0;
+  double m_stabLogFactor = 0.0;
+  double m_stabPspgScale = 0.0;
+  double m_stabPspgBulkFactor = 0.0;
+  double m_stabJMin = 0.0;
+  double m_stabHgVisc = 0.1;
+  double m_stabHgStiff = 0.1;
   double m_outTime = 1.0;
   bool m_fixedTS = false;
   bool m_axiSymmVol = false;
