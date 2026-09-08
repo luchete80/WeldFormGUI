@@ -451,6 +451,7 @@ void InputWriter::writeToFile(std::string fname) {
 
   const RemeshingSettings &remeshing = m_model->remeshing();
   m_json["Meshing"]["enabled"] = remeshing.enabled;
+  m_json["Meshing"]["stepInterval"] = remeshing.stepInterval;
   m_json["Meshing"]["minStrain"] = remeshing.minStrain;
   m_json["Meshing"]["maxStrain"] = remeshing.maxStrain;
   m_json["Meshing"]["mapVel"] = remeshing.mapVel;
@@ -630,6 +631,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
 
   const RemeshingSettings &remeshing = m_model->remeshing();
   m_json["Meshing"]["enabled"] = remeshing.enabled;
+  m_json["Meshing"]["stepInterval"] = remeshing.stepInterval;
   m_json["Meshing"]["minStrain"] = remeshing.minStrain;
   m_json["Meshing"]["maxStrain"] = remeshing.maxStrain;
   m_json["Meshing"]["mapVel"] = remeshing.mapVel;

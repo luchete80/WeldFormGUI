@@ -12,6 +12,7 @@ void RemeshDialog::InitFromModel(Model* model)
 
   const RemeshingSettings& remesh = model->remeshing();
   m_enabled = remesh.enabled;
+  m_stepInterval = remesh.stepInterval;
   m_minStrain = remesh.minStrain;
   m_maxStrain = remesh.maxStrain;
   m_mapVel = remesh.mapVel;
@@ -50,6 +51,10 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
   ImGui::Checkbox("Enabled", &m_enabled);
 
   if (ImGui::CollapsingHeader("Trigger", ImGuiTreeNodeFlags_DefaultOpen)) {
+    ImGui::InputInt("Step Interval (0 = disabled)", &m_stepInterval);
+    if (m_stepInterval < 0) {
+      m_stepInterval = 0;
+    }
     ImGui::InputDouble("Min Strain", &m_minStrain, 0.0, 0.0, "%.6g");
     ImGui::InputDouble("Max Strain", &m_maxStrain, 0.0, 0.0, "%.6g");
     ImGui::InputInt("Max Count", &m_maxCount);
@@ -93,6 +98,7 @@ void RemeshDialog::Draw(const char* title, bool* p_open, Model* model)
     if (model != nullptr) {
       RemeshingSettings& remesh = model->remeshing();
       remesh.enabled = m_enabled;
+      remesh.stepInterval = m_stepInterval < 0 ? 0 : m_stepInterval;
       remesh.minStrain = m_minStrain;
       remesh.maxStrain = m_maxStrain;
       remesh.mapVel = m_mapVel;

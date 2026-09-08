@@ -538,6 +538,7 @@ void ModelWriter::writeToFile(std::string fname){
   {
     const RemeshingSettings &remeshing = m_model.remeshing();
     m_json["Remeshing"]["enabled"] = remeshing.enabled;
+    m_json["Remeshing"]["stepInterval"] = remeshing.stepInterval;
     m_json["Remeshing"]["minStrain"] = remeshing.minStrain;
     m_json["Remeshing"]["maxStrain"] = remeshing.maxStrain;
     m_json["Remeshing"]["mapVel"] = remeshing.mapVel;

@@ -57,6 +57,7 @@ struct ContactProperties {
 
 struct RemeshingSettings {
   bool enabled = false;
+  int stepInterval = 0;
   double minStrain = -1.0;
   double maxStrain = 1.0e6;
   bool mapVel = false;

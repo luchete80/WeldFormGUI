@@ -9,6 +9,7 @@ struct RemeshDialog {
   bool m_cancelled = false;
 
   bool m_enabled = true;
+  int m_stepInterval = 0;
   double m_minStrain = -1.0;
   double m_maxStrain = 1.0e6;
   bool m_mapVel = false;

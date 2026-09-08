@@ -21,3 +21,6 @@ CPackSourceConfig.cmake
 *.dylib
 *.dll
 *.exe
+
+# Solver visualization output
+*.vtk

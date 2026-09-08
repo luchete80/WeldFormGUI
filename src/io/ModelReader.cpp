@@ -132,6 +132,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
         const auto &remeshing = j["Remeshing"];
         RemeshingSettings &settings = m_model->remeshing();
         settings.enabled = remeshing.value("enabled", settings.enabled);
+        settings.stepInterval = std::max(0, remeshing.value("stepInterval", settings.stepInterval));
         settings.minStrain = remeshing.value("minStrain", settings.minStrain);
         settings.maxStrain = remeshing.value("maxStrain", settings.maxStrain);
         settings.mapVel = remeshing.value("mapVel", settings.mapVel);

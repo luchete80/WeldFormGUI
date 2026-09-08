@@ -1,0 +1,166 @@
+{
+    "Amplitudes": null,
+    "BoundaryConditions": [
+        {
+            "id": 1,
+            "value": [
+                0.0,
+                -6.0,
+                0.0
+            ],
+            "valueType": 0,
+            "zoneId": 0
+        },
+        {
+            "id": 2,
+            "value": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "valueType": 0,
+            "zoneId": 2
+        }
+    ],
+    "Configuration": {
+        "artifViscCoeffs": [
+            1.0,
+            0.0,
+            0.0
+        ],
+        "cflFactor": 0.3,
+        "domType": "3D",
+        "fixedTS": false,
+        "outTime": 1e-05,
+        "simTime": 1.0,
+        "solver": "WeldForm",
+        "xSymm": true,
+        "xSymmPlane": 0.0
+    },
+    "Contact": [
+        {
+            "auto": false,
+            "autoFactor": 0.5,
+            "fricCoeffStatic": 0.3,
+            "frictionRegularizationVelocity": 0.0,
+            "gapPenaltyScale": 2.0,
+            "heatCondCoeff": 0.5,
+            "heatConductance": false,
+            "maxAccel": 100000.0,
+            "maxPenetRatio": 0.05,
+            "penaltyFactor": 0.5,
+            "useGapPenalty": true
+        }
+    ],
+    "DomainBlocks": [
+        {
+            "fileName": "cyl_closed_die_3d_part_1.bdf",
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "type": "File"
+        }
+    ],
+    "InitialConditions": [],
+    "Materials": [
+        {
+            "const": [
+                386000000.0,
+                0.154
+            ],
+            "density0": 785000.0,
+            "id": "Solid",
+            "poissonsRatio": 0.3,
+            "strRange": [
+                0.0,
+                0.65
+            ],
+            "strdotRange": [
+                0.001,
+                10.0
+            ],
+            "tempRange": [
+                20.0,
+                1000.0
+            ],
+            "thermalCond": 0.0,
+            "thermalExp": 0.0,
+            "thermalHeatCap": 0.0,
+            "type": "Hollomon",
+            "yieldStress0": 190000000.0,
+            "youngsModulus": 210000000000.0
+        }
+    ],
+    "Meshing": {
+        "beta": 4.0,
+        "boundaryLayers": 2,
+        "dampFactor": 0.02,
+        "debug": false,
+        "enabled": false,
+        "epsRef": 1.0,
+        "hausdorffTolerance": 0.0,
+        "mapAcc": false,
+        "mapVel": false,
+        "maxCount": 1000000,
+        "maxElemAngle": 165.0,
+        "maxFrac": 2.0,
+        "maxStrain": 1000000.0,
+        "minElemAngle": 15.0,
+        "minFrac": 2.0,
+        "minStrain": -1.0,
+        "refineOnlyBoundary": false,
+        "transitionAngle": 15.0,
+        "type": 0
+    },
+    "RigidBodies": [
+        {
+            "fileName": "cyl_closed_die_3d_part_0.bdf",
+            "orientNormals": true,
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 0
+        },
+        {
+            "fileName": "cyl_closed_die_3d_part_2.bdf",
+            "orientNormals": true,
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "start": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": "File",
+            "zoneId": 2
+        }
+    ],
+    "Sets": [],
+    "Stabilization": {
+        "J_min": 0.0,
+        "alpha_contact": 0.0,
+        "alpha_free": 0.0,
+        "av_coeff_bulk": 0.0,
+        "av_coeff_div": 0.0,
+        "hg_coeff_contact": 0.0,
+        "hg_coeff_free": 0.0,
+        "hg_stiff": 0.1,
+        "hg_visc": 0.1,
+        "log_factor": 0.0,
+        "p_pspg_bulkfac": 0.0,
+        "pspg_scale": 0.0
+    }
+}

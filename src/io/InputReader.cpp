@@ -200,6 +200,7 @@ void readMeshing(const json& root, Model* model)
   const json& meshing = root["Meshing"];
   RemeshingSettings& settings = model->remeshing();
   settings.enabled = meshing.value("enabled", settings.enabled);
+  settings.stepInterval = std::max(0, meshing.value("stepInterval", settings.stepInterval));
   settings.minStrain = meshing.value("minStrain", settings.minStrain);
   settings.maxStrain = meshing.value("maxStrain", settings.maxStrain);
   settings.mapVel = meshing.value("mapVel", settings.mapVel);
