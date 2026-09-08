@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <sstream>
 #include <filesystem>
+#include <cmath>
 
 using std::cout;
 using std::cerr;
@@ -656,6 +657,11 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 step->m_omegaP = implicit.value("omegaP", 0.1);
                 step->m_maxIter = implicit.value("maxIter", 200);
                 step->m_timeStepGrowthFactor = implicit.value("timeStepGrowthFactor", 1.2);
+                step->m_initialTimeStep = implicit.value("initialTimeStep", 0.0);
+                step->m_maxStepRetries = std::max(0, implicit.value("maxStepRetries", 8));
+                step->m_nonConvergenceCutbackFactor = implicit.value("nonConvergenceCutbackFactor", 0.5);
+                if (!(step->m_initialTimeStep >= 0.0) || !std::isfinite(step->m_initialTimeStep)) step->m_initialTimeStep = 0.0;
+                if (!(step->m_nonConvergenceCutbackFactor > 0.0 && step->m_nonConvergenceCutbackFactor < 1.0) || !std::isfinite(step->m_nonConvergenceCutbackFactor)) step->m_nonConvergenceCutbackFactor = 0.5;
                 step->m_useWeakSprings = implicit.value("useSprings", false);
                 step->m_springFactor = implicit.value("springFactor", 1.0e-7);
                 step->m_springStiffness = implicit.value("springStiffness", 0.0);

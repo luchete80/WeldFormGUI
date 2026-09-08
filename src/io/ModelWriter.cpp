@@ -523,6 +523,9 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["omegaP"] = step->m_omegaP;
       jstep["implicit"]["maxIter"] = step->m_maxIter;
       jstep["implicit"]["timeStepGrowthFactor"] = step->m_timeStepGrowthFactor;
+      jstep["implicit"]["initialTimeStep"] = step->m_initialTimeStep;
+      jstep["implicit"]["maxStepRetries"] = step->m_maxStepRetries;
+      jstep["implicit"]["nonConvergenceCutbackFactor"] = step->m_nonConvergenceCutbackFactor;
       jstep["implicit"]["useSprings"] = step->m_useWeakSprings;
       jstep["implicit"]["springFactor"] = step->m_springFactor;
       jstep["implicit"]["springStiffness"] = step->m_springStiffness;

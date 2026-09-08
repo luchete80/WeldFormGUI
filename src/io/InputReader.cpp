@@ -101,6 +101,11 @@ void readStep(const json& root, Model* model)
     step->m_omegaP = implicit.value("omegaP", step->m_omegaP);
     step->m_maxIter = implicit.value("maxIter", step->m_maxIter);
     step->m_timeStepGrowthFactor = implicit.value("timeStepGrowthFactor", step->m_timeStepGrowthFactor);
+    step->m_initialTimeStep = implicit.value("initialTimeStep", step->m_initialTimeStep);
+    step->m_maxStepRetries = std::max(0, implicit.value("maxStepRetries", step->m_maxStepRetries));
+    step->m_nonConvergenceCutbackFactor = implicit.value("nonConvergenceCutbackFactor", step->m_nonConvergenceCutbackFactor);
+    if (!(step->m_initialTimeStep >= 0.0) || !std::isfinite(step->m_initialTimeStep)) step->m_initialTimeStep = 0.0;
+    if (!(step->m_nonConvergenceCutbackFactor > 0.0 && step->m_nonConvergenceCutbackFactor < 1.0) || !std::isfinite(step->m_nonConvergenceCutbackFactor)) step->m_nonConvergenceCutbackFactor = 0.5;
     step->m_useWeakSprings = implicit.value("useSprings", step->m_useWeakSprings);
     step->m_springFactor = implicit.value("springFactor", step->m_springFactor);
     step->m_springStiffness = implicit.value("springStiffness", step->m_springStiffness);

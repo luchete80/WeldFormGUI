@@ -80,6 +80,9 @@ public:
   double m_omegaP = 0.1;
   int m_maxIter = 200;
   double m_timeStepGrowthFactor = 1.2;
+  double m_initialTimeStep = 0.0;
+  int m_maxStepRetries = 8;
+  double m_nonConvergenceCutbackFactor = 0.5;
   bool m_useWeakSprings = false;
   double m_springFactor = 1.0e-7;
   double m_springStiffness = 0.0;

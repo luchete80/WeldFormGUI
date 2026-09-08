@@ -99,6 +99,9 @@ void StepDialog::InitFromStep(Step *step) {
   m_omegaP = step->m_omegaP;
   m_maxIter = step->m_maxIter;
   m_timeStepGrowthFactor = step->m_timeStepGrowthFactor;
+  m_initialTimeStep = step->m_initialTimeStep;
+  m_maxStepRetries = step->m_maxStepRetries;
+  m_nonConvergenceCutbackFactor = step->m_nonConvergenceCutbackFactor;
   m_useWeakSprings = step->m_useWeakSprings;
   m_springFactor = step->m_springFactor;
   m_springStiffness = step->m_springStiffness;
@@ -196,6 +199,13 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::InputDouble("Omega P", &m_omegaP, 0.0, 1.0, "%.4f");
     ImGui::InputInt("Max Iter", &m_maxIter);
     ImGui::InputDouble("TS Growth Factor", &m_timeStepGrowthFactor, 0.0, 1.0, "%.3f");
+    ImGui::InputDouble("Initial Time Step (0 = automatic)", &m_initialTimeStep, 0.0, 0.0, "%.6g");
+    if (m_initialTimeStep < 0.0) m_initialTimeStep = 0.0;
+    ImGui::InputInt("Max Step Retries", &m_maxStepRetries);
+    if (m_maxStepRetries < 0) m_maxStepRetries = 0;
+    ImGui::InputDouble("Non-convergence Cutback Factor", &m_nonConvergenceCutbackFactor, 0.0, 0.0, "%.3f");
+    if (!(m_nonConvergenceCutbackFactor > 0.0 && m_nonConvergenceCutbackFactor < 1.0))
+      m_nonConvergenceCutbackFactor = 0.5;
     ImGui::InputDouble("Adaptive DT min", &m_adaptiveDtMin, 0.0, 0.0, "%.4g");
     ImGui::Checkbox("Adaptive DT limiter", &m_adaptiveDtLimiter);
     ImGui::BeginDisabled(!m_adaptiveDtLimiter);
@@ -254,6 +264,9 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_omegaP = m_omegaP;
       step->m_maxIter = m_maxIter;
       step->m_timeStepGrowthFactor = m_timeStepGrowthFactor;
+      step->m_initialTimeStep = m_initialTimeStep;
+      step->m_maxStepRetries = m_maxStepRetries;
+      step->m_nonConvergenceCutbackFactor = m_nonConvergenceCutbackFactor;
       step->m_useWeakSprings = m_useWeakSprings;
       step->m_springFactor = m_springFactor;
       step->m_springStiffness = m_springStiffness;

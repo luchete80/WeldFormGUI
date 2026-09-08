@@ -133,6 +133,9 @@ json makeImplicitSolverJson(const Step *step) {
   implicit["omegaP"] = step ? step->m_omegaP : 0.1;
   implicit["maxIter"] = step ? step->m_maxIter : 200;
   implicit["timeStepGrowthFactor"] = step ? step->m_timeStepGrowthFactor : 1.2;
+  implicit["initialTimeStep"] = step ? step->m_initialTimeStep : 0.0;
+  implicit["maxStepRetries"] = step ? step->m_maxStepRetries : 8;
+  implicit["nonConvergenceCutbackFactor"] = step ? step->m_nonConvergenceCutbackFactor : 0.5;
   implicit["useSprings"] = step ? step->m_useWeakSprings : false;
   implicit["springFactor"] = step ? step->m_springFactor : 1.0e-7;
   implicit["springStiffness"] = step ? step->m_springStiffness : 0.0;
