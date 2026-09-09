@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 #include <cmath>
 
 using std::cout;
@@ -670,6 +671,24 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 step->m_adaptiveDtMin = implicit.value("adaptiveDtMin", 1.0e-7);
                 step->m_maxNodalDisplacementPerStep = implicit.value("maxNodalDisplacementPerStep", 0.0005);
                 step->m_maxEffectiveStrainIncrementPerStep = implicit.value("maxEffectiveStrainIncrementPerStep", 0.02);
+                step->m_picardUseFixedPointResidual = implicit.value("picardUseFixedPointResidual", false);
+                step->m_picardStagnationEnabled = implicit.value("picardStagnationEnabled", false);
+                step->m_picardStagnationWindow = std::max(2, implicit.value("picardStagnationWindow", 10));
+                step->m_picardStagnationMinIter = std::max(0, implicit.value("picardStagnationMinIter", 30));
+                step->m_picardStagnationMinImprovement = std::clamp(implicit.value("picardStagnationMinImprovement", 0.05), 0.0, 1.0);
+                step->m_picardStagnationMaxWindows = std::max(1, implicit.value("picardStagnationMaxWindows", 2));
+                step->m_picardUseAitken = implicit.value("picardUseAitken", false);
+                step->m_picardAitkenMinOmega = implicit.value("picardAitkenMinOmega", 0.05);
+                step->m_picardAitkenMaxOmega = implicit.value("picardAitkenMaxOmega", 0.8);
+                step->m_picardUseAitkenBubble = implicit.value("picardUseAitkenBubble", false);
+                step->m_omegaBubble = implicit.value("omegaBubble", 0.4);
+                step->m_picardAitkenBubbleMinOmega = implicit.value("picardAitkenBubbleMinOmega", 0.05);
+                step->m_picardAitkenBubbleMaxOmega = implicit.value("picardAitkenBubbleMaxOmega", 0.6);
+                if (!(step->m_omegaBubble > 0.0) || !std::isfinite(step->m_omegaBubble)) step->m_omegaBubble = 0.4;
+                if (!(step->m_picardAitkenBubbleMinOmega > 0.0) || !std::isfinite(step->m_picardAitkenBubbleMinOmega)) step->m_picardAitkenBubbleMinOmega = 0.05;
+                if (!(step->m_picardAitkenBubbleMaxOmega >= step->m_picardAitkenBubbleMinOmega) || !std::isfinite(step->m_picardAitkenBubbleMaxOmega)) step->m_picardAitkenBubbleMaxOmega = step->m_picardAitkenBubbleMinOmega;
+                step->m_picardSmoothViscosity = implicit.value("picardSmoothViscosity", false);
+                step->m_picardStrainRateRegularization = implicit.value("picardStrainRateRegularization", 0.001);
             }
 
             m_model->addStep(step);

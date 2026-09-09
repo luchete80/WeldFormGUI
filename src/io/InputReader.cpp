@@ -114,6 +114,27 @@ void readStep(const json& root, Model* model)
     step->m_adaptiveDtMin = implicit.value("adaptiveDtMin", step->m_adaptiveDtMin);
     step->m_maxNodalDisplacementPerStep = implicit.value("maxNodalDisplacementPerStep", step->m_maxNodalDisplacementPerStep);
     step->m_maxEffectiveStrainIncrementPerStep = implicit.value("maxEffectiveStrainIncrementPerStep", step->m_maxEffectiveStrainIncrementPerStep);
+    step->m_picardUseFixedPointResidual = implicit.value("picardUseFixedPointResidual", step->m_picardUseFixedPointResidual);
+    step->m_picardStagnationEnabled = implicit.value("picardStagnationEnabled", step->m_picardStagnationEnabled);
+    step->m_picardStagnationWindow = std::max(2, implicit.value("picardStagnationWindow", step->m_picardStagnationWindow));
+    step->m_picardStagnationMinIter = std::max(0, implicit.value("picardStagnationMinIter", step->m_picardStagnationMinIter));
+    step->m_picardStagnationMinImprovement = std::clamp(implicit.value("picardStagnationMinImprovement", step->m_picardStagnationMinImprovement), 0.0, 1.0);
+    step->m_picardStagnationMaxWindows = std::max(1, implicit.value("picardStagnationMaxWindows", step->m_picardStagnationMaxWindows));
+    step->m_picardUseAitken = implicit.value("picardUseAitken", step->m_picardUseAitken);
+    step->m_picardAitkenMinOmega = implicit.value("picardAitkenMinOmega", step->m_picardAitkenMinOmega);
+    step->m_picardAitkenMaxOmega = std::max(step->m_picardAitkenMinOmega, implicit.value("picardAitkenMaxOmega", step->m_picardAitkenMaxOmega));
+    step->m_picardUseAitkenBubble = implicit.value("picardUseAitkenBubble", step->m_picardUseAitkenBubble);
+    step->m_omegaBubble = implicit.value("omegaBubble", step->m_omegaBubble);
+    step->m_picardAitkenBubbleMinOmega = implicit.value("picardAitkenBubbleMinOmega", step->m_picardAitkenBubbleMinOmega);
+    step->m_picardAitkenBubbleMaxOmega = std::max(step->m_picardAitkenBubbleMinOmega, implicit.value("picardAitkenBubbleMaxOmega", step->m_picardAitkenBubbleMaxOmega));
+    step->m_picardSmoothViscosity = implicit.value("picardSmoothViscosity", step->m_picardSmoothViscosity);
+    step->m_picardStrainRateRegularization = implicit.value("picardStrainRateRegularization", step->m_picardStrainRateRegularization);
+    if (!(step->m_picardAitkenMinOmega > 0.0) || !std::isfinite(step->m_picardAitkenMinOmega)) step->m_picardAitkenMinOmega = 0.05;
+    if (!(step->m_picardAitkenMaxOmega >= step->m_picardAitkenMinOmega) || !std::isfinite(step->m_picardAitkenMaxOmega)) step->m_picardAitkenMaxOmega = 0.8;
+    if (!(step->m_omegaBubble > 0.0) || !std::isfinite(step->m_omegaBubble)) step->m_omegaBubble = 0.4;
+    if (!(step->m_picardAitkenBubbleMinOmega > 0.0) || !std::isfinite(step->m_picardAitkenBubbleMinOmega)) step->m_picardAitkenBubbleMinOmega = 0.05;
+    if (!(step->m_picardAitkenBubbleMaxOmega >= step->m_picardAitkenBubbleMinOmega) || !std::isfinite(step->m_picardAitkenBubbleMaxOmega)) step->m_picardAitkenBubbleMaxOmega = step->m_picardAitkenBubbleMinOmega;
+    if (!(step->m_picardStrainRateRegularization > 0.0) || !std::isfinite(step->m_picardStrainRateRegularization)) step->m_picardStrainRateRegularization = 0.001;
   }
 
   step->m_nproc = conf.value("Nproc", step->m_nproc);

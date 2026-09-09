@@ -534,6 +534,21 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["adaptiveDtMin"] = step->m_adaptiveDtMin;
       jstep["implicit"]["maxNodalDisplacementPerStep"] = step->m_maxNodalDisplacementPerStep;
       jstep["implicit"]["maxEffectiveStrainIncrementPerStep"] = step->m_maxEffectiveStrainIncrementPerStep;
+      jstep["implicit"]["picardUseFixedPointResidual"] = step->m_picardUseFixedPointResidual;
+      jstep["implicit"]["picardStagnationEnabled"] = step->m_picardStagnationEnabled;
+      jstep["implicit"]["picardStagnationWindow"] = step->m_picardStagnationWindow;
+      jstep["implicit"]["picardStagnationMinIter"] = step->m_picardStagnationMinIter;
+      jstep["implicit"]["picardStagnationMinImprovement"] = step->m_picardStagnationMinImprovement;
+      jstep["implicit"]["picardStagnationMaxWindows"] = step->m_picardStagnationMaxWindows;
+      jstep["implicit"]["picardUseAitken"] = step->m_picardUseAitken;
+      jstep["implicit"]["picardAitkenMinOmega"] = step->m_picardAitkenMinOmega;
+      jstep["implicit"]["picardAitkenMaxOmega"] = step->m_picardAitkenMaxOmega;
+      jstep["implicit"]["picardUseAitkenBubble"] = step->m_picardUseAitkenBubble;
+      jstep["implicit"]["omegaBubble"] = step->m_omegaBubble;
+      jstep["implicit"]["picardAitkenBubbleMinOmega"] = step->m_picardAitkenBubbleMinOmega;
+      jstep["implicit"]["picardAitkenBubbleMaxOmega"] = step->m_picardAitkenBubbleMaxOmega;
+      jstep["implicit"]["picardSmoothViscosity"] = step->m_picardSmoothViscosity;
+      jstep["implicit"]["picardStrainRateRegularization"] = step->m_picardStrainRateRegularization;
       m_json["Steps"].push_back(jstep);
     }
   }

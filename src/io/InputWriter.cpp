@@ -144,6 +144,21 @@ json makeImplicitSolverJson(const Step *step) {
   implicit["adaptiveDtMin"] = step ? step->m_adaptiveDtMin : 1.0e-7;
   implicit["maxNodalDisplacementPerStep"] = step ? step->m_maxNodalDisplacementPerStep : 0.0005;
   implicit["maxEffectiveStrainIncrementPerStep"] = step ? step->m_maxEffectiveStrainIncrementPerStep : 0.02;
+  implicit["picardUseFixedPointResidual"] = step ? step->m_picardUseFixedPointResidual : false;
+  implicit["picardStagnationEnabled"] = step ? step->m_picardStagnationEnabled : false;
+  implicit["picardStagnationWindow"] = step ? step->m_picardStagnationWindow : 10;
+  implicit["picardStagnationMinIter"] = step ? step->m_picardStagnationMinIter : 30;
+  implicit["picardStagnationMinImprovement"] = step ? step->m_picardStagnationMinImprovement : 0.05;
+  implicit["picardStagnationMaxWindows"] = step ? step->m_picardStagnationMaxWindows : 2;
+  implicit["picardUseAitken"] = step ? step->m_picardUseAitken : false;
+  implicit["picardAitkenMinOmega"] = step ? step->m_picardAitkenMinOmega : 0.05;
+  implicit["picardAitkenMaxOmega"] = step ? step->m_picardAitkenMaxOmega : 0.8;
+  implicit["picardUseAitkenBubble"] = step ? step->m_picardUseAitkenBubble : false;
+  implicit["omegaBubble"] = step ? step->m_omegaBubble : 0.4;
+  implicit["picardAitkenBubbleMinOmega"] = step ? step->m_picardAitkenBubbleMinOmega : 0.05;
+  implicit["picardAitkenBubbleMaxOmega"] = step ? step->m_picardAitkenBubbleMaxOmega : 0.6;
+  implicit["picardSmoothViscosity"] = step ? step->m_picardSmoothViscosity : false;
+  implicit["picardStrainRateRegularization"] = step ? step->m_picardStrainRateRegularization : 0.001;
   return implicit;
 }
 

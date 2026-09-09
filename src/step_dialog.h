@@ -57,6 +57,21 @@ struct StepDialog {
   double m_adaptiveDtMin = 1.0e-7;
   double m_maxNodalDisplacementPerStep = 0.0005;
   double m_maxEffectiveStrainIncrementPerStep = 0.02;
+  bool m_picardUseFixedPointResidual = false;
+  bool m_picardStagnationEnabled = false;
+  int m_picardStagnationWindow = 10;
+  int m_picardStagnationMinIter = 30;
+  double m_picardStagnationMinImprovement = 0.05;
+  int m_picardStagnationMaxWindows = 2;
+  bool m_picardUseAitken = false;
+  double m_picardAitkenMinOmega = 0.05;
+  double m_picardAitkenMaxOmega = 0.8;
+  bool m_picardUseAitkenBubble = false;
+  double m_omegaBubble = 0.4;
+  double m_picardAitkenBubbleMinOmega = 0.05;
+  double m_picardAitkenBubbleMaxOmega = 0.6;
+  bool m_picardSmoothViscosity = false;
+  double m_picardStrainRateRegularization = 0.001;
 
   void InitFromStep(Step *step);
   void Draw(const char* title, bool* p_open = nullptr, Step* step = nullptr);

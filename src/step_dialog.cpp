@@ -110,6 +110,21 @@ void StepDialog::InitFromStep(Step *step) {
   m_adaptiveDtMin = step->m_adaptiveDtMin;
   m_maxNodalDisplacementPerStep = step->m_maxNodalDisplacementPerStep;
   m_maxEffectiveStrainIncrementPerStep = step->m_maxEffectiveStrainIncrementPerStep;
+  m_picardUseFixedPointResidual = step->m_picardUseFixedPointResidual;
+  m_picardStagnationEnabled = step->m_picardStagnationEnabled;
+  m_picardStagnationWindow = step->m_picardStagnationWindow;
+  m_picardStagnationMinIter = step->m_picardStagnationMinIter;
+  m_picardStagnationMinImprovement = step->m_picardStagnationMinImprovement;
+  m_picardStagnationMaxWindows = step->m_picardStagnationMaxWindows;
+  m_picardUseAitken = step->m_picardUseAitken;
+  m_picardAitkenMinOmega = step->m_picardAitkenMinOmega;
+  m_picardAitkenMaxOmega = step->m_picardAitkenMaxOmega;
+  m_picardUseAitkenBubble = step->m_picardUseAitkenBubble;
+  m_omegaBubble = step->m_omegaBubble;
+  m_picardAitkenBubbleMinOmega = step->m_picardAitkenBubbleMinOmega;
+  m_picardAitkenBubbleMaxOmega = step->m_picardAitkenBubbleMaxOmega;
+  m_picardSmoothViscosity = step->m_picardSmoothViscosity;
+  m_picardStrainRateRegularization = step->m_picardStrainRateRegularization;
 }
 
 void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
@@ -214,6 +229,39 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     ImGui::EndDisabled();
     ImGui::TextDisabled("Formulation: %s", implicitFormulationLabel(m_implicit_formulation));
 
+    if (ImGui::TreeNode("Picard options")) {
+      ImGui::Checkbox("Use fixed-point residual", &m_picardUseFixedPointResidual);
+      ImGui::Checkbox("Enable stagnation detection", &m_picardStagnationEnabled);
+      ImGui::InputInt("Stagnation window", &m_picardStagnationWindow);
+      if (m_picardStagnationWindow < 2) m_picardStagnationWindow = 2;
+      ImGui::InputInt("Stagnation minimum iteration", &m_picardStagnationMinIter);
+      if (m_picardStagnationMinIter < 0) m_picardStagnationMinIter = 0;
+      ImGui::InputDouble("Stagnation minimum improvement", &m_picardStagnationMinImprovement, 0.0, 0.0, "%.4g");
+      if (m_picardStagnationMinImprovement < 0.0) m_picardStagnationMinImprovement = 0.0;
+      if (m_picardStagnationMinImprovement > 1.0) m_picardStagnationMinImprovement = 1.0;
+      ImGui::InputInt("Stagnation maximum windows", &m_picardStagnationMaxWindows);
+      if (m_picardStagnationMaxWindows < 1) m_picardStagnationMaxWindows = 1;
+      ImGui::Checkbox("Use Aitken omega", &m_picardUseAitken);
+      ImGui::InputDouble("Aitken minimum omega", &m_picardAitkenMinOmega, 0.0, 0.0, "%.4g");
+      if (m_picardAitkenMinOmega <= 0.0) m_picardAitkenMinOmega = 0.05;
+      ImGui::InputDouble("Aitken maximum omega", &m_picardAitkenMaxOmega, 0.0, 0.0, "%.4g");
+      if (m_picardAitkenMaxOmega < m_picardAitkenMinOmega) m_picardAitkenMaxOmega = m_picardAitkenMinOmega;
+      ImGui::Checkbox("Use Aitken for bubble", &m_picardUseAitkenBubble);
+      ImGui::BeginDisabled(!m_picardUseAitkenBubble);
+      ImGui::InputDouble("Bubble omega", &m_omegaBubble, 0.0, 0.0, "%.4g");
+      if (m_omegaBubble <= 0.0) m_omegaBubble = 0.4;
+      ImGui::InputDouble("Bubble Aitken min omega", &m_picardAitkenBubbleMinOmega, 0.0, 0.0, "%.4g");
+      if (m_picardAitkenBubbleMinOmega <= 0.0) m_picardAitkenBubbleMinOmega = 0.05;
+      ImGui::InputDouble("Bubble Aitken max omega", &m_picardAitkenBubbleMaxOmega, 0.0, 0.0, "%.4g");
+      if (m_picardAitkenBubbleMaxOmega < m_picardAitkenBubbleMinOmega)
+        m_picardAitkenBubbleMaxOmega = m_picardAitkenBubbleMinOmega;
+      ImGui::EndDisabled();
+      ImGui::Checkbox("Smooth viscosity", &m_picardSmoothViscosity);
+      ImGui::InputDouble("Strain-rate regularization", &m_picardStrainRateRegularization, 0.0, 0.0, "%.4g");
+      if (m_picardStrainRateRegularization <= 0.0) m_picardStrainRateRegularization = 0.001;
+      ImGui::TreePop();
+    }
+
     ImGui::Separator();
     ImGui::Checkbox("Use weak springs", &m_useWeakSprings);
     ImGui::InputDouble("Spring factor", &m_springFactor, 0.0, 0.0, "%.4g");
@@ -275,6 +323,21 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_adaptiveDtMin = m_adaptiveDtMin;
       step->m_maxNodalDisplacementPerStep = m_maxNodalDisplacementPerStep;
       step->m_maxEffectiveStrainIncrementPerStep = m_maxEffectiveStrainIncrementPerStep;
+      step->m_picardUseFixedPointResidual = m_picardUseFixedPointResidual;
+      step->m_picardStagnationEnabled = m_picardStagnationEnabled;
+      step->m_picardStagnationWindow = m_picardStagnationWindow;
+      step->m_picardStagnationMinIter = m_picardStagnationMinIter;
+      step->m_picardStagnationMinImprovement = m_picardStagnationMinImprovement;
+      step->m_picardStagnationMaxWindows = m_picardStagnationMaxWindows;
+      step->m_picardUseAitken = m_picardUseAitken;
+      step->m_picardAitkenMinOmega = m_picardAitkenMinOmega;
+      step->m_picardAitkenMaxOmega = m_picardAitkenMaxOmega;
+      step->m_picardUseAitkenBubble = m_picardUseAitkenBubble;
+      step->m_omegaBubble = m_omegaBubble;
+      step->m_picardAitkenBubbleMinOmega = m_picardAitkenBubbleMinOmega;
+      step->m_picardAitkenBubbleMaxOmega = m_picardAitkenBubbleMaxOmega;
+      step->m_picardSmoothViscosity = m_picardSmoothViscosity;
+      step->m_picardStrainRateRegularization = m_picardStrainRateRegularization;
     }
     m_saved = true;
     m_initialized = false;
