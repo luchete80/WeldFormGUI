@@ -684,6 +684,14 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 step->m_omegaBubble = implicit.value("omegaBubble", 0.4);
                 step->m_picardAitkenBubbleMinOmega = implicit.value("picardAitkenBubbleMinOmega", 0.05);
                 step->m_picardAitkenBubbleMaxOmega = implicit.value("picardAitkenBubbleMaxOmega", 0.6);
+                step->m_picardAcceleration = implicit.value("picardAcceleration", std::string());
+                step->m_picardAndersonDepth = std::clamp(implicit.value("picardAndersonDepth", 3), 1, 5);
+                step->m_picardAndersonConditionLimit = implicit.value("picardAndersonConditionLimit", 1.0e8);
+                step->m_picardAndersonCoefficientLimit = implicit.value("picardAndersonCoefficientLimit", 10.0);
+                step->m_picardAndersonStepFactorLimit = implicit.value("picardAndersonStepFactorLimit", 2.0);
+                step->m_picardAndersonRejectFactor = implicit.value("picardAndersonRejectFactor", 1.25);
+                step->m_picardAndersonMaxRecoveries = std::max(0, implicit.value("picardAndersonMaxRecoveries", 1));
+                step->m_picardAndersonRecoveryIterations = std::max(1, implicit.value("picardAndersonRecoveryIterations", 10));
                 if (!(step->m_omegaBubble > 0.0) || !std::isfinite(step->m_omegaBubble)) step->m_omegaBubble = 0.4;
                 if (!(step->m_picardAitkenBubbleMinOmega > 0.0) || !std::isfinite(step->m_picardAitkenBubbleMinOmega)) step->m_picardAitkenBubbleMinOmega = 0.05;
                 if (!(step->m_picardAitkenBubbleMaxOmega >= step->m_picardAitkenBubbleMinOmega) || !std::isfinite(step->m_picardAitkenBubbleMaxOmega)) step->m_picardAitkenBubbleMaxOmega = step->m_picardAitkenBubbleMinOmega;

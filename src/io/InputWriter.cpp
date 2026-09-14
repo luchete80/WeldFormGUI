@@ -157,6 +157,15 @@ json makeImplicitSolverJson(const Step *step) {
   implicit["omegaBubble"] = step ? step->m_omegaBubble : 0.4;
   implicit["picardAitkenBubbleMinOmega"] = step ? step->m_picardAitkenBubbleMinOmega : 0.05;
   implicit["picardAitkenBubbleMaxOmega"] = step ? step->m_picardAitkenBubbleMaxOmega : 0.6;
+  if (step && !step->m_picardAcceleration.empty())
+    implicit["picardAcceleration"] = step->m_picardAcceleration;
+  implicit["picardAndersonDepth"] = step ? step->m_picardAndersonDepth : 3;
+  implicit["picardAndersonConditionLimit"] = step ? step->m_picardAndersonConditionLimit : 1.0e8;
+  implicit["picardAndersonCoefficientLimit"] = step ? step->m_picardAndersonCoefficientLimit : 10.0;
+  implicit["picardAndersonStepFactorLimit"] = step ? step->m_picardAndersonStepFactorLimit : 2.0;
+  implicit["picardAndersonRejectFactor"] = step ? step->m_picardAndersonRejectFactor : 1.25;
+  implicit["picardAndersonMaxRecoveries"] = step ? step->m_picardAndersonMaxRecoveries : 1;
+  implicit["picardAndersonRecoveryIterations"] = step ? step->m_picardAndersonRecoveryIterations : 10;
   implicit["picardSmoothViscosity"] = step ? step->m_picardSmoothViscosity : false;
   implicit["picardStrainRateRegularization"] = step ? step->m_picardStrainRateRegularization : 0.001;
   return implicit;

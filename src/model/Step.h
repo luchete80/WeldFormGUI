@@ -104,6 +104,14 @@ public:
   double m_omegaBubble = 0.4;
   double m_picardAitkenBubbleMinOmega = 0.05;
   double m_picardAitkenBubbleMaxOmega = 0.6;
+  std::string m_picardAcceleration;
+  int m_picardAndersonDepth = 3;
+  double m_picardAndersonConditionLimit = 1.0e8;
+  double m_picardAndersonCoefficientLimit = 10.0;
+  double m_picardAndersonStepFactorLimit = 2.0;
+  double m_picardAndersonRejectFactor = 1.25;
+  int m_picardAndersonMaxRecoveries = 1;
+  int m_picardAndersonRecoveryIterations = 10;
   bool m_picardSmoothViscosity = false;
   double m_picardStrainRateRegularization = 0.001;
 

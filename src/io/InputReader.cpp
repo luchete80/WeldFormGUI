@@ -127,6 +127,14 @@ void readStep(const json& root, Model* model)
     step->m_omegaBubble = implicit.value("omegaBubble", step->m_omegaBubble);
     step->m_picardAitkenBubbleMinOmega = implicit.value("picardAitkenBubbleMinOmega", step->m_picardAitkenBubbleMinOmega);
     step->m_picardAitkenBubbleMaxOmega = std::max(step->m_picardAitkenBubbleMinOmega, implicit.value("picardAitkenBubbleMaxOmega", step->m_picardAitkenBubbleMaxOmega));
+    step->m_picardAcceleration = implicit.value("picardAcceleration", step->m_picardAcceleration);
+    step->m_picardAndersonDepth = std::clamp(implicit.value("picardAndersonDepth", step->m_picardAndersonDepth), 1, 5);
+    step->m_picardAndersonConditionLimit = implicit.value("picardAndersonConditionLimit", step->m_picardAndersonConditionLimit);
+    step->m_picardAndersonCoefficientLimit = implicit.value("picardAndersonCoefficientLimit", step->m_picardAndersonCoefficientLimit);
+    step->m_picardAndersonStepFactorLimit = implicit.value("picardAndersonStepFactorLimit", step->m_picardAndersonStepFactorLimit);
+    step->m_picardAndersonRejectFactor = implicit.value("picardAndersonRejectFactor", step->m_picardAndersonRejectFactor);
+    step->m_picardAndersonMaxRecoveries = std::max(0, implicit.value("picardAndersonMaxRecoveries", step->m_picardAndersonMaxRecoveries));
+    step->m_picardAndersonRecoveryIterations = std::max(1, implicit.value("picardAndersonRecoveryIterations", step->m_picardAndersonRecoveryIterations));
     step->m_picardSmoothViscosity = implicit.value("picardSmoothViscosity", step->m_picardSmoothViscosity);
     step->m_picardStrainRateRegularization = implicit.value("picardStrainRateRegularization", step->m_picardStrainRateRegularization);
     if (!(step->m_picardAitkenMinOmega > 0.0) || !std::isfinite(step->m_picardAitkenMinOmega)) step->m_picardAitkenMinOmega = 0.05;

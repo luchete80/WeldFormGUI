@@ -547,6 +547,14 @@ void ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["omegaBubble"] = step->m_omegaBubble;
       jstep["implicit"]["picardAitkenBubbleMinOmega"] = step->m_picardAitkenBubbleMinOmega;
       jstep["implicit"]["picardAitkenBubbleMaxOmega"] = step->m_picardAitkenBubbleMaxOmega;
+      jstep["implicit"]["picardAcceleration"] = step->m_picardAcceleration;
+      jstep["implicit"]["picardAndersonDepth"] = step->m_picardAndersonDepth;
+      jstep["implicit"]["picardAndersonConditionLimit"] = step->m_picardAndersonConditionLimit;
+      jstep["implicit"]["picardAndersonCoefficientLimit"] = step->m_picardAndersonCoefficientLimit;
+      jstep["implicit"]["picardAndersonStepFactorLimit"] = step->m_picardAndersonStepFactorLimit;
+      jstep["implicit"]["picardAndersonRejectFactor"] = step->m_picardAndersonRejectFactor;
+      jstep["implicit"]["picardAndersonMaxRecoveries"] = step->m_picardAndersonMaxRecoveries;
+      jstep["implicit"]["picardAndersonRecoveryIterations"] = step->m_picardAndersonRecoveryIterations;
       jstep["implicit"]["picardSmoothViscosity"] = step->m_picardSmoothViscosity;
       jstep["implicit"]["picardStrainRateRegularization"] = step->m_picardStrainRateRegularization;
       m_json["Steps"].push_back(jstep);
