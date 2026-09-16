@@ -502,6 +502,7 @@ void InputWriter::writeToFile(std::string fname) {
   json cont;
   cont["auto"] = contact.autoPenalty;
   cont["autoFactor"] = contact.autoFactor;
+  cont["diagnosticLevel"] = contact.diagnosticLevel;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
   cont["frictionRegularizationVelocity"] = contact.frictionRegularizationVelocity;
   cont["gapPenaltyScale"] = contact.gapPenaltyScale;
@@ -683,6 +684,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Contact"].push_back({
     {"auto", contact.autoPenalty},
     {"autoFactor", contact.autoFactor},
+    {"diagnosticLevel", contact.diagnosticLevel},
     {"fricCoeffStatic", contact.fricCoeffStatic},
     {"frictionRegularizationVelocity", contact.frictionRegularizationVelocity},
     {"gapPenaltyScale", contact.gapPenaltyScale},

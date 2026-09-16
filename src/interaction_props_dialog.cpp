@@ -1,5 +1,6 @@
 #include "interaction_props_dialog.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include "imgui.h"
@@ -25,6 +26,8 @@ void InteractionPropsDialog::Draw()
 
   ContactProperties &contact = m_model->contactProps();
 
+  ImGui::InputInt("Diagnostic Level (0-2)", &contact.diagnosticLevel);
+  contact.diagnosticLevel = std::max(0, std::min(2, contact.diagnosticLevel));
   ImGui::InputDouble("Static Friction", &contact.fricCoeffStatic, 0.01, 0.1, "%.4f");
   ImGui::InputDouble("Friction Reg. Vel. (implicit solver)",
                      &contact.frictionRegularizationVelocity,

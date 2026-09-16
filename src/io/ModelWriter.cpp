@@ -139,6 +139,7 @@ void ModelWriter::writeToFile(std::string fname){
   m_json["Contact"].push_back({
     {"auto", m_model.contactProps().autoPenalty},
     {"autoFactor", m_model.contactProps().autoFactor},
+    {"diagnosticLevel", m_model.contactProps().diagnosticLevel},
     {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
     {"frictionRegularizationVelocity", m_model.contactProps().frictionRegularizationVelocity},
     {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},

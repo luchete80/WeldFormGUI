@@ -44,6 +44,7 @@ enum TwoDMeshGenerator {
 struct ContactProperties {
   bool autoPenalty = false;
   double autoFactor = 0.5;
+  int diagnosticLevel = 0;
   double fricCoeffStatic = 0.0;
   double frictionRegularizationVelocity = 0.0;
   double gapPenaltyScale = 2.0;

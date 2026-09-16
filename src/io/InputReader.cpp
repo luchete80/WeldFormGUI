@@ -214,6 +214,8 @@ void readContact(const json& root, Model* model)
   ContactProperties& props = model->contactProps();
   props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
   props.autoFactor = contact.value("autoFactor", props.autoFactor);
+  props.diagnosticLevel = std::max(0, std::min(2,
+      contact.value("diagnosticLevel", props.diagnosticLevel)));
   props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
   props.frictionRegularizationVelocity =
       contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
