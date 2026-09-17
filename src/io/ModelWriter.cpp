@@ -537,6 +537,10 @@ bool ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["springFactor"] = step->m_springFactor;
       jstep["implicit"]["springStiffness"] = step->m_springStiffness;
       jstep["implicit"]["springMode"] = step->m_springMode;
+      jstep["implicit"]["rigidModeStabilization"] = step->m_rigidModeStabilization;
+      jstep["implicit"]["rigidModeStabilizationFactor"] = step->m_rigidModeStabilizationFactor;
+      jstep["implicit"]["rigidModeContactFade"] = step->m_rigidModeContactFade;
+      jstep["implicit"]["rigidModeContactFadeScale"] = step->m_rigidModeContactFadeScale;
       jstep["implicit"]["adaptiveDtLimiter"] = step->m_adaptiveDtLimiter;
       jstep["implicit"]["adaptiveDtMin"] = step->m_adaptiveDtMin;
       jstep["implicit"]["maxNodalDisplacementPerStep"] = step->m_maxNodalDisplacementPerStep;

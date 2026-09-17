@@ -89,11 +89,25 @@ void testEnabledRoundTripAndPreservation(const fs::path& directory)
           "width must round-trip");
 
   require(roundTripped.getStepCount() > 0, "loaded input should contain the active step");
-  roundTripped.getStep(0)->setStepType(ImplicitStep);
+  Step* implicitStep = roundTripped.getStep(0);
+  implicitStep->setStepType(ImplicitStep);
+  implicitStep->m_rigidModeStabilization = true;
+  implicitStep->m_rigidModeStabilizationFactor = 0.002;
+  implicitStep->m_rigidModeContactFade = false;
+  implicitStep->m_rigidModeContactFadeScale = 1.5;
   InputWriter implicitWriter(&roundTripped);
   const fs::path implicitPath = directory / "enabled_implicit.wfinput";
   require(implicitWriter.writeToFile(implicitPath.string()), "implicit input should write");
   const json implicitJson = readJson(implicitPath);
+  const json& implicitSolver = implicitJson["Configuration"]["solver"]["implicit"];
+  require(implicitSolver["rigidModeStabilization"].get<bool>(),
+          "implicit writer must export rigid-mode stabilization");
+  require(std::abs(implicitSolver["rigidModeStabilizationFactor"].get<double>() - 0.002) < 1e-15,
+          "implicit writer must export the rigid-mode factor");
+  require(!implicitSolver["rigidModeContactFade"].get<bool>(),
+          "implicit writer must export the contact-fade flag");
+  require(std::abs(implicitSolver["rigidModeContactFadeScale"].get<double>() - 1.5) < 1e-15,
+          "implicit writer must export the contact-fade scale");
   const json& implicitContact = implicitJson["Contact"][0];
   require(implicitContact["contactActivationRamp"].is_boolean() &&
               implicitContact["contactActivationRamp"].get<bool>(),
@@ -107,6 +121,16 @@ void testEnabledRoundTripAndPreservation(const fs::path& directory)
   require(implicitRoundTripped.contactProps().contactActivationRamp &&
               std::abs(implicitRoundTripped.contactProps().contactActivationRampWidth - 0.0025) < 1e-15,
           "implicit input ramp settings must round-trip");
+  require(implicitRoundTripped.getStepCount() > 0, "implicit round-trip must contain a step");
+  const Step* importedStep = implicitRoundTripped.getStep(0);
+  require(importedStep->m_rigidModeStabilization,
+          "rigid-mode stabilization must round-trip");
+  require(std::abs(importedStep->m_rigidModeStabilizationFactor - 0.002) < 1e-15,
+          "rigid-mode factor must round-trip");
+  require(!importedStep->m_rigidModeContactFade,
+          "contact-fade flag must round-trip");
+  require(std::abs(importedStep->m_rigidModeContactFadeScale - 1.5) < 1e-15,
+          "contact-fade scale must round-trip");
 
   ContactProperties& roundTripContact = roundTripped.contactProps();
   roundTripContact.contactActivationRamp = false;

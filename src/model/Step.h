@@ -87,6 +87,10 @@ public:
   double m_springFactor = 1.0e-7;
   double m_springStiffness = 0.0;
   int m_springMode = 1;
+  bool m_rigidModeStabilization = false;
+  double m_rigidModeStabilizationFactor = 1.0e-3;
+  bool m_rigidModeContactFade = true;
+  double m_rigidModeContactFadeScale = 1.0;
   bool m_adaptiveDtLimiter = false;
   double m_adaptiveDtMin = 1.0e-7;
   double m_maxNodalDisplacementPerStep = 0.0005;

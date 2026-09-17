@@ -675,6 +675,10 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 step->m_springFactor = implicit.value("springFactor", 1.0e-7);
                 step->m_springStiffness = implicit.value("springStiffness", 0.0);
                 step->m_springMode = implicit.value("springMode", 1);
+                step->m_rigidModeStabilization = implicit.value("rigidModeStabilization", false);
+                step->m_rigidModeStabilizationFactor = implicit.value("rigidModeStabilizationFactor", 1.0e-3);
+                step->m_rigidModeContactFade = implicit.value("rigidModeContactFade", true);
+                step->m_rigidModeContactFadeScale = implicit.value("rigidModeContactFadeScale", 1.0);
                 step->m_adaptiveDtLimiter = implicit.value("adaptiveDtLimiter", false);
                 step->m_adaptiveDtMin = implicit.value("adaptiveDtMin", 1.0e-7);
                 step->m_maxNodalDisplacementPerStep = implicit.value("maxNodalDisplacementPerStep", 0.0005);

@@ -106,6 +106,10 @@ void StepDialog::InitFromStep(Step *step) {
   m_springFactor = step->m_springFactor;
   m_springStiffness = step->m_springStiffness;
   m_springMode = step->m_springMode;
+  m_rigidModeStabilization = step->m_rigidModeStabilization;
+  m_rigidModeStabilizationFactor = step->m_rigidModeStabilizationFactor;
+  m_rigidModeContactFade = step->m_rigidModeContactFade;
+  m_rigidModeContactFadeScale = step->m_rigidModeContactFadeScale;
   m_adaptiveDtLimiter = step->m_adaptiveDtLimiter;
   m_adaptiveDtMin = step->m_adaptiveDtMin;
   m_maxNodalDisplacementPerStep = step->m_maxNodalDisplacementPerStep;
@@ -263,10 +267,27 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
     }
 
     ImGui::Separator();
-    ImGui::Checkbox("Use weak springs", &m_useWeakSprings);
+    if (ImGui::Checkbox("Use weak springs", &m_useWeakSprings) && m_useWeakSprings)
+      m_rigidModeStabilization = false;
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Constrain rigid modes", &m_rigidModeStabilization) &&
+        m_rigidModeStabilization)
+      m_useWeakSprings = false;
     ImGui::InputDouble("Spring factor", &m_springFactor, 0.0, 0.0, "%.4g");
     if (ImGui::Combo("Spring mode", &spring_mode_index, spring_mode_items, IM_ARRAYSIZE(spring_mode_items)))
       m_springMode = springModeFromComboIndex(spring_mode_index);
+
+    ImGui::BeginDisabled(!m_rigidModeStabilization);
+    ImGui::InputDouble("Rigid mode factor", &m_rigidModeStabilizationFactor, 0.0, 0.0, "%.4g");
+    if (m_rigidModeStabilizationFactor <= 0.0)
+      m_rigidModeStabilizationFactor = 1.0e-3;
+    ImGui::Checkbox("Fade constrained modes on contact", &m_rigidModeContactFade);
+    ImGui::BeginDisabled(!m_rigidModeContactFade);
+    ImGui::InputDouble("Rigid mode contact fade scale", &m_rigidModeContactFadeScale, 0.0, 0.0, "%.4g");
+    if (m_rigidModeContactFadeScale <= 0.0)
+      m_rigidModeContactFadeScale = 1.0;
+    ImGui::EndDisabled();
+    ImGui::EndDisabled();
 
     if (ImGui::TreeNode("Advanced")) {
       ImGui::InputDouble("Spring stiffness override", &m_springStiffness, 0.0, 0.0, "%.4g");
@@ -319,6 +340,10 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_springFactor = m_springFactor;
       step->m_springStiffness = m_springStiffness;
       step->m_springMode = m_springMode;
+      step->m_rigidModeStabilization = m_rigidModeStabilization;
+      step->m_rigidModeStabilizationFactor = m_rigidModeStabilizationFactor;
+      step->m_rigidModeContactFade = m_rigidModeContactFade;
+      step->m_rigidModeContactFadeScale = m_rigidModeContactFadeScale;
       step->m_adaptiveDtLimiter = m_adaptiveDtLimiter;
       step->m_adaptiveDtMin = m_adaptiveDtMin;
       step->m_maxNodalDisplacementPerStep = m_maxNodalDisplacementPerStep;
