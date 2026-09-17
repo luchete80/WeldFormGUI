@@ -94,6 +94,7 @@ add_executable(${EXEC_NAME} main.cpp
                             remesh_dialog.cpp
                             model_dialog.cpp
                             move_part_dialog.cpp
+                            geometry/ApproachToContact.cpp
                             mesh_dialog.cpp
                             part_dialog.cpp
                             log.cpp
@@ -213,6 +214,7 @@ find_package(VTK
   CommonColor
   CommonDataModel
   FiltersCore
+  FiltersModeling
   FiltersSources
   InteractionStyle
   InteractionWidgets
@@ -363,6 +365,7 @@ else()
   VTK::CommonColor
   VTK::CommonDataModel
   VTK::FiltersCore
+  VTK::FiltersModeling
   VTK::FiltersSources
   VTK::InteractionStyle
   VTK::InteractionWidgets
@@ -385,6 +388,32 @@ else()
 endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})
+
+if(WFG_BUILD_GEOMETRY_TESTS)
+  add_executable(approach_to_contact_tests
+    geometry/ApproachToContact.cpp
+    geometry/tests/ApproachToContactTests.cpp
+  )
+  target_include_directories(approach_to_contact_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/geometry
+  )
+  if(VTK_VERSION VERSION_LESS "9.0.0")
+    target_link_libraries(approach_to_contact_tests PRIVATE ${VTK_LIBRARIES})
+  else()
+    target_link_libraries(approach_to_contact_tests PRIVATE
+      VTK::CommonCore
+      VTK::CommonDataModel
+      VTK::FiltersCore
+      VTK::FiltersModeling
+      VTK::FiltersSources
+    )
+    vtk_module_autoinit(
+      TARGETS approach_to_contact_tests
+      MODULES VTK::CommonCore VTK::CommonDataModel VTK::FiltersCore VTK::FiltersModeling VTK::FiltersSources
+    )
+  endif()
+  add_test(NAME approach_to_contact_geometry COMMAND approach_to_contact_tests)
+endif()
 
 # imgui-vtk (VTK Viewer class)
 set(imgui_vtk_viewer_dir ${CMAKE_CURRENT_SOURCE_DIR})

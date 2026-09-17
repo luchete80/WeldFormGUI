@@ -29,7 +29,11 @@ set (gl3w_dir "${CMAKE_SOURCE_DIR}/libs/gl3w")
 set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAILS!
 #libs
 # ########### GAME ########
+option(WFG_BUILD_GEOMETRY_TESTS "Build headless approach-to-contact geometry tests" ON)
 add_subdirectory("libs")
+if(WFG_BUILD_GEOMETRY_TESTS)
+    enable_testing()
+endif()
 add_subdirectory("src")
 
 add_custom_target(copy_demos
