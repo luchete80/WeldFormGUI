@@ -1208,7 +1208,14 @@ bool saveModelToPath(Model& model, const std::string& filePathName)
     model.setFilePath(normalizedPath);
 
     ModelWriter writer(model);
-    writer.writeToFile(normalizedPath);
+    if (!writer.writeToFile(normalizedPath)) {
+        if (!isContactActivationRampConfigurationValid(model.contactProps())) {
+            appendToAppConsole("No se guardó el modelo: el ancho de la rampa de activación debe ser finito y mayor que cero.\n");
+        } else {
+            appendToAppConsole("No se pudo escribir el modelo.\n");
+        }
+        return false;
+    }
     model.markSaved();
     getApp().addRecentFile(normalizedPath);
 
@@ -3649,7 +3656,14 @@ bool Editor::createJobFromActiveModel(bool runJob)
 
   fs::path input_path = activeModelOutputPath(model, activeModelStem(model) + ".wfinput");
   InputWriter writer(&model);
-  writer.writeToFile(input_path.string());
+  if (!writer.writeToFile(input_path.string())) {
+    if (!isContactActivationRampConfigurationValid(model.contactProps())) {
+      appendToAppConsole("No se escribió el input: el ancho de la rampa de activación debe ser finito y mayor que cero.\n");
+    } else {
+      appendToAppConsole("No se pudo escribir el input JSON.\n");
+    }
+    return false;
+  }
 
   Job* job = findJobByPath(input_path.string());
   if (job == nullptr) {
@@ -6043,7 +6057,9 @@ void ShowExampleMenuFile(Editor *editor)
         fs::path input_path = activeModelOutputPath(getApp().getActiveModel(),
                                                     activeModelStem(getApp().getActiveModel()) + ".wfinput");
         //writer.writeToFile("Input.json");
-        writer.writeToFile(input_path.string());
+        if (!writer.writeToFile(input_path.string())) {
+          appendToAppConsole("No se pudo escribir el input JSON. Revise el error de validación de contacto.\n");
+        }
       }
       else 
         cout << "File has not name."<<endl;

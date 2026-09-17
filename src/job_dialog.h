@@ -31,6 +31,7 @@ public ObjDialog{
   }
   
   std::string m_filename;
+  std::string m_input_write_error;
   int m_solver_edition = static_cast<int>(Job::SolverEdition::Auto);
   bool m_checkpoint_enabled = false;
   int m_checkpoint_interval = 1;

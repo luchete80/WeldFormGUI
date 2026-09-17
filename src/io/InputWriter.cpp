@@ -420,18 +420,21 @@ json buildEngineMaterialJson(const Material_ *mat, int index) {
 
 InputWriter::InputWriter(Model*m) : m_model(m) {}
 
-void InputWriter::writeToFile(std::string fname) {
+bool InputWriter::writeToFile(std::string fname) {
   namespace fs = std::filesystem;
 
   if (m_model == nullptr) {
-    std::cout << "ERROR: null model in InputWriter" << std::endl;
-    return;
+    std::cerr << "ERROR: null model in InputWriter" << std::endl;
+    return false;
+  }
+  if (!isContactActivationRampConfigurationValid(m_model->contactProps())) {
+    std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
+    return false;
   }
 
   Step *step = activeStep(m_model);
   if (step != nullptr && step->isImplicit()) {
-    writeImplicitToFile(fname);
-    return;
+    return writeImplicitToFile(fname);
   }
 
   json m_json;
@@ -443,7 +446,7 @@ void InputWriter::writeToFile(std::string fname) {
   std::ofstream o(fname);
   if (!o.is_open()) {
     std::cout << "ERROR: could not open output file " << fname << std::endl;
-    return;
+    return false;
   }
 
   m_json["Configuration"]["cflFactor"] = step ? step->m_cflFactor : 0.3;
@@ -502,6 +505,8 @@ void InputWriter::writeToFile(std::string fname) {
   json cont;
   cont["auto"] = contact.autoPenalty;
   cont["autoFactor"] = contact.autoFactor;
+  cont["contactActivationRamp"] = contact.contactActivationRamp;
+  cont["contactActivationRampWidth"] = contact.contactActivationRampWidth;
   cont["diagnosticLevel"] = contact.diagnosticLevel;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
   cont["frictionRegularizationVelocity"] = contact.frictionRegularizationVelocity;
@@ -613,14 +618,19 @@ void InputWriter::writeToFile(std::string fname) {
   }
 
   o << std::setw(4) << m_json << std::endl;
+  return static_cast<bool>(o);
 }
 
-void InputWriter::writeImplicitToFile(std::string fname) {
+bool InputWriter::writeImplicitToFile(std::string fname) {
   namespace fs = std::filesystem;
 
   if (m_model == nullptr) {
-    std::cout << "ERROR: null model in InputWriter" << std::endl;
-    return;
+    std::cerr << "ERROR: null model in InputWriter" << std::endl;
+    return false;
+  }
+  if (!isContactActivationRampConfigurationValid(m_model->contactProps())) {
+    std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
+    return false;
   }
 
   Step *step = activeStep(m_model);
@@ -634,7 +644,7 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   std::ofstream o(fname);
   if (!o.is_open()) {
     std::cout << "ERROR: could not open output file " << fname << std::endl;
-    return;
+    return false;
   }
 
   m_json["Configuration"]["Nproc"] = step ? step->m_nproc : 1;
@@ -684,6 +694,8 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Contact"].push_back({
     {"auto", contact.autoPenalty},
     {"autoFactor", contact.autoFactor},
+    {"contactActivationRamp", contact.contactActivationRamp},
+    {"contactActivationRampWidth", contact.contactActivationRampWidth},
     {"diagnosticLevel", contact.diagnosticLevel},
     {"fricCoeffStatic", contact.fricCoeffStatic},
     {"frictionRegularizationVelocity", contact.frictionRegularizationVelocity},
@@ -779,4 +791,5 @@ void InputWriter::writeImplicitToFile(std::string fname) {
   }
 
   o << std::setw(4) << m_json << std::endl;
+  return static_cast<bool>(o);
 }

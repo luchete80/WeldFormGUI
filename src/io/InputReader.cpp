@@ -207,11 +207,16 @@ void readSymmetryPlanes(const json& root, Model* model)
 
 void readContact(const json& root, Model* model)
 {
-  if (model == nullptr || !root.contains("Contact") || !root["Contact"].is_array() || root["Contact"].empty())
+  if (model == nullptr)
+    return;
+
+  ContactProperties& props = model->contactProps();
+  props.contactActivationRamp = false;
+  props.contactActivationRampWidth = 0.001;
+  if (!root.contains("Contact") || !root["Contact"].is_array() || root["Contact"].empty())
     return;
 
   const json& contact = root["Contact"][0];
-  ContactProperties& props = model->contactProps();
   props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
   props.autoFactor = contact.value("autoFactor", props.autoFactor);
   props.diagnosticLevel = std::max(0, std::min(2,
@@ -226,6 +231,8 @@ void readContact(const json& root, Model* model)
   props.maxPenetRatio = contact.value("maxPenetRatio", props.maxPenetRatio);
   props.penaltyFactor = contact.value("penaltyFactor", props.penaltyFactor);
   props.useGapPenalty = contact.value("useGapPenalty", props.useGapPenalty);
+  props.contactActivationRamp = contact.value("contactActivationRamp", false);
+  props.contactActivationRampWidth = contact.value("contactActivationRampWidth", 0.001);
 }
 
 void readMeshing(const json& root, Model* model)

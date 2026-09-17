@@ -114,9 +114,12 @@ bool ModelReader::readFromFile(const std::string& fname) {
           m_model->m_thermal_coupling = false;
     }
 
+    ContactProperties &contactProps = m_model->contactProps();
+    contactProps.contactActivationRamp = false;
+    contactProps.contactActivationRampWidth = 0.001;
     if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
         const auto &contact = j["Contact"][0];
-        ContactProperties &props = m_model->contactProps();
+        ContactProperties &props = contactProps;
         props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
         props.autoFactor = contact.value("autoFactor", props.autoFactor);
         props.diagnosticLevel = std::max(0, std::min(2,
@@ -131,6 +134,8 @@ bool ModelReader::readFromFile(const std::string& fname) {
         props.maxPenetRatio = contact.value("maxPenetRatio", props.maxPenetRatio);
         props.penaltyFactor = contact.value("penaltyFactor", props.penaltyFactor);
         props.useGapPenalty = contact.value("useGapPenalty", props.useGapPenalty);
+        props.contactActivationRamp = contact.value("contactActivationRamp", false);
+        props.contactActivationRampWidth = contact.value("contactActivationRampWidth", 0.001);
     }
 
     if (j.contains("Remeshing") && j["Remeshing"].is_object()) {

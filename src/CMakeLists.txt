@@ -389,6 +389,14 @@ endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})
 
+if(WFG_BUILD_CONTACT_IO_TESTS)
+  add_executable(contact_activation_ramp_io_tests
+    io/tests/ContactActivationRampIOTests.cpp
+  )
+  target_link_libraries(contact_activation_ramp_io_tests PRIVATE io)
+  add_test(NAME contact_activation_ramp_io COMMAND contact_activation_ramp_io_tests)
+endif()
+
 if(WFG_BUILD_GEOMETRY_TESTS)
   add_executable(approach_to_contact_tests
     geometry/ApproachToContact.cpp

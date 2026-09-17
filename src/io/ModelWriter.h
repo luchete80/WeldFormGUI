@@ -10,7 +10,7 @@ class ModelWriter{
 public:
   ModelWriter(Model &Model);
   //ModelWriter(char *fname);
-  void writeToFile(std::string fname);
+  bool writeToFile(std::string fname);
   ~ModelWriter(){};  
 
 protected:

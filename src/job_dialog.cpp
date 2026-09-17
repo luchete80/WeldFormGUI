@@ -189,26 +189,38 @@ void  JobDialog::Draw(){
   ImGui::Combo("Solver edition", &m_solver_edition, solverEditionLabels, IM_ARRAYSIZE(solverEditionLabels));
   ImGui::TextDisabled("Auto uses environment/default binary selection");
 
+  if (!m_input_write_error.empty()) {
+    ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", m_input_write_error.c_str());
+  }
+
   if (!m_edit_mode && ImGui::Button("From Model")){
+    m_input_write_error.clear();
     Model &model = getApp().getActiveModel();
     if (model.getHasName()) {
       fs::path input_path = modelOutputPath(model, modelStem(model) + ".wfinput");
       m_filename = input_path.string();
       InputWriter writer(&model);
-      writer.writeToFile(input_path.string());
-      Job tempJob(m_filename);
-      tempJob.setCheckpointEnabled(m_checkpoint_enabled);
-      tempJob.setCheckpointInterval(m_checkpoint_interval);
-      tempJob.setCheckpointDir(m_checkpoint_dir);
-      tempJob.setCheckpointPrefix(m_checkpoint_prefix);
-      tempJob.setRestartFile(m_restart_file);
-      tempJob.setResultBaseName(m_result_base_name);
-      tempJob.applyRestartSettingsToInput();
-      create_entity = true;
-      m_edit_mode = false;
-      m_job = nullptr;
-      m_show = false;
-      cout << "Created input from model: " << m_filename << endl;
+      if (!writer.writeToFile(input_path.string())) {
+        if (!isContactActivationRampConfigurationValid(model.contactProps())) {
+          m_input_write_error = "El ancho de la rampa de activación debe ser finito y mayor que cero.";
+        } else {
+          m_input_write_error = "No se pudo escribir el input JSON; revise la consola para más detalles.";
+        }
+      } else {
+        Job tempJob(m_filename);
+        tempJob.setCheckpointEnabled(m_checkpoint_enabled);
+        tempJob.setCheckpointInterval(m_checkpoint_interval);
+        tempJob.setCheckpointDir(m_checkpoint_dir);
+        tempJob.setCheckpointPrefix(m_checkpoint_prefix);
+        tempJob.setRestartFile(m_restart_file);
+        tempJob.setResultBaseName(m_result_base_name);
+        tempJob.applyRestartSettingsToInput();
+        create_entity = true;
+        m_edit_mode = false;
+        m_job = nullptr;
+        m_show = false;
+        cout << "Created input from model: " << m_filename << endl;
+      }
     } else {
       cout << "File has not name." << endl;
     }

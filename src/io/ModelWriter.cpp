@@ -39,8 +39,12 @@ ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 //~ }
 
 
-void ModelWriter::writeToFile(std::string fname){
+bool ModelWriter::writeToFile(std::string fname){
   namespace fs = std::filesystem;
+  if (!isContactActivationRampConfigurationValid(m_model.contactProps())) {
+    std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
+    return false;
+  }
   json m_json;
   
   //json j;
@@ -139,6 +143,8 @@ void ModelWriter::writeToFile(std::string fname){
   m_json["Contact"].push_back({
     {"auto", m_model.contactProps().autoPenalty},
     {"autoFactor", m_model.contactProps().autoFactor},
+    {"contactActivationRamp", m_model.contactProps().contactActivationRamp},
+    {"contactActivationRampWidth", m_model.contactProps().contactActivationRampWidth},
     {"diagnosticLevel", m_model.contactProps().diagnosticLevel},
     {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
     {"frictionRegularizationVelocity", m_model.contactProps().frictionRegularizationVelocity},
@@ -686,4 +692,5 @@ void ModelWriter::writeToFile(std::string fname){
   o << std::setw(4) << m_json << std::endl;
   
   o.close();
+  return static_cast<bool>(o);
 }

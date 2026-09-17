@@ -15,8 +15,8 @@ public:
   Model* getModel(){return m_model;}
   bool readFromFile(const std::string& fname) ;
 
-  void writeToFile(std::string fname);
-  void writeImplicitToFile(std::string fname);
+  bool writeToFile(std::string fname);
+  bool writeImplicitToFile(std::string fname);
   
   ~InputWriter(){}  
 

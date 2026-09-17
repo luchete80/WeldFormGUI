@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <filesystem>
+#include <cmath>
 
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
@@ -54,7 +55,16 @@ struct ContactProperties {
   double maxPenetRatio = 0.05;
   double penaltyFactor = 5000.0;
   bool useGapPenalty = true;
+  bool contactActivationRamp = false;
+  double contactActivationRampWidth = 0.001;
 };
+
+inline bool isContactActivationRampConfigurationValid(const ContactProperties& contact)
+{
+  return !contact.contactActivationRamp ||
+      (std::isfinite(contact.contactActivationRampWidth) &&
+       contact.contactActivationRampWidth > 0.0);
+}
 
 struct RemeshingSettings {
   bool enabled = false;
