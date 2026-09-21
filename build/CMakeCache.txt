@@ -454,6 +454,12 @@ RT_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/librt.a
 //The directory containing a CMake configuration file for VTK.
 VTK_DIR:PATH=/usr/local/lib/cmake/vtk-9.3
 
+//Build headless contact settings input IO tests
+WFG_BUILD_CONTACT_IO_TESTS:BOOL=ON
+
+//Build headless approach-to-contact geometry tests
+WFG_BUILD_GEOMETRY_TESTS:BOOL=OFF
+
 //Path to a file.
 X11_ICE_INCLUDE_PATH:PATH=/usr/include
 
@@ -914,7 +920,7 @@ imgui-vtk_SOURCE_DIR:STATIC=/home/weldform-pc/Numerico/WeldFormGUI
 imgui_LIB_DEPENDS:STATIC=general;glfw;
 
 //Dependencies for the target
-imgui_vtk_viewer_LIB_DEPENDS:STATIC=general;imgui;general;VTK::CommonCore;general;VTK::CommonColor;general;VTK::CommonDataModel;general;VTK::FiltersCore;general;VTK::FiltersSources;general;VTK::InteractionStyle;general;VTK::InteractionWidgets;general;VTK::RenderingAnnotation;general;VTK::RenderingCore;general;VTK::RenderingContextOpenGL2;general;VTK::RenderingFreeType;general;VTK::RenderingGL2PSOpenGL2;general;VTK::RenderingOpenGL2;general;VTK::IOCore;general;VTK::IOGeometry;general;VTK::IOOCCT;general;VTK::CommonExecutionModel;general;VTK::TestingRendering;general;VTK::FiltersGeneral;general;VTK::CommonSystem;general;VTK::vtksys;
+imgui_vtk_viewer_LIB_DEPENDS:STATIC=general;imgui;general;VTK::CommonCore;general;VTK::CommonColor;general;VTK::CommonDataModel;general;VTK::FiltersCore;general;VTK::FiltersModeling;general;VTK::FiltersSources;general;VTK::InteractionStyle;general;VTK::InteractionWidgets;general;VTK::RenderingAnnotation;general;VTK::RenderingCore;general;VTK::RenderingContextOpenGL2;general;VTK::RenderingFreeType;general;VTK::RenderingGL2PSOpenGL2;general;VTK::RenderingOpenGL2;general;VTK::IOCore;general;VTK::IOGeometry;general;VTK::IOOCCT;general;VTK::CommonExecutionModel;general;VTK::TestingRendering;general;VTK::FiltersGeneral;general;VTK::CommonSystem;general;VTK::vtksys;
 
 //Dependencies for the target
 implot_LIB_DEPENDS:STATIC=general;imgui;

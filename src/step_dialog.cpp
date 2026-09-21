@@ -92,6 +92,7 @@ void StepDialog::InitFromStep(Step *step) {
   std::strncpy(m_implicit_type, step->m_implicitType.c_str(), sizeof(m_implicit_type) - 1);
   m_implicit_type[sizeof(m_implicit_type) - 1] = '\0';
   m_velTol = step->m_velTol;
+  m_bubbleVelTol = step->m_bubbleVelTol;
   m_pressTol = step->m_pressTol;
   m_forceTol = step->m_forceTol;
   m_divTol = step->m_divTol;
@@ -131,7 +132,7 @@ void StepDialog::InitFromStep(Step *step) {
   m_picardStrainRateRegularization = step->m_picardStrainRateRegularization;
 }
 
-void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
+void StepDialog::Draw(const char* title, bool* p_open, Step* step, bool is3D) {
   m_saved = false;
   m_cancelled = false;
 
@@ -211,6 +212,8 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       }
     }
     ImGui::InputDouble("Vel Tol", &m_velTol, 0.0, 1.0, "%.4g");
+    if (is3D)
+      ImGui::InputDouble("Bubble Vel Tol", &m_bubbleVelTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Press Tol", &m_pressTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Force Tol", &m_forceTol, 0.0, 1.0, "%.4g");
     ImGui::InputDouble("Div Tol", &m_divTol, 0.0, 1.0, "%.4g");
@@ -326,6 +329,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
       step->m_implicitFormulation = static_cast<ImplicitFormulation>(m_implicit_formulation);
       step->m_implicitType = m_implicit_type;
       step->m_velTol = m_velTol;
+      step->m_bubbleVelTol = m_bubbleVelTol;
       step->m_pressTol = m_pressTol;
       step->m_forceTol = m_forceTol;
       step->m_divTol = m_divTol;
@@ -378,8 +382,8 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step) {
   ImGui::End();
 }
 
-bool ShowEditStepDialog(bool* p_open, StepDialog *stepdlg, Step *step) {
+bool ShowEditStepDialog(bool* p_open, StepDialog *stepdlg, Step *step, bool is3D) {
   ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-  stepdlg->Draw("Step", p_open, step);
+  stepdlg->Draw("Step", p_open, step, is3D);
   return stepdlg->m_saved;
 }

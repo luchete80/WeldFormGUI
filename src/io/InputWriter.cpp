@@ -119,13 +119,15 @@ std::string normalizeImplicitSolverType(const std::string& type, ImplicitFormula
   return "picard";
 }
 
-json makeImplicitSolverJson(const Step *step) {
+json makeImplicitSolverJson(const Step *step, bool is3D) {
   json implicit;
   const ImplicitFormulation formulation =
       step ? step->m_implicitFormulation : ImplicitFormulation::RigidViscoplastic;
   implicit["formulation"] = implicitFormulationToConfigString(formulation);
   implicit["type"] = normalizeImplicitSolverType(step ? step->m_implicitType : "", formulation);
   implicit["velTol"] = step ? step->m_velTol : 5e-2;
+  if (is3D)
+    implicit["bubbleVelTol"] = step ? step->m_bubbleVelTol : 5e-2;
   implicit["pressTol"] = step ? step->m_pressTol : 10.0;
   implicit["forceTol"] = step ? step->m_forceTol : 10.0;
   implicit["divTol"] = step ? step->m_divTol : 1.0;
@@ -667,7 +669,8 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
   if (step != nullptr && step->isImplicit()) {
-    m_json["Configuration"]["solver"]["implicit"] = makeImplicitSolverJson(step);
+    m_json["Configuration"]["solver"]["implicit"] =
+        makeImplicitSolverJson(step, m_model->getAnalysisType() == Solid3D);
   }
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 

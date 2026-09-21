@@ -9324,7 +9324,8 @@ void Editor::drawGui() {
     }
   }
   if (m_show_step_dlg_edit) {
-    ShowEditStepDialog(&m_show_step_dlg_edit, &m_stepdlg, selected_step);
+    const bool is3D = m_model != nullptr && m_model->getAnalysisType() == Solid3D;
+    ShowEditStepDialog(&m_show_step_dlg_edit, &m_stepdlg, selected_step, is3D);
     if (!m_show_step_dlg_edit) {
       if (m_stepdlg.m_saved && m_creating_step && selected_step != nullptr) {
         m_model->addStep(selected_step);

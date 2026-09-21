@@ -659,6 +659,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     implicitFormulationFromConfigString(implicit.value("formulation", std::string("rigid_viscoplastic")));
                 step->m_implicitType = implicit.value("type", "Picard");
                 step->m_velTol = implicit.value("velTol", 5e-2);
+                step->m_bubbleVelTol = implicit.value("bubbleVelTol", step->m_velTol);
                 step->m_pressTol = implicit.value("pressTol", 10.0);
                 step->m_forceTol = implicit.value("forceTol", 10.0);
                 step->m_divTol = implicit.value("divTol", 1.0);

@@ -39,6 +39,7 @@ struct StepDialog {
   int m_implicit_formulation = static_cast<int>(ImplicitFormulation::RigidViscoplastic);
   char m_implicit_type[128] = "Picard";
   double m_velTol = 5e-2;
+  double m_bubbleVelTol = 5e-2;
   double m_pressTol = 10.0;
   double m_forceTol = 10.0;
   double m_divTol = 1.0;
@@ -78,9 +79,9 @@ struct StepDialog {
   double m_picardStrainRateRegularization = 0.001;
 
   void InitFromStep(Step *step);
-  void Draw(const char* title, bool* p_open = nullptr, Step* step = nullptr);
+  void Draw(const char* title, bool* p_open = nullptr, Step* step = nullptr, bool is3D = true);
 };
 
-bool ShowEditStepDialog(bool* p_open, StepDialog *stepdlg, Step *step);
+bool ShowEditStepDialog(bool* p_open, StepDialog *stepdlg, Step *step, bool is3D = true);
 
 #endif

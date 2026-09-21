@@ -94,6 +94,7 @@ void readStep(const json& root, Model* model)
       step->m_implicitType = conf["solver"].value("type", step->m_implicitType);
     }
     step->m_velTol = implicit.value("velTol", step->m_velTol);
+    step->m_bubbleVelTol = implicit.value("bubbleVelTol", step->m_velTol);
     step->m_pressTol = implicit.value("pressTol", step->m_pressTol);
     step->m_forceTol = implicit.value("forceTol", step->m_forceTol);
     step->m_divTol = implicit.value("divTol", step->m_divTol);

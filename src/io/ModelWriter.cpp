@@ -523,6 +523,8 @@ bool ModelWriter::writeToFile(std::string fname){
       jstep["implicit"]["formulation"] = implicitFormulationToConfigString(step->m_implicitFormulation);
       jstep["implicit"]["type"] = persistedImplicitSolverType(step);
       jstep["implicit"]["velTol"] = step->m_velTol;
+      if (m_model.getAnalysisType() == Solid3D)
+        jstep["implicit"]["bubbleVelTol"] = step->m_bubbleVelTol;
       jstep["implicit"]["pressTol"] = step->m_pressTol;
       jstep["implicit"]["forceTol"] = step->m_forceTol;
       jstep["implicit"]["divTol"] = step->m_divTol;
