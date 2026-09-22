@@ -23,6 +23,7 @@ struct ModelDialog{
 
 
   bool m_thermal_coupling_flag = false;
+  double m_plastic_heat_fraction = 0.9;
   
   const bool & isModelCreated()const{return create_part;}
   void   Draw(const char* title, bool* p_open = NULL, Model* prt = NULL);  

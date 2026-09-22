@@ -100,6 +100,51 @@ Step *activeStep(Model *model) {
   return model->getStep(0);
 }
 
+bool validateThermalConfiguration(Model *model, const Step *step) {
+  if (model == nullptr || !model->m_thermal_coupling)
+    return true;
+
+  const double fraction = model->getPlasticHeatFraction();
+  if (!std::isfinite(fraction) || fraction < 0.0 || fraction > 1.0) {
+    std::cerr << "ERROR: plHeatFrac must be finite and within [0,1]." << std::endl;
+    return false;
+  }
+
+  for (int i = 0; i < model->getMaterialCount(); ++i) {
+    const Material_* material = model->getMaterial(i);
+    if (material == nullptr)
+      continue;
+    const double density = material->getDensityConstant();
+    if (!std::isfinite(density) || density <= 0.0) {
+      std::cerr << "ERROR: thermal material " << i << " requires density0 > 0." << std::endl;
+      return false;
+    }
+    if (!std::isfinite(material->cp_T) || material->cp_T <= 0.0) {
+      std::cerr << "ERROR: thermal material " << i << " requires thermalHeatCap > 0." << std::endl;
+      return false;
+    }
+    if (!std::isfinite(material->k_T) || material->k_T < 0.0) {
+      std::cerr << "ERROR: thermal material " << i << " requires thermalCond >= 0." << std::endl;
+      return false;
+    }
+  }
+
+  bool has_temperature = false;
+  for (int i = 0; i < model->getICCount(); ++i) {
+    if (model->getIC(i) != nullptr && model->getIC(i)->getType() == TempIC) {
+      has_temperature = true;
+      break;
+    }
+  }
+  if (!has_temperature)
+    std::cerr << "WARNING: thermal coupling has no initial temperature; the engine will use 20 C." << std::endl;
+
+  if (step != nullptr && step->isImplicit() && model->getAnalysisType() == Solid3D)
+    std::cerr << "WARNING: implicit 3D thermal export assumes deformable elements are TET4; topology validation is unavailable in the GUI." << std::endl;
+
+  return true;
+}
+
 std::string normalizeImplicitSolverType(const std::string& type, ImplicitFormulation formulation) {
   if (formulation == ImplicitFormulation::J2Elastoplastic)
     return "j2";
@@ -437,8 +482,10 @@ bool InputWriter::writeToFile(std::string fname) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
   }
-
   Step *step = activeStep(m_model);
+  if ((step == nullptr || !step->isImplicit()) && !validateThermalConfiguration(m_model, step))
+    return false;
+
   if (step != nullptr && step->isImplicit()) {
     return writeImplicitToFile(fname);
   }
@@ -466,6 +513,7 @@ bool InputWriter::writeToFile(std::string fname) {
     0.0
   };
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
+  m_json["Configuration"]["plHeatFrac"] = m_model->getPlasticHeatFraction();
   if (m_model->m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true;
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
@@ -638,8 +686,10 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
   }
-
   Step *step = activeStep(m_model);
+  if (!validateThermalConfiguration(m_model, step))
+    return false;
+
 
   json m_json;
   fs::path json_path(fname);
@@ -664,6 +714,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   m_json["Configuration"]["outTime"] = step ? step->m_outTime : 1.0;
   m_json["Configuration"]["fixedTS"] = step ? step->m_fixedTS : false;
   m_json["Configuration"]["domType"] = domTypeFromAnalysis(m_model);
+  m_json["Configuration"]["plHeatFrac"] = m_model->getPlasticHeatFraction();
   m_json["Configuration"]["AxiSymmVol"] = step ? step->m_axiSymmVol : false;
   m_json["Configuration"]["elemLentghFraction"] = step ? step->m_elemLengthFraction : 0.2;
   if (m_model->m_thermal_coupling)

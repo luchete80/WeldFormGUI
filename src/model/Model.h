@@ -7,6 +7,7 @@
 #include <string>
 #include <filesystem>
 #include <cmath>
+#include <algorithm>
 
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
@@ -230,6 +231,13 @@ public:
         return -1; // error
     }
   bool m_thermal_coupling = false;
+  // Fraction of plastic work converted to heat; matches the engine default.
+  double m_plastic_heat_fraction = 0.9;
+
+  double getPlasticHeatFraction() const { return m_plastic_heat_fraction; }
+  void setPlasticHeatFraction(double value) {
+    m_plastic_heat_fraction = std::isfinite(value) ? std::max(0.0, std::min(1.0, value)) : 0.9;
+  }
 
 protected:
   std::vector <Part*>        m_part;

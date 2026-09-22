@@ -531,6 +531,10 @@ bool InputReader::readFromFile(const std::string& fname)
     const json& conf = root["Configuration"];
     m_model->setAnalysisType(analysisFromDomType(conf.value("domType", std::string("3D"))));
     m_model->m_thermal_coupling = conf.value("thermal", false);
+    if (conf.contains("plHeatFrac") && conf["plHeatFrac"].is_number())
+      m_model->setPlasticHeatFraction(conf["plHeatFrac"].get<double>());
+    else
+      m_model->setPlasticHeatFraction(0.9);
   }
 
   readStep(root, m_model);

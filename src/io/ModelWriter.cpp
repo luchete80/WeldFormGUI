@@ -138,6 +138,7 @@ bool ModelWriter::writeToFile(std::string fname){
   
   if (m_model.m_thermal_coupling)
     m_json["Configuration"]["thermal"] = true; 
+  m_json["Configuration"]["plHeatFrac"] = m_model.getPlasticHeatFraction();
 
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({

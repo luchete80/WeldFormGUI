@@ -1,11 +1,15 @@
 #include "io/InputReader.h"
 #include "io/InputWriter.h"
+#include "io/ModelReader.h"
+#include "io/ModelWriter.h"
 #include "model/Model.h"
+#include "model/Material.h"
 #include "model/Step.h"
 
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -166,6 +170,81 @@ void testInvalidWidthsBlockWrites(const fs::path& directory)
   require(writer.writeToFile(disabledPath.string()), "invalid width is allowed while the ramp is disabled");
 }
 
+void testThermalCouplingPersistence(const fs::path& directory)
+{
+  const fs::path legacyInput = directory / "legacy_thermal.wfinput";
+  {
+    std::ofstream legacy(legacyInput);
+    legacy << R"({"Configuration":{"domType":"3D","thermal":true},"Contact":[{}]})";
+  }
+  Model imported;
+  InputReader inputReader(&imported);
+  require(inputReader.readFromFile(legacyInput.string()), "legacy thermal input should load");
+  require(std::abs(imported.getPlasticHeatFraction() - 0.9) < 1e-15,
+          "legacy input must default plHeatFrac to 0.9");
+
+  imported.setPlasticHeatFraction(0.73);
+  Material_* thermalMaterial = new Material_(Elastic_(1000.0, 0.3));
+  thermalMaterial->setDensityConstant(1.0);
+  thermalMaterial->cp_T = 2.0;
+  thermalMaterial->k_T = 0.5;
+  imported.addMaterial(thermalMaterial);
+  require(imported.getStepCount() > 0, "legacy input should create a step");
+  imported.getStep(0)->setStepType(ImplicitStep);
+  InputWriter inputWriter(&imported);
+  const fs::path generatedInput = directory / "thermal.wfinput";
+  require(inputWriter.writeToFile(generatedInput.string()), "thermal input should write");
+  const json inputJson = readJson(generatedInput);
+  require(std::abs(inputJson["Configuration"]["plHeatFrac"].get<double>() - 0.73) < 1e-15,
+          "thermal input must serialize plHeatFrac");
+  require(inputJson["Configuration"]["thermal"].get<bool>(),
+          "thermal input must preserve the thermal flag");
+  require(std::abs(inputJson["Materials"][0]["thermalHeatCap"].get<double>() - 2.0) < 1e-15,
+          "thermal input must serialize heat capacity");
+  require(std::abs(inputJson["Materials"][0]["thermalCond"].get<double>() - 0.5) < 1e-15,
+          "thermal input must serialize conductivity");
+
+  Model inputRoundTrip;
+  InputReader inputRoundTripReader(&inputRoundTrip);
+  require(inputRoundTripReader.readFromFile(generatedInput.string()), "thermal input should round-trip");
+  require(std::abs(inputRoundTrip.getPlasticHeatFraction() - 0.73) < 1e-15,
+          "thermal input plHeatFrac must round-trip");
+
+  const fs::path legacyModel = directory / "legacy.wfmodel";
+  {
+    std::ofstream legacy(legacyModel);
+    legacy << R"({"Configuration":{"analysisType":"Solid3D"}})";
+  }
+  Model modelImported;
+  ModelReader modelReader(&modelImported);
+  require(modelReader.readFromFile(legacyModel.string()), "legacy model should load");
+  require(std::abs(modelImported.getPlasticHeatFraction() - 0.9) < 1e-15,
+          "legacy model must default plHeatFrac to 0.9");
+
+  modelImported.setPlasticHeatFraction(0.73);
+  ModelWriter modelWriter(modelImported);
+  const fs::path generatedModel = directory / "thermal.wfmodel";
+  require(modelWriter.writeToFile(generatedModel.string()), "thermal model should write");
+  Model modelRoundTrip;
+  ModelReader modelRoundTripReader(&modelRoundTrip);
+  require(modelRoundTripReader.readFromFile(generatedModel.string()), "thermal model should round-trip");
+  require(std::abs(modelRoundTrip.getPlasticHeatFraction() - 0.73) < 1e-15,
+          "thermal model plHeatFrac must round-trip");
+
+  const double invalidValues[] = {-0.1, 1.1, std::numeric_limits<double>::quiet_NaN(),
+                                  std::numeric_limits<double>::infinity()};
+  for (double value : invalidValues) {
+    modelImported.setPlasticHeatFraction(value);
+    require(std::abs(modelImported.getPlasticHeatFraction() -
+                     (std::isfinite(value) ? std::max(0.0, std::min(1.0, value)) : 0.9)) < 1e-15,
+            "model setter must sanitize invalid plHeatFrac values");
+  }
+  modelImported.m_plastic_heat_fraction = -0.1;
+  const fs::path invalidOutput = directory / "invalid_thermal.wfinput";
+  require(!inputWriter.writeToFile(invalidOutput.string()),
+          "invalid direct plHeatFrac state must block input writing");
+}
+
 int main()
 {
   const auto nonce = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -176,6 +255,7 @@ int main()
     testDefaultsAndLegacyInput(directory);
     testEnabledRoundTripAndPreservation(directory);
     testInvalidWidthsBlockWrites(directory);
+    testThermalCouplingPersistence(directory);
     fs::remove_all(directory);
     std::cout << "Contact activation ramp IO tests passed.\n";
     return 0;

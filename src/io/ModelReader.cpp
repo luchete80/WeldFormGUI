@@ -112,6 +112,10 @@ bool ModelReader::readFromFile(const std::string& fname) {
           m_model->m_thermal_coupling = true;
         else
           m_model->m_thermal_coupling = false;
+        if (conf.contains("plHeatFrac") && conf["plHeatFrac"].is_number())
+            m_model->setPlasticHeatFraction(conf["plHeatFrac"].get<double>());
+        else
+            m_model->setPlasticHeatFraction(0.9);
     }
 
     ContactProperties &contactProps = m_model->contactProps();

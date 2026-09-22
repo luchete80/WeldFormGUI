@@ -5,6 +5,8 @@
 #include "model_dialog.h"
 
 #include <iostream>
+#include <algorithm>
+#include <cmath>
 
 
 using namespace std;
@@ -26,6 +28,7 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
         m_antype = Axisymmetric2D;
         
       m_thermal_coupling_flag = model->m_thermal_coupling;
+      m_plastic_heat_fraction = model->getPlasticHeatFraction();
         
       cout << "Not initialized "<<endl;
   }
@@ -42,6 +45,12 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
   //~ ImGui::InputInt("Id ", &m_id, 1,10);  
 
   ImGui::Checkbox("Thermal Coupling", &m_thermal_coupling_flag);
+  if (m_thermal_coupling_flag) {
+    ImGui::SliderDouble("Plastic Work to Heat Fraction", &m_plastic_heat_fraction, 0.0, 1.0, "%.4f");
+    if (!std::isfinite(m_plastic_heat_fraction))
+      m_plastic_heat_fraction = 0.9;
+    m_plastic_heat_fraction = std::max(0.0, std::min(1.0, m_plastic_heat_fraction));
+  }
   
   if (ImGui::RadioButton("Solid 3D", m_antype == Solid3D)) {
       m_antype = Solid3D;
@@ -73,6 +82,7 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
       model->m_thermal_coupling = true;
     else
       model->m_thermal_coupling = false;
+    model->setPlasticHeatFraction(m_plastic_heat_fraction);
     m_saved = true;
     m_cancelled = false;
     
