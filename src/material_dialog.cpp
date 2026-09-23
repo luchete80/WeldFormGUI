@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -639,6 +640,9 @@ bool BuildGMTPreviewMaterial(const MaterialDialog &dialog, Material_ &preview_ma
 void DrawGMTPlots(const MaterialDialog &dialog) {
   static bool fit_strain_next = true;
   static bool fit_temp_next = true;
+  static bool family_values_initialized = false;
+  static double family_temperatures[3] = {};
+  static double family_strains[3] = {};
 
   Material_ preview_material;
   if (!BuildGMTPreviewMaterial(dialog, preview_material)) {
@@ -653,38 +657,93 @@ void DrawGMTPlots(const MaterialDialog &dialog) {
   const double strain_max = preview_material.e_max;
   const double temp_min = preview_material.T_min;
   const double temp_max = preview_material.T_max;
-  const double plot_temp = ClampMaterialValue(dialog.m_plot_temperature, temp_min, temp_max);
-  const double plot_strain = ClampMaterialValue(dialog.m_plot_strain, strain_min, strain_max);
+
+  if (!family_values_initialized) {
+    family_temperatures[0] = temp_min;
+    family_temperatures[1] = 0.5 * (temp_min + temp_max);
+    family_temperatures[2] = temp_max;
+    family_strains[0] = strain_min;
+    family_strains[1] = 0.5 * (strain_min + strain_max);
+    family_strains[2] = strain_max;
+    family_values_initialized = true;
+  }
+
+  ImGui::Text("Temperatures for stress-strain families");
+  for (int i = 0; i < 3; ++i) {
+    ImGui::PushID(i);
+    ImGui::SetNextItemWidth(150.0f);
+    ImGui::InputDouble("T (°C)", &family_temperatures[i], 0.0, 1.0, "%.3f");
+    family_temperatures[i] = ClampMaterialValue(family_temperatures[i], temp_min, temp_max);
+    if (i < 2) ImGui::SameLine();
+    ImGui::PopID();
+  }
+  ImGui::Text("Strains for stress-temperature families");
+  for (int i = 0; i < 3; ++i) {
+    ImGui::PushID(i + 3);
+    ImGui::SetNextItemWidth(150.0f);
+    ImGui::InputDouble("Strain", &family_strains[i], 0.0, 0.01, "%.5f");
+    family_strains[i] = ClampMaterialValue(family_strains[i], strain_min, strain_max);
+    if (i < 2) ImGui::SameLine();
+    ImGui::PopID();
+  }
 
   const std::vector<double> strain_values = BuildAxisRange(strain_min, strain_max);
   std::vector<std::vector<double>> strain_family_curves;
+  std::vector<std::string> strain_family_labels;
   double strain_y_max = 0.0;
-  BuildFamilyCurves(
-    strain_values, rate_values,
-    [&preview_material, plot_temp](double strain, double strain_rate) {
-      return CalcGMTYieldStress(strain, strain_rate, plot_temp, &preview_material);
-    },
-    strain_family_curves, strain_y_max);
+  std::vector<double> unique_temperatures;
+  for (double selected_temp : family_temperatures) {
+    const double temp = ClampMaterialValue(selected_temp, temp_min, temp_max);
+    if (std::find(unique_temperatures.begin(), unique_temperatures.end(), temp) != unique_temperatures.end()) continue;
+    unique_temperatures.push_back(temp);
+    for (size_t rate_index = 0; rate_index < rate_values.size(); ++rate_index) {
+      std::vector<double> curve;
+      curve.reserve(strain_values.size());
+      for (double strain : strain_values) {
+        const double stress = CalcGMTYieldStress(strain, rate_values[rate_index], temp, &preview_material);
+        curve.push_back(stress);
+        strain_y_max = std::max(strain_y_max, stress);
+      }
+      std::ostringstream label;
+      label << "T=" << std::setprecision(5) << temp << " °C, " << rate_labels[rate_index];
+      strain_family_labels.push_back(label.str());
+      strain_family_curves.push_back(std::move(curve));
+    }
+  }
 
-  ImGui::Text("Stress-strain curves at T = %.3e", plot_temp);
+  ImGui::Text("Stress-strain curves at selected temperatures");
   DrawPlotToolbar("Reset Zoom##gmt_strain", fit_strain_next);
   DrawFamilyPlot("##GMTCurve", "Strain", "Stress", strain_values, strain_family_curves,
-                 rate_labels, strain_y_max, fit_strain_next);
+                 strain_family_labels, strain_y_max, fit_strain_next);
 
   const std::vector<double> temperature_values = BuildAxisRange(temp_min, temp_max);
   std::vector<std::vector<double>> temp_family_curves;
+  std::vector<std::string> temp_family_labels;
   double temp_y_max = 0.0;
-  BuildFamilyCurves(
-    temperature_values, rate_values,
-    [&preview_material, plot_strain](double temp, double strain_rate) {
-      return CalcGMTYieldStress(plot_strain, strain_rate, temp, &preview_material);
-    },
-    temp_family_curves, temp_y_max);
+  std::vector<double> unique_strains;
+  for (double selected_strain : family_strains) {
+    const double strain = ClampMaterialValue(selected_strain, strain_min, strain_max);
+    if (std::find(unique_strains.begin(), unique_strains.end(), strain) != unique_strains.end()) continue;
+    unique_strains.push_back(strain);
+    for (size_t rate_index = 0; rate_index < rate_values.size(); ++rate_index) {
+      std::vector<double> curve;
+      curve.reserve(temperature_values.size());
+      for (double temp : temperature_values) {
+        const double stress = CalcGMTYieldStress(strain, rate_values[rate_index], temp, &preview_material);
+        curve.push_back(stress);
+        temp_y_max = std::max(temp_y_max, stress);
+      }
+      std::ostringstream label;
+      label << "ε=" << std::setprecision(5) << strain << ", " << rate_labels[rate_index];
+      temp_family_labels.push_back(label.str());
+      temp_family_curves.push_back(std::move(curve));
+    }
+  }
 
-  ImGui::Text("Stress-temperature curves at strain = %.3e", plot_strain);
+  ImGui::Text("Stress-temperature curves at selected strains");
   DrawPlotToolbar("Reset Zoom##gmt_temp", fit_temp_next);
   DrawFamilyPlot("##GMTTempCurve", "Temperature", "Stress", temperature_values,
-                 temp_family_curves, rate_labels, temp_y_max, fit_temp_next);
+                 temp_family_curves, temp_family_labels, temp_y_max, fit_temp_next);
 }
 
 bool BuildTabulatedPreviewMaterial(const MaterialDialog &dialog, Material_ &preview_material) {
@@ -998,8 +1057,6 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
       ImGui::InputDouble("Strain Rate Max", &m_strain_rate_range_max, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("Temperature Min", &m_temperature_range_min, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("Temperature Max", &m_temperature_range_max, 0.0f, 1.0f, "%.4e");
-      ImGui::InputDouble("Plot Temperature", &m_plot_temperature, 0.0f, 1.0f, "%.4e");
-      ImGui::InputDouble("Plot Strain", &m_plot_strain, 0.0f, 1.0f, "%.4f");
       ImGui::Spacing();
       DrawGMTPlots(*this);
     }

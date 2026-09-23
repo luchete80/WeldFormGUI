@@ -8,9 +8,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-PARAMETERS = (
-    "n1", "n2", "C1", "C2", "m1", "m2", "I1", "I2",
-)
+# Simufact XMT order differs from WeldForm's internal JSON order.
+XMT_TO_WELDFORM_ORDER = (2, 3, 0, 1, 6, 7, 4, 5)
 
 
 def child_text(element, name, *, required=True, default=None):
@@ -33,9 +32,11 @@ def convert(input_path):
     if equation is None:
         raise ValueError("No active equation at flow_curves_plasticity_approach/equations/equation")
 
-    params = [child_text(equation, f"flowcurve_parameter_{i:02d}") for i in range(1, 9)]
-    if len(params) != len(PARAMETERS):  # documents the engine's required order
-        raise ValueError("GMT equation must provide eight flow curve parameters")
+    xmt_params = [child_text(equation, f"flowcurve_parameter_{i:02d}") for i in range(1, 9)]
+    # XMT uses [C1, C2, n1, n2, I1, I2, m1, m2]; WeldForm stores
+    # [n1, n2, C1, C2, m1, m2, I1, I2]. XMT stress is in MPa, WeldForm in Pa.
+    xmt_params[0] *= 1.0e6
+    params = [xmt_params[index] for index in XMT_TO_WELDFORM_ORDER]
 
     material = {
         "type": "GMT",
