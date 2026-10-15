@@ -1045,12 +1045,12 @@ void MaterialDialog::Draw(const char* title, bool* p_open, Material_ *mat, Mater
     }
 
     if (item_current == _GMT_) {
-      ImGui::InputDouble("n1", &gmt_n1, 0.0f, 1.0f, "%.4f");
-      ImGui::InputDouble("n2", &gmt_n2, 0.0f, 1.0f, "%.4f");
+      ImGui::InputDouble("n1", &gmt_n1, 0.0f, 1.0f, "%.4e");
+      ImGui::InputDouble("n2", &gmt_n2, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("C1", &gmt_C1, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("C2", &gmt_C2, 0.0f, 1.0f, "%.4e");
-      ImGui::InputDouble("m1", &gmt_m1, 0.0f, 1.0f, "%.4f");
-      ImGui::InputDouble("m2", &gmt_m2, 0.0f, 1.0f, "%.4f");
+      ImGui::InputDouble("m1", &gmt_m1, 0.0f, 1.0f, "%.4e");
+      ImGui::InputDouble("m2", &gmt_m2, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("I1", &gmt_I1, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("I2", &gmt_I2, 0.0f, 1.0f, "%.4e");
       ImGui::InputDouble("Strain Rate Min", &m_strain_rate_range_min, 0.0f, 1.0f, "%.4e");
