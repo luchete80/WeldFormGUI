@@ -46,7 +46,9 @@ void  ModelDialog::Draw(const char* title, bool* p_open, Model *model){
 
   ImGui::Checkbox("Thermal Coupling", &m_thermal_coupling_flag);
   if (m_thermal_coupling_flag) {
-    ImGui::SliderDouble("Plastic Work to Heat Fraction", &m_plastic_heat_fraction, 0.0, 1.0, "%.4f");
+    float plastic_heat_fraction = static_cast<float>(m_plastic_heat_fraction);
+    if (ImGui::SliderFloat("Plastic Work to Heat Fraction", &plastic_heat_fraction, 0.0f, 1.0f, "%.4f"))
+      m_plastic_heat_fraction = plastic_heat_fraction;
     if (!std::isfinite(m_plastic_heat_fraction))
       m_plastic_heat_fraction = 0.9;
     m_plastic_heat_fraction = std::max(0.0, std::min(1.0, m_plastic_heat_fraction));
