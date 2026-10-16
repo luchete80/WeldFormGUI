@@ -1878,6 +1878,8 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                                 bool& fieldSelectionChanged,
                                 bool& manualColorScale,
                                 bool& colorScaleModeChanged,
+                                bool& localColorScale,
+                                bool& localColorScaleChanged,
                                 int activeFieldComponents,
                                 int& selectedFieldComponent,
                                 bool& componentChanged,
@@ -2031,6 +2033,22 @@ void drawResultsPlaybackOverlay(VtkViewer& viewer,
                 if (toggled)
                     vectorGlyphVisibilityChanged = true;
             }
+
+            ImGui::BeginDisabled(manualColorScale);
+            if (ImGui::RadioButton("Global scale", !localColorScale)) {
+                localColorScale = false;
+                localColorScaleChanged = true;
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("Auto fits the scalar range to the full result set.");
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Local scale", localColorScale)) {
+                localColorScale = true;
+                localColorScaleChanged = true;
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("Auto fits the scalar range to the current frame.");
+            ImGui::EndDisabled();
 
             const bool autoScale = !manualColorScale;
             if (ImGui::RadioButton("Auto", autoScale)) {
@@ -2910,6 +2928,7 @@ int main(int argc, char* argv[])
           static double globalMin = 0.0;
           static double globalMax = 1.0;
           static bool manualColorScale = false;
+          static bool localColorScale = false;
           static double manualMin = 0.0;
           static double manualMax = 1.0;
           static bool isCellField = false;
@@ -3114,7 +3133,11 @@ int main(int argc, char* argv[])
 	                  globalMin = 1.0e10;
 	                  globalMax = -1.0e10;
 
-	                  for (auto& f : editor->getResults()->frames) {
+                  const int firstFrame = localColorScale ? currentFrame : 0;
+                  const int lastFrame = localColorScale ? currentFrame + 1 :
+                      static_cast<int>(editor->getResults()->frames.size());
+                  for (int frameIndex = firstFrame; frameIndex < lastFrame; ++frameIndex) {
+                      auto& f = editor->getResults()->frames[frameIndex];
 	                      if (!f || !f->mesh)
 	                          continue;
 
@@ -3349,6 +3372,8 @@ int main(int argc, char* argv[])
 	                          renderer->ResetCamera();
 	                      }
 	                      if (!activeFieldName.empty()) {
+                          if (localColorScale && !manualColorScale)
+                              recomputeActiveFieldScale();
 	                          applyActiveFieldSelection(*editor->getResults()->frames[currentFrame]);
 	                      }
                         syncCurrentVectorFieldActor(*editor->getResults()->frames[currentFrame]);
@@ -3451,6 +3476,7 @@ int main(int argc, char* argv[])
                   const auto overlayFieldNames = overlayFrame.getAvailableFieldNames();
                   bool fieldSelectionChanged = false;
                   bool colorScaleModeChanged = false;
+                  bool localColorScaleChanged = false;
                   bool componentChanged = false;
                   bool vectorGlyphVisibilityChanged = false;
                   bool manualRangeChanged = false;
@@ -3473,6 +3499,8 @@ int main(int argc, char* argv[])
                                              fieldSelectionChanged,
                                              manualColorScale,
                                              colorScaleModeChanged,
+                                             localColorScale,
+                                             localColorScaleChanged,
                                              activeFieldComponents,
                                              selectedFieldComponent,
                                              componentChanged,
@@ -3518,6 +3546,13 @@ int main(int argc, char* argv[])
 	                      }
 	                      vtkViewer_res.render();
 	                  }
+
+                  if (localColorScaleChanged && !manualColorScale) {
+                      recomputeActiveFieldScale();
+                      applyActiveFieldSelectionToAllFrames();
+                      syncCurrentVectorFieldActor(overlayFrame);
+                      vtkViewer_res.render();
+                  }
 
 	                  if (componentChanged) {
 	                      recomputeActiveFieldScale();

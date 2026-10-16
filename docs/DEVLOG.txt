@@ -333,3 +333,4 @@
 20260630 - fixed slider in job progress (now allows to move in log)
 20260701 - Separated Adaptive DT min from Adaptive DT limiter in StepDialog.
 20260715 - Added MMG hausdorffTolerance to the remeshing model, dialog, and input/model readers and writers.
+20261016 - Added Global/Local scale options in the Results viewer for automatic scalar color ranges.
