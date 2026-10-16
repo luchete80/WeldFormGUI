@@ -812,7 +812,15 @@ int Job::Run(){
           const std::string message =
               "[Job::Run] An initial-state sidecar cannot be combined with restartFile.";
           std::cerr << message << std::endl;
-          persistLogMessage({message});
+          const fs::path logPath = getLogFilePath();
+          std::error_code logError;
+          if (!logPath.parent_path().empty()) {
+            fs::create_directories(logPath.parent_path(), logError);
+          }
+          std::ofstream logFile(logPath, std::ios::out | std::ios::trunc);
+          if (logFile.is_open()) {
+            logFile << message << '\n';
+          }
           return -1;
         }
       }

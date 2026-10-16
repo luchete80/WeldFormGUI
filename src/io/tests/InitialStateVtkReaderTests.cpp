@@ -1,6 +1,7 @@
 #include "io/InitialStateVtkReader.h"
 #include "io/InitialStateVtkMeshBuilder.h"
 #include "model/InitialStateMaterialPolicy.h"
+#include "model/Step.h"
 #include "io/InitialStateHistoryJson.h"
 #include "io/InitialStatePieceExporter.h"
 #include "io/InitialStateSidecar.h"
@@ -421,9 +422,11 @@ void testMaterialDecisionFingerprintAndDiscardPolicy() {
   check(InitialStateMaterialFingerprint(&bilinearMaterialA) !=
         InitialStateMaterialFingerprint(&bilinearMaterialB),
         "Bilinear plastic tangent Et used by material serializers is fingerprinted");
-  bilinearA.Et = 3.0;
+  Bilinear bilinearBaseEtA(250.0, 3.0);
+  bilinearMaterialA.m_plastic = &bilinearBaseEtA;
   const std::string baseEtFingerprint = InitialStateMaterialFingerprint(&bilinearMaterialA);
-  bilinearA.Et = 4.0;
+  Bilinear bilinearBaseEtB(250.0, 4.0);
+  bilinearMaterialA.m_plastic = &bilinearBaseEtB;
   check(InitialStateMaterialFingerprint(&bilinearMaterialA) != baseEtFingerprint,
         "Bilinear base Et used by the Engine input serializer is fingerprinted");
 
