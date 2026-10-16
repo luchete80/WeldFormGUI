@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <cmath>
 #include <algorithm>
+#include <memory>
 
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
@@ -19,6 +20,7 @@ class Node;
 class Material_;
 class Part;
 class Mesh;
+struct InitialStateMeshStorage;
 class Particle;
 class Geom;
 class Vec3_t;
@@ -248,6 +250,9 @@ protected:
   // NDOES AND ELEMENTS
   std::vector <Particle* >  m_particle; 
   std::vector <Node* >      m_node; //Mesh part refer to this
+  // Imported history meshes own their nodes/elements; retain that storage for
+  // as long as the model's legacy raw-pointer node lists can reference it.
+  std::vector<std::shared_ptr<InitialStateMeshStorage>> m_initial_state_storage_owners;
   std::vector <Element* >   m_elem; //Mesh part refer to this
   std::map <std::pair<int,int>, int> m_linemap;
   std::vector <Particle*>   Particles; //SPH

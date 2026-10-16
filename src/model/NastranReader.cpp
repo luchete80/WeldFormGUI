@@ -19,6 +19,10 @@
 
 #include "NastranReader.h"
 
+#include <cerrno>
+#include <climits>
+#include <set>
+
 
 //NOT NECESSARY
 inline std::string trimSpaces(const std::string& s) {
@@ -91,7 +95,16 @@ inline int parseNastranIntField(const std::string& line, int fieldIndex)
     if (pos < 0 || pos + FIELD_LENGTH > static_cast<int>(line.size())) {
         return 0;
     }
-    return atoi(line.substr(pos, FIELD_LENGTH).c_str());
+    const std::string field = trimWhitespace(line.substr(pos, FIELD_LENGTH));
+    if (field.empty()) return 0;
+    errno = 0;
+    char* end = nullptr;
+    const long parsed = std::strtol(field.c_str(), &end, 10);
+    if (errno == ERANGE || parsed < INT_MIN || parsed > INT_MAX || end == field.c_str())
+        return 0;
+    while (*end != '\0' && std::isspace(static_cast<unsigned char>(*end))) ++end;
+    if (*end != '\0') return 0;
+    return static_cast<int>(parsed);
 }
 
 inline bool isContinuationLine(const std::string& raw_line) {
@@ -125,6 +138,7 @@ inline std::vector<int> readChexaNodeIds(const std::vector<std::string>& rawData
 }
 
 void NastranReader::read(const char* fName){
+	readValid = true;
 	string fileName = fName;
   string line;
   //rawData="";
@@ -318,6 +332,8 @@ void NastranReader::read(const char* fName){
   cout << "Allocating " <<elem_count<<" Elements..."<<endl;
 	// ASSUMING NODE IS FROM 1
   elcon = new int [max_nodes_per_elem * elem_count];
+	elementid = new int[elem_count];
+	std::set<int> element_ids_seen;
 
 	map<int, int>::iterator it;
   curr_line = line_start_elem;
@@ -333,6 +349,14 @@ void NastranReader::read(const char* fName){
           (!found_shell && startsWithCardPrefix(rawData[l], "CBEAM")) ||
           (!found_shell && startsWithCardPrefix(rawData[l], "CBAR"))));
     if (!is_selected_elem) {
+      continue;
+    }
+
+    const int eid = parseNastranIntField(rawData[l], 1);
+    if (eid <= 0 || !element_ids_seen.insert(eid).second) {
+      readValid = false;
+      cerr << "[E] Invalid or duplicate Nastran element EID " << eid
+           << " at line " << l + 1 << endl;
       continue;
     }
 
@@ -360,6 +384,7 @@ void NastranReader::read(const char* fName){
     if (startsWithCardPrefix(rawData[l], "CHEXA")) {
       const std::vector<int> chexa_nodes = readChexaNodeIds(rawData, l, line_count);
       if (chexa_nodes.size() != 8) {
+        readValid = false;
         cerr << "[E] Invalid CHEXA connectivity at Nastran line " << l + 1
              << ": expected 8 node ids, parsed " << chexa_nodes.size() << endl;
         if (l + 1 < line_count && isContinuationLine(rawData[l + 1])) {
@@ -382,6 +407,7 @@ void NastranReader::read(const char* fName){
 			int d = node_ids[en];
       auto it_nod = nodepos.find(d);
       if (it_nod == nodepos.end()) {
+        readValid = false;
         cerr << "[E] Node id " << d << " referenced by element line " << l
              << " was not found in GRID table." << endl;
         elcon[max_nodes_per_elem*ecount+en] = -1;
@@ -411,9 +437,11 @@ void NastranReader::read(const char* fName){
            << elcon[max_nodes_per_elem*ecount + 3] << endl;
     }
     ecount++;
+		elementid[ecount - 1] = eid;
 	}
 
   if (ecount != elem_count) {
+    readValid = false;
     cerr << "[E] Parsed " << ecount << " element entries, expected " << elem_count << endl;
   }
   cout << "Done."<<endl;
@@ -520,4 +548,5 @@ NastranReader::~NastranReader(){
   delete [] node;
   delete [] elcon;
   delete [] nodeid;
+  delete [] elementid;
 }

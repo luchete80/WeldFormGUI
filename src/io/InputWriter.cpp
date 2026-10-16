@@ -7,6 +7,9 @@
 #include "InitialCondition.h"
 #include "Node.h"
 #include "Step.h"
+#include "InitialStateMaterialPolicy.h"
+#include "ExportGeneration.h"
+#include "InitialStatePieceExporter.h"
 
 #include <cmath>
 #include <cctype>
@@ -23,6 +26,52 @@ using json = nlohmann::json;
 
 namespace {
 namespace fs = std::filesystem;
+
+Step* activeStep(Model* model);
+
+bool validateInitialStateHistoryForInput(Model* model, bool implicitWriter)
+{
+  if (model == nullptr) return false;
+  int historyPartCount = 0;
+  int deformablePartCount = 0;
+  for (int i = 0; i < model->getPartCount(); ++i) {
+    Part* part = model->getPart(i);
+    if (part == nullptr || !part->isMeshed() || part->getMesh() == nullptr) continue;
+    if (part->getType() == Elastic) ++deformablePartCount;
+    part->getMesh()->validateInitialStateTopology();
+    if (!part->getMesh()->hasInitialPlasticStrainHistory()) continue;
+    ++historyPartCount;
+    if (implicitWriter) {
+      Step* step = activeStep(model);
+      if (model->getAnalysisType() != Solid3D || step == nullptr || !step->isImplicit() ||
+          !step->usesRigidViscoplasticImplicitSolver()) {
+        std::cerr << "ERROR: initial pl_strain sidecars require the 3D MINI3D rigid-viscoplastic implicit solver; explicit and J2 workflows are unsupported."
+                  << std::endl;
+        return false;
+      }
+    } else {
+      std::cerr << "ERROR: initial pl_strain sidecars are not supported by the explicit input writer; use 3D MINI3D implicit."
+                << std::endl;
+      return false;
+    }
+    if (part->getType() != Elastic) {
+      std::cerr << "ERROR: initial pl_strain history requires a deformable part." << std::endl;
+      return false;
+    }
+    const std::string issue = InitialStateHistoryExportIssue(*model, *part);
+    if (!issue.empty()) {
+      std::cerr << "ERROR: " << issue << " (part " << part->getId() << ")." << std::endl;
+      return false;
+    }
+  }
+  if (historyPartCount == 0) return true;
+  if (historyPartCount != 1 || deformablePartCount != 1) {
+    std::cerr << "ERROR: MINI3D initial pl_strain input currently supports exactly one meshed deformable part."
+              << std::endl;
+    return false;
+  }
+  return true;
+}
 
 std::string materialIdFromIndex(int index) {
   if (index == 0)
@@ -478,27 +527,25 @@ bool InputWriter::writeToFile(std::string fname) {
     std::cerr << "ERROR: null model in InputWriter" << std::endl;
     return false;
   }
+  Step *step = activeStep(m_model);
+  if (step != nullptr && step->isImplicit())
+    return writeImplicitToFile(fname);
+  if (!validateInitialStateHistoryForInput(m_model, false)) return false;
   if (!isContactActivationRampConfigurationValid(m_model->contactProps())) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
   }
-  Step *step = activeStep(m_model);
   if ((step == nullptr || !step->isImplicit()) && !validateThermalConfiguration(m_model, step))
     return false;
-
-  if (step != nullptr && step->isImplicit()) {
-    return writeImplicitToFile(fname);
-  }
 
   json m_json;
   fs::path json_path(fname);
   fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
-  fs::create_directories(json_dir);
   std::string base_name = modelStem(m_model);
-
-  std::ofstream o(fname);
-  if (!o.is_open()) {
-    std::cout << "ERROR: could not open output file " << fname << std::endl;
+  ExportGenerationDirectory generation;
+  std::string generationError;
+  if (!generation.create(json_dir, base_name, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
     return false;
   }
 
@@ -586,6 +633,19 @@ bool InputWriter::writeToFile(std::string fname) {
     }
   }
 
+  for (std::size_t materialIndex = 0; materialIndex < m_json["Materials"].size(); ++materialIndex) {
+    json& materialJson = m_json["Materials"][materialIndex];
+    if (!materialJson.contains("flowStressCsv")) continue;
+    std::string relativeCsv;
+    if (!PackageExternalCsv(materialJson["flowStressCsv"].get<std::string>(),
+                            static_cast<int>(materialIndex), generation.path(), json_path,
+                            relativeCsv, &generationError)) {
+      std::cerr << "ERROR: " << generationError << std::endl;
+      return false;
+    }
+    materialJson["flowStressCsv"] = relativeCsv;
+  }
+
   bool is_elastic = false;
   m_json["BoundaryConditions"] = json::array();
   m_json["InitialConditions"] = json::array();
@@ -594,8 +654,17 @@ bool InputWriter::writeToFile(std::string fname) {
     if (part == nullptr || !part->isMeshed())
       continue;
 
-    fs::path mesh_path = json_dir / (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
-    part->getMesh()->exportToNASTRAN(mesh_path.string());
+    fs::path mesh_path = generation.path() /
+        (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
+    if (!part->getMesh()->exportToNASTRAN(mesh_path.string())) {
+      std::cerr << "ERROR: failed to export BDF generation resource: " << mesh_path << std::endl;
+      return false;
+    }
+    std::string relativeMesh;
+    if (!ExportGenerationRelativePath(mesh_path, json_path, relativeMesh, &generationError)) {
+      std::cerr << "ERROR: " << generationError << std::endl;
+      return false;
+    }
 
     if (part->getType() == Elastic) {
       if (is_elastic) {
@@ -604,7 +673,7 @@ bool InputWriter::writeToFile(std::string fname) {
       }
       json block;
       block["type"] = "File";
-      block["fileName"] = fs::relative(mesh_path, json_dir).string();
+      block["fileName"] = relativeMesh;
       block["scale"] = {1, 1, 1};
       m_json["DomainBlocks"].push_back(block);
       is_elastic = true;
@@ -615,7 +684,7 @@ bool InputWriter::writeToFile(std::string fname) {
       rigidBody["start"] = {0.0, 0.0, 0.0};
       rigidBody["scale"] = {1, 1, 1};
       rigidBody["orientNormals"] = true;
-      rigidBody["fileName"] = fs::relative(mesh_path, json_dir).string();
+      rigidBody["fileName"] = relativeMesh;
       m_json["RigidBodies"].push_back(rigidBody);
     }
   }
@@ -671,8 +740,14 @@ bool InputWriter::writeToFile(std::string fname) {
     appendInitialCondition(m_json["InitialConditions"], m_model->getIC(i), ic_export_id++);
   }
 
-  o << std::setw(4) << m_json << std::endl;
-  return static_cast<bool>(o);
+  const fs::path temporaryInputPath = json_dir /
+      (json_path.filename().string() + ".tmp." + generation.name());
+  if (!WriteJsonAndPublish(m_json, temporaryInputPath, json_path, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
+    return false;
+  }
+  generation.retain();
+  return true;
 }
 
 bool InputWriter::writeImplicitToFile(std::string fname) {
@@ -682,6 +757,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     std::cerr << "ERROR: null model in InputWriter" << std::endl;
     return false;
   }
+  if (!validateInitialStateHistoryForInput(m_model, true)) return false;
   if (!isContactActivationRampConfigurationValid(m_model->contactProps())) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
@@ -694,12 +770,11 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   json m_json;
   fs::path json_path(fname);
   fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
-  fs::create_directories(json_dir);
   std::string base_name = modelStem(m_model);
-
-  std::ofstream o(fname);
-  if (!o.is_open()) {
-    std::cout << "ERROR: could not open output file " << fname << std::endl;
+  ExportGenerationDirectory generation;
+  std::string generationError;
+  if (!generation.create(json_dir, base_name, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
     return false;
   }
 
@@ -783,22 +858,62 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     }
   }
 
+  for (std::size_t materialIndex = 0; materialIndex < m_json["Materials"].size(); ++materialIndex) {
+    json& materialJson = m_json["Materials"][materialIndex];
+    if (!materialJson.contains("flowStressCsv")) continue;
+    std::string relativeCsv;
+    if (!PackageExternalCsv(materialJson["flowStressCsv"].get<std::string>(),
+                            static_cast<int>(materialIndex), generation.path(), json_path,
+                            relativeCsv, &generationError)) {
+      std::cerr << "ERROR: " << generationError << std::endl;
+      return false;
+    }
+    materialJson["flowStressCsv"] = relativeCsv;
+  }
+
   int amplitude_id = 1;
   for (std::vector<Part*>::iterator it = m_model->m_part.begin(); it != m_model->m_part.end(); ++it) {
     Part* part = *it;
     if (part == nullptr || !part->isMeshed())
       continue;
 
-    fs::path mesh_path = json_dir / (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
-    part->getMesh()->exportToNASTRAN(mesh_path.string());
-    std::string relative_mesh = fs::relative(mesh_path, json_dir).string();
+    fs::path mesh_path = generation.path() /
+        (base_name + "_part_" + std::to_string(part->getId()) + ".bdf");
+    const bool hasHistory = part->getMesh()->hasInitialPlasticStrainHistory();
+    fs::path sidecar_path;
+    if (hasHistory) {
+      sidecar_path = generation.path() /
+          (base_name + "_part_" + std::to_string(part->getId()) + ".initial_state.json");
+      std::string stateError;
+      if (!ExportInitialStatePiece(*part->getMesh(), mesh_path, sidecar_path, &stateError)) {
+        std::cerr << "ERROR: failed to export MINI3D initial-state BDF/sidecar: " << stateError << std::endl;
+        return false;
+      }
+    } else if (!part->getMesh()->exportToNASTRAN(mesh_path.string())) {
+      std::cerr << "ERROR: failed to export BDF generation resource: " << mesh_path << std::endl;
+      return false;
+    }
+    std::string relative_mesh;
+    if (!ExportGenerationRelativePath(mesh_path, json_path, relative_mesh, &generationError)) {
+      std::cerr << "ERROR: " << generationError << std::endl;
+      return false;
+    }
 
     if (part->getType() == Elastic) {
-      m_json["DomainBlocks"].push_back({
+      json block = {
         {"type", "File"},
         {"fileName", relative_mesh},
         {"scale", {1, 1, 1}}
-      });
+      };
+      if (hasHistory) {
+        std::string relativeSidecar;
+        if (!ExportGenerationRelativePath(sidecar_path, json_path, relativeSidecar, &generationError)) {
+          std::cerr << "ERROR: " << generationError << std::endl;
+          return false;
+        }
+        block["initialStateFile"] = relativeSidecar;
+      }
+      m_json["DomainBlocks"].push_back(block);
     } else {
       m_json["RigidBodies"].push_back({
         {"type", "File"},
@@ -848,6 +963,12 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     appendInitialCondition(m_json["InitialConditions"], m_model->getIC(i), ic_export_id++);
   }
 
-  o << std::setw(4) << m_json << std::endl;
-  return static_cast<bool>(o);
+  const fs::path temporaryInputPath = json_dir /
+      (json_path.filename().string() + ".tmp." + generation.name());
+  if (!WriteJsonAndPublish(m_json, temporaryInputPath, json_path, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
+    return false;
+  }
+  generation.retain();
+  return true;
 }

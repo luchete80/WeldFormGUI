@@ -1,6 +1,7 @@
 #include "Part.h"
 
 #include <iostream>
+#include <memory>
 
 using namespace std; 
 
@@ -17,6 +18,12 @@ Part::Part(int &id, Mesh *m)
 Part::Part(int &id)
 //:Entity(id)
 {
+  m_id = id;
+  m_msh = nullptr;
+  m_geom = nullptr;
+  m_ismeshed = false;
+  m_isgeom = false;
+  m_type = Elastic;
   }
 
 Part::Part(Mesh *mesh):
@@ -41,37 +48,60 @@ Part::Part(Geom* geom){
   m_type = Elastic;
 }
 
-void Part::generateMesh(){
-  this->m_msh = new Mesh;
-  this->m_msh->genFromGmshModel();
+bool Part::generateMesh(){
+  if (m_msh != nullptr && m_msh->hasInitialPlasticStrainHistory()) {
+    std::cerr << "Cannot replace mesh: explicitly discard its initial pl_strain history first." << std::endl;
+    return false;
+  }
+  std::unique_ptr<Mesh> generated = std::make_unique<Mesh>();
+  generated->genFromGmshModel();
+  delete m_msh;
+  this->m_msh = generated.release();
   m_mesh_source_file.clear();
   m_ismeshed = true;
+  return true;
 }
 
-void Part::generateMeshFromNastranFile(const std::string& filename){
-  this->m_msh = new Mesh;
-  this->m_msh->genFromNastranFile(filename);
+bool Part::generateMeshFromNastranFile(const std::string& filename){
+  if (m_msh != nullptr && m_msh->hasInitialPlasticStrainHistory()) {
+    std::cerr << "Cannot replace mesh: explicitly discard its initial pl_strain history first." << std::endl;
+    return false;
+  }
+  std::unique_ptr<Mesh> loadedMesh = std::make_unique<Mesh>();
+  loadedMesh->genFromNastranFile(filename);
+  delete m_msh;
+  this->m_msh = loadedMesh.release();
   m_mesh_source_file = filename;
   m_ismeshed = true;
+  return true;
 }
 
-void Part::deleteMesh(){
+bool Part::deleteMesh(){
+  if (m_msh != nullptr && m_msh->hasInitialPlasticStrainHistory()) {
+    std::cerr << "Cannot delete mesh: explicitly discard its initial pl_strain history first." << std::endl;
+    return false;
+  }
   delete this->m_msh;
   this->m_msh = nullptr;
   m_ismeshed = false;
+  return true;
 }
 
 
-void Part::setMesh(Mesh* m){
+bool Part::setMesh(Mesh* m){
+  if (m_msh != nullptr && m_msh != m && m_msh->hasInitialPlasticStrainHistory()) {
+    std::cerr << "Cannot replace mesh: explicitly discard its initial pl_strain history first." << std::endl;
+    return false;
+  }
   if (m!=nullptr){
     m_msh = (Mesh*) m;
     m_ismeshed = true;
     m_mesh_source_file.clear();
       cout << "Set Mesh "<<m_msh->getNodeCount()<< " nodes "<<endl;
+    return true;
   }
   else {
-    m_msh = nullptr;
-    m_ismeshed = false;
-    cout << "ERROR. null msh address"<<endl;
+    std::cerr << "Cannot set a null mesh." << std::endl;
+    return false;
   }
   }

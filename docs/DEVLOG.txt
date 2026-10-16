@@ -334,3 +334,17 @@
 20260701 - Separated Adaptive DT min from Adaptive DT limiter in StepDialog.
 20260715 - Added MMG hausdorffTolerance to the remeshing model, dialog, and input/model readers and writers.
 20261016 - Added Global/Local scale options in the Results viewer for automatic scalar color ranges.
+20261016 - Added detached legacy VTK/VTU Tet4 reader for initial-state import; preserves source cell IDs and validates geometry/data array tuple counts before model creation.
+20261016 - Hardened initial-state VTK reader after audit: load all legacy arrays, check reader errors and connectivity IDs; registered focused fixtures and tests for legacy/VTU inputs.
+20261016 - Added staged VTK/VTU piece selection by validated CELL_DATA Part_ID; requires explicit single-piece confirmation when absent and does not create model entities before later integration steps.
+20261016 - Added detached Tet4-to-Mesh builder with compact node IDs, source-cell-to-element map, direct VTK Points coordinates, and RAII backing storage.
+20261016 - Added strict CELL_DATA pl_strain inspection and explicit history/conventional mode selection; nodal, vector, string, negative and nonfinite values cannot enter history mode.
+20261016 - Scoped pl_strain value checks and min/max summaries to explicitly selected Tet4 groups; invalid unselected cells and surface filler no longer block a valid piece.
+20261016 - Committed selected VTK Tet4 groups as model parts with Element-owned pl_strain/source-cell provenance and Mesh ownership; blocked current BDF/JSON exports until history serialization is implemented.
+20261016 - Added explicit per-piece keep/discard decisions for imported pl_strain, material fingerprint snapshots, stale-decision checks for material/section/rigid changes, and safe history discard.
+20261016 - Persisted initial pl_strain history/provenance inline in .wfmodel keyed by BDF EID; project BDF reload preserves sparse EIDs and JSON validation rejects invalid coverage, values, duplicates, and integer overflow.
+20261016 - Added per-piece BDF/initial-state sidecar export with explicit written-EID mapping, closed-file SHA-256, strict Tet4 coverage validation, and known-vector/export fixtures; hardened GUI BDF import diagnostics after EID-preserving reads.
+20261016 - Added exclusive staged export generations for input/project writers, checked resource writes, relative packaged CSV references, and atomic final JSON publication; staged failures retain prior references and clean only their owned generation.
+20261016 - Connected v1 pl_strain sidecars to the 3D MINI3D rigid-viscoplastic input path; strict readers verify relative BDF identity, SHA-256, raw Tet4 cards and exact EID coverage before attaching buffered values, while explicit/J2/2D/restart combinations are rejected.
+20261016 - Added topology snapshots for imported initial-state meshes; rigid transforms and ID renumbering preserve element history, while connectivity/entity edits invalidate it and mesh replacement/remeshing requires explicit history discard. Added topology/transform source tests; runtime remains unverified.
+20261016 - Accepted point 12 by source inspection. Build, test execution, and Engine runtime validation remain pending.

@@ -6,6 +6,8 @@
 #include "Geom.h"
 #include "Node.h"
 #include "json_io.h"
+#include "InitialStateHistoryJson.h"
+#include "StrictJson.h"
 #include "gmsh.h"
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
@@ -57,7 +59,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
     // --- 2. Parsear JSON ---
     json j;
     try {
-        i >> j;
+        j = ParseJsonRejectDuplicateKeys(i);
     } catch (const std::exception& e) {
         cerr << "[ModelReader] JSON parse error: " << e.what() << endl;
         return false;
@@ -284,7 +286,10 @@ bool ModelReader::readFromFile(const std::string& fname) {
                         material->tabulatedTemperatureGrid = table["temperatureGrid"].get<std::vector<double>>();
                         material->tabulatedStressValues = table["stressValues"].get<std::vector<double>>();
                         if (table.contains("csvFile")) {
-                            material->tableCsvPath = table["csvFile"].get<std::string>();
+                            fs::path csvPath = table["csvFile"].get<std::string>();
+                            if (csvPath.is_relative())
+                                csvPath = fs::path(fname).parent_path() / csvPath;
+                            material->tableCsvPath = csvPath.lexically_normal().string();
                         }
                         material->Material_model = TABULATED;
                         if (!material->tabulatedStrainGrid.empty()) {
@@ -308,7 +313,10 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     }
                 }
                 if (type == "Tabulated" && mat.contains("flowStressCsv")) {
-                    material->tableCsvPath = mat["flowStressCsv"].get<std::string>();
+                    fs::path csvPath = mat["flowStressCsv"].get<std::string>();
+                    if (csvPath.is_relative())
+                        csvPath = fs::path(fname).parent_path() / csvPath;
+                    material->tableCsvPath = csvPath.lexically_normal().string();
                     material->tabulated_export_csv_reference = true;
                 }
 
@@ -409,7 +417,14 @@ bool ModelReader::readFromFile(const std::string& fname) {
                     for (auto &c : ext) c = std::tolower(c);
 
                     if (ext == ".bdf") {
-                        part->generateMeshFromNastranFile(mesh_path.string());
+                        try {
+                            part->generateMeshFromNastranFile(mesh_path.string());
+                        } catch (const std::exception& error) {
+                            cerr << "    [Error] Invalid Nastran mesh " << mesh_path.string()
+                                 << ": " << error.what() << endl;
+                            delete part;
+                            return false;
+                        }
                     } else {
                         gmsh::clear();
                         gmsh::open(mesh_path.string());
@@ -423,6 +438,21 @@ bool ModelReader::readFromFile(const std::string& fname) {
             bool isRigid = jpart.value("isRigid", false);
             part->setType(isRigid ? 1 : 0);
             cout << "    Type: " << (isRigid ? "Rigid" : "Deformable") << endl;
+
+            if (jpart.contains("mesh") && jpart["mesh"].is_object() &&
+                jpart["mesh"].contains("initialState")) {
+                if (part->getMesh() == nullptr) {
+                    cerr << "    [Error] Initial-state data exists but the referenced mesh could not be loaded."
+                         << endl;
+                    return false;
+                }
+                try {
+                    ApplyInitialStateMeshJson(*part->getMesh(), jpart["mesh"]["initialState"]);
+                } catch (const std::exception& error) {
+                    cerr << "    [Error] Invalid inline initial-state data: " << error.what() << endl;
+                    return false;
+                }
+            }
 
             // Add to model
             m_model->addPart(part);

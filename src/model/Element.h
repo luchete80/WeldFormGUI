@@ -2,6 +2,10 @@
 #define _ELEMENT_H_
 
 #include <vector>
+#include <cstdint>
+#include <optional>
+#include <stdexcept>
+#include <cmath>
 #include "Entity.h"
 
 class Node;
@@ -31,9 +35,23 @@ public:
   
   const int & getNodeId(const int &i)const;
   const int & getNodeCount()const{return m_nodecount;}
+  void setInitialPlasticStrain(double value) {
+    if (!std::isfinite(value) || value < 0.0)
+      throw std::invalid_argument("Initial plastic strain must be finite and non-negative.");
+    m_initial_plastic_strain = value;
+  }
+  const std::optional<double>& getInitialPlasticStrain() const { return m_initial_plastic_strain; }
+  void clearInitialPlasticStrain() { m_initial_plastic_strain.reset(); }
+  void setSourceVtkCellId(std::int64_t cellId) { m_source_vtk_cell_id = cellId; }
+  void clearSourceVtkCellId() { m_source_vtk_cell_id.reset(); }
+  const std::optional<std::int64_t>& getSourceVtkCellId() const { return m_source_vtk_cell_id; }
 protected:
   std::vector<Node*> m_node;  //Is like elnod
   int m_nodecount;
+  // Stored on the element so selection, deletion and renumbering cannot shift
+  // state onto a different cell.
+  std::optional<double> m_initial_plastic_strain;
+  std::optional<std::int64_t> m_source_vtk_cell_id;
   //elem_type m_type;
   
 };

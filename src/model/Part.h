@@ -41,10 +41,10 @@ public:
   void setId(const int &id){m_id = id;}
 
   Mesh & getRef(){return *m_msh;}
-  void setMesh(Mesh* m);
-  void generateMesh();
-  void generateMeshFromNastranFile(const std::string& filename);
-  void deleteMesh();
+  bool setMesh(Mesh* m);
+  bool generateMesh();
+  bool generateMeshFromNastranFile(const std::string& filename);
+  bool deleteMesh();
   void setMeshSourceFile(const std::string& filename){m_mesh_source_file = filename;}
   const std::string& getMeshSourceFile() const {return m_mesh_source_file;}
   virtual Part_Type getType(){return m_type;}

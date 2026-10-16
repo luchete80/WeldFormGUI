@@ -31,8 +31,9 @@ set (imgui_dir "${CMAKE_SOURCE_DIR}/libs/imgui") ###NOT THE 1.87 ONE, WHICH FAIL
 # ########### GAME ########
 option(WFG_BUILD_GEOMETRY_TESTS "Build headless approach-to-contact geometry tests" ON)
 option(WFG_BUILD_CONTACT_IO_TESTS "Build headless contact settings input IO tests" ON)
+option(WFG_BUILD_INITIAL_STATE_VTK_TESTS "Build headless initial-state VTK reader tests" ON)
 add_subdirectory("libs")
-if(WFG_BUILD_GEOMETRY_TESTS OR WFG_BUILD_CONTACT_IO_TESTS)
+if(WFG_BUILD_GEOMETRY_TESTS OR WFG_BUILD_CONTACT_IO_TESTS OR WFG_BUILD_INITIAL_STATE_VTK_TESTS)
     enable_testing()
 endif()
 add_subdirectory("src")

@@ -214,12 +214,15 @@ void  JobDialog::Draw(){
         tempJob.setCheckpointPrefix(m_checkpoint_prefix);
         tempJob.setRestartFile(m_restart_file);
         tempJob.setResultBaseName(m_result_base_name);
-        tempJob.applyRestartSettingsToInput();
-        create_entity = true;
-        m_edit_mode = false;
-        m_job = nullptr;
-        m_show = false;
-        cout << "Created input from model: " << m_filename << endl;
+        if (!tempJob.applyRestartSettingsToInput()) {
+          m_input_write_error = "No se pudieron aplicar los settings al input; revise restartFile y el archivo.";
+        } else {
+          create_entity = true;
+          m_edit_mode = false;
+          m_job = nullptr;
+          m_show = false;
+          cout << "Created input from model: " << m_filename << endl;
+        }
       }
     } else {
       cout << "File has not name." << endl;
@@ -365,6 +368,7 @@ void  JobDialog::Draw(){
     ImGui::BeginDisabled();
   }
   if (m_edit_mode && ImGui::Button("Save")) {
+    bool saveSucceeded = true;
     if (m_job != nullptr) {
       m_job->setPathFile(m_filename);
       m_job->setSolverEditionOverride(static_cast<Job::SolverEdition>(m_solver_edition));
@@ -374,11 +378,16 @@ void  JobDialog::Draw(){
       m_job->setCheckpointPrefix(m_checkpoint_prefix);
       m_job->setRestartFile(supportsRestart ? m_restart_file : std::string());
       m_job->setResultBaseName(supportsRestart ? m_result_base_name : std::string());
-      m_job->applyRestartSettingsToInput();
+      if (!m_job->applyRestartSettingsToInput()) {
+        m_input_write_error = "No se pudieron aplicar los settings al input; revise restartFile y el archivo.";
+        saveSucceeded = false;
+      }
     }
-    m_edit_mode = false;
-    m_job = nullptr;
-    m_show = false;
+    if (saveSucceeded) {
+      m_edit_mode = false;
+      m_job = nullptr;
+      m_show = false;
+    }
   }
   if (m_edit_mode && m_filename.empty()) {
     ImGui::EndDisabled();

@@ -17,6 +17,9 @@
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
 #include "Step.h"
+#include "InitialStateMaterialPolicy.h"
+#include "InitialStateHistoryJson.h"
+#include "ExportGeneration.h"
 
 using json = nlohmann::json;
 
@@ -46,6 +49,23 @@ bool ModelWriter::writeToFile(std::string fname){
     return false;
   }
   json m_json;
+
+  std::map<int, json> initialStateByPartId;
+  try {
+    for (int partIndex = 0; partIndex < m_model.getPartCount(); ++partIndex) {
+      Part* part = m_model.getPart(partIndex);
+      if (part == nullptr || part->getMesh() == nullptr) continue;
+      Mesh* mesh = part->getMesh();
+      const auto& provenance = mesh->getInitialStateProvenance();
+      if (mesh->hasInitialPlasticStrainHistory() ||
+          (provenance && provenance->importedFromVtk)) {
+        initialStateByPartId.emplace(part->getId(), SerializeInitialStateMesh(*mesh));
+      }
+    }
+  } catch (const std::exception& error) {
+    std::cerr << "ERROR: cannot persist initial-state mesh data: " << error.what() << std::endl;
+    return false;
+  }
   
   //json j;
 	//i >> j;
@@ -61,13 +81,17 @@ bool ModelWriter::writeToFile(std::string fname){
 	nlohmann::json bcs 			= j["BoundaryConditions"];
 	nlohmann::json ics 			= j["InitialConditions"];
 */
-  //std::ofstream o(m_model.getName());
-  std::ofstream o(fname);
   std::string filename = m_model.getName();
+  const std::string resourceStem = fs::path(filename).stem().string();
   fs::path json_path(fname);
   fs::path json_dir = json_path.has_parent_path() ? json_path.parent_path() : fs::path(".");
-  std::error_code mkdir_ec;
-  fs::create_directories(json_dir, mkdir_ec);
+  ExportGenerationDirectory generation;
+  std::string generationError;
+  if (!generation.create(json_dir, resourceStem, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
+    return false;
+  }
+  std::vector<std::pair<Part*, std::string>> pendingMeshSourceUpdates;
   if (!m_model.getHasName()) cout << "Not has name!"<<endl;
   std::cout << "Writing to file: " << filename << std::endl;
 
@@ -243,16 +267,38 @@ bool ModelWriter::writeToFile(std::string fname){
       //~ // Geometry (si existe)
       if (part->isGeom()) {
           const std::string step_filename =
-              m_model.getName() + "_part_" + std::to_string(part->getId()) + ".step";
-          fs::path geom_path = json_dir / step_filename;
+              resourceStem + "_part_" + std::to_string(part->getId()) + ".step";
+          fs::path geom_path = generation.path() / step_filename;
 
-          part->getGeom()->setFileName(geom_path.string());
-          if (!part->getGeom()->ExportSTEP()) {
-            std::cerr << "Error exporting geometry STEP: " << geom_path << std::endl;
+          const std::string previousGeomPath = part->getGeom()->getName();
+          bool exportedStep = false;
+          try {
+            part->getGeom()->setFileName(geom_path.string());
+            exportedStep = part->getGeom()->ExportSTEP();
+          } catch (const std::exception& error) {
+            part->getGeom()->setFileName(previousGeomPath);
+            std::cerr << "ERROR: geometry STEP export threw: " << error.what() << std::endl;
+            return false;
+          } catch (...) {
+            part->getGeom()->setFileName(previousGeomPath);
+            std::cerr << "ERROR: geometry STEP export failed with an unknown exception." << std::endl;
+            return false;
+          }
+          part->getGeom()->setFileName(previousGeomPath);
+          std::error_code stepError;
+          if (!exportedStep || !fs::is_regular_file(geom_path, stepError) || stepError ||
+              fs::file_size(geom_path, stepError) == 0 || stepError) {
+            std::cerr << "ERROR: failed to export geometry STEP: " << geom_path << std::endl;
+            return false;
           }
 
           cout << "Part has geom"<<endl;
-          jpart["geometry"]["source"] = fs::relative(geom_path, json_dir).string();
+          std::string relativeGeomPath;
+          if (!ExportGenerationRelativePath(geom_path, json_path, relativeGeomPath, &generationError)) {
+            std::cerr << "ERROR: " << generationError << std::endl;
+            return false;
+          }
+          jpart["geometry"]["source"] = relativeGeomPath;
           jpart["geometry"]["origin"] = writeVector(part->getGeom()->getOrigin());
           //jpart["geometry"]["representation"] = "BRep";
           //~ jpart["geometry"]["bounding_box"] = {
@@ -265,18 +311,34 @@ bool ModelWriter::writeToFile(std::string fname){
         cout << "Part "<<i << " is meshed."<<endl;
         const bool use_bdf_mesh = true;
         const std::string meshname =
-            m_model.getName() + "_part_" + std::to_string(part->getId()) + ".bdf";
-        fs::path mesh_path = json_dir / meshname;
-        jpart["mesh"]["source"] = fs::relative(mesh_path, json_dir).string();
+            resourceStem + "_part_" + std::to_string(part->getId()) + ".bdf";
+        fs::path mesh_path = generation.path() / meshname;
+        std::string relativeMeshPath;
+        if (!ExportGenerationRelativePath(mesh_path, json_path, relativeMeshPath, &generationError)) {
+          std::cerr << "ERROR: " << generationError << std::endl;
+          return false;
+        }
+        jpart["mesh"]["source"] = relativeMeshPath;
+        const auto state = initialStateByPartId.find(part->getId());
+        if (state != initialStateByPartId.end())
+          jpart["mesh"]["initialState"] = state->second;
 
         cout << "Exporting current mesh to Nastran..."<<endl;
-        part->getMesh()->exportToNASTRAN(mesh_path.string());
-        part->setMeshSourceFile(mesh_path.string());
+        if (!part->getMesh()->exportToNASTRAN(
+                mesh_path.string(), MeshNastranExportPurpose::ProjectSnapshot)) {
+          std::cerr << "ERROR: failed to export project mesh snapshot: " << mesh_path << std::endl;
+          return false;
+        }
+        pendingMeshSourceUpdates.emplace_back(part, mesh_path.string());
 
         if (m_model.getPrevName()!=m_model.getName()){
-         std::string kname = m_model.getName()+"_part_" + std::to_string(i) + ".k";
+         std::string kname = (generation.path() /
+             (resourceStem+"_part_" + std::to_string(i) + ".k")).string();
             cout << "Exporting to LSDyna..."<<endl;
-            part->getMesh()->exportToLSDYNA(kname);
+            if (!part->getMesh()->exportToLSDYNA(kname)) {
+              std::cerr << "ERROR: failed to export LSDYNA generation resource: " << kname << std::endl;
+              return false;
+            }
         
         }// IF NAME CHANGED
       } else {
@@ -484,6 +546,17 @@ bool ModelWriter::writeToFile(std::string fname){
     }//if not nullptr
     cout << "Done."<<endl;
   }// MATERIALS
+
+  if (m_json.contains("Materials") && m_json["Materials"].is_object() &&
+      m_json["Materials"].contains("flowStressCsv")) {
+    std::string relativeCsv;
+    if (!PackageExternalCsv(m_json["Materials"]["flowStressCsv"].get<std::string>(), 0,
+                            generation.path(), json_path, relativeCsv, &generationError)) {
+      std::cerr << "ERROR: " << generationError << std::endl;
+      return false;
+    }
+    m_json["Materials"]["flowStressCsv"] = relativeCsv;
+  }
 
   if (m_model.getStepCount() > 0) {
     m_json["Steps"] = json::array();
@@ -696,8 +769,14 @@ bool ModelWriter::writeToFile(std::string fname){
   
   
   
-  o << std::setw(4) << m_json << std::endl;
-  
-  o.close();
-  return static_cast<bool>(o);
+  const fs::path temporaryModelPath = json_dir /
+      (json_path.filename().string() + ".tmp." + generation.name());
+  if (!WriteJsonAndPublish(m_json, temporaryModelPath, json_path, &generationError)) {
+    std::cerr << "ERROR: " << generationError << std::endl;
+    return false;
+  }
+  generation.retain();
+  for (const auto& update : pendingMeshSourceUpdates)
+    update.first->setMeshSourceFile(update.second);
+  return true;
 }

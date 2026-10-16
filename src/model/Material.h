@@ -18,8 +18,8 @@
 #include <vector>
 class Elastic_{
 	private:
-	double E_m, nu_m;	//Poisson and young
-	double K_m, G_m;
+	double E_m = 0.0, nu_m = 0.0;	//Poisson and young
+	double K_m = 0.0, G_m = 0.0;
 	
 	public:
 	Elastic_(){}
@@ -40,23 +40,23 @@ class Elastic_{
 class Plastic_{
 	
 	public:  
-  int			Material_model;	//TODO: Change to enum
+  int			Material_model = NONE;	//TODO: Change to enum
 
 	//virtual inline double CalcYieldStress();
 
   ////// NO //virtual FUNCTIONS, HOLLOMON MATERIAL ///////
-  double K, m;
-	double eps0, eps1;
-  double sy0;
-  double Et;
+  double K = 0.0, m = 0.0;
+	double eps0 = 0.0, eps1 = 0.0;
+  double sy0 = 0.0;
+  double Et = 0.0;
   void InitHollomon(){}
 
   ////// NO //virtual FUNCTIONS, JOHNSON COOK MATERIAL ///////
-	double T_t,T_m;	//transition and melting temps
+	double T_t = 0.0,T_m = 0.0;	//transition and melting temps
   
-  double T_min, T_max;
-  double e_min, e_max;
-  double er_min, er_max;
+  double T_min = 0.0, T_max = 0.0;
+  double e_min = 0.0, e_max = 0.0;
+  double er_min = 0.0, er_max = 0.0;
 
   virtual ~Plastic_() {}
     
@@ -65,7 +65,7 @@ class Plastic_{
   virtual const int getType()const{return Material_model;}
   //THERMAL
 
-  virtual std::vector<double> getPlasticConstants(){
+  virtual std::vector<double> getPlasticConstants() const {
     return std::vector<double>(); // Return empty vector    
   }
 };
@@ -97,6 +97,7 @@ class Material_{
   void setDensityConstant(const double &val){m_density = val;};
 	const double& getDensityConstant()const {return m_density;}; //COULD DEFINE IT AS TEMP 0 and 
   Plastic_* getPlastic(){return m_plastic;}
+  const Plastic_* getPlastic() const { return m_plastic; }
   const bool & isPlastic()const{return m_isplastic;}
 
   void InitializeDefaults() {
@@ -209,7 +210,7 @@ class Material_{
   }
   
 	
-  double m_density;
+	double m_density = 0.0;
   int			Material_model;	//TODO: Change to enum
   Elastic_  elastic_m;
   Plastic_ *m_plastic;
@@ -462,7 +463,7 @@ public Plastic_{
 
     Plastic_* clone() const override { return new Tabulated(*this); }
 
-    std::vector<double> getPlasticConstants() override {
+    std::vector<double> getPlasticConstants() const override {
       return {};
     }
 };
@@ -470,8 +471,8 @@ public Plastic_{
 
 class Bilinear:
 public Plastic_{
-  double sy0;
-  double Et;
+  double sy0 = 0.0;
+  double Et = 0.0;
 	
 	public:
 	Bilinear(){
@@ -497,7 +498,7 @@ public Plastic_{
 	//~ inline double CalcTangentModulus(const double &strain);
 	//~ inline double CalcYieldStress(){return 0.0;}	
 	//~ inline double CalcYieldStress(const double &strain);	
-  virtual std::vector <double> getPlasticConstants(){
+  virtual std::vector <double> getPlasticConstants() const {
     std::vector<double> ret;
     ret.push_back(sy0);ret.push_back(Et);
     return ret;
@@ -508,10 +509,10 @@ public Plastic_{
 //TODO: derive johnson cook as plastic material flow
 class JohnsonCook:
 public Plastic_{
-	double T_t,T_m;	//transition and melting temps
-	double A, B, C;
-	double n, m;
-	double eps_0;
+	double T_t = 0.0,T_m = 0.0;	//transition and melting temps
+	double A = 0.0, B = 0.0, C = 0.0;
+	double n = 0.0, m = 0.0;
+	double eps_0 = 0.0;
 	
 	public:
 	JohnsonCook(){
@@ -554,7 +555,7 @@ public Plastic_{
 	//~ inline double CalcTangentModulus(const double &strain, const double &strain_rate, const double &temp);
 
     Plastic_* clone() const override { return new JohnsonCook(*this); }
-    virtual std::vector<double> getPlasticConstants() {
+    virtual std::vector<double> getPlasticConstants() const {
       std::vector<double> ret;
       ret.push_back(B);
       ret.push_back(n);
@@ -570,10 +571,10 @@ public Plastic_{
 
 class Hollomon:
 public Plastic_{
-	double K, n;
-	double eps0;
-  double eps1;  //if has a perfectly plastic algoritm
-  double sy0;
+	double K = 0.0, n = 0.0;
+	double eps0 = 0.0;
+  double eps1 = 0.0;  //if has a perfectly plastic algoritm
+  double sy0 = 0.0;
 	
 	public:
 	Hollomon(){
@@ -599,7 +600,7 @@ public Plastic_{
 	//~ inline double CalcTangentModulus(const double &strain);
 	//~ inline double CalcYieldStress(){return 0.0;}	
 	//~ inline double CalcYieldStress(const double &strain);	
-  virtual std::vector <double> getPlasticConstants(){
+  virtual std::vector <double> getPlasticConstants() const {
     std::vector<double> ret;
     ret.push_back(K);ret.push_back(n);
     return ret;
@@ -612,11 +613,11 @@ class GMT:
 public Plastic_{
 	public:
   
-	double C1, C2;
-  double n1, n2; //Strain hardening exponent
-	double m1, m2;
-  double I1, I2; //EXPONENTIAL TERMS
-	double eps_0; //ONLY FOR JC DAMAGE , CORRECT THIS
+	double C1 = 0.0, C2 = 0.0;
+  double n1 = 0.0, n2 = 0.0; //Strain hardening exponent
+	double m1 = 0.0, m2 = 0.0;
+  double I1 = 0.0, I2 = 0.0; //EXPONENTIAL TERMS
+	double eps_0 = 0.0; //ONLY FOR JC DAMAGE , CORRECT THIS
   
 	
 	GMT(){
@@ -663,7 +664,7 @@ public Plastic_{
   //~JohnsonCook(){}
 
   Plastic_* clone() const override { return new GMT(*this); }
-  virtual std::vector<double> getPlasticConstants() {
+  virtual std::vector<double> getPlasticConstants() const {
     std::vector<double> ret;
     ret.push_back(n1);
     ret.push_back(n2);

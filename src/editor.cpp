@@ -33,11 +33,14 @@
 #include "io/ModelReader.h"
 #include "io/InputWriter.h"
 #include "io/InputReader.h"
+#include "io/InitialStateVtkReader.h"
+#include "io/InitialStateVtkMeshBuilder.h"
 #include "modelcheck/ModelCheck.h"
 #include "LSDynaWriter.h"
 #include "action.h"
 #include "model/SetWorkflow.h"
 #include "model/ElementType.h"
+#include "model/InitialStateMaterialPolicy.h"
 #include "model/Section.h"
 
 //#include "SceneView.h"
@@ -3340,13 +3343,23 @@ bool Editor::importMeshPartFromPath(const std::string& filePathName)
     return static_cast<char>(std::tolower(c));
   });
 
+  if (ext == ".vtk" || ext == ".vtu") {
+    return stageInitialStateVtkImport(filePathName);
+  }
+
   if (ext != ".bdf") {
     cout << "Unsupported orphan mesh format: " << filePathName << endl;
     return false;
   }
 
   Part* part = new Part();
-  part->generateMeshFromNastranFile(filePathName);
+  try {
+    part->generateMeshFromNastranFile(filePathName);
+  } catch (const std::exception& error) {
+    delete part;
+    std::cerr << "Cannot import Nastran mesh " << filePathName << ": " << error.what() << std::endl;
+    return false;
+  }
   part->setName(mesh_path.stem().string().c_str());
   part->setId(m_model->getPartCount());
   m_model->addPart(part);
@@ -3355,6 +3368,304 @@ bool Editor::importMeshPartFromPath(const std::string& filePathName)
   getApp().Update();
   markActiveModelDirty();
   return true;
+}
+
+bool Editor::stageInitialStateVtkImport(const std::string& filePathName)
+{
+  try {
+    InitialStateVtkMesh loaded = ReadInitialStateVtkMesh(filePathName);
+    PendingInitialStateVtkImport pending;
+    pending.mesh = std::make_unique<InitialStateVtkMesh>(std::move(loaded));
+    pending.sourcePath = filePathName;
+
+    pending.cellIdsByPartId =
+        GroupInitialStateVtkTet4ByPartId(*pending.mesh, pending.hasPartId);
+    const InitialStateVtkPlStrain history = InspectInitialStateVtkPlStrain(*pending.mesh, {});
+    pending.historyDiagnostic = history.diagnostic;
+    pending.plStrainBySourceCellId = history.valuesBySourceCellId;
+    pending.historyCellCount = history.selectedTetCount;
+    pending.historyHasRange = history.hasRange;
+    pending.historyMinimum = history.minimum;
+    pending.historyMaximum = history.maximum;
+    switch (history.status) {
+      case InitialStateVtkHistoryStatus::Available:
+        pending.historyStatus = PendingInitialStateVtkImport::HistoryStatus::Available;
+        break;
+      case InitialStateVtkHistoryStatus::Missing:
+        pending.historyStatus = PendingInitialStateVtkImport::HistoryStatus::Missing;
+        break;
+      case InitialStateVtkHistoryStatus::PointDataOnly:
+        pending.historyStatus = PendingInitialStateVtkImport::HistoryStatus::PointDataOnly;
+        break;
+      case InitialStateVtkHistoryStatus::Invalid:
+        pending.historyStatus = PendingInitialStateVtkImport::HistoryStatus::Invalid;
+        break;
+    }
+
+    m_pending_initial_state_vtk_import = std::move(pending);
+    m_pending_initial_state_vtk_import.openPopup = true;
+    return true;
+  } catch (const std::exception& error) {
+    const std::string message = std::string("No se pudo preparar la importación VTK: ") + error.what();
+    std::cerr << message << std::endl;
+    appendToAppConsole(message + "\n");
+    m_pending_initial_state_vtk_import = PendingInitialStateVtkImport{};
+    return false;
+  }
+}
+
+void Editor::drawPendingInitialStateVtkImportPopup()
+{
+  auto& pending = m_pending_initial_state_vtk_import;
+  if (pending.openPopup ||
+      (pending.mesh && !ImGui::IsPopupOpen("Select VTK Mesh Parts"))) {
+    ImGui::OpenPopup("Select VTK Mesh Parts");
+    pending.openPopup = false;
+  }
+  if (!ImGui::BeginPopupModal("Select VTK Mesh Parts", nullptr,
+                              ImGuiWindowFlags_AlwaysAutoResize)) {
+    return;
+  }
+
+  ImGui::TextWrapped("Archivo: %s", pending.sourcePath.c_str());
+  ImGui::Text("Tet4 disponibles: %zu", pending.mesh ? pending.mesh->tetCellIds.size() : 0u);
+  if (pending.mesh && !pending.mesh->surfaceCellIds.empty()) {
+    ImGui::Text("Celdas superficiales acompañantes ignoradas: %zu", pending.mesh->surfaceCellIds.size());
+  }
+  ImGui::Separator();
+
+  if (pending.hasPartId) {
+    ImGui::TextWrapped("Selecciona explícitamente solo grupos deformables. Part_ID no distingue piezas de herramientas volumétricas; excluye las herramientas. No se infieren por conectividad ni porque pl_strain sea cero.");
+    for (const auto& group : pending.cellIdsByPartId) {
+      bool selected = pending.selectedPartIds.find(group.first) != pending.selectedPartIds.end();
+      const std::string label = "Part_ID " + std::to_string(group.first) + " (" +
+                                std::to_string(group.second.size()) + " Tet4) — pieza deformable";
+      if (ImGui::Checkbox(label.c_str(), &selected)) {
+        if (selected) pending.selectedPartIds.insert(group.first);
+        else pending.selectedPartIds.erase(group.first);
+      }
+    }
+  } else {
+    ImGui::TextWrapped("No hay CELL_DATA Part_ID. Confirma solo si todos los Tet4 pertenecen a una pieza deformable; excluye herramientas volumétricas. No se infieren piezas por conectividad ni por valores pl_strain.");
+    ImGui::Checkbox("Confirmo que todos los Tet4 son una sola pieza deformable", &pending.confirmSinglePiece);
+  }
+
+  using HistoryStatus = PendingInitialStateVtkImport::HistoryStatus;
+  std::vector<vtkIdType> selectedSourceCellIds;
+  if (pending.hasPartId) {
+    for (int partId : pending.selectedPartIds) {
+      const auto group = pending.cellIdsByPartId.find(partId);
+      if (group != pending.cellIdsByPartId.end()) {
+        selectedSourceCellIds.insert(selectedSourceCellIds.end(), group->second.begin(), group->second.end());
+      }
+    }
+  } else if (pending.confirmSinglePiece && pending.mesh) {
+    selectedSourceCellIds = pending.mesh->tetCellIds;
+  }
+
+  std::vector<std::pair<int, std::vector<vtkIdType>>> selectedGroups;
+  if (pending.hasPartId) {
+    for (int sourcePartId : pending.selectedPartIds) {
+      const auto group = pending.cellIdsByPartId.find(sourcePartId);
+      if (group != pending.cellIdsByPartId.end()) selectedGroups.push_back(*group);
+    }
+  } else if (pending.confirmSinglePiece && pending.mesh) {
+    selectedGroups.emplace_back(-1, pending.mesh->tetCellIds);
+  }
+
+  if (pending.mesh && selectedSourceCellIds != pending.inspectedSourceCellIds) {
+    const InitialStateVtkPlStrain selectedHistory =
+        InspectInitialStateVtkPlStrain(*pending.mesh, selectedSourceCellIds);
+    pending.inspectedSourceCellIds = selectedSourceCellIds;
+    pending.historyDiagnostic = selectedHistory.diagnostic;
+    pending.plStrainBySourceCellId = selectedHistory.valuesBySourceCellId;
+    pending.historyCellCount = selectedSourceCellIds.size();
+    pending.historyHasRange = selectedHistory.hasRange;
+    pending.historyMinimum = selectedHistory.minimum;
+    pending.historyMaximum = selectedHistory.maximum;
+    switch (selectedHistory.status) {
+      case InitialStateVtkHistoryStatus::Available:
+        pending.historyStatus = HistoryStatus::Available;
+        break;
+      case InitialStateVtkHistoryStatus::Missing:
+        pending.historyStatus = HistoryStatus::Missing;
+        break;
+      case InitialStateVtkHistoryStatus::PointDataOnly:
+        pending.historyStatus = HistoryStatus::PointDataOnly;
+        break;
+      case InitialStateVtkHistoryStatus::Invalid:
+        pending.historyStatus = HistoryStatus::Invalid;
+        break;
+    }
+    if (pending.historyMode == 1 &&
+        (pending.historyStatus != HistoryStatus::Available || selectedSourceCellIds.empty())) {
+      pending.historyMode = 0;
+    }
+  }
+
+  ImGui::Separator();
+  ImGui::TextWrapped("Origen de historia: CELL_DATA pl_strain en %s", pending.sourcePath.c_str());
+  ImGui::TextWrapped("Historia: %s", pending.historyDiagnostic.c_str());
+  ImGui::Text("Tet4 seleccionados: %zu", selectedSourceCellIds.size());
+  if (pending.historyStatus == HistoryStatus::Available && pending.historyHasRange) {
+    ImGui::Text("pl_strain CELL_DATA — cantidad %zu, mínimo %.17g, máximo %.17g",
+                pending.historyCellCount, pending.historyMinimum, pending.historyMaximum);
+  }
+
+  bool historyDecisionsReady = !selectedGroups.empty();
+  if (pending.historyMode == 1 && pending.historyStatus == HistoryStatus::Available) {
+    const InitialStateMaterialResolution currentMaterial = m_model != nullptr
+        ? ResolveInitialStateMaterial(*m_model, -1, Elastic)
+        : InitialStateMaterialResolution{};
+    ImGui::Separator();
+    ImGui::TextWrapped("Decisión explícita por pieza para CELL_DATA pl_strain. El exportador actual usa Material 0 global (las relaciones Section→Material aún no se aplican a los BDF/DomainBlocks). El Engine recalcula el esfuerzo con la ley actual; conservar pl_strain no implica equivalencia física con el modelo previo.");
+    if (currentMaterial.effectiveMaterial == nullptr || currentMaterial.fingerprint.empty())
+      ImGui::TextWrapped("Material 0 falta o sus parámetros/tabla externa no se pueden validar; usa una tabla interna o descarta la historia.");
+    for (const auto& group : selectedGroups) {
+      const int sourcePartId = group.first;
+      const std::string prefix = pending.hasPartId
+          ? "Part_ID " + std::to_string(sourcePartId)
+          : "Pieza única";
+      ImGui::Text("%s — CELL_DATA pl_strain", prefix.c_str());
+      int decision = pending.historyDecisionBySourcePartId[sourcePartId];
+      ImGui::BeginDisabled(currentMaterial.effectiveMaterial == nullptr ||
+                           currentMaterial.fingerprint.empty());
+      if (ImGui::RadioButton(("Conservar con Material 0 actual##keep_" + std::to_string(sourcePartId)).c_str(),
+                             decision == 1)) {
+        decision = 1;
+        pending.historyDecisionBySourcePartId[sourcePartId] = decision;
+      }
+      ImGui::EndDisabled();
+      if (ImGui::RadioButton(("Descartar historia##discard_" + std::to_string(sourcePartId)).c_str(),
+                             decision == 2)) {
+        decision = 2;
+        pending.historyDecisionBySourcePartId[sourcePartId] = decision;
+      }
+      if (decision == 0) historyDecisionsReady = false;
+    }
+  }
+
+  ImGui::Separator();
+  if (pending.historyStatus == HistoryStatus::Available) {
+    ImGui::Text("Elige cómo preparar la historia:");
+    ImGui::BeginDisabled(selectedSourceCellIds.empty());
+    if (ImGui::RadioButton("Usar CELL_DATA pl_strain", pending.historyMode == 1))
+      pending.historyMode = 1;
+    ImGui::EndDisabled();
+    if (ImGui::RadioButton("Importación convencional sin historia", pending.historyMode == 2))
+      pending.historyMode = 2;
+  } else {
+    ImGui::TextWrapped("La importación con historia no está disponible para este archivo.");
+    if (ImGui::RadioButton("Importación convencional sin historia", pending.historyMode == 2))
+      pending.historyMode = 2;
+  }
+
+  ImGui::Separator();
+  const bool hasSelection = pending.hasPartId
+      ? !pending.selectedPartIds.empty()
+      : pending.confirmSinglePiece;
+  const bool historyReady = pending.historyMode != 1 ||
+      (pending.historyStatus == HistoryStatus::Available &&
+       pending.plStrainBySourceCellId.size() == selectedSourceCellIds.size() &&
+       historyDecisionsReady);
+  ImGui::BeginDisabled(!hasSelection || pending.historyMode == 0 || !historyReady || !pending.mesh);
+  if (ImGui::Button("Importar piezas", ImVec2(150.0f, 0.0f))) {
+    try {
+      struct PreparedImport {
+        int sourcePartId = -1;
+        bool hasSourcePartId = false;
+        InitialStateVtkModelMesh converted;
+        std::unique_ptr<Part> part;
+      };
+      if (selectedGroups.empty())
+        throw std::runtime_error("Selecciona al menos una pieza deformable.");
+
+      std::vector<PreparedImport> prepared;
+      prepared.reserve(selectedGroups.size());
+      std::size_t totalNodes = 0;
+      for (const auto& group : selectedGroups) {
+        PreparedImport item;
+        item.sourcePartId = group.first;
+        item.hasSourcePartId = pending.hasPartId;
+        item.converted = ConvertInitialStateVtkTet4CellsToMesh(*pending.mesh, group.second);
+        const int historyDecision = pending.historyMode == 1
+            ? pending.historyDecisionBySourcePartId[group.first]
+            : 2;
+        const bool preserveHistory = pending.historyMode == 1 && historyDecision == 1;
+        if (preserveHistory) {
+          for (const auto& sourceCell : item.converted.sourceCellIdToElement) {
+            const auto value = pending.plStrainBySourceCellId.find(sourceCell.first);
+            if (value == pending.plStrainBySourceCellId.end())
+              throw std::runtime_error("Falta pl_strain validado para una celda seleccionada.");
+            sourceCell.second->setInitialPlasticStrain(value->second);
+          }
+        }
+        InitialStateMeshProvenance provenance;
+        provenance.importedFromVtk = true;
+        provenance.sourcePath = pending.sourcePath;
+        if (item.hasSourcePartId) provenance.sourcePartId = item.sourcePartId;
+        provenance.hasPlasticStrainHistory = preserveHistory;
+        provenance.historyValid = preserveHistory;
+        provenance.historyDiagnostic = preserveHistory
+            ? "CELL_DATA pl_strain validado y almacenado por Element; el Engine recalcula con la ley actual, sin equivalencia física garantizada."
+            : (pending.historyMode == 1
+                ? "El usuario descartó explícitamente CELL_DATA pl_strain para esta pieza."
+                : "Importación convencional confirmada explícitamente sin historia pl_strain.");
+        item.converted.mesh->setInitialStateProvenance(provenance);
+        item.part = std::make_unique<Part>();
+        if (pending.historyMode == 1) {
+          const InitialStateMaterialResolution material =
+              ResolveInitialStateMaterial(*m_model, *item.part);
+          if (preserveHistory &&
+              (material.effectiveMaterial == nullptr || material.fingerprint.empty()))
+            throw std::runtime_error("Material 0 falta o no puede validarse completamente para conservar pl_strain.");
+          item.converted.mesh->setInitialStateMaterialDecision(
+              preserveHistory, material.effectiveMaterialIndex, material.fingerprint,
+              material.sectionId, material.sectionMaterialIndex, material.partIsElastic);
+        }
+        const std::string name = std::filesystem::path(pending.sourcePath).stem().string() +
+            (item.hasSourcePartId ? "_Part_" + std::to_string(item.sourcePartId) : "");
+        item.part->setName(name.c_str());
+        item.part->setType(0);
+        item.part->setMeshSourceFile(pending.sourcePath);
+        totalNodes += item.converted.mesh->getNodeCount();
+        prepared.push_back(std::move(item));
+      }
+
+      // All selected pieces and state values are validated before mutating Model.
+      m_model->m_part.reserve(m_model->m_part.size() + prepared.size());
+      m_model->m_node.reserve(m_model->m_node.size() + totalNodes);
+      for (PreparedImport& item : prepared) {
+        item.converted.mesh->adoptInitialStateStorage(
+            std::move(item.converted.ownedNodes), std::move(item.converted.ownedElements));
+      }
+      for (PreparedImport& item : prepared) {
+        item.part->setMesh(item.converted.mesh.get());
+        m_model->addPart(item.part.get());
+        item.converted.mesh.release();
+        item.part.release();
+      }
+      markActiveModelDirty();
+      getApp().setActiveModel(m_model);
+      getApp().Update();
+      appendToAppConsole("Importación VTK confirmada: " +
+          std::to_string(prepared.size()) + " pieza(s), " +
+          std::to_string(selectedSourceCellIds.size()) + " Tet4; decisión de historia registrada por pieza.\n");
+      ImGui::CloseCurrentPopup();
+      pending = PendingInitialStateVtkImport{};
+    } catch (const std::exception& error) {
+      const std::string message = std::string("No se confirmó la importación VTK: ") + error.what();
+      appendToAppConsole(message + "\n");
+      std::cerr << message << std::endl;
+    }
+  }
+  ImGui::EndDisabled();
+  ImGui::SameLine();
+  if (ImGui::Button("Cancelar", ImVec2(120.0f, 0.0f))) {
+    ImGui::CloseCurrentPopup();
+    pending = PendingInitialStateVtkImport{};
+  }
+  ImGui::EndPopup();
 }
 
 void Editor::markActiveModelDirty()
@@ -3750,6 +4061,11 @@ void Editor::requestJobRun(Job* job)
 
 bool Editor::scalePartGeometry(Part* part, double factor)
 {
+  if (part != nullptr && part->getMesh() != nullptr &&
+      part->getMesh()->hasInitialPlasticStrainHistory()) {
+    appendToAppConsole("Cannot scale this part while it has initial pl_strain history; explicitly discard the history first.\n");
+    return false;
+  }
   if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
     cout << "Scale is only available for geometry parts." << endl;
     return false;
@@ -3804,22 +4120,46 @@ bool Editor::rotatePartGeometry(Part* part,
                                 double pivotY,
                                 double pivotZ)
 {
-  if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
-    cout << "Rotate is only available for geometry parts." << endl;
+  if (part == nullptr || (part->getGeom() == nullptr && part->getMesh() == nullptr)) {
+    cout << "Rotate requires a part with geometry or a mesh." << endl;
     return false;
   }
 
   Geom* geom = part->getGeom();
   double rotationCenter[3] = {0.0, 0.0, 0.0};
-  bool hasRotationCenter = geom->getMassCenter(rotationCenter[0],
-                                               rotationCenter[1],
-                                               rotationCenter[2]);
+  bool hasRotationCenter = geom != nullptr && geom->getMassCenter(rotationCenter[0],
+                                                                  rotationCenter[1],
+                                                                  rotationCenter[2]);
   if (!hasRotationCenter) {
-    hasRotationCenter = geom->getBoundingBoxCenter(rotationCenter[0],
-                                                   rotationCenter[1],
-                                                   rotationCenter[2]);
+    hasRotationCenter = geom != nullptr && geom->getBoundingBoxCenter(rotationCenter[0],
+                                                                      rotationCenter[1],
+                                                                      rotationCenter[2]);
   }
-  const bool rotated = useCustomPivot
+  if (!hasRotationCenter && part->getMesh() != nullptr && part->getMesh()->getNodeCount() > 0) {
+    Mesh* mesh = part->getMesh();
+    double minimum[3] = {mesh->getNode(0)->getPos(0), mesh->getNode(0)->getPos(1), mesh->getNode(0)->getPos(2)};
+    double maximum[3] = {minimum[0], minimum[1], minimum[2]};
+    for (int i = 1; i < mesh->getNodeCount(); ++i) {
+      for (int d = 0; d < 3; ++d) {
+        minimum[d] = std::min(minimum[d], mesh->getNode(i)->getPos(d));
+        maximum[d] = std::max(maximum[d], mesh->getNode(i)->getPos(d));
+      }
+    }
+    for (int d = 0; d < 3; ++d) rotationCenter[d] = 0.5 * (minimum[d] + maximum[d]);
+    hasRotationCenter = true;
+  }
+  const double pivot[3] = {useCustomPivot ? pivotX : rotationCenter[0],
+                           useCustomPivot ? pivotY : rotationCenter[1],
+                           useCustomPivot ? pivotZ : rotationCenter[2]};
+  Vector3f axisVector(axisDirX, axisDirY, axisDirZ);
+  Vector3f pivotVector(pivot[0], pivot[1], pivot[2]);
+  if (part->getMesh() != nullptr &&
+      !part->getMesh()->canRotateNodesAroundAxis(angleDeg, axisVector, pivotVector)) {
+    appendToAppConsole("Cannot rotate mesh: the axis, pivot or node coordinates are invalid.\n");
+    return false;
+  }
+  if (geom != nullptr) {
+    const bool rotated = useCustomPivot
     ? geom->RotateAroundPoint(angleDeg,
                               axisDirX,
                               axisDirY,
@@ -3836,15 +4176,18 @@ bool Editor::rotatePartGeometry(Part* part,
                                   rotationCenter[1],
                                   rotationCenter[2])
         : geom->Rotate(angleDeg, axisDirX, axisDirY, axisDirZ));
-  if (!rotated) {
-    return false;
+    if (!rotated) return false;
+  }
+  if (part->getMesh() != nullptr) {
+    if (!part->getMesh()->rotateNodesAroundAxis(angleDeg, axisVector, pivotVector)) return false;
+    getApp().rebuildGraphicMeshForPart(part);
   }
 
-  vtkOCCTGeom* visual = getApp().getVisualForPart(part);
-  if (visual != nullptr) {
+  vtkOCCTGeom* visual = geom != nullptr ? getApp().getVisualForPart(part) : nullptr;
+  if (geom != nullptr && visual != nullptr) {
     visual->SetGeometry(geom);
     visual->ReloadFromGeometry();
-  } else {
+  } else if (geom != nullptr) {
     vtkOCCTGeom* newVisual = new vtkOCCTGeom();
     newVisual->SetGeometry(geom);
     newVisual->BuildVTKData();
@@ -3853,13 +4196,6 @@ bool Editor::rotatePartGeometry(Part* part,
     if (viewer != nullptr && newVisual->actor != nullptr) {
       viewer->addActor(newVisual->actor);
     }
-  }
-
-  if (part->isMeshed()) {
-    clearStateForDeletedMesh(part->getMesh());
-    getApp().removeGraphicMeshForPart(part);
-    part->deleteMesh();
-    cout << "Deleted mesh after rotating geometry because it became outdated." << endl;
   }
 
   getApp().Update();
@@ -3875,6 +4211,11 @@ bool Editor::splitPartGeometryWithPlane(Part* part,
                                         double normalY,
                                         double normalZ)
 {
+  if (part != nullptr && part->getMesh() != nullptr &&
+      part->getMesh()->hasInitialPlasticStrainHistory()) {
+    appendToAppConsole("Cannot split this part while it has initial pl_strain history; explicitly discard the history first.\n");
+    return false;
+  }
   if (part == nullptr || !part->isGeom() || part->getGeom() == nullptr) {
     cout << "Plane split is only available for geometry parts." << endl;
     return false;
@@ -4196,6 +4537,11 @@ void Editor::applyPartTranslation(Part* part, double dx, double dy, double dz)
   GraphicMesh* graphicMesh = getApp().getGraphicMeshFromPart(part);
   if (graphicMesh != nullptr) {
     graphicMesh->Translate(dx, dy, dz);
+  } else if (part->getMesh() != nullptr) {
+    for (int i = 0; i < part->getMesh()->getNodeCount(); ++i) {
+      Node* node = part->getMesh()->getNode(i);
+      if (node != nullptr) node->translate(dx, dy, dz);
+    }
   }
 
   if (gizmo != nullptr && selected_prt == part) {
@@ -5581,6 +5927,10 @@ void Editor::meshPart(Part* part){
   if (part == nullptr || part->getGeom() == nullptr){
     return;
   }
+  if (part->getMesh() != nullptr && part->getMesh()->hasInitialPlasticStrainHistory()) {
+    appendToAppConsole("Cannot remesh this part while it has initial pl_strain history; explicitly discard the history first.\n");
+    return;
+  }
 
   Geom *geo = part->getGeom();
   int part_index = -1;
@@ -6008,7 +6358,7 @@ void ShowExampleMenuFile(Editor *editor)
           ".step,.STEP,.stp,.STP,.iges,.IGES,.igs,.IGS,.geo,.GEO");
     }
     if (ImGui::MenuItem("Import Mesh", "Ctrl+M")){
-      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
+      ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF,.vtk,.VTK,.vtu,.VTU", ".");
     }
     if (ImGui::MenuItem("Open Result", "Ctrl+O")){
       ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgOpenRes", "Choose File", ".wfresult,.vtk", ".");
@@ -6427,7 +6777,7 @@ void Editor::drawGui() {
             m_showNewDomain = true;
           }
           if (ImGui::MenuItem("New Mesh from file", "CTRL+Z")) {
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF", ".");
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgImportMesh", "Choose File", ".bdf,.BDF,.vtk,.VTK,.vtu,.VTU", ".");
           }
           ImGui::EndPopup();          
         }
@@ -6601,7 +6951,7 @@ void Editor::drawGui() {
 	                scale_factor = 1.0;
 	                scale_part = treePart;
               }
-	              else if (treePart->isGeom() && ImGui::MenuItem("Rotate")) {
+	              else if ((treePart->isGeom() || treePart->getMesh() != nullptr) && ImGui::MenuItem("Rotate")) {
 	                show_rotate_popup = true;
 	                rotate_angle_deg = 0.0;
 	                rotate_axis = 4;
@@ -6711,6 +7061,54 @@ void Editor::drawGui() {
                   hovered_prt = treePart;
                 }
 
+                if (treePart->getMesh() != nullptr &&
+                    treePart->getMesh()->hasInitialPlasticStrainHistory()) {
+                  Mesh* stateMesh = treePart->getMesh();
+                  stateMesh->validateInitialStateTopology();
+                  const InitialStateMaterialResolution currentMaterial =
+                      ResolveInitialStateMaterial(*m_model, *treePart);
+                  const auto& stateProvenance = stateMesh->getInitialStateProvenance();
+                  const bool storedHistoryValid = stateProvenance && stateProvenance->historyValid;
+                  const bool decisionCurrent = stateProvenance &&
+                      IsInitialStateMaterialDecisionCurrent(*stateProvenance, currentMaterial) &&
+                      stateMesh->initialStateTopologyMatches();
+                  ImGui::TextWrapped("Historia inicial pl_strain: %s. Material efectivo actual: %s.",
+                      decisionCurrent ? "decisión vigente" : "requiere re-confirmación",
+                      currentMaterial.effectiveMaterial != nullptr
+                          ? ("Material " + std::to_string(currentMaterial.effectiveMaterialIndex)).c_str()
+                          : "ninguno");
+                  ImGui::TextWrapped("El exportador actual usa Material 0 global; la sección se registra para invalidar la decisión si cambia. El Engine recalcula el esfuerzo con la ley actual, sin equivalencia física garantizada.");
+                  if (!storedHistoryValid)
+                    ImGui::TextWrapped("La historia está marcada inválida por una validación previa; re-confirmar material no la rehabilita.");
+                  const std::string keepLabel = "Conservar historia con Material actual##history_keep_" +
+                      std::to_string(treePart->getId());
+                  ImGui::BeginDisabled(currentMaterial.effectiveMaterial == nullptr ||
+                                       currentMaterial.fingerprint.empty() ||
+                                       !currentMaterial.partIsElastic ||
+                                       !storedHistoryValid);
+                  if (ImGui::Button(keepLabel.c_str())) {
+                    stateMesh->setInitialStateMaterialDecision(
+                        true, currentMaterial.effectiveMaterialIndex,
+                        currentMaterial.fingerprint, currentMaterial.sectionId,
+                        currentMaterial.sectionMaterialIndex, currentMaterial.partIsElastic);
+                    if (stateMesh->getInitialStateProvenance()) {
+                      InitialStateMeshProvenance updated = *stateMesh->getInitialStateProvenance();
+                      updated.hasPlasticStrainHistory = true;
+                      updated.historyDiagnostic = "Historia re-confirmada para la configuración actual; el Engine recalcula con la ley de material vigente.";
+                      stateMesh->setInitialStateProvenance(updated);
+                    }
+                    markActiveModelDirty();
+                  }
+                  ImGui::EndDisabled();
+                  ImGui::SameLine();
+                  const std::string discardLabel = "Descartar historia##history_discard_" +
+                      std::to_string(treePart->getId());
+                  if (ImGui::Button(discardLabel.c_str())) {
+                    stateMesh->discardInitialPlasticStrainHistory();
+                    markActiveModelDirty();
+                  }
+                }
+
                 if (treePart->isGeom()) {
                   if (expand_model_tree_once) {
                     ImGui::SetNextItemOpen(true, ImGuiCond_Always);
@@ -6773,11 +7171,13 @@ void Editor::drawGui() {
                   if (ImGui::BeginPopupContextItem())
                   {
 	                      if (ImGui::MenuItem("Delete")) {
+                        if (treePart->getMesh() == nullptr ||
+                            !treePart->getMesh()->hasInitialPlasticStrainHistory()) {
                           clearStateForDeletedMesh(treePart->getMesh());
-	                        getApp().removeGraphicMeshForPart(treePart);
-	                        treePart->deleteMesh();
-                          markActiveModelDirty();
-	                        meshDeleted = true;
+                          getApp().removeGraphicMeshForPart(treePart);
+                          meshDeleted = treePart->deleteMesh();
+                          if (meshDeleted) markActiveModelDirty();
+                        }
                         
                       }
                       ImGui::EndPopup();
@@ -6947,12 +7347,12 @@ void Editor::drawGui() {
                     double3 axis_dir = make_double3(0.0, 0.0, 1.0);
                     Geom* geom = rotate_part->getGeom();
                     switch (rotate_axis) {
-                      case 0: axis_dir = geom->getLocalAxisX(); break;
-                      case 1: axis_dir = -1.0 * geom->getLocalAxisX(); break;
-                      case 2: axis_dir = geom->getLocalAxisY(); break;
-                      case 3: axis_dir = -1.0 * geom->getLocalAxisY(); break;
-                      case 4: axis_dir = geom->getLocalAxisZ(); break;
-                      case 5: axis_dir = -1.0 * geom->getLocalAxisZ(); break;
+                      case 0: axis_dir = geom != nullptr ? geom->getLocalAxisX() : make_double3(1.0, 0.0, 0.0); break;
+                      case 1: axis_dir = geom != nullptr ? -1.0 * geom->getLocalAxisX() : make_double3(-1.0, 0.0, 0.0); break;
+                      case 2: axis_dir = geom != nullptr ? geom->getLocalAxisY() : make_double3(0.0, 1.0, 0.0); break;
+                      case 3: axis_dir = geom != nullptr ? -1.0 * geom->getLocalAxisY() : make_double3(0.0, -1.0, 0.0); break;
+                      case 4: axis_dir = geom != nullptr ? geom->getLocalAxisZ() : make_double3(0.0, 0.0, 1.0); break;
+                      case 5: axis_dir = geom != nullptr ? -1.0 * geom->getLocalAxisZ() : make_double3(0.0, 0.0, -1.0); break;
                       default: break;
                     }
                     close_popup = rotatePartGeometry(rotate_part,
@@ -9213,6 +9613,7 @@ void Editor::drawGui() {
   }
 
   drawPendingModelSavePopup();
+  drawPendingInitialStateVtkImportPopup();
   
   bool show_app_log = true;
   //ShowExampleAppLog(&show_app_log);

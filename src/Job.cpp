@@ -1,4 +1,5 @@
 #include "Job.h"
+#include "io/ExportGeneration.h"
 #include <cstdlib>
 
 #include <iostream>
@@ -13,6 +14,7 @@
 #include <set>
 #include <vector>
 #include <utility>
+#include <chrono>
 
 #ifdef _WIN32
 #include "common/platform/WindowsHeaders.h"
@@ -535,6 +537,13 @@ bool Job::applyRestartSettingsToInput() const
   }
 
   json updated = *input;
+  if (!m_restart_file.empty() && updated.contains("DomainBlocks") &&
+      updated["DomainBlocks"].is_array()) {
+    for (const json& block : updated["DomainBlocks"]) {
+      if (block.is_object() && block.contains("initialStateFile"))
+        return false;
+    }
+  }
   if (!updated.contains("Configuration") || !updated["Configuration"].is_object()) {
     return false;
   }
@@ -579,12 +588,15 @@ bool Job::applyRestartSettingsToInput() const
     configuration.erase("resultBaseName");
   }
 
-  std::ofstream output(m_path_file, std::ios::out | std::ios::trunc);
-  if (!output.is_open()) {
+  const fs::path inputPath(m_path_file);
+  const fs::path temporaryPath = inputPath.parent_path() /
+      (inputPath.filename().string() + ".tmp.job." + std::to_string(
+          std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::string diagnostic;
+  if (!WriteJsonAndPublish(updated, temporaryPath, inputPath, &diagnostic)) {
+    std::cerr << "[Job] Could not atomically update input settings: " << diagnostic << std::endl;
     return false;
   }
-
-  output << std::setw(4) << updated << std::endl;
   return true;
 }
 
@@ -791,6 +803,21 @@ bool Job::validateSolverSelection(const SolverInputInfo& info,
 
 int Job::Run(){
   int returnCode = -1;
+  if (!m_restart_file.empty()) {
+    const std::optional<json> input = loadInputJson();
+    if (input.has_value() && input->contains("DomainBlocks") &&
+        input->at("DomainBlocks").is_array()) {
+      for (const json& block : input->at("DomainBlocks")) {
+        if (block.is_object() && block.contains("initialStateFile")) {
+          const std::string message =
+              "[Job::Run] An initial-state sidecar cannot be combined with restartFile.";
+          std::cerr << message << std::endl;
+          persistLogMessage({message});
+          return -1;
+        }
+      }
+    }
+  }
   applyRestartSettingsToInput();
   const SolverInputInfo inputInfo = inspectSolverInput();
   const SolverEdition requestedEdition = getRequestedSolverEdition();

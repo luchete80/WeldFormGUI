@@ -6,6 +6,10 @@
 #include <map>
 #include <algorithm>
 #include <unordered_set>
+#include <stdexcept>
+#include <cstdint>
+#include <locale>
+#include <cmath>
 
 #include <gmsh.h>
 #include <array>
@@ -48,6 +52,7 @@ void initValues(  std::vector <Node*>    m_node, //LOCATED ON MODEL SPACE!!!!
 */
 
 void Mesh::addNode(double x, double y, double z, int id){
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
   int max = 0;
   if (id ==-1){
     for (int i=0;i<m_node.size();i++){
@@ -59,13 +64,17 @@ void Mesh::addNode(double x, double y, double z, int id){
   cout << "adding Node "<<"id "<<id << "x: "<<x<<", y: "<<y<<", z: "<<z<<endl;
   m_node.push_back(new Node(x,y,z,id));
   m_node_count++;
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 }
   
 void Mesh::addNode(Node *node){
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
   m_node.push_back(node);
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 }
 
 void Mesh::addElement(Element *el, bool alloc){
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
     Element* new_element = new Element(*el);
     int next_id = 1;
     for (int i = 0; i < m_elem.size(); ++i) {
@@ -74,6 +83,7 @@ void Mesh::addElement(Element *el, bool alloc){
     }
     new_element->m_id = next_id;
     m_elem.push_back(new_element);
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 
 }
 
@@ -98,6 +108,7 @@ int Mesh::removeElements(const std::vector<Element*>& elements){
   if (toRemove.empty()) {
     return 0;
   }
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 
   int removedCount = 0;
   for (std::vector<Element*>::iterator it = m_elem.begin(); it != m_elem.end();) {
@@ -113,16 +124,135 @@ int Mesh::removeElements(const std::vector<Element*>& elements){
     for (FaceSet& set : m_face_sets) {
       set.removeFacesForOwnerElementId(element->getId());
     }
-    delete element;
+    for (auto source = m_source_vtk_cell_to_element.begin();
+         source != m_source_vtk_cell_to_element.end();) {
+      if (source->second == element) source = m_source_vtk_cell_to_element.erase(source);
+      else ++source;
+    }
+    bool ownedByInitialStateImport = false;
+    if (m_initial_state_storage) {
+      auto& owned = m_initial_state_storage->elements;
+      for (auto owner = owned.begin(); owner != owned.end(); ++owner) {
+        if (owner->get() == element) {
+          owned.erase(owner);
+          ownedByInitialStateImport = true;
+          break;
+        }
+      }
+    }
+    if (!ownedByInitialStateImport) delete element;
     it = m_elem.erase(it);
     ++removedCount;
   }
 
   if (removedCount > 0) {
     m_elem_count = static_cast<int>(m_elem.size());
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
   }
 
   return removedCount;
+}
+
+void Mesh::adoptInitialStateStorage(std::vector<std::unique_ptr<Node>>&& nodes,
+                                    std::vector<std::unique_ptr<Element>>&& elements) {
+  if (m_initial_state_storage) {
+    throw std::logic_error("Mesh already owns imported initial-state entities.");
+  }
+  auto storage = std::make_shared<InitialStateMeshStorage>();
+  storage->nodes = std::move(nodes);
+  storage->elements = std::move(elements);
+  m_initial_state_storage = std::move(storage);
+}
+
+void Mesh::setInitialStateProvenance(const InitialStateMeshProvenance& provenance) {
+  m_initial_state_provenance = provenance;
+  if (!provenance.historyValid || !provenance.hasPlasticStrainHistory) {
+    m_initial_state_element_nodes.clear();
+    m_initial_state_nodes.clear();
+    return;
+  }
+  // Do not let a material reconfirmation refresh a stale topology snapshot.
+  if (!m_initial_state_element_nodes.empty()) return;
+  m_initial_state_nodes.clear();
+  for (const Node* node : m_node) m_initial_state_nodes.insert(node);
+  for (const Element* element : m_elem) {
+    if (element == nullptr) continue;
+    std::vector<const Node*> connectivity;
+    connectivity.reserve(element->m_node.size());
+    for (const Node* node : element->m_node) connectivity.push_back(node);
+    m_initial_state_element_nodes.emplace(element, std::move(connectivity));
+  }
+}
+
+bool Mesh::initialStateTopologyMatches() const {
+  if (m_initial_state_element_nodes.empty()) return false;
+  if (m_elem.size() != m_initial_state_element_nodes.size() ||
+      m_node.size() != m_initial_state_nodes.size()) return false;
+  std::set<const Node*> currentNodes(m_node.begin(), m_node.end());
+  if (currentNodes != m_initial_state_nodes) return false;
+  for (const Element* element : m_elem) {
+    const auto expected = m_initial_state_element_nodes.find(element);
+    if (element == nullptr || expected == m_initial_state_element_nodes.end() ||
+        expected->second.size() != element->m_node.size()) return false;
+    for (std::size_t i = 0; i < expected->second.size(); ++i)
+      if (expected->second[i] != element->m_node[i]) return false;
+  }
+  return true;
+}
+
+bool Mesh::validateInitialStateTopology() {
+  if (!m_initial_state_provenance || !m_initial_state_provenance->historyValid ||
+      !m_initial_state_provenance->hasPlasticStrainHistory) return true;
+  if (initialStateTopologyMatches()) return true;
+  m_initial_state_provenance->historyValid = false;
+  m_initial_state_provenance->historyDiagnostic =
+      "La conectividad o el conjunto de entidades cambió después de asociar pl_strain; descarte la historia antes de exportar.";
+  return false;
+}
+
+bool Mesh::rotateNodesAroundAxis(double angleDeg, const Vector3f& axis,
+                                 const Vector3f& pivot) {
+  if (!canRotateNodesAroundAxis(angleDeg, axis, pivot)) return false;
+  const double length = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+  const double ux = axis[0] / length, uy = axis[1] / length, uz = axis[2] / length;
+  const double radians = angleDeg * 3.14159265358979323846 / 180.0;
+  const double cosine = std::cos(radians), sine = std::sin(radians);
+  for (Node* node : m_node) {
+    if (node == nullptr) continue;
+    const double x = node->getPos(0) - pivot[0];
+    const double y = node->getPos(1) - pivot[1];
+    const double z = node->getPos(2) - pivot[2];
+    const double dot = ux * x + uy * y + uz * z;
+    const double rx = x * cosine + (uy * z - uz * y) * sine + ux * dot * (1.0 - cosine);
+    const double ry = y * cosine + (uz * x - ux * z) * sine + uy * dot * (1.0 - cosine);
+    const double rz = z * cosine + (ux * y - uy * x) * sine + uz * dot * (1.0 - cosine);
+    node->setPos(rx + pivot[0], ry + pivot[1], rz + pivot[2]);
+  }
+  return true;
+}
+
+bool Mesh::canRotateNodesAroundAxis(double angleDeg, const Vector3f& axis,
+                                   const Vector3f& pivot) const {
+  const double length = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+  if (!std::isfinite(angleDeg) || !std::isfinite(length) || length <= 0.0) return false;
+  for (int d = 0; d < 3; ++d)
+    if (!std::isfinite(pivot[d])) return false;
+  const double ux = axis[0] / length, uy = axis[1] / length, uz = axis[2] / length;
+  const double radians = angleDeg * 3.14159265358979323846 / 180.0;
+  const double cosine = std::cos(radians), sine = std::sin(radians);
+  for (const Node* node : m_node) {
+    if (node == nullptr) return false;
+    const double x = node->getPos(0) - pivot[0];
+    const double y = node->getPos(1) - pivot[1];
+    const double z = node->getPos(2) - pivot[2];
+    const double dot = ux * x + uy * y + uz * z;
+    const double rx = x * cosine + (uy * z - uz * y) * sine + ux * dot * (1.0 - cosine);
+    const double ry = y * cosine + (uz * x - ux * z) * sine + uy * dot * (1.0 - cosine);
+    const double rz = z * cosine + (ux * y - uy * x) * sine + uz * dot * (1.0 - cosine);
+    if (!std::isfinite(rx + pivot[0]) || !std::isfinite(ry + pivot[1]) ||
+        !std::isfinite(rz + pivot[2])) return false;
+  }
+  return true;
 }
 
 void Mesh::addQuad(int v0, int v1, int v2, int v3, int id){
@@ -144,6 +274,7 @@ void Mesh::addQuad(int v0, int v1, int v2, int v3, int id){
 
 void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
                     std::vector <Element*> e){
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
   m_node.resize(n.size());
   for (int nn=0;nn<n.size(); nn++) m_node[nn]=n[nn];
   m_node_count = n.size();
@@ -156,6 +287,7 @@ void Mesh::assignValues(  std::vector <Node*>    n, //LOCATED ON MODEL SPACE!!!!
     m_elem[nn]=e[nn];
   }
   m_elem_count = e.size();
+  if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 }
 
 const Vector3f& Mesh::getNodePos(const int &i)const{
@@ -357,6 +489,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 
     assignSequentialEntityIds(m_node);
     assignSequentialEntityIds(m_elem);
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 
     // // //cudaMalloc((void **)&m_elnod, m_elem_count * m_nodxelem * sizeof (int));	
     // // malloc_t(m_elnod, unsigned int, m_elem_count * m_nodxelem);
@@ -656,6 +789,7 @@ void Mesh::addBoxLength(Vector3f V, Vector3f L, double r){
 
 
 void Mesh::genFromGmshModel() {
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
     // Limpiar estructuras existentes
     m_node.clear();
     m_elem.clear();
@@ -830,15 +964,19 @@ void Mesh::genFromGmshModel() {
 }
 
 void Mesh::genFromNastranFile(const std::string& filename) {
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
     m_node.clear();
     m_elem.clear();
 
     std::cout << "Opening Nastran mesh " << filename << std::endl;
     NastranReader reader(filename.c_str());
+    if (!reader.isReadValid())
+        throw std::runtime_error("Nastran mesh has malformed connectivity or invalid/duplicate element EIDs: " + filename);
 
     const double* nodes = reader.getNodes();
     const int* connectivity = reader.getConnectivity();
     const int* nodeIds = reader.getNodeIds();
+    const int* elementIds = reader.getElementIds();
     const int nodeCount = reader.getNodeCount();
     const int elemCount = reader.getElemCount();
     const int maxNodesPerElem = reader.getMaxNodesPerElem();
@@ -880,19 +1018,19 @@ void Mesh::genFromNastranFile(const std::string& filename) {
 
         if(elementNodes.size() == 2) {
             Line* line = new Line(elementNodes);
-            line->m_id = static_cast<int>(m_elem.size()) + 1;
+            line->m_id = elementIds ? elementIds[e] : static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(line);
         } else if(elementNodes.size() == 3) {
             Tria* tria = new Tria(elementNodes);
-            tria->m_id = static_cast<int>(m_elem.size()) + 1;
+            tria->m_id = elementIds ? elementIds[e] : static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(tria);
         } else if(elementNodes.size() == 4 && reader.dim == 2) {
             Quad* quad = new Quad(elementNodes);
-            quad->m_id = static_cast<int>(m_elem.size()) + 1;
+            quad->m_id = elementIds ? elementIds[e] : static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(quad);
         } else {
             Element* element = new Element(elementNodes);
-            element->m_id = static_cast<int>(m_elem.size()) + 1;
+            element->m_id = elementIds ? elementIds[e] : static_cast<int>(m_elem.size()) + 1;
             m_elem.push_back(element);
             if (debugTargetTetra) {
                 std::cout << "[debug tetra 3801][mesh] created generic 4-node solid with temp id "
@@ -901,11 +1039,13 @@ void Mesh::genFromNastranFile(const std::string& filename) {
         }
     }
 
-    assignSequentialEntityIds(m_elem);
+    // Preserve BDF EIDs: the portable .wfmodel history is keyed by these IDs.
 
     m_dim = reader.dim;
     m_node_count = m_node.size();
     m_elem_count = m_elem.size();
+
+    if (hasInitialPlasticStrainHistory()) validateInitialStateTopology();
 
     std::cout << "Mesh created successfully from Nastran with " << m_node_count
               << " nodes and " << m_elem_count << " elements" << std::endl;
@@ -1181,8 +1321,17 @@ bool Mesh::exportToLSDYNA(const std::string& filename) {
 
     // Escribir terminador del archivo
     outfile << "*END" << std::endl;
-    
+    outfile.flush();
+    if (!outfile.good()) {
+        std::cerr << "Error: Failed while writing LSDYNA file " << filename << std::endl;
+        outfile.close();
+        return false;
+    }
     outfile.close();
+    if (outfile.fail()) {
+        std::cerr << "Error: Failed while closing LSDYNA file " << filename << std::endl;
+        return false;
+    }
 
     std::cout << "LS-DYNA export completed successfully!" << std::endl;
     std::cout << "File: " << filename << std::endl;
@@ -1230,6 +1379,7 @@ std::string formatNastranNumber(double value) {
 
     for (int decimals = 3; decimals >= 0; --decimals) {
         std::ostringstream mantissa_stream;
+        mantissa_stream.imbue(std::locale::classic());
         mantissa_stream << std::fixed << std::setprecision(decimals) << mantissa;
         std::string mantissa_str = mantissa_stream.str();
 
@@ -1248,6 +1398,7 @@ std::string formatNastranNumber(double value) {
     }
 
     std::ostringstream fallback;
+    fallback.imbue(std::locale::classic());
     fallback << std::scientific << std::setprecision(1) << value;
     std::string s = fallback.str();
     if (s.size() > 8) s = s.substr(0, 8);
@@ -1302,12 +1453,23 @@ std::string formatScientific(double value) {
     //~ return oss.str();
 //~ }
 
-bool Mesh::exportToNASTRAN(const std::string& filename) {
+bool Mesh::exportToNASTRAN(const std::string& filename, MeshNastranExportPurpose purpose,
+                           std::map<const Element*, int>* writtenElementIds) {
+    validateInitialStateTopology();
+    if (hasInitialPlasticStrainHistory() &&
+        purpose != MeshNastranExportPurpose::ProjectSnapshot &&
+        purpose != MeshNastranExportPurpose::InitialStatePackage) {
+        std::cerr << "Error: NASTRAN export cannot preserve imported CELL_DATA pl_strain history yet; refusing to write "
+                  << filename << std::endl;
+        return false;
+    }
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
         std::cerr << "Error: Cannot open file " << filename << " for writing" << std::endl;
         return false;
     }
+    outfile.imbue(std::locale::classic());
+    if (writtenElementIds != nullptr) writtenElementIds->clear();
 
     // Escribir encabezado del archivo NASTRAN
     outfile << "$ WeldFormGUI NASTRAN export" << std::endl;
@@ -1378,6 +1540,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     //<< ",,0.0,1.0,0.0" // Vector de orientación 
                     << std::endl;     
             cbarCount++;
+            if (writtenElementIds != nullptr) (*writtenElementIds)[elem] = elem->getId();
         }
 //        else if (elemType == "BEAM" || (numNodes == 2 && elemType == "BEAM")) {
             // // Elemento viga CBEAM
@@ -1397,6 +1560,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << std::setw(8) << elem->getNodeId(2)
                     << std::endl;
             ctri3Count++;
+            if (writtenElementIds != nullptr) (*writtenElementIds)[elem] = elem->getId();
         }
         else if (numNodes == 4 && m_dim == 2) {
             // Elemento cuadrilátero 2D CQUAD4
@@ -1408,6 +1572,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << std::setw(8) << elem->getNodeId(3)
                     << std::endl;
             cquad4Count++;
+            if (writtenElementIds != nullptr) (*writtenElementIds)[elem] = elem->getId();
         }
         else if (numNodes == 4 && m_dim == 3) {
             // Elemento tetraédrico CTETRA
@@ -1419,6 +1584,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << std::setw(8) << elem->getNodeId(3)
                     << std::endl;
             ctetraCount++;
+            if (writtenElementIds != nullptr) (*writtenElementIds)[elem] = elem->getId();
         }
         else if (numNodes == 8 && m_dim == 3) {
             // Elemento hexaédrico CHEXA
@@ -1436,6 +1602,7 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
                     << std::setw(8) << elem->getNodeId(7)
                     << std::endl;
             chexaCount++;
+            if (writtenElementIds != nullptr) (*writtenElementIds)[elem] = elem->getId();
         }
     }
     // Escribir propiedades de elementos (PBAR, PBEAM, PSHELL, etc.)
@@ -1467,7 +1634,17 @@ bool Mesh::exportToNASTRAN(const std::string& filename) {
     // Finalizar archivo
     outfile << "ENDDATA" << std::endl;
     
+    outfile.flush();
+    if (!outfile.good()) {
+        std::cerr << "Error: Failed while writing NASTRAN file " << filename << std::endl;
+        outfile.close();
+        return false;
+    }
     outfile.close();
+    if (outfile.fail()) {
+        std::cerr << "Error: Failed while closing NASTRAN file " << filename << std::endl;
+        return false;
+    }
 
     std::cout << "NASTRAN export completed successfully!" << std::endl;
     std::cout << "File: " << filename << std::endl;

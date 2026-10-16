@@ -9,6 +9,8 @@
 #include "Part.h"
 #include "Step.h"
 #include "Element.h"
+#include "StrictJson.h"
+#include "InitialStateSidecar.h"
 
 #include <algorithm>
 #include <cctype>
@@ -315,18 +317,17 @@ void readMaterials(const json& root, Model* model)
   }
 }
 
-void addFilePart(Model* model,
+bool addFilePart(Model* model,
                  const fs::path& base_dir,
                  const json& part_json,
                  bool rigid,
                  int fallback_id)
 {
-  if (model == nullptr)
-    return;
+  if (model == nullptr) return false;
 
   const std::string file_name = part_json.value("fileName", std::string());
   if (file_name.empty())
-    return;
+    return !part_json.contains("initialStateFile");
 
   fs::path mesh_path = resolveRelative(base_dir, file_name);
   Part* part = new Part();
@@ -336,13 +337,43 @@ void addFilePart(Model* model,
   part->setName(rigid ? "Rigid File" : "Domain File");
 
   if (fs::exists(mesh_path)) {
-    part->generateMeshFromNastranFile(mesh_path.string());
+    try {
+      part->generateMeshFromNastranFile(mesh_path.string());
+    } catch (const std::exception& error) {
+      std::cerr << "[InputReader] Invalid Nastran mesh " << mesh_path
+                << ": " << error.what() << std::endl;
+      delete part;
+      return false;
+    }
     part->setMeshSourceFile(mesh_path.string());
   } else {
     std::cerr << "[InputReader] Mesh file not found: " << mesh_path << std::endl;
+    if (part_json.contains("initialStateFile")) {
+      delete part;
+      return false;
+    }
+  }
+
+  if (part_json.contains("initialStateFile")) {
+    if (rigid || part->getMesh() == nullptr || !part_json.at("initialStateFile").is_string()) {
+      std::cerr << "[InputReader] initialStateFile requires a file-backed deformable part." << std::endl;
+      delete part;
+      return false;
+    }
+    const fs::path sidecarPath = resolveRelative(base_dir,
+        part_json.at("initialStateFile").get<std::string>());
+    try {
+      ApplyInitialStateSidecar(*part->getMesh(), sidecarPath, mesh_path, *model, *part);
+    } catch (const std::exception& error) {
+      std::cerr << "[InputReader] Invalid initial-state sidecar " << sidecarPath
+                << ": " << error.what() << std::endl;
+      delete part;
+      return false;
+    }
   }
 
   model->addPart(part);
+  return true;
 }
 
 void addPlaneRigidPart(Model* model, const json& rigid_json, int fallback_id)
@@ -517,7 +548,7 @@ bool InputReader::readFromFile(const std::string& fname)
 
   json root;
   try {
-    input >> root;
+    root = ParseJsonRejectDuplicateKeys(input);
   } catch (const std::exception& e) {
     std::cerr << "[InputReader] JSON parse error: " << e.what() << std::endl;
     return false;
@@ -525,6 +556,62 @@ bool InputReader::readFromFile(const std::string& fname)
 
   const fs::path input_path(fname);
   const fs::path base_dir = input_path.has_parent_path() ? input_path.parent_path() : fs::path(".");
+
+  int initialStateBlockCount = 0;
+  int fileDomainBlockCount = 0;
+  if (root.contains("DomainBlocks") && root["DomainBlocks"].is_array()) {
+    for (const json& block : root["DomainBlocks"]) {
+      if (block.is_object() && block.value("type", std::string()) == "File")
+        ++fileDomainBlockCount;
+      if (block.is_object() && block.contains("initialStateFile")) {
+        ++initialStateBlockCount;
+        if (block.value("type", std::string()) != "File" || !block["initialStateFile"].is_string()) {
+          std::cerr << "[InputReader] initialStateFile is valid only on a file-backed DomainBlock." << std::endl;
+          return false;
+        }
+      }
+    }
+  }
+  if (initialStateBlockCount > 0) {
+    if (initialStateBlockCount != 1 || fileDomainBlockCount != 1) {
+      std::cerr << "[InputReader] MINI3D initial-state input supports exactly one file-backed deformable DomainBlock."
+                << std::endl;
+      return false;
+    }
+    const json* configuration = root.contains("Configuration") && root["Configuration"].is_object()
+        ? &root["Configuration"] : nullptr;
+    const json* implicit = configuration != nullptr && configuration->contains("solver") &&
+        configuration->at("solver").is_object() && configuration->at("solver").contains("implicit")
+        ? &configuration->at("solver").at("implicit") : nullptr;
+    const std::string domType = configuration != nullptr &&
+        (!configuration->contains("domType") || configuration->at("domType").is_string())
+        ? lowerCopy(configuration->value("domType", std::string("3D"))) : std::string{};
+    const bool isSolid3d = domType == "3d" || domType == "solid3d";
+    const bool isMini3d = implicit != nullptr && implicit->is_object() &&
+        implicit->contains("formulation") && implicit->at("formulation").is_string() &&
+        implicit->at("formulation").get<std::string>() == "rigid_viscoplastic";
+    const bool hasRestart = implicit != nullptr && implicit->is_object() &&
+        implicit->contains("restartFile") &&
+        (!implicit->at("restartFile").is_string() ||
+         !implicit->at("restartFile").get<std::string>().empty());
+    if (!isSolid3d || !isMini3d) {
+      std::cerr << "[InputReader] Initial-state sidecars require the 3D MINI3D rigid-viscoplastic implicit solver; explicit and J2 inputs are unsupported."
+                << std::endl;
+      return false;
+    }
+    if (hasRestart) {
+      std::cerr << "[InputReader] An initial-state sidecar cannot be combined with restartFile." << std::endl;
+      return false;
+    }
+  }
+  if (root.contains("RigidBodies") && root["RigidBodies"].is_array()) {
+    for (const json& rigid : root["RigidBodies"]) {
+      if (rigid.is_object() && rigid.contains("initialStateFile")) {
+        std::cerr << "[InputReader] initialStateFile is supported only on a deformable DomainBlock." << std::endl;
+        return false;
+      }
+    }
+  }
 
   m_model->setFilePath(fname);
   if (root.contains("Configuration") && root["Configuration"].is_object()) {
@@ -547,7 +634,7 @@ bool InputReader::readFromFile(const std::string& fname)
   if (root.contains("DomainBlocks") && root["DomainBlocks"].is_array()) {
     for (const json& block : root["DomainBlocks"]) {
       if (block.value("type", std::string()) == "File")
-        addFilePart(m_model, base_dir, block, false, fallback_id);
+        if (!addFilePart(m_model, base_dir, block, false, fallback_id)) return false;
       ++fallback_id;
     }
   }
@@ -556,7 +643,7 @@ bool InputReader::readFromFile(const std::string& fname)
     for (const json& rigid : root["RigidBodies"]) {
       const std::string type = rigid.value("type", std::string());
       if (type == "File")
-        addFilePart(m_model, base_dir, rigid, true, fallback_id);
+        if (!addFilePart(m_model, base_dir, rigid, true, fallback_id)) return false;
       else if (type == "Plane")
         addPlaneRigidPart(m_model, rigid, fallback_id);
       else

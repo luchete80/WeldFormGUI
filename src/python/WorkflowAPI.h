@@ -952,6 +952,10 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
   Model* model = get_active_model();
   if (model == nullptr || part == nullptr || part->getGeom() == nullptr)
     return false;
+  if (part->getMesh() != nullptr && part->getMesh()->hasInitialPlasticStrainHistory()) {
+    std::cerr << "Cannot remesh a part with initial pl_strain history; explicitly discard the history first.\n";
+    return false;
+  }
 
   const int part_index = wfgui::workflow::find_part_index(model, part);
   if (part_index < 0)
@@ -973,7 +977,7 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
   geom->ExportSTEP();
 
   if (part->isMeshed())
-    part->deleteMesh();
+    if (!part->deleteMesh()) return false;
 
   const AnalysisType analysis_type = model->getAnalysisType();
   const bool is_2d_analysis = wfgui::workflow::is_2d_analysis_type(analysis_type);
@@ -1014,8 +1018,7 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
     if (ec)
       return false;
 
-    part->generateMeshFromNastranFile(bdf_export_path.string());
-    return true;
+    return part->generateMeshFromNastranFile(bdf_export_path.string());
   }
 
   gmsh::clear();
@@ -1049,8 +1052,7 @@ inline bool mesh_part_geometry(Part* part, double element_size = -1.0)
     *model,
     wfgui::workflow::active_model_stem(*model) + "_part_" + std::to_string(part_index) + ".msh");
   gmsh::write(mesh_path.string().c_str());
-  part->generateMesh();
-  return true;
+  return part->generateMesh();
 }
 
 inline Part* import_and_mesh_step_part(const std::string& step_path,

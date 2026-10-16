@@ -65,6 +65,9 @@
 #include "results.h"
 #include <map>
 #include <memory>
+#include <set>
+#include <vector>
+#include <vtkType.h>
 
 class TransformGizmo;
 class MeasurementTool;
@@ -78,6 +81,7 @@ class GraphicMesh;
 class Material_Db;
 class vtkPolyData;
 class InitialCondition;
+struct InitialStateVtkMesh;
 
     // unsigned int indices[] = {  // note that we start from 0!
       // 0, 1, 
@@ -138,6 +142,8 @@ public:
   bool openInputFromPath(const std::string& filePathName);
   bool openScriptFromPath(const std::string& filePathName);
   bool importMeshPartFromPath(const std::string& filePathName);
+  bool stageInitialStateVtkImport(const std::string& filePathName);
+  void drawPendingInitialStateVtkImportPopup();
   bool createJobFromActiveModel(bool runJob = false);
   bool openResultsFromPath(const std::string& filePathName);
   bool openResultsForModel();
@@ -505,6 +511,27 @@ protected:
   };
 
   PendingResultsLoad m_pending_results_load;
+  struct PendingInitialStateVtkImport {
+    enum class HistoryStatus { Available, Missing, PointDataOnly, Invalid };
+    bool openPopup = false;
+    bool hasPartId = false;
+    bool confirmSinglePiece = false;
+    int historyMode = 0; // 0 undecided, 1 use CELL_DATA pl_strain, 2 conventional without history
+    HistoryStatus historyStatus = HistoryStatus::Missing;
+    std::size_t historyCellCount = 0;
+    bool historyHasRange = false;
+    double historyMinimum = 0.0;
+    double historyMaximum = 0.0;
+    std::string sourcePath;
+    std::string historyDiagnostic;
+    std::unique_ptr<InitialStateVtkMesh> mesh;
+    std::map<int, std::vector<vtkIdType>> cellIdsByPartId;
+    std::map<vtkIdType, double> plStrainBySourceCellId;
+    std::map<int, int> historyDecisionBySourcePartId; // 0 undecided, 1 keep with current material, 2 discard
+    std::set<int> selectedPartIds;
+    std::vector<vtkIdType> inspectedSourceCellIds;
+  };
+  PendingInitialStateVtkImport m_pending_initial_state_vtk_import;
   int m_pending_results_frame_index = -1;
   bool m_close_results_load_popup = false;
   bool m_expand_model_tree_once = false;

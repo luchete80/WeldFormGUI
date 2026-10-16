@@ -51,12 +51,14 @@ protected:
   double  *node = nullptr;
   int     *elcon= nullptr;
 	int 		*nodeid= nullptr;	//If node number does not begin in one
+	int     *elementid = nullptr;
 	std::map <int,int> nodepos;	//id to position
   
   //TriMesh trimesh;
 	
 	public:
   int     dim;
+  bool    readValid = true;
   NastranReader(){dim=3; max_nodes_per_elem = 3;}
 	NastranReader(const char* fName){read(fName);}
 	
@@ -69,6 +71,8 @@ protected:
   const double* getNodes() const { return node; }
   const int* getConnectivity() const { return elcon; }
   const int* getNodeIds() const { return nodeid; }
+	const int* getElementIds() const { return elementid; }
+  bool isReadValid() const { return readValid; }
 	
   ~NastranReader();
 	void read(const char *fName);

@@ -226,7 +226,9 @@ find_package(VTK
   RenderingOpenGL2
   #DisplayCoordinateAxes
   IOCore
+  IOLegacy
   IOGeometry
+  IOXML
   
   IOOCCT
   CommonExecutionModel
@@ -378,13 +380,37 @@ else()
   VTK::FiltersHybrid
   #DisplayCoordinateAxes
   VTK::IOCore
+  VTK::IOLegacy
   VTK::IOGeometry
+  VTK::IOXML
   VTK::IOOCCT
 
   VTK::TestingCore
   VTK::TestingRendering
   #VTK::FiltersGeneral
   )
+endif()
+
+if(WFG_BUILD_INITIAL_STATE_VTK_TESTS)
+  add_executable(initial_state_vtk_reader_tests
+    io/tests/InitialStateVtkReaderTests.cpp
+  )
+  target_include_directories(initial_state_vtk_reader_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_compile_definitions(initial_state_vtk_reader_tests PRIVATE
+    INITIAL_STATE_VTK_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/io/tests/fixtures/initial_state_vtk"
+  )
+  if(VTK_VERSION VERSION_LESS "9.0.0")
+    target_link_libraries(initial_state_vtk_reader_tests PRIVATE io ${VTK_LIBRARIES})
+  else()
+    target_link_libraries(initial_state_vtk_reader_tests PRIVATE
+      io VTK::CommonCore VTK::CommonDataModel VTK::IOCore VTK::IOLegacy VTK::IOXML
+    )
+    vtk_module_autoinit(
+      TARGETS initial_state_vtk_reader_tests
+      MODULES VTK::CommonCore VTK::CommonDataModel VTK::IOCore VTK::IOLegacy VTK::IOXML
+    )
+  endif()
+  add_test(NAME initial_state_vtk_reader COMMAND initial_state_vtk_reader_tests)
 endif()
 message (STATUS "VTK Version: ${VTK_VERSION}")
 message ("VTK LIBS:" ${VTK_LIBRARIES})

@@ -131,6 +131,10 @@ void Model::addPart(Part *part){
     int nextId = nextAvailablePartId(m_part);
     part->setId(nextId);
   }
+  if (part->isMeshed()) {
+    if (auto owner = part->getMesh()->getInitialStateStorageOwner())
+      m_initial_state_storage_owners.push_back(std::move(owner));
+  }
   m_part.push_back(part);
   if (part->isMeshed()){
     for (int n=0;n<part->getMesh()->getNodeCount();n++){
