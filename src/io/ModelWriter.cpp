@@ -48,6 +48,17 @@ bool ModelWriter::writeToFile(std::string fname){
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
   }
+  for (int bcIndex = 0; bcIndex < m_model.getBCCount(); ++bcIndex) {
+    const BoundaryCondition* bc = m_model.getBC(bcIndex);
+    if (bc == nullptr || !bc->hasAngularMotion())
+      continue;
+    std::string angularError;
+    if (!bc->isAngularMotionValid(&angularError)) {
+      std::cerr << "ERROR: cannot save angular BC for target " << bc->getTargetId()
+                << ": " << angularError << "." << std::endl;
+      return false;
+    }
+  }
   json m_json;
 
   std::map<int, json> initialStateByPartId;
@@ -727,6 +738,19 @@ bool ModelWriter::writeToFile(std::string fname){
               jbc["amplitudeValue"] = bc->getAmplitudeValue();
           }
           jbc["dofMask"] = {bc->getDofMaskX(), bc->getDofMaskY(), bc->getDofMaskZ()};
+
+          if (bc->hasAngularMotion()) {
+              const double3 angularVelocity = bc->getAngularVelocity();
+              const double3 rotationCenter = bc->getRotationCenter();
+              jbc["valueAng"] = {angularVelocity.x, angularVelocity.y, angularVelocity.z};
+              jbc["rotationCenter"] = {rotationCenter.x, rotationCenter.y, rotationCenter.z};
+              jbc["angularValueType"] = static_cast<int>(bc->getAngularValueType());
+              jbc["angularAmplitudeFactor"] = bc->getAngularAmplitudeFactor();
+              if (bc->usesAngularAmplitude()) {
+                  jbc["angularAmplitudeTime"] = bc->getAngularAmplitudeTime();
+                  jbc["angularAmplitudeValue"] = bc->getAngularAmplitudeValue();
+              }
+          }
 
           // Agregar al array
           m_json["BoundaryConditions"].push_back(jbc);

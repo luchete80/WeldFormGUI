@@ -423,6 +423,14 @@ if(WFG_BUILD_CONTACT_IO_TESTS)
   add_test(NAME contact_activation_ramp_io COMMAND contact_activation_ramp_io_tests)
 endif()
 
+if(WFG_BUILD_ANGULAR_MOTION_PROJECT_IO_TESTS)
+  add_executable(angular_motion_project_io_tests
+    io/tests/AngularMotionProjectIOTests.cpp
+  )
+  target_link_libraries(angular_motion_project_io_tests PRIVATE io)
+  add_test(NAME angular_motion_project_io COMMAND angular_motion_project_io_tests)
+endif()
+
 if(WFG_BUILD_GEOMETRY_TESTS)
   add_executable(approach_to_contact_tests
     geometry/ApproachToContact.cpp

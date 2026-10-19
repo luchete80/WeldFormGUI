@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 using std::cout;
 using std::cerr;
@@ -773,8 +774,25 @@ bool ModelReader::readFromFile(const std::string& fname) {
               ? ApplyToNodeSet
               : ApplyToPart;
 
+            const char *angularKeys[] = {"valueAng", "rotationCenter", "angularValueType",
+                                         "angularAmplitudeFactor", "angularAmplitudeTime",
+                                         "angularAmplitudeValue"};
+            bool hasAngularBlock = false;
+            for (const char *key : angularKeys)
+                hasAngularBlock = hasAngularBlock || jbc.contains(key);
+
             // --- Target ID ---
-            int targetId = jbc.value("targetId", -1);
+            int targetId = -1;
+            if (hasAngularBlock) {
+                if (!jbc.contains("targetId") || !jbc["targetId"].is_number_integer() ||
+                    jbc["targetId"] < 0 || jbc["targetId"] > std::numeric_limits<int>::max()) {
+                    cerr << "  [Error] Angular BC block is missing a valid targetId." << endl;
+                    return false;
+                }
+                targetId = jbc["targetId"].get<int>();
+            } else {
+                targetId = jbc.value("targetId", -1);
+            }
             if (targetId < 0) {
                 cerr << "  [Warning] BoundaryCondition missing targetId, skipping." << endl;
                 continue;
@@ -830,6 +848,96 @@ bool ModelReader::readFromFile(const std::string& fname) {
             if (jbc.contains("amplitudeValue") && jbc["amplitudeValue"].is_array())
                 amplitudeValue = jbc["amplitudeValue"].get<std::vector<double>>();
 
+            double3 angularVelocity = make_double3(0.0, 0.0, 0.0);
+            double3 rotationCenter = make_double3(0.0, 0.0, 0.0);
+            ConditionValueType angularValueType = ConstantValue;
+            double angularAmplitudeFactor = 1.0;
+            std::vector<double> angularAmplitudeTime;
+            std::vector<double> angularAmplitudeValue;
+            if (hasAngularBlock) {
+                const auto isFiniteNumberArray = [](const json &value, std::size_t expectedSize) {
+                    if (!value.is_array() || value.size() != expectedSize)
+                        return false;
+                    for (const auto &entry : value) {
+                        if (!entry.is_number() || !std::isfinite(entry.get<double>()))
+                            return false;
+                    }
+                    return true;
+                };
+                const bool vectorsValid = jbc.contains("valueAng") &&
+                    isFiniteNumberArray(jbc["valueAng"], 3) && jbc.contains("rotationCenter") &&
+                    isFiniteNumberArray(jbc["rotationCenter"], 3);
+                if (!vectorsValid) {
+                    cerr << "  [Error] Angular BC block for target " << targetId
+                         << " requires finite three-component valueAng and rotationCenter vectors." << endl;
+                    return false;
+                }
+                int angularMode = static_cast<int>(ConstantValue);
+                if (jbc.contains("angularValueType")) {
+                    const json &mode = jbc["angularValueType"];
+                    if (!mode.is_number_integer() || (mode != 0 && mode != 1)) {
+                        cerr << "  [Error] Invalid angularValueType for target " << targetId << "." << endl;
+                        return false;
+                    }
+                    angularMode = (mode == 1) ? static_cast<int>(AmplitudeValue)
+                                              : static_cast<int>(ConstantValue);
+                }
+                angularVelocity = make_double3(jbc["valueAng"][0].get<double>(),
+                                               jbc["valueAng"][1].get<double>(),
+                                               jbc["valueAng"][2].get<double>());
+                rotationCenter = make_double3(jbc["rotationCenter"][0].get<double>(),
+                                             jbc["rotationCenter"][1].get<double>(),
+                                             jbc["rotationCenter"][2].get<double>());
+                angularValueType = static_cast<ConditionValueType>(angularMode);
+                if (jbc.contains("angularAmplitudeFactor")) {
+                    if (!jbc["angularAmplitudeFactor"].is_number() ||
+                        !std::isfinite(jbc["angularAmplitudeFactor"].get<double>())) {
+                        cerr << "  [Error] angularAmplitudeFactor for target " << targetId
+                             << " must be finite." << endl;
+                        return false;
+                    }
+                    angularAmplitudeFactor = jbc["angularAmplitudeFactor"].get<double>();
+                }
+                const bool hasAngularTimes = jbc.contains("angularAmplitudeTime");
+                const bool hasAngularValues = jbc.contains("angularAmplitudeValue");
+                if (hasAngularTimes) {
+                    if (!hasAngularValues || !jbc["angularAmplitudeTime"].is_array() ||
+                        !jbc["angularAmplitudeValue"].is_array()) {
+                        cerr << "  [Error] Incomplete angular amplitude table for target " << targetId << "." << endl;
+                        return false;
+                    }
+                    for (const auto &entry : jbc["angularAmplitudeTime"]) {
+                        if (!entry.is_number() || !std::isfinite(entry.get<double>())) {
+                            cerr << "  [Error] Angular amplitude times for target " << targetId
+                                 << " must be finite numbers." << endl;
+                            return false;
+                        }
+                        angularAmplitudeTime.push_back(entry.get<double>());
+                    }
+                    for (const auto &entry : jbc["angularAmplitudeValue"]) {
+                        if (!entry.is_number() || !std::isfinite(entry.get<double>())) {
+                            cerr << "  [Error] Angular amplitude values for target " << targetId
+                                 << " must be finite numbers." << endl;
+                            return false;
+                        }
+                        angularAmplitudeValue.push_back(entry.get<double>());
+                    }
+                } else if (hasAngularValues) {
+                    cerr << "  [Error] Incomplete angular amplitude table for target " << targetId << "." << endl;
+                    return false;
+                }
+                if (angularValueType == ConstantValue && hasAngularTimes) {
+                    cerr << "  [Error] Constant angular BC cannot contain an amplitude table for target "
+                         << targetId << "." << endl;
+                    return false;
+                }
+                if (angularValueType == AmplitudeValue && !hasAngularTimes) {
+                    cerr << "  [Error] Function angular BC requires an amplitude table for target "
+                         << targetId << "." << endl;
+                    return false;
+                }
+            }
+
             // --- Crear BC ---
             BoundaryCondition* bc = nullptr;
 
@@ -841,6 +949,22 @@ bool ModelReader::readFromFile(const std::string& fname) {
                 bc->setAmplitudeFactor(amplitudeFactor);
                 bc->setAmplitudeTable(amplitudeTime, amplitudeValue);
                 bc->setDofMask(dofMask[0], dofMask[1], dofMask[2]);
+            }
+
+            if (hasAngularBlock) {
+                bc->setAngularMotionEnabled(true);
+                bc->setAngularVelocity(angularVelocity);
+                bc->setRotationCenter(rotationCenter);
+                bc->setAngularValueType(angularValueType);
+                bc->setAngularAmplitudeFactor(angularAmplitudeFactor);
+                bc->setAngularAmplitudeTable(angularAmplitudeTime, angularAmplitudeValue);
+                std::string angularError;
+                if (!bc->isAngularMotionValid(&angularError)) {
+                    cerr << "  [Error] Invalid angular BC for target " << targetId
+                         << ": " << angularError << "." << endl;
+                    delete bc;
+                    return false;
+                }
             }
 
             m_model->addBoundaryCondition(bc);
