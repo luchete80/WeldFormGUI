@@ -43,6 +43,19 @@ public Dialog
   std::vector<double> m_amplitudeValue;
   int m_activeAmplitudeRow = -1;
 
+  bool m_angularMotionEnabled = false;
+  double3 m_angularVelocity = make_double3(0.0, 0.0, 0.0);
+  double3 m_rotationCenter = make_double3(0.0, 0.0, 0.0);
+  int m_angularValueType = 0;
+  double m_angularAmplitudeFactor = 1.0;
+  std::vector<double> m_angularAmplitudeTime;
+  std::vector<double> m_angularAmplitudeValue;
+  int m_activeAngularAmplitudeRow = -1;
+  std::string m_angularValidationError;
+  bool m_angularSaveAttempted = false;
+
+  void resetDialogState();
+
   int bcType = 0;      // 0 = Velocity, 1 = Displacement, 2 = Symmetry
   double3 m_normal = make_double3(0,0,1);
 

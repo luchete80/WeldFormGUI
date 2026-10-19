@@ -492,7 +492,13 @@ bool Job::isImplicit() const{
 bool Job::supportsImplicit3DRestart() const
 {
   const SolverInputInfo info = inspectSolverInput();
-  return info.implicit && info.is3D;
+  if (!info.implicit || !info.is3D) return false;
+  const std::optional<json> input = loadInputJson();
+  if (input.has_value() && input->contains("BoundaryConditions") && input->at("BoundaryConditions").is_array()) {
+    for (const json &bc : input->at("BoundaryConditions"))
+      if (bc.is_object() && bc.contains("valueAng")) return false;
+  }
+  return true;
 }
 
 bool Job::loadRestartSettingsFromInput()
@@ -537,6 +543,15 @@ bool Job::applyRestartSettingsToInput() const
   }
 
   json updated = *input;
+  bool hasAngularMotion = false;
+  if (updated.contains("BoundaryConditions") && updated["BoundaryConditions"].is_array()) {
+    for (const json &bc : updated["BoundaryConditions"])
+      hasAngularMotion = hasAngularMotion || (bc.is_object() && bc.contains("valueAng"));
+  }
+  if (hasAngularMotion && (m_checkpoint_enabled || !m_restart_file.empty())) {
+    std::cerr << "[Job] Restart and checkpoints are unsupported for angular tool motion." << std::endl;
+    return false;
+  }
   if (!m_restart_file.empty() && updated.contains("DomainBlocks") &&
       updated["DomainBlocks"].is_array()) {
     for (const json& block : updated["DomainBlocks"]) {
@@ -564,6 +579,20 @@ bool Job::applyRestartSettingsToInput() const
   }
 
   json& implicit = solver["implicit"];
+  if (hasAngularMotion) {
+    const bool existingRestart = implicit.contains("restartFile") &&
+        (!implicit["restartFile"].is_string() || !implicit["restartFile"].get<std::string>().empty());
+    const bool existingCheckpointEnabled = implicit.value("checkpointEnabled", false);
+    const bool existingCheckpointInterval = implicit.contains("checkpointInterval") &&
+        (!implicit["checkpointInterval"].is_number_integer() || implicit["checkpointInterval"].get<long long>() > 0);
+    const bool existingCheckpointStop = implicit.contains("checkpointStopTime") &&
+        (!implicit["checkpointStopTime"].is_number() || implicit["checkpointStopTime"].get<double>() >= 0.0);
+    if (existingRestart || existingCheckpointEnabled || existingCheckpointInterval || existingCheckpointStop ||
+        m_checkpoint_enabled || !m_restart_file.empty()) {
+      std::cerr << "[Job] Restart and checkpoint settings are unsupported for angular tool motion." << std::endl;
+      return false;
+    }
+  }
   if (m_checkpoint_enabled) {
     implicit["checkpointEnabled"] = true;
     implicit["checkpointInterval"] = std::max(1, m_checkpoint_interval);
@@ -826,7 +855,12 @@ int Job::Run(){
       }
     }
   }
-  applyRestartSettingsToInput();
+  if (!applyRestartSettingsToInput()) {
+    const std::optional<json> input = loadInputJson();
+    if (input.has_value() && input->contains("BoundaryConditions") && input->at("BoundaryConditions").is_array())
+      for (const json &bc : input->at("BoundaryConditions"))
+        if (bc.is_object() && bc.contains("valueAng")) return -1;
+  }
   const SolverInputInfo inputInfo = inspectSolverInput();
   const SolverEdition requestedEdition = getRequestedSolverEdition();
   const std::string solver_name = getSolverBinaryName(inputInfo);

@@ -146,12 +146,13 @@ void NastranReader::read(const char* fName){
     bool found=false;
 	//MPI_Comm_rank(MPI_COMM_WORLD, &Rank);
 	cout << "[I] Reading ... "<<endl;
-	file.open(fileName.c_str());
+	file.open(fileName.c_str(), ios::in);
 	if (file.is_open()) {
 		//cout << "[I] Found input file " << fileName << endl;
 		found=true;
 	} else {
-		//cerr << "[E] Input file " << fileName << " could not be found!!" << endl;
+		readValid = false;
+		cerr << "[E] Input file " << fileName << " could not be opened for reading." << endl;
 	}
 	
   int l=0;
@@ -205,8 +206,9 @@ void NastranReader::read(const char* fName){
     file.close();
 
     file.clear();
-    file.open(fileName.c_str());
+    file.open(fileName.c_str(), ios::in);
     if (!file.is_open()) {
+      readValid = false;
       std::cerr << "[E] Failed to reopen Nastran file for parsing: " << fileName << std::endl;
       return;
     }

@@ -79,6 +79,16 @@ bool loadRestartConfigurationFromInput(const std::string& filename,
     }
 
     supportsRestart = true;
+    if (data.contains("BoundaryConditions") && data["BoundaryConditions"].is_array()) {
+      for (const json &bc : data["BoundaryConditions"]) {
+        if (bc.is_object() && bc.contains("valueAng")) {
+          supportsRestart = false;
+          checkpointEnabled = false;
+          restartFile.clear();
+          return true;
+        }
+      }
+    }
     const json& implicit = solver["implicit"];
     checkpointEnabled = implicit.value("checkpointEnabled", false);
     checkpointInterval = std::max(1, implicit.value("checkpointInterval", 1));
@@ -265,7 +275,10 @@ void  JobDialog::Draw(){
     }
 
     Step* step = model.getStep(0);
-    return step != nullptr && step->isImplicit() && model.getAnalysisType() == Solid3D;
+    if (step == nullptr || !step->isImplicit() || model.getAnalysisType() != Solid3D) return false;
+    for (int i = 0; i < model.getBCCount(); ++i)
+      if (model.getBC(i) != nullptr && model.getBC(i)->hasAngularMotion()) return false;
+    return true;
   }();
   const bool supportsRestartFromInput = !m_filename.empty() && inputSupportsImplicit3DRestart();
   const bool supportsRestart = supportsRestartFromModel || supportsRestartFromInput;

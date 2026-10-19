@@ -4,6 +4,7 @@
 #include "BoundaryCondition.h"
 #include "InitialCondition.h"
 #include "Part.h"
+#include "Step.h"
 #include "Mesh.h"
 
 #include "imgui.h"
@@ -12,8 +13,11 @@
 #include "implot.h"
 
 #include <algorithm>
+#include <cmath>
 
 namespace {
+
+bool finiteVector(const double3 &value);
 
 void ensureAmplitudeTableDefaults(std::vector<double> &timeValues,
                                   std::vector<double> &amplitudeValues) {
@@ -53,6 +57,105 @@ void buildAmplitudePlotData(const std::vector<double> &timeValues,
     }
 }
 
+bool angularTableIsValid(const std::vector<double> &times,
+                         const std::vector<double> &values,
+                         std::string &error) {
+    if (times.size() != values.size() || times.size() < 2) {
+        error = "La tabla angular requiere al menos dos puntos y longitudes iguales.";
+        return false;
+    }
+    for (std::size_t i = 0; i < times.size(); ++i) {
+        if (!std::isfinite(times[i]) || times[i] < 0.0) {
+            error = "Los tiempos angulares deben ser finitos y no negativos.";
+            return false;
+        }
+        if (!std::isfinite(values[i])) {
+            error = "Los valores de la tabla angular deben ser finitos.";
+            return false;
+        }
+        if (i > 0 && !(times[i] > times[i - 1])) {
+            error = "Los tiempos angulares deben crecer estrictamente.";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool validateAngularMotionWithModelContract(const double3 &velocity,
+                                            const double3 &rotationCenter,
+                                            int valueType,
+                                            double amplitudeFactor,
+                                            const std::vector<double> &times,
+                                            const std::vector<double> &values,
+                                            int targetId,
+                                            std::string &error) {
+    BoundaryCondition candidate(VelocityBC, ApplyToPart, targetId, velocity);
+    candidate.setAngularVelocity(velocity);
+    candidate.setRotationCenter(rotationCenter);
+    candidate.setAngularValueType(valueType);
+    candidate.setAngularAmplitudeFactor(amplitudeFactor);
+    candidate.setAngularAmplitudeTable(valueType == 1 ? times : std::vector<double>(),
+                                       valueType == 1 ? values : std::vector<double>());
+    return candidate.isAngularMotionValid(&error);
+}
+
+bool supportsAngularMotion(Model *model) {
+    if (model == nullptr || model->getAnalysisType() != Solid3D ||
+        model->getDimension() != 3 || model->getStepCount() <= 0)
+        return false;
+    Step *step = model->getStep(0);
+    return step != nullptr && step->isImplicit() &&
+        step->m_implicitFormulation == ImplicitFormulation::RigidViscoplastic;
+}
+
+bool finiteLinearValues(const double3 &velocity,
+                        int valueType,
+                        double amplitudeFactor,
+                        const std::vector<double> &times,
+                        const std::vector<double> &values) {
+    if (!finiteVector(velocity) || !std::isfinite(amplitudeFactor))
+        return false;
+    if (valueType == 1) {
+        for (double value : times)
+            if (!std::isfinite(value)) return false;
+        for (double value : values)
+            if (!std::isfinite(value)) return false;
+    }
+    return true;
+}
+
+bool finiteVector(const double3 &value) {
+    return std::isfinite(value.x) && std::isfinite(value.y) && std::isfinite(value.z);
+}
+
+}
+
+void BCDialog::resetDialogState() {
+    initialized = false;
+    m_editingExisting = false;
+    m_editTarget = nullptr;
+    m_targetId = -1;
+    m_applyTo = 0;
+    m_vel = make_double3(0.0, 0.0, 0.0);
+    m_dof_mask[0] = m_dof_mask[1] = m_dof_mask[2] = true;
+    m_valueType = 0;
+    m_amplitudeFactor = 1.0;
+    m_amplitudeTime = {0.0, 1.0};
+    m_amplitudeValue = {1.0, 1.0};
+    m_activeAmplitudeRow = -1;
+    m_angularMotionEnabled = false;
+    m_angularVelocity = make_double3(0.0, 0.0, 0.0);
+    m_rotationCenter = make_double3(0.0, 0.0, 0.0);
+    m_angularValueType = 0;
+    m_angularAmplitudeFactor = 1.0;
+    m_angularAmplitudeTime = {0.0, 1.0};
+    m_angularAmplitudeValue = {1.0, 1.0};
+    m_activeAngularAmplitudeRow = -1;
+    m_angularValidationError.clear();
+    m_angularSaveAttempted = false;
+    bcType = 0;
+    m_normal = make_double3(0.0, 0.0, 1.0);
+    symPreset = 0;
 }
 
 
@@ -97,6 +200,16 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             m_amplitudeFactor = bc->getAmplitudeFactor();
             m_amplitudeTime = bc->getAmplitudeTime();
             m_amplitudeValue = bc->getAmplitudeValue();
+            if (bc->kind == ConditionKind::Boundary) {
+                BoundaryCondition *boundary = static_cast<BoundaryCondition *>(bc);
+                m_angularMotionEnabled = boundary->hasAngularMotion();
+                m_angularVelocity = boundary->getAngularVelocity();
+                m_rotationCenter = boundary->getRotationCenter();
+                m_angularValueType = static_cast<int>(boundary->getAngularValueType());
+                m_angularAmplitudeFactor = boundary->getAngularAmplitudeFactor();
+                m_angularAmplitudeTime = boundary->getAngularAmplitudeTime();
+                m_angularAmplitudeValue = boundary->getAngularAmplitudeValue();
+            }
             m_dof_mask[0] = bc->getDofMaskX();
             m_dof_mask[1] = bc->getDofMaskY();
             m_dof_mask[2] = bc->getDofMaskZ();
@@ -123,6 +236,22 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         m_amplitudeFactor = 1.0;
         m_amplitudeTime = {0.0, 1.0};
         m_amplitudeValue = {1.0, 1.0};
+        m_angularMotionEnabled = false;
+        m_angularVelocity = make_double3(0.0, 0.0, 0.0);
+        m_rotationCenter = make_double3(0.0, 0.0, 0.0);
+        m_angularValueType = 0;
+        m_angularAmplitudeFactor = 1.0;
+        m_angularAmplitudeTime = {0.0, 1.0};
+        m_angularAmplitudeValue = {1.0, 1.0};
+        m_angularSaveAttempted = false;
+        m_angularValidationError.clear();
+        m_activeAmplitudeRow = -1;
+        m_activeAngularAmplitudeRow = -1;
+        m_vel = make_double3(0.0, 0.0, 0.0);
+        m_normal = make_double3(0.0, 0.0, 1.0);
+        m_targetId = -1;
+        if (model != nullptr && model->getPartCount() > 0)
+            m_targetId = model->getPart(0)->getID();
         }
         initialized = true;
     }
@@ -130,8 +259,23 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         create = !m_editingExisting;
     }
 
+    bool modelHasAngularMotion = false;
+    if (model != nullptr) {
+        for (int i = 0; i < model->getBCCount(); ++i) {
+            BoundaryCondition *boundary = model->getBC(i);
+            if (boundary != nullptr && boundary->hasAngularMotion()) {
+                modelHasAngularMotion = true;
+                break;
+            }
+        }
+    }
+
     if (!ImGui::Begin(title, p_open)) {
         ImGui::End();
+        if (!*p_open) {
+            resetDialogState();
+            *sel_bc = nullptr;
+        }
         return;
     }
 
@@ -155,32 +299,16 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
 
     // --- Selección de Part ---
     if (m_applyTo == 0) {
-
-        static std::vector<std::string> partNames;
-        static int selectedPartIndex = -1;
-
+        std::vector<std::string> partNames;
         int numParts = model->getPartCount();
-        if ((int)partNames.size() != numParts) {
-            partNames.clear();
-            for (int i = 0; i < numParts; i++) {
-                std::string name = model->getPart(i)->getName();
-                if (name.empty()) name = "Part " + std::to_string(model->getPart(i)->getID());
-                partNames.push_back(name);
-            }
-        }
-
-        if (!create && selectedPartIndex == -1) {
-            for (int i = 0; i < numParts; i++) {
-                if (model->getPart(i)->getID() == m_targetId) {
-                    selectedPartIndex = i;
-                    break;
-                }
-            }
-        }
-
-        if (create && selectedPartIndex == -1 && numParts > 0) {
-            selectedPartIndex = 0;
-            m_targetId = model->getPart(0)->getID();
+        int selectedPartIndex = -1;
+        for (int i = 0; i < numParts; i++) {
+            Part *part = model->getPart(i);
+            std::string name = part->getName();
+            if (name.empty()) name = "Part " + std::to_string(part->getID());
+            partNames.push_back(name + " [id " + std::to_string(part->getID()) + "]");
+            if (part->getID() == m_targetId)
+                selectedPartIndex = i;
         }
 
         const char* preview = 
@@ -304,13 +432,15 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         m_vel = make_double3(v[0], v[1], v[2]);
 
         if (m_valueType == 1) {
-            ensureAmplitudeTableDefaults(m_amplitudeTime, m_amplitudeValue);
+            if (!m_angularMotionEnabled && !modelHasAngularMotion)
+                ensureAmplitudeTableDefaults(m_amplitudeTime, m_amplitudeValue);
 
             ImGui::SetNextItemWidth(140.0f);
             ImGui::InputDouble("Amplitude Factor", &m_amplitudeFactor, 0.0, 0.0, "%.6g");
             ImGui::TextDisabled("Applied value = base vector * factor * amplitude(t)");
 
-            for (int i = 0; i < static_cast<int>(m_amplitudeTime.size()); ++i) {
+            const std::size_t lineRowCount = (std::min)(m_amplitudeTime.size(), m_amplitudeValue.size());
+            for (int i = 0; i < static_cast<int>(lineRowCount); ++i) {
                 ImGui::PushID(i);
                 ImGui::SetNextItemWidth(120.0f);
                 ImGui::InputDouble("Time", &m_amplitudeTime[i], 0.0, 0.0, "%.6g");
@@ -325,7 +455,17 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
                 }
                 ImGui::PopID();
             }
+            if (m_amplitudeTime.size() != m_amplitudeValue.size()) {
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.2f, 1.0f),
+                                   "La tabla lineal tiene longitudes distintas.");
+                if (ImGui::Button("Reset Linear Table")) {
+                    m_amplitudeTime = {0.0, 1.0};
+                    m_amplitudeValue = {1.0, 1.0};
+                }
+            }
 
+            const bool lineTableLengthsMatch = m_amplitudeTime.size() == m_amplitudeValue.size();
+            ImGui::BeginDisabled(!lineTableLengthsMatch);
             if (ImGui::Button("Add Point Below")) {
                 const int insertIndex =
                     (m_activeAmplitudeRow >= 0 &&
@@ -367,6 +507,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
                 m_activeAmplitudeRow = std::min(removeIndex,
                                                 static_cast<int>(m_amplitudeTime.size()) - 1);
             }
+            ImGui::EndDisabled();
 
             std::vector<double> plotTime;
             std::vector<double> plotAmplitude;
@@ -394,11 +535,194 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         ImGui::TextDisabled("Value and DOF mask are ignored for Symmetry BC.");
     }
 
+    Part *angularTargetPart = nullptr;
+    if (m_applyTo == 0) {
+        for (int i = 0; i < model->getPartCount(); ++i) {
+            Part *part = model->getPart(i);
+            if (part != nullptr && part->getID() == m_targetId) {
+                angularTargetPart = part;
+                break;
+            }
+        }
+    }
+    const bool angularDestinationCompatible =
+        isBoundary && bcType == 0 && m_applyTo == 0 && supportsAngularMotion(model) &&
+        angularTargetPart != nullptr && angularTargetPart->getType() == Rigid;
+    const bool hasExistingAngularMotion =
+        m_editTarget != nullptr && m_editTarget->kind == ConditionKind::Boundary &&
+        static_cast<BoundaryCondition *>(m_editTarget)->hasAngularMotion();
+
+    if (angularDestinationCompatible || hasExistingAngularMotion || m_angularMotionEnabled) {
+        ImGui::Separator();
+        ImGui::Text("Angular velocity (rad/s; right-hand rule, global X/Y/Z)");
+        ImGui::Checkbox("Enable angular velocity##BCAngular", &m_angularMotionEnabled);
+        if (angularDestinationCompatible) {
+            const bool angularEditorEnabled = m_angularMotionEnabled;
+            ImGui::BeginDisabled(!angularEditorEnabled);
+            ImGui::Text("Angular value mode:");
+            ImGui::RadioButton("Constant##BCAngular", &m_angularValueType, 0);
+            ImGui::SameLine();
+            ImGui::RadioButton("Function##BCAngular", &m_angularValueType, 1);
+
+            double *angularComponents[3] = {&m_angularVelocity.x, &m_angularVelocity.y, &m_angularVelocity.z};
+            double *centerComponents[3] = {&m_rotationCenter.x, &m_rotationCenter.y, &m_rotationCenter.z};
+            const char *axisNames[3] = {"X", "Y", "Z"};
+            for (int axis = 0; axis < 3; ++axis) {
+                ImGui::SetNextItemWidth(150.0f);
+                ImGui::InputDouble((std::string("Angular ") + axisNames[axis] + " (rad/s)##BCAngular").c_str(),
+                                   angularComponents[axis], 0.0, 0.0, "%.17g");
+            }
+            ImGui::Text("Rotation center (global coordinates)");
+            for (int axis = 0; axis < 3; ++axis) {
+                ImGui::SetNextItemWidth(150.0f);
+                ImGui::InputDouble((std::string("Center ") + axisNames[axis] + "##BCAngular").c_str(),
+                                   centerComponents[axis], 0.0, 0.0, "%.17g");
+            }
+            ImGui::TextDisabled("Centro inicial explícito; se traslada con la pieza.");
+            ImGui::TextDisabled("La tabla escala las tres componentes angulares.");
+
+            if (m_angularValueType == 1) {
+                ImGui::SetNextItemWidth(140.0f);
+                ImGui::InputDouble("Angular amplitude factor##BCAngular", &m_angularAmplitudeFactor,
+                                   0.0, 0.0, "%.6g");
+                ImGui::TextDisabled("Interpolación lineal; se mantiene el valor extremo fuera del intervalo.");
+                const std::size_t angularRowCount =
+                    (std::min)(m_angularAmplitudeTime.size(), m_angularAmplitudeValue.size());
+                for (int i = 0; i < static_cast<int>(angularRowCount); ++i) {
+                    ImGui::PushID("BCAngularRow");
+                    ImGui::PushID(i);
+                    ImGui::SetNextItemWidth(120.0f);
+                    ImGui::InputDouble("Time##BCAngular", &m_angularAmplitudeTime[i], 0.0, 0.0, "%.6g");
+                    if (ImGui::IsItemActive() || ImGui::IsItemFocused()) m_activeAngularAmplitudeRow = i;
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(120.0f);
+                    ImGui::InputDouble("Scale##BCAngular", &m_angularAmplitudeValue[i], 0.0, 0.0, "%.6g");
+                    if (ImGui::IsItemActive() || ImGui::IsItemFocused()) m_activeAngularAmplitudeRow = i;
+                    ImGui::PopID();
+                    ImGui::PopID();
+                }
+                if (m_angularAmplitudeTime.size() != m_angularAmplitudeValue.size() ||
+                    m_angularAmplitudeTime.size() < 2) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.2f, 1.0f),
+                        "La tabla angular es inválida; debe tener al menos dos filas y longitudes iguales.");
+                    if (ImGui::Button("Reset Angular Table")) {
+                        m_angularAmplitudeTime = {0.0, 1.0};
+                        m_angularAmplitudeValue = {1.0, 1.0};
+                        m_activeAngularAmplitudeRow = -1;
+                    }
+                }
+                const bool angularTableLengthsMatch =
+                    m_angularAmplitudeTime.size() == m_angularAmplitudeValue.size();
+                ImGui::BeginDisabled(!angularTableLengthsMatch);
+                if (ImGui::Button("Add Angular Point Below")) {
+                    const int insertIndex = (m_activeAngularAmplitudeRow >= 0 &&
+                        m_activeAngularAmplitudeRow < static_cast<int>(m_angularAmplitudeTime.size()))
+                        ? m_activeAngularAmplitudeRow + 1 : static_cast<int>(m_angularAmplitudeTime.size());
+                    double nextTime = m_angularAmplitudeTime.empty() ? 0.0 : m_angularAmplitudeTime.back() + 1.0;
+                    double nextValue = m_angularAmplitudeValue.empty() ? 1.0 : m_angularAmplitudeValue.back();
+                    if (insertIndex > 0 && insertIndex < static_cast<int>(m_angularAmplitudeTime.size())) {
+                        const double previous = m_angularAmplitudeTime[insertIndex - 1];
+                        nextTime = previous + (m_angularAmplitudeTime[insertIndex] - previous) * 0.5;
+                        nextValue = m_angularAmplitudeValue[insertIndex - 1];
+                    }
+                    m_angularAmplitudeTime.insert(m_angularAmplitudeTime.begin() + insertIndex, nextTime);
+                    m_angularAmplitudeValue.insert(m_angularAmplitudeValue.begin() + insertIndex, nextValue);
+                    m_activeAngularAmplitudeRow = insertIndex;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Remove Angular Point") && m_angularAmplitudeTime.size() > 2) {
+                    const int removeIndex = (m_activeAngularAmplitudeRow >= 0 &&
+                        m_activeAngularAmplitudeRow < static_cast<int>(m_angularAmplitudeTime.size()))
+                        ? m_activeAngularAmplitudeRow : static_cast<int>(m_angularAmplitudeTime.size()) - 1;
+                    m_angularAmplitudeTime.erase(m_angularAmplitudeTime.begin() + removeIndex);
+                    m_angularAmplitudeValue.erase(m_angularAmplitudeValue.begin() + removeIndex);
+                    m_activeAngularAmplitudeRow = std::min(removeIndex,
+                        static_cast<int>(m_angularAmplitudeTime.size()) - 1);
+                }
+                ImGui::EndDisabled();
+                std::vector<double> plotTime, plotAmplitude;
+                std::string plotError;
+                const bool plotTableValid = angularTableIsValid(
+                    m_angularAmplitudeTime, m_angularAmplitudeValue, plotError);
+                if (plotTableValid)
+                    buildAmplitudePlotData(m_angularAmplitudeTime, m_angularAmplitudeValue, plotTime, plotAmplitude);
+                if (plotTableValid && plotTime.size() >= 2 && ImPlot::BeginPlot("##BCAngularAmplitudePlot", ImVec2(-1.0f, 180.0f))) {
+                    ImPlot::SetupAxes("Time", "Scale");
+                    ImPlot::PlotLine("Angular amplitude", plotTime.data(), plotAmplitude.data(),
+                                     static_cast<int>(plotTime.size()));
+                    ImPlot::PlotScatter("Points", plotTime.data(), plotAmplitude.data(),
+                                         static_cast<int>(plotTime.size()));
+                    ImPlot::EndPlot();
+                }
+            }
+            ImGui::EndDisabled();
+        } else if (m_angularMotionEnabled || hasExistingAngularMotion) {
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.2f, 1.0f),
+                "El giro requiere Velocity en una Part rígida y un modelo 3D MINI3D implícito. Cambie el destino o desactive el giro.");
+        }
+    }
+    if (m_angularSaveAttempted && !m_angularValidationError.empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", m_angularValidationError.c_str());
+    }
+
     // --- BOTÓN OK / CREATE ---
     std::string butleg = create ? "Create" : "Update";
     if (ImGui::Button(butleg.c_str())) {
+        m_angularSaveAttempted = true;
 
-
+        m_angularValidationError.clear();
+        const bool angularEnabledOnSave = m_angularMotionEnabled;
+        if (angularEnabledOnSave && !angularDestinationCompatible) {
+            m_angularValidationError = "El destino actual no admite giro. Desactive explícitamente el giro o corrija el destino/tipo.";
+        } else if (m_angularMotionEnabled) {
+            validateAngularMotionWithModelContract(
+                m_angularVelocity, m_rotationCenter, m_angularValueType,
+                m_angularAmplitudeFactor, m_angularAmplitudeTime,
+                m_angularAmplitudeValue, m_targetId, m_angularValidationError);
+        }
+        const bool proposedAngularRoute = m_angularMotionEnabled;
+        bool angularRouteInModel = proposedAngularRoute;
+        for (int i = 0; i < model->getBCCount(); ++i) {
+            BoundaryCondition *other = model->getBC(i);
+            if (other == nullptr || other == m_editTarget)
+                continue;
+            if (other->hasAngularMotion())
+                angularRouteInModel = true;
+        }
+        if (m_angularValidationError.empty() && angularRouteInModel &&
+            isBoundary && bcType == 0 &&
+            !finiteLinearValues(m_vel, m_valueType, m_amplitudeFactor,
+                                m_amplitudeTime, m_amplitudeValue)) {
+            m_angularValidationError = "La velocidad, el factor y los valores de amplitud lineales deben ser finitos cuando se usa la ruta angular.";
+        }
+        if (m_angularValidationError.empty() && angularRouteInModel &&
+            angularDestinationCompatible && isBoundary && bcType == 0 && m_valueType == 1 &&
+            !angularTableIsValid(m_amplitudeTime, m_amplitudeValue, m_angularValidationError)) {
+            m_angularValidationError = "La tabla lineal usada junto con el giro requiere dos o más filas válidas, tiempos no negativos y estrictamente crecientes.";
+        }
+        if (m_angularValidationError.empty() && angularRouteInModel && isBoundary) {
+            for (int p = 0; p < model->getPartCount(); ++p) {
+                Part *part = model->getPart(p);
+                if (part == nullptr || part->getType() != Rigid)
+                    continue;
+                int velocityCount = 0;
+                for (int i = 0; i < model->getBCCount(); ++i) {
+                    BoundaryCondition *other = model->getBC(i);
+                    if (other == nullptr || other == m_editTarget ||
+                        other->getApplyTo() != ApplyToPart || other->getTargetId() != part->getID() ||
+                        other->getType() != VelocityBC)
+                        continue;
+                    ++velocityCount;
+                }
+                if (isBoundary && bcType == 0 && m_applyTo == 0 && m_targetId == part->getID())
+                    ++velocityCount;
+                if (velocityCount > 1) {
+                    m_angularValidationError = "La ruta angular requiere una sola BC Velocity por Part rígida; consolide sus movimientos.";
+                    break;
+                }
+            }
+        }
+        if (m_angularValidationError.empty()) {
         BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodeSet;
         BoundaryCondition *bc = nullptr;
         InitialCondition  *ic = nullptr;
@@ -417,6 +741,17 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
               bc->setAmplitudeFactor(m_amplitudeFactor);
               bc->setAmplitudeTable(m_amplitudeTime, m_amplitudeValue);
               bc->setDofMask(m_dof_mask[0], m_dof_mask[1], m_dof_mask[2]);
+            }
+
+            if (bc != nullptr && m_angularMotionEnabled) {
+                bc->setAngularMotionEnabled(true);
+                bc->setAngularVelocity(m_angularVelocity);
+                bc->setRotationCenter(m_rotationCenter);
+                bc->setAngularValueType(m_angularValueType);
+                bc->setAngularAmplitudeFactor(m_angularAmplitudeFactor);
+                bc->setAngularAmplitudeTable(
+                    m_angularValueType == 1 ? m_angularAmplitudeTime : std::vector<double>(),
+                    m_angularValueType == 1 ? m_angularAmplitudeValue : std::vector<double>());
             }
 
             model->addBoundaryCondition(bc);
@@ -466,24 +801,36 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
                 bc->setType(SymmetryBC);
                 bc->setNormal(m_normal);
             }
+            if (bc->kind == ConditionKind::Boundary) {
+                BoundaryCondition *boundary = static_cast<BoundaryCondition *>(bc);
+                boundary->setAngularMotionEnabled(m_angularMotionEnabled);
+                if (m_angularMotionEnabled) {
+                    boundary->setAngularVelocity(m_angularVelocity);
+                    boundary->setRotationCenter(m_rotationCenter);
+                    boundary->setAngularValueType(m_angularValueType);
+                    boundary->setAngularAmplitudeFactor(m_angularAmplitudeFactor);
+                    boundary->setAngularAmplitudeTable(
+                        m_angularValueType == 1 ? m_angularAmplitudeTime : std::vector<double>(),
+                        m_angularValueType == 1 ? m_angularAmplitudeValue : std::vector<double>());
+                }
+            }
         }
 
         std::cout << (create ? "Created" : "Updated") << " BC\n";
+        model->markDirty();
         *p_open = false;
         *sel_bc = nullptr;
+        }
     }
 
     // Cancel
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) {
         *p_open = false;
-        //sel_bc = nullptr;
     }
 
     if (!(*p_open)) {
-        initialized = false;
-        m_editingExisting = false;
-        m_editTarget = nullptr;
+        resetDialogState();
         *sel_bc = nullptr;
         cout << "closed. sel_çbc "<<*sel_bc<<endl;
     }

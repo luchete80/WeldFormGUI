@@ -17,6 +17,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
+#include <set>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -334,14 +336,14 @@ bool appendAmplitudeForCondition(json &amplitude_array, const Condition *conditi
   return true;
 }
 
-void appendDirectionalBoundaryCondition(json &bc_array,
+bool appendDirectionalBoundaryCondition(json &bc_array,
                                         json &amplitude_array,
                                         Model *model,
                                         BoundaryCondition *bc,
                                         int export_id,
                                         int &next_amplitude_id) {
   if (bc == nullptr || bc->getType() == SymmetryBC)
-    return;
+    return true;
 
   json jbc;
   jbc["id"] = export_id;
@@ -365,6 +367,44 @@ void appendDirectionalBoundaryCondition(json &bc_array,
   const double3 value = bc->getValue();
   jbc["value"] = {value.x, value.y, value.z};
 
+  if (bc->hasAngularMotion()) {
+    std::string angularError;
+    Part *target = nullptr;
+    if (bc->getApplyTo() == ApplyToPart) {
+      for (int i = 0; i < model->getPartCount(); ++i) {
+        Part *candidate = model->getPart(i);
+        if (candidate != nullptr && candidate->getId() == bc->getTargetId()) {
+          target = candidate;
+          break;
+        }
+      }
+    }
+    Step *step = activeStep(model);
+    if (model == nullptr || model->getAnalysisType() != Solid3D || target == nullptr ||
+        target->getType() != Rigid || !target->isMeshed() || step == nullptr || !step->isImplicit() ||
+        !step->usesRigidViscoplasticImplicitSolver()) {
+      return false;
+    }
+    if (!bc->isAngularMotionValid(&angularError)) {
+      std::cerr << "ERROR: invalid angular BC: " << angularError << std::endl;
+      return false;
+    }
+
+    const double3 angular = bc->getAngularVelocity();
+    const double3 center = bc->getRotationCenter();
+    jbc["valueAng"] = {angular.x, angular.y, angular.z};
+    jbc["rotationCenter"] = {center.x, center.y, center.z};
+    jbc["angularValueType"] = static_cast<int>(bc->getAngularValueType());
+    if (bc->usesAngularAmplitude()) {
+      const int angularId = next_amplitude_id++;
+      amplitude_array.push_back({{"id", angularId}, {"valueType", 1},
+                                 {"time", bc->getAngularAmplitudeTime()},
+                                 {"value", bc->getAngularAmplitudeValue()}});
+      jbc["angularAmplitudeId"] = angularId;
+      jbc["angularAmplitudeFactor"] = bc->getAngularAmplitudeFactor();
+    }
+  }
+
   const int dim_count = exportedDimensionCount(model);
   std::vector<int> directions;
   if (bc->getDofMaskX())
@@ -386,6 +426,7 @@ void appendDirectionalBoundaryCondition(json &bc_array,
   }
 
   bc_array.push_back(jbc);
+  return true;
 }
 
 void appendInitialCondition(json &ic_array, InitialCondition *ic, int export_id) {
@@ -521,6 +562,21 @@ json buildEngineMaterialJson(const Material_ *mat, int index) {
 InputWriter::InputWriter(Model*m) : m_model(m) {}
 
 bool InputWriter::writeToFile(std::string fname) {
+  if (m_model != nullptr) {
+    bool hasAngularMotion = false;
+    for (int i = 0; i < m_model->getBCCount(); ++i) {
+      BoundaryCondition *bc = m_model->getBC(i);
+      hasAngularMotion = hasAngularMotion || (bc != nullptr && bc->hasAngularMotion());
+    }
+    if (hasAngularMotion) {
+      Step *step = activeStep(m_model);
+      if (m_model->getAnalysisType() != Solid3D || step == nullptr || !step->isImplicit() ||
+          !step->usesRigidViscoplasticImplicitSolver()) {
+        std::cerr << "ERROR: angular BC export requires 3D MINI3D rigid-viscoplastic implicit mode." << std::endl;
+        return false;
+      }
+    }
+  }
   namespace fs = std::filesystem;
 
   if (m_model == nullptr) {
@@ -710,12 +766,12 @@ bool InputWriter::writeToFile(std::string fname) {
         m_json["Configuration"]["ySymm"] = ySymm;
         m_json["Configuration"]["zSymm"] = zSymm;
       } else {
-        appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
+        if (!appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
                                            m_json["Amplitudes"],
                                            m_model,
                                            bc,
                                            bc_export_id++,
-                                           amplitude_id);
+                                           amplitude_id)) return false;
       }
     }
   }
@@ -765,6 +821,119 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   Step *step = activeStep(m_model);
   if (!validateThermalConfiguration(m_model, step))
     return false;
+
+  std::map<int, int> angularTargets;
+  bool hasAngular = false;
+  for (int i = 0; i < m_model->getBCCount(); ++i) {
+    BoundaryCondition *bc = m_model->getBC(i);
+    hasAngular = hasAngular || (bc != nullptr && bc->hasAngularMotion());
+  }
+  if (hasAngular) {
+    std::set<int> rigidZoneIds;
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part *part = m_model->getPart(p);
+      if (part != nullptr && part->getType() == Rigid) rigidZoneIds.insert(part->getId());
+    }
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part *part = m_model->getPart(p);
+      if (part == nullptr || part->getMesh() == nullptr) continue;
+      Mesh *mesh = part->getMesh();
+      for (int s = 0; s < mesh->getNodeSetCount(); ++s) {
+        const int setId = mesh->getNodeSet(s).getId();
+        if (rigidZoneIds.count(setId) != 0) {
+          std::cerr << "ERROR: NodeSet ID " << setId
+                    << " aliases a rigid tool zone in angular-motion input." << std::endl;
+          return false;
+        }
+      }
+    }
+  }
+  for (int i = 0; i < m_model->getBCCount(); ++i) {
+    BoundaryCondition *bc = m_model->getBC(i);
+    if (bc == nullptr) continue;
+    if (bc->hasAngularMotion() && bc->getType() != VelocityBC) {
+      std::cerr << "ERROR: angular motion is supported only on Velocity boundary conditions." << std::endl;
+      return false;
+    }
+    if (bc->getType() != SymmetryBC && bc->getApplyTo() == ApplyToPart) {
+      Part *candidateTarget = nullptr;
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part *candidate = m_model->getPart(p);
+        if (candidate != nullptr && candidate->getId() == bc->getTargetId()) candidateTarget = candidate;
+      }
+      if (candidateTarget != nullptr && candidateTarget->getType() == Rigid && hasAngular &&
+          bc->getType() != VelocityBC) {
+        std::cerr << "ERROR: angular tool motion cannot be combined with non-Velocity BCs on zone "
+                  << bc->getTargetId() << "; solver input export cannot preserve that BC type." << std::endl;
+        return false;
+      }
+      if (candidateTarget != nullptr && candidateTarget->getType() == Rigid && hasAngular &&
+          bc->getType() == VelocityBC) {
+        const double3 value = bc->getValue();
+        if (!std::isfinite(value.x) || !std::isfinite(value.y) || !std::isfinite(value.z)) {
+          std::cerr << "ERROR: rigid tool velocity components must be finite in angular-motion input." << std::endl;
+          return false;
+        }
+      }
+      if (candidateTarget != nullptr && candidateTarget->getType() == Rigid &&
+          ++angularTargets[bc->getTargetId()] > 1 && hasAngular) {
+        std::cerr << "ERROR: multiple velocity BCs target rigid tool zone " << bc->getTargetId()
+                  << "; angular motion export is ambiguous." << std::endl;
+        return false;
+      }
+    }
+    if (hasAngular && bc->getApplyTo() == ApplyToNodeSet) {
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part *candidate = m_model->getPart(p);
+        if (candidate != nullptr && candidate->getType() == Rigid &&
+            candidate->getId() == bc->getTargetId()) {
+          std::cerr << "ERROR: NodeSet ID " << bc->getTargetId()
+                    << " aliases a rigid tool zone in angular-motion input." << std::endl;
+          return false;
+        }
+      }
+    }
+    if (hasAngular && bc->getType() == VelocityBC && bc->getApplyTo() == ApplyToPart && bc->usesAmplitude()) {
+      Part *linearTarget = nullptr;
+      for (int p = 0; p < m_model->getPartCount(); ++p) {
+        Part *candidate = m_model->getPart(p);
+        if (candidate != nullptr && candidate->getId() == bc->getTargetId()) linearTarget = candidate;
+      }
+      if (linearTarget != nullptr && linearTarget->getType() == Rigid) {
+      const auto &times = bc->getAmplitudeTime();
+      const auto &values = bc->getAmplitudeValue();
+      bool valid = times.size() >= 2 && times.size() == values.size() &&
+                   std::isfinite(bc->getAmplitudeFactor());
+      for (std::size_t k = 0; valid && k < times.size(); ++k)
+        valid = std::isfinite(times[k]) && times[k] >= 0.0 && std::isfinite(values[k]) &&
+                (k == 0 || times[k] > times[k - 1]);
+      if (!valid) {
+        std::cerr << "ERROR: linear amplitude on an angular-motion input must have finite values and at least two strictly increasing non-negative times." << std::endl;
+        return false;
+      }
+      }
+    }
+    if (!bc->hasAngularMotion()) continue;
+    if (m_model->getAnalysisType() != Solid3D || step == nullptr || !step->isImplicit() ||
+        !step->usesRigidViscoplasticImplicitSolver() || bc->getApplyTo() != ApplyToPart) {
+      std::cerr << "ERROR: angular BC export requires 3D MINI3D rigid-viscoplastic implicit mode and a Part target." << std::endl;
+      return false;
+    }
+    Part *target = nullptr;
+    for (int p = 0; p < m_model->getPartCount(); ++p) {
+      Part *candidate = m_model->getPart(p);
+      if (candidate != nullptr && candidate->getId() == bc->getTargetId()) target = candidate;
+    }
+    if (target == nullptr || target->getType() != Rigid || !target->isMeshed()) {
+      std::cerr << "ERROR: angular BC target must be a meshed rigid Part (zoneId " << bc->getTargetId() << ")." << std::endl;
+      return false;
+    }
+    std::string angularError;
+    if (!bc->isAngularMotionValid(&angularError)) {
+      std::cerr << "ERROR: invalid angular BC: " << angularError << std::endl;
+      return false;
+    }
+  }
 
 
   json m_json;
@@ -935,12 +1104,12 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     if (bc->getType() == SymmetryBC)
       continue;
 
-    appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
+    if (!appendDirectionalBoundaryCondition(m_json["BoundaryConditions"],
                                        m_json["Amplitudes"],
                                        m_model,
                                        bc,
                                        bc_export_id++,
-                                       amplitude_id);
+                                       amplitude_id)) return false;
   }
 
   if (m_json["BoundaryConditions"].empty()) {

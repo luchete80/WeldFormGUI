@@ -319,6 +319,31 @@ void testNastranReaderAndMeshPreserveSparseReorderedEids() {
         "project BDF reader retains EIDs required by inline history lookup");
 }
 
+void testNastranReaderReportsOpenFailure() {
+  const auto path = std::filesystem::temp_directory_path() /
+      ("wfg_missing_nastran_" + std::to_string(
+          std::chrono::steady_clock::now().time_since_epoch().count()) + ".bdf");
+  NastranReader reader(path.string().c_str());
+  check(!reader.isReadValid(), "Nastran reader reports an input file that cannot be opened");
+}
+
+void testNastranReaderOpensReadOnlyBdf() {
+  const auto source = fixture("tetra_sparse_eids.bdf");
+  const auto path = std::filesystem::temp_directory_path() /
+      ("wfg_readonly_nastran_" + std::to_string(
+          std::chrono::steady_clock::now().time_since_epoch().count()) + ".bdf");
+  std::filesystem::copy_file(source, path);
+  std::filesystem::permissions(path,
+      std::filesystem::perms::owner_read | std::filesystem::perms::group_read |
+      std::filesystem::perms::others_read, std::filesystem::perm_options::replace);
+  NastranReader reader(path.string().c_str());
+  check(reader.isReadValid() && reader.getNodeCount() == 4 && reader.getElemCount() == 2,
+        "Nastran reader loads BDF files with read-only permissions");
+  std::filesystem::permissions(path, std::filesystem::perms::owner_all,
+                               std::filesystem::perm_options::replace);
+  std::filesystem::remove(path);
+}
+
 void testInitialStateSha256KnownVectors() {
   check(InitialStateSha256Hex("") ==
         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -951,6 +976,8 @@ int main() {
     testInlineHistoryRejectsMalformedCoverageAndIntegerOverflow();
     testProjectJsonParserRejectsDuplicateKeys();
     testNastranReaderAndMeshPreserveSparseReorderedEids();
+    testNastranReaderReportsOpenFailure();
+    testNastranReaderOpensReadOnlyBdf();
     testInitialStateSha256KnownVectors();
     testInitialStatePackageUsesWrittenSparseEidsAndBdfHash();
     testMaterialDecisionFingerprintAndDiscardPolicy();
