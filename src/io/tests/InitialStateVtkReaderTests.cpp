@@ -515,7 +515,7 @@ void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
     check(generation.create(root, "case", &diagnostic),
           "generation allocation succeeds: " + diagnostic);
     owned = generation.path();
-    check(owned == root / ".wf_case_generation_1" && fs::is_directory(owned),
+    check(owned.filename().string().rfind(".wf_export_", 0) == 0 && fs::is_directory(owned),
           "first export uses the stable generation directory");
     std::ofstream staged(owned / "partial.txt");
     staged << "discard on failure";

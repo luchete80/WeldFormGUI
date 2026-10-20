@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <exception>
 #include <locale>
 #include <string>
@@ -40,21 +42,31 @@ public:
     std::error_code ec;
     fs::create_directories(parent, ec);
     if (ec) return fail("Cannot create export directory parent: " + ec.message());
-    // Reuse the newest generation directory for this export stem. Keeping its
-    // name stable prevents every save from leaving another resource package.
+    // Use an opaque, deterministic directory name so generated paths do not
+    // expose the model name while keeping each export package isolated.
+    const fs::path absoluteParent = fs::absolute(parent, ec).lexically_normal();
+    if (ec) return fail("Cannot resolve export directory parent: " + ec.message());
+    const std::string identity = absoluteParent.generic_string() + "\n" + stem;
+    std::uint64_t hash = 14695981039346656037ull;
+    for (unsigned char byte : identity) {
+      hash ^= byte;
+      hash *= 1099511628211ull;
+    }
+    std::ostringstream suffix;
+    suffix << std::hex << std::setw(16) << std::setfill('0') << hash;
     fs::path candidate;
     std::uint64_t newestSequence = 0;
     for (std::uint64_t sequence = 1; sequence <= 100000; ++sequence) {
-      const fs::path candidate = parent / (".wf_" + stem + "_generation_" + std::to_string(sequence));
+      const fs::path existing = parent / (".wf_export_" + suffix.str() + "_generation_" + std::to_string(sequence));
       ec.clear();
-      const bool candidateExists = fs::exists(candidate, ec);
+      const bool candidateExists = fs::exists(existing, ec);
       if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
       if (!candidateExists) continue;
-      if (fs::is_directory(candidate, ec)) newestSequence = sequence;
+      if (fs::is_directory(existing, ec)) newestSequence = sequence;
       else if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
     }
     if (newestSequence == 0) newestSequence = 1;
-    candidate = parent / (".wf_" + stem + "_generation_" + std::to_string(newestSequence));
+    candidate = parent / (".wf_export_" + suffix.str() + "_generation_" + std::to_string(newestSequence));
     bool created = false;
     ec.clear();
     if (!fs::exists(candidate, ec)) {
