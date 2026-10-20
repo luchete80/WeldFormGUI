@@ -676,7 +676,6 @@ bool InputWriter::writeToFile(std::string fname) {
   cont["penaltyFactor"] = contact.penaltyFactor;
   cont["useGapPenalty"] = contact.useGapPenalty;
   if (contact.unilateralContact) {
-    cont["maxPenetRatio"] = 0.05;
     cont["penaltyFactor"] = 20.0;
     cont["useGapPenalty"] = true;
     cont["gapPenaltyScale"] = 2.0;
@@ -1021,7 +1020,6 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   });
   if (contact.unilateralContact) {
     auto& inputContact = m_json["Contact"][0];
-    inputContact["maxPenetRatio"] = 0.05;
     inputContact["penaltyFactor"] = 20.0;
     inputContact["useGapPenalty"] = true;
     inputContact["gapPenaltyScale"] = 2.0;

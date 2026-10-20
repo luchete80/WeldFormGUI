@@ -62,7 +62,9 @@ void InteractionPropsDialog::Draw()
   ImGui::EndDisabled();
   ImGui::Checkbox("Heat Conductance", &contact.heatConductance);
   ImGui::InputDouble("Heat Cond Coeff", &contact.heatCondCoeff, 0.1, 1.0, "%.4f");
+  ImGui::BeginDisabled(!contact.unilateralContact);
   ImGui::InputDouble("Max Penetration Ratio", &contact.maxPenetRatio, 0.01, 0.1, "%.4f");
+  ImGui::EndDisabled();
   ImGui::InputDouble("Max Accel", &contact.maxAccel, 1000.0, 10000.0, "%.4f");
 
   if (supportsContactActivationRamp(m_model)) {
