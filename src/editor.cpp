@@ -3143,7 +3143,8 @@ bool Editor::openModelFromPathImpl(const std::string& filePathName)
   m_redo_stack.clear();
 
   ModelReader mr(m_model);
-  mr.readFromFile(filePathName);
+  if (!mr.readFromFile(filePathName))
+    return false;
 
   int pc = m_model->getPartCount();
   cout << "Model part count: " << pc << endl;
@@ -3151,11 +3152,12 @@ bool Editor::openModelFromPathImpl(const std::string& filePathName)
   cout << "Adding vtkgeo meshes" << endl;
   for (int p = 0; p < pc; p++) {
     cout << "part " << p << endl;
-    vtkOCCTGeom *geom = new vtkOCCTGeom;
-
     Part *part = m_model->getPart(p);
     Geom *geo = part ? part->getGeom() : nullptr;
-    if (geo != nullptr) {
+    // A model part may contain only a mesh (for example, imported BDF parts).
+    // Loading the CAD visual requires a valid Geom and shape.
+    if (geo != nullptr && geo->hasShape()) {
+      vtkOCCTGeom *geom = new vtkOCCTGeom;
       geom->LoadFromShape(geo->getShape(), 0.01);
       cout << "Done." << endl;
 

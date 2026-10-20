@@ -776,6 +776,10 @@ bool Geom::ExportSTEP() {
     return true;
 }
 
+bool Geom::hasShape() const {
+    return m_shape != nullptr && !m_shape->IsNull();
+}
+
 bool Geom::LoadSTEP(const std::string& fname) {
     STEPControl_Reader reader;
     IFSelect_ReturnStatus stat = reader.ReadFile(fname.c_str());

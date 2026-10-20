@@ -114,6 +114,7 @@ public:
                     TopoDS_Shape& negativeShape) const;
   
   const TopoDS_Shape& getShape() const { return *m_shape; }
+  bool hasShape() const;
   bool prefersHexaTransfinite() const { return m_preferHexaTransfinite; }
   void setPreferHexaTransfinite(bool prefer) { m_preferHexaTransfinite = prefer; }
   
