@@ -268,6 +268,10 @@ bool ModelWriter::writeToFile(std::string fname){
     }
       if (part->getType() == Rigid){
         jpart["isRigid"] = true;
+        jpart["flipNormals"] = part->getFlipNormals();
+        if (!part->getNormalOrientation().empty())
+          jpart["normalOrientation"] = part->getNormalOrientation();
+        jpart["orientPoint"] = writeVector(part->getOrientPoint());
         cout << "Part "<<i << " is rigid"<<endl;
       } else {
         jpart["isRigid"] = false;

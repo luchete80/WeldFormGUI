@@ -372,6 +372,10 @@ bool addFilePart(Model* model,
   int part_id = part_json.value("zoneId", fallback_id);
   part->setId(part_id);
   part->setType(rigid ? 1 : 0);
+  part->setFlipNormals(rigid && part_json.value("flipNormals", false));
+  part->setNormalOrientation(rigid ? part_json.value("normalOrientation", std::string()) : std::string());
+  if (rigid && part_json.contains("orientPoint"))
+    part->setOrientPoint(readDouble3(part_json["orientPoint"], part->getOrientPoint()));
   part->setName(rigid ? "Rigid File" : "Domain File");
 
   if (fs::exists(mesh_path)) {
@@ -466,6 +470,10 @@ void addPlaneRigidPart(Model* model, const json& rigid_json, int fallback_id)
   int part_id = rigid_json.value("zoneId", fallback_id);
   part->setId(part_id);
   part->setType(1);
+  part->setFlipNormals(rigid_json.value("flipNormals", false));
+  part->setNormalOrientation(rigid_json.value("normalOrientation", std::string()));
+  if (rigid_json.contains("orientPoint"))
+    part->setOrientPoint(readDouble3(rigid_json["orientPoint"], part->getOrientPoint()));
   part->setName("Rigid Plane");
   part->setMesh(mesh);
   model->addPart(part);

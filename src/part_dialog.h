@@ -16,6 +16,9 @@ struct PartDialog {
   double m_poisson_const;
   int part_type = 0 ;
   double3 m_v ;
+  bool m_flip_normals = false;
+  int m_normal_orientation = 0;
+  double m_orient_point[3] = {0.0, 0.0, 0.0};
   
   bool m_initialized = false;
   

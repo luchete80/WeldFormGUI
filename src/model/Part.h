@@ -52,6 +52,12 @@ public:
     if (t==0) m_type = Elastic;
     else if (t==1)m_type = Rigid;
   }
+  bool getFlipNormals() const { return m_flip_normals; }
+  void setFlipNormals(bool value) { m_flip_normals = value; }
+  const std::string& getNormalOrientation() const { return m_normal_orientation; }
+  void setNormalOrientation(const std::string& value) { m_normal_orientation = value; }
+  double3 getOrientPoint() const { return m_orient_point; }
+  void setOrientPoint(const double3& value) { m_orient_point = value; }
   int getSectionId() const { return m_section_id; }
   void setSectionId(int section_id) { m_section_id = section_id; }
   
@@ -64,6 +70,10 @@ protected:
   Geom* m_geom = nullptr;
   std::string m_mesh_source_file;
   int m_section_id = -1;
+  bool m_flip_normals = false;
+  // Empty keeps the solver legacy policy selected by orientNormals.
+  std::string m_normal_orientation;
+  double3 m_orient_point = make_double3(0.0, 0.0, 0.0);
   bool m_ismeshed;
   bool m_isgeom;
   

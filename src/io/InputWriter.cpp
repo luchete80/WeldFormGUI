@@ -748,6 +748,14 @@ bool InputWriter::writeToFile(std::string fname) {
       rigidBody["start"] = {0.0, 0.0, 0.0};
       rigidBody["scale"] = {1, 1, 1};
       rigidBody["orientNormals"] = true;
+      rigidBody["flipNormals"] = part->getFlipNormals();
+      if (!part->getNormalOrientation().empty())
+        rigidBody["normalOrientation"] = part->getNormalOrientation();
+      if (part->getNormalOrientation() == "towardPoint" ||
+          part->getNormalOrientation() == "awayFromPoint") {
+        const double3 orientPoint = part->getOrientPoint();
+        rigidBody["orientPoint"] = {orientPoint.x, orientPoint.y, orientPoint.z};
+      }
       rigidBody["fileName"] = relativeMesh;
       m_json["RigidBodies"].push_back(rigidBody);
     }
@@ -1108,8 +1116,17 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
         // The exported BDF already contains the current transformed node coordinates.
         // Using the geometry origin here would apply the same translation twice.
         {"start", {0.0, 0.0, 0.0}},
-        {"orientNormals", true}
+        {"orientNormals", true},
+        {"flipNormals", part->getFlipNormals()}
       });
+      if (!part->getNormalOrientation().empty())
+        m_json["RigidBodies"].back()["normalOrientation"] = part->getNormalOrientation();
+      if (part->getNormalOrientation() == "towardPoint" ||
+          part->getNormalOrientation() == "awayFromPoint") {
+        const double3 orientPoint = part->getOrientPoint();
+        m_json["RigidBodies"].back()["orientPoint"] =
+            {orientPoint.x, orientPoint.y, orientPoint.z};
+      }
     }
   }
 

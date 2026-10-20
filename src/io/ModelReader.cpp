@@ -439,6 +439,13 @@ bool ModelReader::readFromFile(const std::string& fname) {
             // --- Type (rigid/deformable) ---
             bool isRigid = jpart.value("isRigid", false);
             part->setType(isRigid ? 1 : 0);
+            part->setFlipNormals(isRigid && jpart.value("flipNormals", false));
+            part->setNormalOrientation(isRigid ? jpart.value("normalOrientation", std::string()) : std::string());
+            if (isRigid && jpart.contains("orientPoint")) {
+                double3 orientPoint = part->getOrientPoint();
+                if (readVector(jpart["orientPoint"], orientPoint))
+                    part->setOrientPoint(orientPoint);
+            }
             cout << "    Type: " << (isRigid ? "Rigid" : "Deformable") << endl;
 
             if (jpart.contains("mesh") && jpart["mesh"].is_object() &&
