@@ -24,78 +24,28 @@ public:
   ExportGenerationDirectory() = default;
   ExportGenerationDirectory(const ExportGenerationDirectory&) = delete;
   ExportGenerationDirectory& operator=(const ExportGenerationDirectory&) = delete;
-  ~ExportGenerationDirectory() {
-    if (m_owned && !m_retained) {
-      std::error_code ignored;
-      std::filesystem::remove_all(m_path, ignored);
-    }
-  }
-
+  // Resources live beside the project/input file. This directory belongs to
+  // the user: never clear it or remove it when an export fails.
   bool create(const std::filesystem::path& parent,
-              const std::string& stem,
+              const std::string& /*stem*/,
               std::string* diagnostic = nullptr) {
-    namespace fs = std::filesystem;
-    auto fail = [diagnostic](const std::string& message) {
-      if (diagnostic != nullptr) *diagnostic = message;
-      return false;
-    };
     std::error_code ec;
-    fs::create_directories(parent, ec);
-    if (ec) return fail("Cannot create export directory parent: " + ec.message());
-    // Use an opaque, deterministic directory name so generated paths do not
-    // expose the model name while keeping each export package isolated.
-    const fs::path absoluteParent = fs::absolute(parent, ec).lexically_normal();
-    if (ec) return fail("Cannot resolve export directory parent: " + ec.message());
-    const std::string identity = absoluteParent.generic_string() + "\n" + stem;
-    std::uint64_t hash = 14695981039346656037ull;
-    for (unsigned char byte : identity) {
-      hash ^= byte;
-      hash *= 1099511628211ull;
+    std::filesystem::create_directories(parent, ec);
+    if (ec) {
+      if (diagnostic) *diagnostic = "Cannot create export directory: " + ec.message();
+      return false;
     }
-    std::ostringstream suffix;
-    suffix << std::hex << std::setw(16) << std::setfill('0') << hash;
-    fs::path candidate;
-    std::uint64_t newestSequence = 0;
-    for (std::uint64_t sequence = 1; sequence <= 100000; ++sequence) {
-      const fs::path existing = parent / (".wf_export_" + suffix.str() + "_generation_" + std::to_string(sequence));
-      ec.clear();
-      const bool candidateExists = fs::exists(existing, ec);
-      if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
-      if (!candidateExists) continue;
-      if (fs::is_directory(existing, ec)) newestSequence = sequence;
-      else if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
-    }
-    if (newestSequence == 0) newestSequence = 1;
-    candidate = parent / (".wf_export_" + suffix.str() + "_generation_" + std::to_string(newestSequence));
-    bool created = false;
-    ec.clear();
-    if (!fs::exists(candidate, ec)) {
-      ec.clear();
-      if (!fs::create_directory(candidate, ec))
-        return fail("Cannot create export generation directory: " + ec.message());
-      created = true;
-    } else {
-      if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
-      if (!fs::is_directory(candidate, ec) || ec)
-        return fail("Export generation path exists but is not a directory.");
-      for (fs::directory_iterator it(candidate, ec), end; !ec && it != end; it.increment(ec))
-        fs::remove_all(it->path(), ec);
-      if (ec) return fail("Cannot clear export generation directory: " + ec.message());
-    }
-    m_path = candidate;
-    m_owned = created;
-    if (diagnostic != nullptr) diagnostic->clear();
+    m_path = parent;
+    if (diagnostic) diagnostic->clear();
     return true;
   }
 
   const std::filesystem::path& path() const { return m_path; }
-  std::string name() const { return m_path.filename().string(); }
-  void retain() { m_retained = true; }
+  std::string name() const { return "export"; }
+  void retain() {}
 
 private:
   std::filesystem::path m_path;
-  bool m_owned = false;
-  bool m_retained = false;
 };
 
 inline bool ExportGenerationRelativePath(const std::filesystem::path& resource,
@@ -141,7 +91,10 @@ inline bool PackageExternalCsv(const std::string& sourcePath,
     return fail("External material CSV is missing or unreadable: " + sourcePath);
   const fs::path destination = generationDirectory /
       ("material_" + std::to_string(materialIndex) + "_flow_stress.csv");
-  fs::copy_file(source, destination, fs::copy_options::none, ec);
+  const bool sameFile = fs::equivalent(source, destination, ec);
+  ec.clear();
+  if (!sameFile)
+    fs::copy_file(source, destination, fs::copy_options::overwrite_existing, ec);
   if (ec) return fail("Cannot package external material CSV: " + ec.message());
   if (!ExportGenerationRelativePath(destination, referenceFile, relativePath, diagnostic))
     return false;

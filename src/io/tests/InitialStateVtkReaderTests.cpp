@@ -502,7 +502,7 @@ void testMaterialDecisionFingerprintAndDiscardPolicy() {
         "explicit discard clears element values and records the discard decision");
 }
 
-void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
+void testExportUsesRunDirectoryAndPreservesExistingFiles() {
   namespace fs = std::filesystem;
   const auto root = fs::temp_directory_path() /
       ("wf_export_generation_" + std::to_string(
@@ -515,12 +515,12 @@ void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
     check(generation.create(root, "case", &diagnostic),
           "generation allocation succeeds: " + diagnostic);
     owned = generation.path();
-    check(owned.filename().string().rfind(".wf_export_", 0) == 0 && fs::is_directory(owned),
-          "first export uses the stable generation directory");
+    check(owned == root && fs::is_directory(owned),
+          "export uses the run directory directly");
     std::ofstream staged(owned / "partial.txt");
     staged << "discard on failure";
   }
-  check(!fs::exists(owned), "failed first export removes only the directory it created");
+  check(fs::exists(owned / "partial.txt"), "failed export preserves the run directory and its files");
   fs::create_directories(owned);
   {
     std::ofstream previous(owned / "old_mesh.bdf");
@@ -531,14 +531,31 @@ void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
     std::string diagnostic;
     check(generation.create(root, "case", &diagnostic),
           "subsequent export reuses generation directory: " + diagnostic);
-    check(generation.path() == owned && fs::is_empty(owned),
-          "subsequent export clears stale resources in the stable directory");
+    check(generation.path() == owned && fs::exists(owned / "old_mesh.bdf"),
+          "subsequent export preserves existing run files");
     std::ofstream current(generation.path() / "case_part_1.bdf");
     current << "current export";
     generation.retain();
   }
   check(fs::exists(owned / "case_part_1.bdf"),
         "successful export retains the resource at the stable filename");
+
+  {
+    std::ofstream csv(root / "source.csv");
+    csv << "strain,stress\n0,100\n";
+  }
+  std::string relativeCsv, csvError;
+  check(PackageExternalCsv((root / "source.csv").string(), 0, root,
+                          root / "input.json", relativeCsv, &csvError),
+        "CSV packages directly in run directory: " + csvError);
+  check(relativeCsv == "material_0_flow_stress.csv",
+        "CSV reference has no generation subdirectory");
+  check(PackageExternalCsv((root / "source.csv").string(), 0, root,
+                          root / "input.json", relativeCsv, &csvError),
+        "CSV can be exported repeatedly: " + csvError);
+  check(PackageExternalCsv((root / relativeCsv).string(), 0, root,
+                          root / "input.json", relativeCsv, &csvError),
+        "reopened packaged CSV can be saved in place: " + csvError);
 
   const auto published = root / "input.json";
   {
@@ -558,7 +575,7 @@ void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
   fs::remove_all(root, cleanupError);
 }
 
-void testSecondPieceFailurePreservesPublishedReferenceAndCleansGeneration() {
+void testSecondPieceFailurePreservesPublishedReferenceAndRunDirectory() {
   namespace fs = std::filesystem;
   const auto root = fs::temp_directory_path() /
       ("wf_export_second_piece_" + std::to_string(
@@ -614,8 +631,8 @@ void testSecondPieceFailurePreservesPublishedReferenceAndCleansGeneration() {
   std::ifstream old(published);
   std::string contents;
   std::getline(old, contents);
-  check(contents == "previous input" && !fs::exists(generationPath),
-        "second-piece failure leaves old input intact and removes only new staged resources");
+  check(contents == "previous input" && fs::exists(generationPath / "part_1.bdf"),
+        "second-piece failure leaves old input and run directory intact");
   std::error_code cleanupError;
   fs::remove_all(root, cleanupError);
 }
@@ -992,8 +1009,8 @@ int main() {
     testInitialStateSha256KnownVectors();
     testInitialStatePackageUsesWrittenSparseEidsAndBdfHash();
     testMaterialDecisionFingerprintAndDiscardPolicy();
-    testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure();
-    testSecondPieceFailurePreservesPublishedReferenceAndCleansGeneration();
+    testExportUsesRunDirectoryAndPreservesExistingFiles();
+    testSecondPieceFailurePreservesPublishedReferenceAndRunDirectory();
     testInputSidecarRoundTripRelativeHashAndInlinePersistence();
     testTopologySnapshotPreservesTransformsAndBlocksEdits();
     testMini3dInputWriterReaderAndProjectRoundTrip();
