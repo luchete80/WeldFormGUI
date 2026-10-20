@@ -30,6 +30,7 @@
 #include <stdint.h>     // intptr_t
 #endif
 #include <cmath>
+#include <algorithm>
 
 // OpenGL Loader
 // This can be replaced with another loader, e.g. glad, but
@@ -43,6 +44,7 @@
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 #include <vtkWindowToImageFilter.h>
+#include <vtkMatrix4x4.h>
 
 //#include <vtkArrowSource.h>
 
@@ -295,6 +297,91 @@ void VtkViewer::removeActor(const vtkSmartPointer<vtkProp>& actor){
 
 	cout << "[VtkViewer::removeActor] removed actor " << actor.GetPointer()
 	     << " hasAfter=" << renderer->HasViewProp(actor) << endl;
+}
+
+void VtkViewer::clearSymmetry(vtkActor* source){
+  if (source == nullptr) return;
+  auto found = symmetryActors.find(source);
+  if (found == symmetryActors.end()) return;
+  for (const auto& reflected : found->second.actors) {
+    if (renderer && reflected.second) renderer->RemoveActor(reflected.second);
+  }
+  symmetryActors.erase(found);
+}
+
+void VtkViewer::clearSymmetryExcept(const std::vector<vtkActor*>& sources){
+  std::vector<vtkActor*> stale;
+  for (const auto& entry : symmetryActors) {
+    if (std::find(sources.begin(), sources.end(), entry.first) == sources.end()) stale.push_back(entry.first);
+  }
+  for (vtkActor* actor : stale) clearSymmetry(actor);
+}
+
+void VtkViewer::setSymmetry(vtkActor* source, unsigned int axisMask,
+                            const std::array<double, 3>& planeCoordinates){
+  if (source == nullptr) return;
+  axisMask &= 0x7u;
+  auto found = symmetryActors.find(source);
+  bool rebuild = found == symmetryActors.end() || found->second.axisMask != axisMask;
+  if (!rebuild && found != symmetryActors.end()) {
+    for (int axis = 0; axis < 3; ++axis)
+      rebuild |= std::abs(found->second.planeCoordinates[axis] - planeCoordinates[axis]) > 1.0e-12;
+  }
+  if (axisMask == 0) { clearSymmetry(source); return; }
+  if (rebuild) {
+    clearSymmetry(source);
+    SymmetryActors state;
+    state.axisMask = axisMask;
+    state.planeCoordinates = planeCoordinates;
+    for (unsigned int subset = 1; subset < 8; ++subset) {
+      if ((subset & axisMask) != subset) continue;
+      vtkSmartPointer<vtkActor> reflected = vtkSmartPointer<vtkActor>::New();
+      reflected->ShallowCopy(source);
+      vtkSmartPointer<vtkProperty> property = vtkSmartPointer<vtkProperty>::New();
+      property->DeepCopy(source->GetProperty());
+      property->SetBackfaceCulling(false);
+      reflected->SetProperty(property);
+      vtkSmartPointer<vtkMatrix4x4> reflection = vtkSmartPointer<vtkMatrix4x4>::New();
+      reflection->Identity();
+      for (int axis = 0; axis < 3; ++axis) {
+        if ((subset & (1u << axis)) != 0) {
+          reflection->SetElement(axis, axis, -1.0);
+          reflection->SetElement(axis, 3, 2.0 * planeCoordinates[axis]);
+        }
+      }
+      vtkSmartPointer<vtkMatrix4x4> matrix = vtkSmartPointer<vtkMatrix4x4>::New();
+      vtkMatrix4x4::Multiply4x4(reflection, source->GetMatrix(), matrix);
+      reflected->SetPosition(0.0, 0.0, 0.0);
+      reflected->SetOrientation(0.0, 0.0, 0.0);
+      reflected->SetOrigin(0.0, 0.0, 0.0);
+      reflected->SetScale(1.0, 1.0, 1.0);
+      reflected->SetUserMatrix(matrix);
+      reflected->SetPickable(0);
+      reflected->SetDragable(0);
+      renderer->AddActor(reflected);
+      state.actors.emplace_back(subset, reflected);
+    }
+    found = symmetryActors.emplace(source, std::move(state)).first;
+  }
+  // Properties on the source are changed by result field/color/visibility controls.
+  for (const auto& reflectedEntry : found->second.actors) {
+    vtkActor* reflected = reflectedEntry.second;
+    reflected->SetMapper(source->GetMapper());
+    reflected->GetProperty()->DeepCopy(source->GetProperty());
+    reflected->GetProperty()->SetBackfaceCulling(false);
+    reflected->SetVisibility(source->GetVisibility());
+    vtkSmartPointer<vtkMatrix4x4> reflection = vtkSmartPointer<vtkMatrix4x4>::New();
+    reflection->Identity();
+    for (int axis = 0; axis < 3; ++axis) {
+      if ((reflectedEntry.first & (1u << axis)) != 0) {
+        reflection->SetElement(axis, axis, -1.0);
+        reflection->SetElement(axis, 3, 2.0 * found->second.planeCoordinates[axis]);
+      }
+    }
+    vtkSmartPointer<vtkMatrix4x4> matrix = vtkSmartPointer<vtkMatrix4x4>::New();
+    vtkMatrix4x4::Multiply4x4(reflection, source->GetMatrix(), matrix);
+    reflected->SetUserMatrix(matrix);
+  }
 }
 
 void VtkViewer::setViewportSize(const ImVec2 newSize){

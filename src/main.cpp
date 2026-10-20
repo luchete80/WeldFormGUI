@@ -182,6 +182,12 @@ struct ResultsViewportToolState {
     std::map<vtkActor*, vtkSmartPointer<vtkActor>> clipCapActors;
     bool gizmoAddedToRenderer = false;
     bool customInteractorInstalled = false;
+    bool symmetryXY = false;
+    bool symmetryXZ = false;
+    bool symmetryYZ = false;
+    bool symmetryAboutX = false;
+    bool symmetryAboutY = false;
+    std::array<double, 3> symmetryCoordinates = {0.0, 0.0, 0.0};
 };
 
 struct ResultsPlaybackOverlayState {
@@ -192,6 +198,30 @@ struct ResultsPlaybackOverlayState {
     ImVec2 lastMin = ImVec2(0.0f, 0.0f);
     ImVec2 lastMax = ImVec2(0.0f, 0.0f);
 };
+
+void syncResultsSymmetry(VtkViewer& viewer, ResultsViewportToolState& state, ResultFrame& frame)
+{
+    unsigned int mask = 0;
+    if (state.is3DFrame) {
+        if (state.symmetryXY) mask |= 1u << 2;
+        if (state.symmetryXZ) mask |= 1u << 1;
+        if (state.symmetryYZ) mask |= 1u << 0;
+    } else {
+        if (state.symmetryAboutX) mask |= 1u << 1;
+        if (state.symmetryAboutY) mask |= 1u << 0;
+    }
+    std::vector<vtkActor*> sources;
+    if (frame.actor != nullptr) {
+        sources.push_back(frame.actor);
+        viewer.setSymmetry(frame.actor, mask, state.symmetryCoordinates);
+    }
+    vtkActor* vectors = frame.getVectorActor();
+    if (vectors != nullptr && frame.hasVisibleVectorGlyphs()) {
+        sources.push_back(vectors);
+        viewer.setSymmetry(vectors, mask, state.symmetryCoordinates);
+    }
+    viewer.clearSymmetryExcept(sources);
+}
 
 struct ColorMapControlPoint {
     float t = 0.0f;
@@ -1285,7 +1315,7 @@ bool drawToolbarButton(const char* label, bool active = false, const char* toolt
     return pressed;
 }
 
-bool drawAxisButton(const char* label, const ImVec4& baseColor)
+bool drawAxisButton(const char* label, const ImVec4& baseColor, bool selected = false)
 {
     const ImVec2 buttonSize(24.0f, 24.0f);
     const ImVec4 hoveredColor(
@@ -1299,7 +1329,10 @@ bool drawAxisButton(const char* label, const ImVec4& baseColor)
         (std::max)(baseColor.z - 0.08f, 0.0f),
         1.0f);
 
-    ImGui::PushStyleColor(ImGuiCol_Button, baseColor);
+    const ImVec4 buttonColor = selected
+        ? ImVec4((std::min)(baseColor.x + 0.18f, 1.0f), (std::min)(baseColor.y + 0.18f, 1.0f), (std::min)(baseColor.z + 0.18f, 1.0f), 1.0f)
+        : baseColor;
+    ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.949f, 0.957f, 0.965f, 1.0f));
@@ -1821,6 +1854,49 @@ void drawViewportOverlay(VtkViewer& viewer,
                     resultsTools->clipAxis = 2;
                 }
             }
+        }
+
+        if (resultsTools != nullptr) {
+            ImGui::PushID("results_symmetry");
+            ImGui::TextDisabled("Mirror");
+            if (resultsTools->is3DFrame) {
+                const char* mirrorTips[3] = {
+                    "Reflect across XY (Z = coordinate). Signed component colors retain source values.",
+                    "Reflect across XZ (Y = coordinate). Signed component colors retain source values.",
+                    "Reflect across YZ (X = coordinate). Signed component colors retain source values."};
+                const char* names[3] = {"XY", "XZ", "YZ"};
+                bool* active[3] = {&resultsTools->symmetryXY, &resultsTools->symmetryXZ, &resultsTools->symmetryYZ};
+                for (int i = 0; i < 3; ++i) {
+                    ImGui::SameLine();
+                    if (drawAxisButton(names[i], ImVec4(0.42f, 0.54f, 0.72f, 1.0f), *active[i])) *active[i] = !*active[i];
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", mirrorTips[i]);
+                }
+                if (resultsTools->symmetryXY || resultsTools->symmetryXZ || resultsTools->symmetryYZ) {
+                    const char* labels[3] = {"X##mirror", "Y##mirror", "Z##mirror"};
+                    for (int axis = 0; axis < 3; ++axis) {
+                        ImGui::SameLine(); ImGui::SetNextItemWidth(65.0f);
+                        ImGui::DragScalar(labels[axis], ImGuiDataType_Double, &resultsTools->symmetryCoordinates[axis], 0.05f, nullptr, nullptr, "%.3f");
+                    }
+                }
+            } else {
+                const char* tips[2] = {"Reflect across the X axis (flip Y). Signed component colors retain source values.",
+                                       "Reflect across the Y axis (flip X). Signed component colors retain source values."};
+                ImGui::SameLine();
+                if (drawAxisButton("X", ImVec4(0.70f, 0.24f, 0.24f, 1.0f), resultsTools->symmetryAboutX)) resultsTools->symmetryAboutX = !resultsTools->symmetryAboutX;
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tips[0]);
+                ImGui::SameLine();
+                if (drawAxisButton("Y", ImVec4(0.22f, 0.58f, 0.28f, 1.0f), resultsTools->symmetryAboutY)) resultsTools->symmetryAboutY = !resultsTools->symmetryAboutY;
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tips[1]);
+                if (resultsTools->symmetryAboutX) {
+                    ImGui::SameLine(); ImGui::SetNextItemWidth(72.0f);
+                    ImGui::DragScalar("Y##mirror2d_x", ImGuiDataType_Double, &resultsTools->symmetryCoordinates[1], 0.05f, nullptr, nullptr, "%.3f");
+                }
+                if (resultsTools->symmetryAboutY) {
+                    ImGui::SameLine(); ImGui::SetNextItemWidth(72.0f);
+                    ImGui::DragScalar("X##mirror2d_y", ImGuiDataType_Double, &resultsTools->symmetryCoordinates[0], 0.05f, nullptr, nullptr, "%.3f");
+                }
+            }
+            ImGui::PopID();
         }
 
         drawOverlaySeparator();
@@ -3433,12 +3509,14 @@ int main(int argc, char* argv[])
 
                   applyResultsToolState(editor, vtkViewer_res, resultsToolState);
                   syncResultsClipTools(vtkViewer_res, resultsToolState, activeFrame);
+                  syncResultsSymmetry(vtkViewer_res, resultsToolState, activeFrame);
               } else {
                   resultsToolState.is3DFrame = false;
                   resultsToolState.clipEnabled = false;
                   resultsToolState.transparencyControlsVisible = false;
                   resultsToolState.surfaceOpacity = 1.0f;
                   detachResultsClipTools(vtkViewer_res, resultsToolState);
+                  vtkViewer_res.clearSymmetryExcept({});
               }
               // Render del viewer
               vtkViewer_res.render();

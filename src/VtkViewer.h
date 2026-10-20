@@ -20,6 +20,9 @@
 #include <vtkGenericRenderWindowInteractor.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
+#include <vtkMatrix4x4.h>
+#include <map>
+#include <vector>
 
 
 //#include <vtkArrowSource.h>
@@ -79,6 +82,12 @@ private:
   bool globalOriginSelected = false;
   
   vtkSmartPointer<vtkActor> currentActor = nullptr;
+  struct SymmetryActors {
+    unsigned int axisMask = 0;
+    std::array<double, 3> planeCoordinates = {0.0, 0.0, 0.0};
+    std::vector<std::pair<unsigned int, vtkSmartPointer<vtkActor>>> actors;
+  };
+  std::map<vtkActor*, SymmetryActors> symmetryActors;
 
 
 
@@ -208,6 +217,12 @@ public:
   }
 
   vtkSmartPointer<vtkActor> getCurrentActor(){return currentActor;}
+
+  // Axis mask uses X=1, Y=2, Z=4. Every selected axis creates a reflection;
+  // combinations create the corresponding reflected copies as well.
+  void setSymmetry(vtkActor* source, unsigned int axisMask, const std::array<double, 3>& planeCoordinates);
+  void clearSymmetry(vtkActor* source);
+  void clearSymmetryExcept(const std::vector<vtkActor*>& sources);
 
 
 
