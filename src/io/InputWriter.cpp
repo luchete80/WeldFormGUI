@@ -661,6 +661,7 @@ bool InputWriter::writeToFile(std::string fname) {
   const ContactProperties &contact = m_model->contactProps();
   json cont;
   cont["auto"] = contact.autoPenalty;
+  cont["contactNormalMode"] = contact.unilateralContact ? "unilateral" : "legacy";
   cont["autoFactor"] = contact.autoFactor;
   cont["contactActivationRamp"] = contact.contactActivationRamp;
   cont["contactActivationRampWidth"] = contact.contactActivationRampWidth;
@@ -674,6 +675,14 @@ bool InputWriter::writeToFile(std::string fname) {
   cont["maxPenetRatio"] = contact.maxPenetRatio;
   cont["penaltyFactor"] = contact.penaltyFactor;
   cont["useGapPenalty"] = contact.useGapPenalty;
+  if (contact.unilateralContact) {
+    cont["maxPenetRatio"] = 0.05;
+    cont["penaltyFactor"] = 20.0;
+    cont["useGapPenalty"] = true;
+    cont["gapPenaltyScale"] = 2.0;
+    cont["fricCoeffStatic"] = 0.3;
+    cont["frictionRegularizationVelocity"] = 0.0005;
+  }
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back(cont);
   appendNodeSets(m_json, m_model);
@@ -994,6 +1003,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   const ContactProperties &contact = m_model->contactProps();
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
+    {"contactNormalMode", contact.unilateralContact ? "unilateral" : "legacy"},
     {"auto", contact.autoPenalty},
     {"autoFactor", contact.autoFactor},
     {"contactActivationRamp", contact.contactActivationRamp},
@@ -1009,6 +1019,15 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     {"penaltyFactor", contact.penaltyFactor},
     {"useGapPenalty", contact.useGapPenalty}
   });
+  if (contact.unilateralContact) {
+    auto& inputContact = m_json["Contact"][0];
+    inputContact["maxPenetRatio"] = 0.05;
+    inputContact["penaltyFactor"] = 20.0;
+    inputContact["useGapPenalty"] = true;
+    inputContact["gapPenaltyScale"] = 2.0;
+    inputContact["fricCoeffStatic"] = 0.3;
+    inputContact["frictionRegularizationVelocity"] = 0.0005;
+  }
   appendNodeSets(m_json, m_model);
 
   m_json["Amplitudes"] = json::array();

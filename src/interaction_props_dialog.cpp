@@ -38,6 +38,11 @@ void InteractionPropsDialog::Draw()
 
   ContactProperties &contact = m_model->contactProps();
 
+  const char* contactModes[] = {"Legacy contact", "Unilateral contact"};
+  int contactMode = contact.unilateralContact ? 1 : 0;
+  if (ImGui::Combo("Contact mode", &contactMode, contactModes, 2))
+    contact.unilateralContact = contactMode == 1;
+
   ImGui::InputInt("Diagnostic Level (0-2)", &contact.diagnosticLevel);
   contact.diagnosticLevel = std::max(0, std::min(2, contact.diagnosticLevel));
   ImGui::InputDouble("Static Friction", &contact.fricCoeffStatic, 0.01, 0.1, "%.4f");

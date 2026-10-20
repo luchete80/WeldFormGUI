@@ -177,6 +177,7 @@ bool ModelWriter::writeToFile(std::string fname){
 
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back({
+    {"contactNormalMode", m_model.contactProps().unilateralContact ? "unilateral" : "legacy"},
     {"auto", m_model.contactProps().autoPenalty},
     {"autoFactor", m_model.contactProps().autoFactor},
     {"contactActivationRamp", m_model.contactProps().contactActivationRamp},

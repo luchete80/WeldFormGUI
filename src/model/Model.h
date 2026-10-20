@@ -46,6 +46,8 @@ enum TwoDMeshGenerator {
 };
 
 struct ContactProperties {
+  // Legacy contact remains the default for existing models and projects.
+  bool unilateralContact = false;
   bool autoPenalty = false;
   double autoFactor = 0.5;
   int diagnosticLevel = 0;

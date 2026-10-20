@@ -127,6 +127,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
     if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
         const auto &contact = j["Contact"][0];
         ContactProperties &props = contactProps;
+        props.unilateralContact = contact.value("contactNormalMode", std::string("legacy")) == "unilateral";
         props.autoPenalty = contact.value("auto", contact.value("autoPenalty", props.autoPenalty));
         props.autoFactor = contact.value("autoFactor", props.autoFactor);
         props.diagnosticLevel = std::max(0, std::min(2,
