@@ -47,6 +47,9 @@ public:
     for (std::uint64_t sequence = 1; sequence <= 100000; ++sequence) {
       const fs::path candidate = parent / (".wf_" + stem + "_generation_" + std::to_string(sequence));
       ec.clear();
+      const bool candidateExists = fs::exists(candidate, ec);
+      if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
+      if (!candidateExists) continue;
       if (fs::is_directory(candidate, ec)) newestSequence = sequence;
       else if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
     }
