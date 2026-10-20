@@ -502,32 +502,43 @@ void testMaterialDecisionFingerprintAndDiscardPolicy() {
         "explicit discard clears element values and records the discard decision");
 }
 
-void testExportGenerationIsExclusiveAndCleansOnlyOwnedDirectory() {
+void testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure() {
   namespace fs = std::filesystem;
   const auto root = fs::temp_directory_path() /
       ("wf_export_generation_" + std::to_string(
           std::chrono::steady_clock::now().time_since_epoch().count()));
   fs::create_directories(root);
-  const auto preexisting = root / ".wf_case_generation_1";
-  fs::create_directory(preexisting);
-  {
-    std::ofstream marker(preexisting / "keep.txt");
-    marker << "unrelated";
-  }
   fs::path owned;
   {
     ExportGenerationDirectory generation;
     std::string diagnostic;
     check(generation.create(root, "case", &diagnostic),
-          "exclusive generation allocation succeeds: " + diagnostic);
+          "generation allocation succeeds: " + diagnostic);
     owned = generation.path();
-    check(owned != preexisting && fs::is_directory(owned),
-          "generation allocation never reuses an existing directory");
+    check(owned == root / ".wf_case_generation_1" && fs::is_directory(owned),
+          "first export uses the stable generation directory");
     std::ofstream staged(owned / "partial.txt");
     staged << "discard on failure";
   }
-  check(!fs::exists(owned) && fs::exists(preexisting / "keep.txt"),
-        "failed generation cleanup removes only the directory it created");
+  check(!fs::exists(owned), "failed first export removes only the directory it created");
+  fs::create_directories(owned);
+  {
+    std::ofstream previous(owned / "old_mesh.bdf");
+    previous << "old export";
+  }
+  {
+    ExportGenerationDirectory generation;
+    std::string diagnostic;
+    check(generation.create(root, "case", &diagnostic),
+          "subsequent export reuses generation directory: " + diagnostic);
+    check(generation.path() == owned && fs::is_empty(owned),
+          "subsequent export clears stale resources in the stable directory");
+    std::ofstream current(generation.path() / "case_part_1.bdf");
+    current << "current export";
+    generation.retain();
+  }
+  check(fs::exists(owned / "case_part_1.bdf"),
+        "successful export retains the resource at the stable filename");
 
   const auto published = root / "input.json";
   {
@@ -981,7 +992,7 @@ int main() {
     testInitialStateSha256KnownVectors();
     testInitialStatePackageUsesWrittenSparseEidsAndBdfHash();
     testMaterialDecisionFingerprintAndDiscardPolicy();
-    testExportGenerationIsExclusiveAndCleansOnlyOwnedDirectory();
+    testExportGenerationReusesDirectoryAndCleansNewDirectoryOnFailure();
     testSecondPieceFailurePreservesPublishedReferenceAndCleansGeneration();
     testInputSidecarRoundTripRelativeHashAndInlinePersistence();
     testTopologySnapshotPreservesTransformsAndBlocksEdits();

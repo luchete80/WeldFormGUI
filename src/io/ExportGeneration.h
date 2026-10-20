@@ -40,22 +40,37 @@ public:
     std::error_code ec;
     fs::create_directories(parent, ec);
     if (ec) return fail("Cannot create export directory parent: " + ec.message());
+    // Reuse the newest generation directory for this export stem. Keeping its
+    // name stable prevents every save from leaving another resource package.
+    fs::path candidate;
+    std::uint64_t newestSequence = 0;
     for (std::uint64_t sequence = 1; sequence <= 100000; ++sequence) {
       const fs::path candidate = parent / (".wf_" + stem + "_generation_" + std::to_string(sequence));
       ec.clear();
-      if (fs::create_directory(candidate, ec)) {
-        m_path = candidate;
-        m_owned = true;
-        if (diagnostic != nullptr) diagnostic->clear();
-        return true;
-      }
-      std::error_code existsError;
-      const bool alreadyExists = fs::exists(candidate, existsError);
-      if (alreadyExists && !existsError) continue;
-      if (ec) return fail("Cannot create exclusive export generation directory: " + ec.message());
-      return fail("Cannot create exclusive export generation directory.");
+      if (fs::is_directory(candidate, ec)) newestSequence = sequence;
+      else if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
     }
-    return fail("No unused export generation directory name is available.");
+    if (newestSequence == 0) newestSequence = 1;
+    candidate = parent / (".wf_" + stem + "_generation_" + std::to_string(newestSequence));
+    bool created = false;
+    ec.clear();
+    if (!fs::exists(candidate, ec)) {
+      ec.clear();
+      if (!fs::create_directory(candidate, ec))
+        return fail("Cannot create export generation directory: " + ec.message());
+      created = true;
+    } else {
+      if (ec) return fail("Cannot inspect export generation directory: " + ec.message());
+      if (!fs::is_directory(candidate, ec) || ec)
+        return fail("Export generation path exists but is not a directory.");
+      for (fs::directory_iterator it(candidate, ec), end; !ec && it != end; it.increment(ec))
+        fs::remove_all(it->path(), ec);
+      if (ec) return fail("Cannot clear export generation directory: " + ec.message());
+    }
+    m_path = candidate;
+    m_owned = created;
+    if (diagnostic != nullptr) diagnostic->clear();
+    return true;
   }
 
   const std::filesystem::path& path() const { return m_path; }
