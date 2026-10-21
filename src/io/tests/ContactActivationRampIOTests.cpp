@@ -245,6 +245,73 @@ void testThermalCouplingPersistence(const fs::path& directory)
           "invalid direct plHeatFrac state must block input writing");
 }
 
+void testUnilateralContactExportPreservesSettings(const fs::path& directory)
+{
+  const fs::path sourcePath = directory / "contact_source.wfinput";
+  {
+    std::ofstream source(sourcePath);
+    source << R"({"Configuration":{"domType":"3D"},"Contact":[{}]})";
+  }
+
+  struct ContactCase {
+    double penaltyFactor;
+    bool useGapPenalty;
+    double gapPenaltyScale;
+    double fricCoeffStatic;
+    double frictionRegularizationVelocity;
+  };
+  const ContactCase cases[] = {
+    {50.0, false, 1.0, 0.17, 0.0013},
+    {37.0, true, 1.4, 0.23, 0.0021}
+  };
+
+  for (int modeIndex = 0; modeIndex < 2; ++modeIndex) {
+    const bool unilateral = modeIndex == 1;
+    for (int formulationIndex = 0; formulationIndex < 2; ++formulationIndex) {
+      const bool implicit = formulationIndex == 1;
+      for (std::size_t index = 0; index < sizeof(cases) / sizeof(cases[0]); ++index) {
+        Model model;
+        InputReader reader(&model);
+        require(reader.readFromFile(sourcePath.string()), "contact source input should load");
+        ContactProperties& contact = model.contactProps();
+        contact.unilateralContact = unilateral;
+        contact.autoPenalty = false;
+        contact.penaltyFactor = cases[index].penaltyFactor;
+        contact.useGapPenalty = cases[index].useGapPenalty;
+        contact.gapPenaltyScale = cases[index].gapPenaltyScale;
+        contact.fricCoeffStatic = cases[index].fricCoeffStatic;
+        contact.frictionRegularizationVelocity = cases[index].frictionRegularizationVelocity;
+        if (implicit) {
+          require(model.getStepCount() > 0, "contact source input should provide a step");
+          model.getStep(0)->setStepType(ImplicitStep);
+        }
+
+        const std::string mode = unilateral ? "unilateral" : "legacy";
+        const std::string formulation = implicit ? "implicit" : "explicit";
+        const fs::path outputPath = directory /
+            ("contact_" + mode + "_" + formulation + "_" + std::to_string(index) + ".wfinput");
+        InputWriter writer(&model);
+        require(writer.writeToFile(outputPath.string()), "contact input should write");
+        const json output = readJson(outputPath);
+        const json& written = output["Contact"][0];
+        require(written["contactNormalMode"].get<std::string>() == mode,
+                "contact mode must be preserved in exported input");
+        require(std::abs(written["penaltyFactor"].get<double>() - cases[index].penaltyFactor) < 1e-15,
+                "penalty factor must be preserved in exported input");
+        require(written["useGapPenalty"].get<bool>() == cases[index].useGapPenalty,
+                "gap penalty flag must be preserved in exported input");
+        require(std::abs(written["gapPenaltyScale"].get<double>() - cases[index].gapPenaltyScale) < 1e-15,
+                "gap penalty scale must be preserved in exported input");
+        require(std::abs(written["fricCoeffStatic"].get<double>() - cases[index].fricCoeffStatic) < 1e-15,
+                "static friction must be preserved in exported input");
+        require(std::abs(written["frictionRegularizationVelocity"].get<double>() -
+                         cases[index].frictionRegularizationVelocity) < 1e-15,
+                "friction regularization velocity must be preserved in exported input");
+      }
+    }
+  }
+}
+
 int main()
 {
   const auto nonce = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -253,6 +320,7 @@ int main()
   try {
     fs::create_directories(directory);
     testDefaultsAndLegacyInput(directory);
+    testUnilateralContactExportPreservesSettings(directory);
     testEnabledRoundTripAndPreservation(directory);
     testInvalidWidthsBlockWrites(directory);
     testThermalCouplingPersistence(directory);
