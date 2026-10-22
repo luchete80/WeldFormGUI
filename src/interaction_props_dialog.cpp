@@ -45,6 +45,23 @@ void InteractionPropsDialog::Draw()
 
   ImGui::InputInt("Diagnostic Level (0-2)", &contact.diagnosticLevel);
   contact.diagnosticLevel = std::max(0, std::min(2, contact.diagnosticLevel));
+  bool unilateralDiagnostics = contact.unilateralDiagnosticLevel != 0;
+  ImGui::Checkbox("Unilateral contact diagnostics", &unilateralDiagnostics);
+  contact.unilateralDiagnosticLevel = unilateralDiagnostics ? 1 : 0;
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("Enables diagnostic output for unilateral contact. The setting is retained when legacy contact is selected.");
+  }
+  ImGui::BeginDisabled(!unilateralDiagnostics);
+  ImGui::InputInt("Tracked contact points (0-64)", &contact.unilateralDiagnosticTrackedPoints);
+  contact.unilateralDiagnosticTrackedPoints =
+      std::max(0, std::min(64, contact.unilateralDiagnosticTrackedPoints));
+  ImGui::EndDisabled();
+  const char* frictionModes[] = {"shear", "shear/coulomb"};
+  int frictionMode = contact.frictionModel == "coulomb_tresca" ? 1 : 0;
+  if (ImGui::Combo("Friction model", &frictionMode, frictionModes, 2))
+    contact.frictionModel = frictionMode == 1 ? "coulomb_tresca" : "shear";
+  if (frictionMode == 1)
+    ImGui::InputDouble("Coulomb friction coeff", &contact.coulombCoefficient, 0.01, 0.1, "%.4f");
   ImGui::InputDouble("Static Friction", &contact.fricCoeffStatic, 0.01, 0.1, "%.4f");
   ImGui::InputDouble("Friction Reg. Vel. (implicit solver)",
                      &contact.frictionRegularizationVelocity,

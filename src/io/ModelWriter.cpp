@@ -183,6 +183,9 @@ bool ModelWriter::writeToFile(std::string fname){
     {"contactActivationRamp", m_model.contactProps().contactActivationRamp},
     {"contactActivationRampWidth", m_model.contactProps().contactActivationRampWidth},
     {"diagnosticLevel", m_model.contactProps().diagnosticLevel},
+    {"unilateralDiagnosticLevel", m_model.contactProps().unilateralDiagnosticLevel},
+    {"unilateralDiagnosticTrackedPoints", m_model.contactProps().unilateralDiagnosticTrackedPoints},
+    {"frictionModel", m_model.contactProps().frictionModel},
     {"fricCoeffStatic", m_model.contactProps().fricCoeffStatic},
     {"frictionRegularizationVelocity", m_model.contactProps().frictionRegularizationVelocity},
     {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},
@@ -193,6 +196,8 @@ bool ModelWriter::writeToFile(std::string fname){
     {"penaltyFactor", m_model.contactProps().penaltyFactor},
     {"useGapPenalty", m_model.contactProps().useGapPenalty}
   });
+  if (m_model.contactProps().frictionModel == "coulomb_tresca")
+    m_json["Contact"][0]["coulombCoefficient"] = m_model.contactProps().coulombCoefficient;
   
   //SHOULD BE AT SPH
   //m_json["Configuration"]["hFactor"] = 1.2;

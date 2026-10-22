@@ -312,15 +312,218 @@ void testUnilateralContactExportPreservesSettings(const fs::path& directory)
   }
 }
 
-int main()
+void testUnilateralDiagnosticSettings(const fs::path& directory)
+{
+  Model fresh;
+  require(fresh.contactProps().unilateralDiagnosticLevel == 0,
+          "unilateral diagnostic level must default to disabled");
+  require(fresh.contactProps().unilateralDiagnosticTrackedPoints == 8,
+          "unilateral diagnostic tracked-point count must default to 8");
+
+  const fs::path source = directory / "unilateral_diagnostic_source.wfinput";
+  {
+    std::ofstream input(source);
+    input << R"({"Configuration":{"domType":"3D"},"Contact":[{}]})";
+  }
+  Model model;
+  InputReader reader(&model);
+  require(reader.readFromFile(source.string()), "unilateral diagnostic source should load");
+  model.contactProps().unilateralContact = false;
+  model.contactProps().unilateralDiagnosticLevel = 1;
+  model.contactProps().unilateralDiagnosticTrackedPoints = 23;
+
+  for (bool implicit : {false, true}) {
+    model.getStep(0)->setStepType(implicit ? ImplicitStep : ExplicitStep);
+    const fs::path output = directory /
+        (implicit ? "unilateral_diagnostic_implicit.wfinput" : "unilateral_diagnostic_explicit.wfinput");
+    InputWriter writer(&model);
+    require(writer.writeToFile(output.string()), "unilateral diagnostic input should write");
+    const json contact = readJson(output)["Contact"][0];
+    require(contact["unilateralDiagnosticLevel"] == 1 &&
+                contact["unilateralDiagnosticTrackedPoints"] == 23,
+            "both input writer paths must preserve unilateral diagnostic settings in legacy mode");
+    Model imported;
+    InputReader inputReader(&imported);
+    require(inputReader.readFromFile(output.string()), "unilateral diagnostic input should round-trip");
+    require(imported.contactProps().unilateralDiagnosticLevel == 1 &&
+                imported.contactProps().unilateralDiagnosticTrackedPoints == 23,
+            "input reader must preserve unilateral diagnostic settings");
+  }
+
+  const fs::path project = directory / "unilateral_diagnostic.wfmodel";
+  ModelWriter modelWriter(model);
+  require(modelWriter.writeToFile(project.string()), "unilateral diagnostic project should write");
+  const json projectContact = readJson(project)["Contact"][0];
+  require(projectContact["unilateralDiagnosticLevel"] == 1 &&
+              projectContact["unilateralDiagnosticTrackedPoints"] == 23,
+          "project writer must preserve unilateral diagnostic settings in legacy mode");
+  Model projectRoundTrip;
+  ModelReader projectReader(&projectRoundTrip);
+  require(projectReader.readFromFile(project.string()), "unilateral diagnostic project should round-trip");
+  require(projectRoundTrip.contactProps().unilateralDiagnosticLevel == 1 &&
+              projectRoundTrip.contactProps().unilateralDiagnosticTrackedPoints == 23,
+          "project reader must preserve unilateral diagnostic settings");
+
+  const fs::path contactless = directory / "unilateral_diagnostic_contactless.wfinput";
+  {
+    std::ofstream input(contactless);
+    input << R"({"Configuration":{"domType":"3D"}})";
+  }
+  model.contactProps().unilateralDiagnosticLevel = 1;
+  model.contactProps().unilateralDiagnosticTrackedPoints = 41;
+  require(reader.readFromFile(contactless.string()), "contactless input should load into a reused model");
+  require(model.contactProps().unilateralDiagnosticLevel == 0 &&
+              model.contactProps().unilateralDiagnosticTrackedPoints == 8,
+          "input reader must reset unilateral diagnostic defaults when Contact is absent");
+  const fs::path contactlessProject = directory / "unilateral_diagnostic_contactless.wfmodel";
+  {
+    std::ofstream projectFile(contactlessProject);
+    projectFile << R"({"Configuration":{"analysisType":"Solid3D"}})";
+  }
+  projectRoundTrip.contactProps().unilateralDiagnosticLevel = 1;
+  projectRoundTrip.contactProps().unilateralDiagnosticTrackedPoints = 41;
+  require(projectReader.readFromFile(contactlessProject.string()),
+          "contactless project should load into a reused model");
+  require(projectRoundTrip.contactProps().unilateralDiagnosticLevel == 0 &&
+              projectRoundTrip.contactProps().unilateralDiagnosticTrackedPoints == 8,
+          "project reader must reset unilateral diagnostic defaults when Contact is absent");
+
+  const fs::path invalidInput = directory / "unilateral_diagnostic_clamp.wfinput";
+  {
+    std::ofstream input(invalidInput);
+    input << R"({"Configuration":{"domType":"3D"},"Contact":[{"unilateralDiagnosticLevel":9,"unilateralDiagnosticTrackedPoints":999}]})";
+  }
+  Model clamped;
+  InputReader clampReader(&clamped);
+  require(clampReader.readFromFile(invalidInput.string()), "out-of-range diagnostic input should load");
+  require(clamped.contactProps().unilateralDiagnosticLevel == 1 &&
+              clamped.contactProps().unilateralDiagnosticTrackedPoints == 64,
+          "input reader must clamp unilateral diagnostic values to their supported ranges");
+
+  const fs::path invalidProject = directory / "unilateral_diagnostic_clamp.wfmodel";
+  {
+    std::ofstream projectFile(invalidProject);
+    projectFile << R"({"Configuration":{"analysisType":"Solid3D"},"Contact":[{"unilateralDiagnosticLevel":-9,"unilateralDiagnosticTrackedPoints":-20}]})";
+  }
+  Model clampedProject;
+  ModelReader clampProjectReader(&clampedProject);
+  require(clampProjectReader.readFromFile(invalidProject.string()), "out-of-range diagnostic project should load");
+  require(clampedProject.contactProps().unilateralDiagnosticLevel == 0 &&
+              clampedProject.contactProps().unilateralDiagnosticTrackedPoints == 0,
+          "project reader must clamp negative unilateral diagnostic values to zero");
+}
+
+void testFrictionModels(const fs::path& directory)
+{
+  Model model;
+  require(model.contactProps().frictionModel == "shear", "new models must use shear friction");
+  require(model.contactProps().coulombCoefficient == 0.3, "default Coulomb coefficient must be 0.3");
+  const fs::path source = directory / "friction_source.wfinput";
+  {
+    std::ofstream input(source);
+    input << R"({"Configuration":{"domType":"3D"},"Contact":[{}]})";
+  }
+  InputReader reader(&model);
+  require(reader.readFromFile(source.string()), "friction source should load");
+  InputWriter reusedInputWriter(&model);
+  ModelWriter reusedModelWriter(model);
+  const fs::path reusedCombinedInput = directory / "reused_combined.wfinput";
+  const fs::path reusedShearInput = directory / "reused_shear.wfinput";
+  const fs::path reusedCombinedModel = directory / "reused_combined.wfmodel";
+  const fs::path reusedShearModel = directory / "reused_shear.wfmodel";
+  model.contactProps().frictionModel = "coulomb_tresca";
+  require(reusedInputWriter.writeToFile(reusedCombinedInput.string()), "reused input writer combined output should write");
+  require(reusedModelWriter.writeToFile(reusedCombinedModel.string()), "reused model writer combined output should write");
+  model.contactProps().frictionModel = "shear";
+  require(reusedInputWriter.writeToFile(reusedShearInput.string()), "reused input writer shear output should write");
+  require(reusedModelWriter.writeToFile(reusedShearModel.string()), "reused model writer shear output should write");
+  require(readJson(reusedCombinedInput)["Contact"][0].contains("coulombCoefficient"),
+          "reused input writer must emit Coulomb coefficient in combined mode");
+  require(!readJson(reusedShearInput)["Contact"][0].contains("coulombCoefficient"),
+          "reused input writer must clear Coulomb coefficient in shear mode");
+  require(readJson(reusedCombinedModel)["Contact"][0].contains("coulombCoefficient"),
+          "reused project writer must emit Coulomb coefficient in combined mode");
+  require(!readJson(reusedShearModel)["Contact"][0].contains("coulombCoefficient"),
+          "reused project writer must clear Coulomb coefficient in shear mode");
+  for (const std::string mode : {"shear", "coulomb_tresca"}) {
+    model.contactProps().frictionModel = mode;
+    model.contactProps().fricCoeffStatic = 0.5;
+    model.contactProps().coulombCoefficient = 0.3;
+    for (bool implicit : {false, true}) {
+      model.getStep(0)->setStepType(implicit ? ImplicitStep : ExplicitStep);
+      const fs::path output = directory / (mode + (implicit ? "_implicit" : "_explicit") + ".wfinput");
+      InputWriter writer(&model);
+      require(writer.writeToFile(output.string()), "friction input should write");
+      const json contact = readJson(output)["Contact"][0];
+      require(contact["frictionModel"] == mode && contact["fricCoeffStatic"] == 0.5,
+              "both input writers must preserve friction model and static friction");
+      require((mode == "coulomb_tresca") == contact.contains("coulombCoefficient"),
+              "input writers must only emit Coulomb coefficient for combined friction");
+      if (mode == "coulomb_tresca")
+        require(contact["coulombCoefficient"] == 0.3, "combined friction must preserve Coulomb coefficient");
+      Model imported;
+      InputReader inputReader(&imported);
+      require(inputReader.readFromFile(output.string()), "friction input should round-trip");
+      require(imported.contactProps().frictionModel == mode &&
+                  imported.contactProps().fricCoeffStatic == 0.5 &&
+                  imported.contactProps().coulombCoefficient == 0.3,
+              "input reader must preserve friction settings");
+    }
+    const fs::path output = directory / (mode + ".wfmodel");
+    ModelWriter writer(model);
+    require(writer.writeToFile(output.string()), "friction model should write");
+    const json contact = readJson(output)["Contact"][0];
+    require(contact["frictionModel"] == mode && contact["fricCoeffStatic"] == 0.5,
+            "project writer must preserve friction model and static friction");
+    require((mode == "coulomb_tresca") == contact.contains("coulombCoefficient"),
+            "project writer must only emit Coulomb coefficient for combined friction");
+    if (mode == "coulomb_tresca")
+      require(contact["coulombCoefficient"] == 0.3, "combined friction must preserve Coulomb coefficient");
+    Model imported;
+    ModelReader modelReader(&imported);
+    require(modelReader.readFromFile(output.string()), "friction model should round-trip");
+    require(imported.contactProps().frictionModel == mode &&
+                imported.contactProps().fricCoeffStatic == 0.5 &&
+                imported.contactProps().coulombCoefficient == 0.3,
+            "project reader must preserve friction settings");
+  }
+  for (bool withContact : {false, true}) {
+    const fs::path legacy = directory / "friction_legacy.json";
+    {
+      std::ofstream output(legacy);
+      output << (withContact ? R"({"Contact":[{}]})" : "{}");
+    }
+    model.contactProps().frictionModel = "coulomb_tresca";
+    model.contactProps().coulombCoefficient = 0.8;
+    require(reader.readFromFile(legacy.string()), "legacy input should load into reused model");
+    require(model.contactProps().frictionModel == "shear" && model.contactProps().coulombCoefficient == 0.3,
+            "legacy input must reset friction defaults even without Contact");
+    model.contactProps().frictionModel = "coulomb_tresca";
+    model.contactProps().coulombCoefficient = 0.8;
+    ModelReader modelReader(&model);
+    require(modelReader.readFromFile(legacy.string()), "legacy project should load into reused model");
+    require(model.contactProps().frictionModel == "shear" && model.contactProps().coulombCoefficient == 0.3,
+            "legacy project must reset friction defaults even without Contact");
+  }
+}
+
+int main(int argc, char** argv)
 {
   const auto nonce = std::chrono::high_resolution_clock::now().time_since_epoch().count();
   const fs::path directory = fs::temp_directory_path() /
       ("wfg_contact_activation_ramp_" + std::to_string(nonce));
   try {
     fs::create_directories(directory);
+    if (argc == 2 && std::string(argv[1]) == "--friction-only") {
+      testFrictionModels(directory);
+      fs::remove_all(directory);
+      std::cout << "Friction model IO tests passed.\n";
+      return 0;
+    }
     testDefaultsAndLegacyInput(directory);
+    testFrictionModels(directory);
     testUnilateralContactExportPreservesSettings(directory);
+    testUnilateralDiagnosticSettings(directory);
     testEnabledRoundTripAndPreservation(directory);
     testInvalidWidthsBlockWrites(directory);
     testThermalCouplingPersistence(directory);

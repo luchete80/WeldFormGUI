@@ -122,8 +122,12 @@ bool ModelReader::readFromFile(const std::string& fname) {
     }
 
     ContactProperties &contactProps = m_model->contactProps();
+    contactProps.frictionModel = "shear";
+    contactProps.coulombCoefficient = 0.3;
     contactProps.contactActivationRamp = false;
     contactProps.contactActivationRampWidth = 0.001;
+    contactProps.unilateralDiagnosticLevel = 0;
+    contactProps.unilateralDiagnosticTrackedPoints = 8;
     if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
         const auto &contact = j["Contact"][0];
         ContactProperties &props = contactProps;
@@ -132,6 +136,12 @@ bool ModelReader::readFromFile(const std::string& fname) {
         props.autoFactor = contact.value("autoFactor", props.autoFactor);
         props.diagnosticLevel = std::max(0, std::min(2,
             contact.value("diagnosticLevel", props.diagnosticLevel)));
+        props.unilateralDiagnosticLevel = std::max(0, std::min(1,
+            contact.value("unilateralDiagnosticLevel", props.unilateralDiagnosticLevel)));
+        props.unilateralDiagnosticTrackedPoints = std::max(0, std::min(64,
+            contact.value("unilateralDiagnosticTrackedPoints", props.unilateralDiagnosticTrackedPoints)));
+        props.frictionModel = contact.value("frictionModel", std::string("shear"));
+        props.coulombCoefficient = contact.value("coulombCoefficient", 0.3);
         props.fricCoeffStatic = contact.value("fricCoeffStatic", props.fricCoeffStatic);
         props.frictionRegularizationVelocity =
             contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);

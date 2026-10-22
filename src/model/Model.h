@@ -51,7 +51,11 @@ struct ContactProperties {
   bool autoPenalty = false;
   double autoFactor = 0.5;
   int diagnosticLevel = 0;
+  int unilateralDiagnosticLevel = 0;
+  int unilateralDiagnosticTrackedPoints = 8;
+  std::string frictionModel = "shear";
   double fricCoeffStatic = 0.0;
+  double coulombCoefficient = 0.3;
   double frictionRegularizationVelocity = 0.0;
   double gapPenaltyScale = 2.0;
   double heatCondCoeff = 0.5;

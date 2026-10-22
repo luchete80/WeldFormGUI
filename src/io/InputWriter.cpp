@@ -666,7 +666,12 @@ bool InputWriter::writeToFile(std::string fname) {
   cont["contactActivationRamp"] = contact.contactActivationRamp;
   cont["contactActivationRampWidth"] = contact.contactActivationRampWidth;
   cont["diagnosticLevel"] = contact.diagnosticLevel;
+  cont["unilateralDiagnosticLevel"] = contact.unilateralDiagnosticLevel;
+  cont["unilateralDiagnosticTrackedPoints"] = contact.unilateralDiagnosticTrackedPoints;
+  cont["frictionModel"] = contact.frictionModel;
   cont["fricCoeffStatic"] = contact.fricCoeffStatic;
+  if (contact.frictionModel == "coulomb_tresca")
+    cont["coulombCoefficient"] = contact.coulombCoefficient;
   cont["frictionRegularizationVelocity"] = contact.frictionRegularizationVelocity;
   cont["gapPenaltyScale"] = contact.gapPenaltyScale;
   cont["heatCondCoeff"] = contact.heatCondCoeff;
@@ -675,13 +680,6 @@ bool InputWriter::writeToFile(std::string fname) {
   cont["maxPenetRatio"] = contact.maxPenetRatio;
   cont["penaltyFactor"] = contact.penaltyFactor;
   cont["useGapPenalty"] = contact.useGapPenalty;
-  if (contact.unilateralContact) {
-    cont["penaltyFactor"] = 20.0;
-    cont["useGapPenalty"] = true;
-    cont["gapPenaltyScale"] = 2.0;
-    cont["fricCoeffStatic"] = 0.3;
-    cont["frictionRegularizationVelocity"] = 0.0005;
-  }
   m_json["Contact"] = json::array();
   m_json["Contact"].push_back(cont);
   appendNodeSets(m_json, m_model);
@@ -1016,6 +1014,9 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     {"contactActivationRamp", contact.contactActivationRamp},
     {"contactActivationRampWidth", contact.contactActivationRampWidth},
     {"diagnosticLevel", contact.diagnosticLevel},
+    {"unilateralDiagnosticLevel", contact.unilateralDiagnosticLevel},
+    {"unilateralDiagnosticTrackedPoints", contact.unilateralDiagnosticTrackedPoints},
+    {"frictionModel", contact.frictionModel},
     {"fricCoeffStatic", contact.fricCoeffStatic},
     {"frictionRegularizationVelocity", contact.frictionRegularizationVelocity},
     {"gapPenaltyScale", contact.gapPenaltyScale},
@@ -1026,14 +1027,8 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     {"penaltyFactor", contact.penaltyFactor},
     {"useGapPenalty", contact.useGapPenalty}
   });
-  if (contact.unilateralContact) {
-    auto& inputContact = m_json["Contact"][0];
-    inputContact["penaltyFactor"] = 20.0;
-    inputContact["useGapPenalty"] = true;
-    inputContact["gapPenaltyScale"] = 2.0;
-    inputContact["fricCoeffStatic"] = 0.3;
-    inputContact["frictionRegularizationVelocity"] = 0.0005;
-  }
+  if (contact.frictionModel == "coulomb_tresca")
+    m_json["Contact"][0]["coulombCoefficient"] = contact.coulombCoefficient;
   appendNodeSets(m_json, m_model);
 
   m_json["Amplitudes"] = json::array();
