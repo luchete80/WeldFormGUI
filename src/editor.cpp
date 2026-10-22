@@ -97,18 +97,26 @@
 //#include "graphics/ModelGizmo.h"
 
 #include <vtkArrowSource.h>
+#include <vtkActor2D.h>
 #include <vtkBillboardTextActor3D.h>
 #include <vtkCell.h>
 #include <vtkCellArray.h>
 #include <vtkCellPicker.h>
 #include <vtkCenterOfMass.h>
+#include <vtkCoordinate.h>
 #include <vtkMapper.h>
 #include <vtkMath.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkPolyDataMapper2D.h>
 #include <vtkProperty.h>
+#include <vtkProperty2D.h>
+#include <vtkSphereSource.h>
+#include <vtkTextActor.h>
 #include <vtkTextProperty.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 
 
 //~ #include <GModel.h>
@@ -5043,6 +5051,138 @@ void Editor::updateBoundaryConditionOverlayForViewer(
 
   vtkSmartPointer<vtkRenderer> renderer = targetViewer->getRenderer();
 
+  const bool rotationCenterPreview =
+      targetViewer == model_viewer && is_model && m_show_bc_dlg_edit &&
+      m_create_bc != 2 && m_bcdlg.m_rotationCenterPreview;
+  const auto addAngularMarker = [&](vtkPolyData* targetPolyData,
+                                    const double center[3],
+                                    const double3& angularVelocity) {
+    if (targetPolyData == nullptr || targetPolyData->GetNumberOfPoints() == 0 ||
+        !std::isfinite(center[0]) ||
+        !std::isfinite(center[1]) || !std::isfinite(center[2]) ||
+        !std::isfinite(angularVelocity.x) || !std::isfinite(angularVelocity.y) ||
+        !std::isfinite(angularVelocity.z)) {
+      return;
+    }
+
+    double bounds[6];
+    targetPolyData->GetBounds(bounds);
+    for (double bound : bounds) {
+      if (!std::isfinite(bound)) return;
+    }
+    if (bounds[0] > bounds[1] || bounds[2] > bounds[3] || bounds[4] > bounds[5]) return;
+    const double dx = bounds[1] - bounds[0];
+    const double dy = bounds[3] - bounds[2];
+    const double dz = bounds[5] - bounds[4];
+    if (!std::isfinite(dx) || !std::isfinite(dy) || !std::isfinite(dz)) return;
+    double arrowLength = std::max(dx, std::max(dy, dz)) * 0.35;
+    if (arrowLength <= 1.0e-12) {
+      arrowLength = std::sqrt(dx * dx + dy * dy + dz * dz) * 0.35;
+    }
+    if (arrowLength <= 1.0e-12) arrowLength = 1.0;
+
+    double direction[3] = {angularVelocity.x, angularVelocity.y, angularVelocity.z};
+    if (vtkMath::Normalize(direction) <= 1.0e-12) {
+      direction[0] = 0.0;
+      direction[1] = 0.0;
+      direction[2] = 1.0;
+    }
+    const auto addWorldOverlay = [&](vtkPolyData* localPolyData, vtkTransform* transform,
+                                     double color[3]) {
+      vtkNew<vtkTransformPolyDataFilter> transformFilter;
+      transformFilter->SetInputData(localPolyData);
+      transformFilter->SetTransform(transform);
+      vtkNew<vtkPolyDataMapper2D> overlayMapper;
+      overlayMapper->SetInputConnection(transformFilter->GetOutputPort());
+      overlayMapper->TransformCoordinateUseDoubleOn();
+      vtkNew<vtkCoordinate> worldCoordinate;
+      worldCoordinate->SetCoordinateSystemToWorld();
+      overlayMapper->SetTransformCoordinate(worldCoordinate);
+      vtkSmartPointer<vtkActor2D> overlayActor = vtkSmartPointer<vtkActor2D>::New();
+      overlayActor->SetMapper(overlayMapper);
+      overlayActor->GetProperty()->SetColor(color);
+      overlayActor->GetProperty()->SetDisplayLocationToForeground();
+      overlayActor->PickableOff();
+      renderer->AddActor2D(overlayActor);
+      overlayActors.push_back(overlayActor);
+    };
+
+    const auto addArrow = [&](double lengthScale) {
+      vtkNew<vtkArrowSource> arrowSource;
+      arrowSource->SetTipLength(0.18 / lengthScale);
+      arrowSource->SetTipRadius(0.20);
+      arrowSource->SetShaftRadius(0.09);
+      arrowSource->SetTipResolution(24);
+      arrowSource->SetShaftResolution(24);
+      arrowSource->Update();
+      vtkSmartPointer<vtkActor> transformActor = vtkSmartPointer<vtkActor>::New();
+      const double thickness = std::max(arrowLength * 0.10, 1.0e-3);
+      transformActor->SetScale(arrowLength * lengthScale, thickness, thickness);
+      transformActor->SetPosition(center[0], center[1], center[2]);
+      const double xAxis[3] = {1.0, 0.0, 0.0};
+      double rotationAxis[3];
+      vtkMath::Cross(xAxis, direction, rotationAxis);
+      const double dotValue = std::max(-1.0, std::min(1.0, vtkMath::Dot(xAxis, direction)));
+      const double axisNorm = vtkMath::Norm(rotationAxis);
+      if (axisNorm > 1.0e-12) {
+        vtkMath::Normalize(rotationAxis);
+        transformActor->RotateWXYZ(vtkMath::DegreesFromRadians(std::acos(dotValue)),
+                                   rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+      } else if (dotValue < 0.0) {
+        transformActor->RotateWXYZ(180.0, 0.0, 1.0, 0.0);
+      }
+      vtkNew<vtkTransform> transform;
+      transform->SetMatrix(transformActor->GetMatrix());
+      double color[3] = {0.1, 0.85, 0.95};
+      addWorldOverlay(arrowSource->GetOutput(), transform, color);
+    };
+    // Two equally sized heads on the same end of the rotation-axis shaft.
+    addArrow(1.0);
+    addArrow(0.78);
+
+    vtkNew<vtkSphereSource> centerSource;
+    centerSource->SetRadius(std::max(arrowLength * 0.025, 1.0e-3));
+    centerSource->SetThetaResolution(16);
+    centerSource->SetPhiResolution(12);
+    centerSource->Update();
+    vtkNew<vtkTransform> centerTransform;
+    centerTransform->Translate(center);
+    double centerColor[3] = {1.0, 0.9, 0.1};
+    addWorldOverlay(centerSource->GetOutput(), centerTransform, centerColor);
+
+    std::ostringstream label;
+    label << "Rotation center = ("
+          << to_string_scientific(center[0], 3) << ", "
+          << to_string_scientific(center[1], 3) << ", "
+          << to_string_scientific(center[2], 3) << ")";
+    vtkSmartPointer<vtkTextActor> textActor = vtkSmartPointer<vtkTextActor>::New();
+    textActor->SetInput(label.str().c_str());
+    renderer->SetWorldPoint(center[0], center[1], center[2] + arrowLength * 0.16, 1.0);
+    renderer->WorldToDisplay();
+    double displayPoint[3];
+    renderer->GetDisplayPoint(displayPoint);
+    if (!std::isfinite(displayPoint[0]) || !std::isfinite(displayPoint[1])) return;
+    textActor->SetDisplayPosition(static_cast<int>(std::lround(displayPoint[0])),
+                                  static_cast<int>(std::lround(displayPoint[1])));
+    textActor->PickableOff();
+    textActor->GetProperty()->SetDisplayLocationToForeground();
+    textActor->GetTextProperty()->SetFontSize(16);
+    textActor->GetTextProperty()->SetColor(0.1, 0.85, 0.95);
+    textActor->GetTextProperty()->SetBold(true);
+    textActor->GetTextProperty()->SetBackgroundColor(0.0, 0.0, 0.0);
+    textActor->GetTextProperty()->SetBackgroundOpacity(0.45);
+    renderer->AddActor(textActor);
+    overlayActors.push_back(textActor);
+  };
+
+  const auto findPartById = [&](int targetId) -> Part* {
+    for (int partIndex = 0; partIndex < m_model->getPartCount(); ++partIndex) {
+      Part* part = m_model->getPart(partIndex);
+      if (part != nullptr && part->getId() == targetId) return part;
+    }
+    return nullptr;
+  };
+
   for (int i = 0; i < m_model->getBCCount(); ++i) {
     Condition* condition = m_model->getBC(i);
     if (condition == nullptr) {
@@ -5137,6 +5277,16 @@ void Editor::updateBoundaryConditionOverlayForViewer(
       overlayActors.push_back(arrowActor);
     }
 
+    BoundaryCondition* boundaryCondition = dynamic_cast<BoundaryCondition*>(condition);
+    if (targetViewer == model_viewer && is_model && boundaryCondition != nullptr &&
+        boundaryCondition->hasAngularMotion()) {
+      if (!(rotationCenterPreview && m_bcdlg.m_editTarget == condition)) {
+        const double3 rotationCenter = boundaryCondition->getRotationCenter();
+        const double markerCenter[3] = {rotationCenter.x, rotationCenter.y, rotationCenter.z};
+        addAngularMarker(targetPolyData, markerCenter, boundaryCondition->getAngularVelocity());
+      }
+    }
+
     if (selected_bc == condition || (includeHoverHighlight && hovered_bc == condition)) {
       vtkNew<vtkPolyDataMapper> surfaceMapper;
       surfaceMapper->SetInputData(targetPolyData);
@@ -5199,6 +5349,15 @@ void Editor::updateBoundaryConditionOverlayForViewer(
       }
     }
   }
+
+  if (rotationCenterPreview && m_bcdlg.m_applyTo == ApplyToPart) {
+    Part* previewPart = findPartById(m_bcdlg.m_targetId);
+    vtkSmartPointer<vtkPolyData> previewPolyData = getBoundaryConditionTargetPolyData(previewPart);
+    const double3 rotationCenter = m_bcdlg.m_rotationCenter;
+    const double previewCenter[3] = {rotationCenter.x, rotationCenter.y, rotationCenter.z};
+    addAngularMarker(previewPolyData, previewCenter, m_bcdlg.m_angularVelocity);
+  }
+
 }
 
 void Editor::updatePartOverlay()

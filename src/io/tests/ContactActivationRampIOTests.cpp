@@ -239,7 +239,7 @@ void testThermalCouplingPersistence(const fs::path& directory)
                      (std::isfinite(value) ? std::max(0.0, std::min(1.0, value)) : 0.9)) < 1e-15,
             "model setter must sanitize invalid plHeatFrac values");
   }
-  modelImported.m_plastic_heat_fraction = -0.1;
+  imported.m_plastic_heat_fraction = -0.1;
   const fs::path invalidOutput = directory / "invalid_thermal.wfinput";
   require(!inputWriter.writeToFile(invalidOutput.string()),
           "invalid direct plHeatFrac state must block input writing");

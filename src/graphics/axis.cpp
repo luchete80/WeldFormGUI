@@ -251,7 +251,15 @@ void Axis::orientCameraToAxis(int axis)
 
   double axisDirection[3] = {0.0, 0.0, 0.0};
   double viewUp[3] = {0.0, 1.0, 0.0};
-  axisDirection[axis] = 1.0;
+  // The orientation marker only exposes the positive ends of its axes. When
+  // the camera is already looking along the selected axis, use the next click
+  // to move to the opposite normal. For all other views keep the usual
+  // positive-axis destination.
+  const double alignment = viewDirection[axis] / distance;
+  const double sign = std::abs(alignment) >= 0.98
+                        ? (alignment > 0.0 ? -1.0 : 1.0)
+                        : 1.0;
+  axisDirection[axis] = sign;
 
   if (axis == 0) {
     viewUp[0] = 0.0; viewUp[1] = 0.0; viewUp[2] = 1.0;

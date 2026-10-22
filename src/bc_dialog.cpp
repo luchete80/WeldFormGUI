@@ -6,6 +6,8 @@
 #include "Part.h"
 #include "Step.h"
 #include "Mesh.h"
+#include "Node.h"
+#include "geom/Geom.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -128,6 +130,38 @@ bool finiteVector(const double3 &value) {
     return std::isfinite(value.x) && std::isfinite(value.y) && std::isfinite(value.z);
 }
 
+bool getPartMassCenter(Part *part, double3 &center, bool &isNodal) {
+    isNodal = false;
+    if (part == nullptr)
+        return false;
+
+    if (Geom *geom = part->getGeom()) {
+        if (!geom->getMassCenter(center.x, center.y, center.z) || !finiteVector(center))
+            return false;
+        return true;
+    }
+
+    Mesh *mesh = part->getMesh();
+    if (mesh == nullptr || mesh->getNodeCount() <= 0)
+        return false;
+
+    center = make_double3(0.0, 0.0, 0.0);
+    for (int i = 0; i < mesh->getNodeCount(); ++i) {
+        Node *node = mesh->getNode(i);
+        if (node == nullptr)
+            return false;
+        center.x += node->getPos(0);
+        center.y += node->getPos(1);
+        center.z += node->getPos(2);
+    }
+    const double inverseCount = 1.0 / static_cast<double>(mesh->getNodeCount());
+    center.x *= inverseCount;
+    center.y *= inverseCount;
+    center.z *= inverseCount;
+    isNodal = true;
+    return finiteVector(center);
+}
+
 }
 
 void BCDialog::resetDialogState() {
@@ -144,6 +178,8 @@ void BCDialog::resetDialogState() {
     m_amplitudeValue = {1.0, 1.0};
     m_activeAmplitudeRow = -1;
     m_angularMotionEnabled = false;
+    m_rotationCenterPreview = false;
+    m_rotationCenterAtCentroid[0] = m_rotationCenterAtCentroid[1] = m_rotationCenterAtCentroid[2] = false;
     m_angularVelocity = make_double3(0.0, 0.0, 0.0);
     m_rotationCenter = make_double3(0.0, 0.0, 0.0);
     m_angularValueType = 0;
@@ -161,6 +197,8 @@ void BCDialog::resetDialogState() {
 
 //// IS DOUBLE ONLY TO MODIDY PTR.
 void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **sel_bc,  DialogMode mode) {
+
+    m_rotationCenterPreview = false;
 
     bool isBoundary = false;
     bool isInitial = false;
@@ -186,6 +224,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     //cout << "sel bc "<<*sel_bc<<endl; 
     
     if (!initialized) {
+        m_rotationCenterAtCentroid[0] = m_rotationCenterAtCentroid[1] = m_rotationCenterAtCentroid[2] = false;
         m_editTarget = *sel_bc;
         m_editingExisting = (m_editTarget != nullptr);
         create = !m_editingExisting;
@@ -548,6 +587,13 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
     const bool angularDestinationCompatible =
         isBoundary && bcType == 0 && m_applyTo == 0 && supportsAngularMotion(model) &&
         angularTargetPart != nullptr && angularTargetPart->getType() == Rigid;
+    double3 angularTargetCenter = make_double3(0.0, 0.0, 0.0);
+    bool angularTargetCenterIsNodal = false;
+    const bool angularTargetCenterAvailable =
+        angularDestinationCompatible &&
+        getPartMassCenter(angularTargetPart, angularTargetCenter, angularTargetCenterIsNodal);
+    if (!angularTargetCenterAvailable)
+        m_rotationCenterAtCentroid[0] = m_rotationCenterAtCentroid[1] = m_rotationCenterAtCentroid[2] = false;
     const bool hasExistingAngularMotion =
         m_editTarget != nullptr && m_editTarget->kind == ConditionKind::Boundary &&
         static_cast<BoundaryCondition *>(m_editTarget)->hasAngularMotion();
@@ -558,6 +604,7 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
         ImGui::Checkbox("Enable angular velocity##BCAngular", &m_angularMotionEnabled);
         if (angularDestinationCompatible) {
             const bool angularEditorEnabled = m_angularMotionEnabled;
+            m_rotationCenterPreview = angularEditorEnabled;
             ImGui::BeginDisabled(!angularEditorEnabled);
             ImGui::Text("Angular value mode:");
             ImGui::RadioButton("Constant##BCAngular", &m_angularValueType, 0);
@@ -574,10 +621,30 @@ void BCDialog::Draw(const char* title, bool* p_open, Model* model, Condition **s
             }
             ImGui::Text("Rotation center (global coordinates)");
             for (int axis = 0; axis < 3; ++axis) {
+                if (m_rotationCenterAtCentroid[axis] && angularTargetCenterAvailable) {
+                    if (axis == 0) m_rotationCenter.x = angularTargetCenter.x;
+                    else if (axis == 1) m_rotationCenter.y = angularTargetCenter.y;
+                    else m_rotationCenter.z = angularTargetCenter.z;
+                }
                 ImGui::SetNextItemWidth(150.0f);
+                ImGui::BeginDisabled(m_rotationCenterAtCentroid[axis]);
                 ImGui::InputDouble((std::string("Center ") + axisNames[axis] + "##BCAngular").c_str(),
                                    centerComponents[axis], 0.0, 0.0, "%.17g");
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                ImGui::BeginDisabled(!angularTargetCenterAvailable);
+                const bool centroidChanged = ImGui::Checkbox(
+                    (std::string("Baricentro##BCAngular") + axisNames[axis]).c_str(),
+                    &m_rotationCenterAtCentroid[axis]);
+                ImGui::EndDisabled();
+                if (centroidChanged && m_rotationCenterAtCentroid[axis])
+                    *centerComponents[axis] = axis == 0 ? angularTargetCenter.x :
+                        (axis == 1 ? angularTargetCenter.y : angularTargetCenter.z);
             }
+            if (angularTargetCenterIsNodal)
+                ImGui::TextDisabled("Baricentro nodal (malla sin CAD).");
+            else if (!angularTargetCenterAvailable)
+                ImGui::TextDisabled("Baricentro no disponible; ingrese el centro manualmente.");
             ImGui::TextDisabled("Centro inicial explícito; se traslada con la pieza.");
             ImGui::TextDisabled("La tabla escala las tres componentes angulares.");
 

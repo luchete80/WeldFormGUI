@@ -44,6 +44,8 @@ public Dialog
   int m_activeAmplitudeRow = -1;
 
   bool m_angularMotionEnabled = false;
+  bool m_rotationCenterPreview = false;
+  bool m_rotationCenterAtCentroid[3] = {false, false, false};
   double3 m_angularVelocity = make_double3(0.0, 0.0, 0.0);
   double3 m_rotationCenter = make_double3(0.0, 0.0, 0.0);
   int m_angularValueType = 0;
