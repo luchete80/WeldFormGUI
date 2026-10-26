@@ -37,6 +37,7 @@ struct StepDialog {
   double m_elemLengthFraction = 0.2;
 
   int m_implicit_formulation = static_cast<int>(ImplicitFormulation::RigidViscoplastic);
+  bool m_implicitProfilingEnabled = false;
   char m_implicit_type[128] = "Picard";
   double m_velTol = 5e-2;
   double m_bubbleVelTol = 5e-2;

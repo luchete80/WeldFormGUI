@@ -89,6 +89,7 @@ void StepDialog::InitFromStep(Step *step) {
   m_elemLengthFraction = step->m_elemLengthFraction;
 
   m_implicit_formulation = static_cast<int>(step->m_implicitFormulation);
+  m_implicitProfilingEnabled = step->m_implicitProfilingEnabled;
   std::strncpy(m_implicit_type, step->m_implicitType.c_str(), sizeof(m_implicit_type) - 1);
   m_implicit_type[sizeof(m_implicit_type) - 1] = '\0';
   m_velTol = step->m_velTol;
@@ -190,6 +191,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step, bool is3D) {
   ImGui::Checkbox("Auto TS Z", &m_autoTS[2]);
 
   if (isImplicit && ImGui::CollapsingHeader("Implicit Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
+    ImGui::Checkbox("Profiling", &m_implicitProfilingEnabled);
     static const char* spring_mode_items[] = {"1 node", "3-2-1"};
     static const char* implicit_solver_items[] = {"Picard", "Hybrid", "Newton", "NR"};
     static const char* implicit_formulation_items[] = {"Rigid Viscoplastic", "J2 Elastoplastic"};
@@ -327,6 +329,7 @@ void StepDialog::Draw(const char* title, bool* p_open, Step* step, bool is3D) {
       step->m_axiSymmVol = m_axiSymmVol;
       step->m_elemLengthFraction = m_elemLengthFraction;
       step->m_implicitFormulation = static_cast<ImplicitFormulation>(m_implicit_formulation);
+      step->m_implicitProfilingEnabled = m_implicitProfilingEnabled;
       step->m_implicitType = m_implicit_type;
       step->m_velTol = m_velTol;
       step->m_bubbleVelTol = m_bubbleVelTol;

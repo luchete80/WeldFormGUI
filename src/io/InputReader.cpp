@@ -126,6 +126,7 @@ void readStep(const json& root, Model* model)
   if (conf.contains("solver") && conf["solver"].is_object() && conf["solver"].contains("implicit")) {
     step->setStepType(ImplicitStep);
     const json& implicit = conf["solver"]["implicit"];
+    step->m_implicitProfilingEnabled = implicit.value("profilingEnabled", false);
     step->m_implicitFormulation =
         implicitFormulationFromConfigString(implicit.value("formulation", std::string("rigid_viscoplastic")));
     if (implicit.contains("type")) {

@@ -980,6 +980,8 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
   if (step != nullptr && step->isImplicit()) {
     m_json["Configuration"]["solver"]["implicit"] =
         makeImplicitSolverJson(step, m_model->getAnalysisType() == Solid3D);
+    m_json["Configuration"]["solver"]["implicit"]["profilingEnabled"] =
+        step->m_implicitProfilingEnabled;
   }
   appendSymmetryPlanesToConfiguration(m_json["Configuration"], m_model);
 

@@ -616,6 +616,7 @@ bool ModelWriter::writeToFile(std::string fname){
       jstep["axiSymmVol"] = step->m_axiSymmVol;
       jstep["elemLengthFraction"] = step->m_elemLengthFraction;
       jstep["implicit"]["formulation"] = implicitFormulationToConfigString(step->m_implicitFormulation);
+      jstep["implicit"]["profilingEnabled"] = step->m_implicitProfilingEnabled;
       jstep["implicit"]["type"] = persistedImplicitSolverType(step);
       jstep["implicit"]["velTol"] = step->m_velTol;
       if (m_model.getAnalysisType() == Solid3D)

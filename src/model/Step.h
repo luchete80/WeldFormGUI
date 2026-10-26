@@ -71,6 +71,7 @@ public:
   double m_elemLengthFraction = 0.2;
 
   ImplicitFormulation m_implicitFormulation = ImplicitFormulation::RigidViscoplastic;
+  bool m_implicitProfilingEnabled = false;
   std::string m_implicitType = "Picard";
   double m_velTol = 5e-2;
   // Relative tolerance for the MINI 3D bubble block. If omitted in input,

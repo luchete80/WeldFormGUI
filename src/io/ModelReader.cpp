@@ -708,6 +708,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
 
             if (jstep.contains("implicit")) {
                 const auto &implicit = jstep["implicit"];
+                step->m_implicitProfilingEnabled = implicit.value("profilingEnabled", false);
                 step->m_implicitFormulation =
                     implicitFormulationFromConfigString(implicit.value("formulation", std::string("rigid_viscoplastic")));
                 step->m_implicitType = implicit.value("type", "Picard");
