@@ -3,6 +3,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
+#include <iostream>
 
 #include "imgui.h"
 
@@ -176,14 +178,21 @@ void IniDialog::Draw(const char* title, bool* p_open, Model* model, InitialCondi
         ImGui::SameLine();
         ImGui::Checkbox("Z", &m_dof_mask[2]);
     } else {
-        float temp = static_cast<float>(m_temperature);
-        ImGui::InputFloat("Temperature", &temp, 0.0f, 0.0f, "%.3f");
+        double temp = m_temperature;
+        ImGui::InputDouble("Temperature [°C]", &temp, 0.0, 0.0, "%.3f");
         m_temperature = temp;
-        ImGui::TextDisabled("Temperature is stored as a scalar initial condition.");
+        ImGui::TextDisabled("This initial temperature applies to the selected part or node set.");
+        ImGui::TextDisabled("The constant tool reservoir temperature is configured in Interaction.");
+        if (!std::isfinite(m_temperature))
+            ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.25f, 1.0f), "Initial temperature must be finite in °C.");
     }
 
     const char* buttonLabel = create ? "Create" : "OK";
-    if (ImGui::Button(buttonLabel)) {
+    const bool validTemperature = m_iniType != 1 || std::isfinite(m_temperature);
+    ImGui::BeginDisabled(!validTemperature);
+    const bool accepted = ImGui::Button(buttonLabel);
+    ImGui::EndDisabled();
+    if (accepted) {
         const BCApplyTo target = (m_applyTo == 0) ? ApplyToPart : ApplyToNodeSet;
         const BCType type = (m_iniType == 0) ? VelocityIC : TempIC;
         const double3 value = (m_iniType == 0)

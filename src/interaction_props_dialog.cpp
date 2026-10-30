@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 #include "imgui.h"
 #include "model/Step.h"
@@ -78,7 +79,16 @@ void InteractionPropsDialog::Draw()
   ImGui::InputDouble("Auto Factor", &contact.autoFactor, 0.05, 0.1, "%.4f");
   ImGui::EndDisabled();
   ImGui::Checkbox("Heat Conductance", &contact.heatConductance);
-  ImGui::InputDouble("Heat Cond Coeff", &contact.heatCondCoeff, 0.1, 1.0, "%.4f");
+  ImGui::BeginDisabled(!contact.heatConductance);
+  ImGui::InputDouble("Surface conductance h [W/(m² K)]", &contact.heatCondCoeff, 0.1, 1.0, "%.4f");
+  ImGui::EndDisabled();
+  ImGui::InputDouble("Constant tool temperature [°C]", &contact.dieTemp, 1.0, 10.0, "%.3f");
+  if (!std::isfinite(contact.heatCondCoeff) || contact.heatCondCoeff < 0.0)
+    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.25f, 1.0f), "h must be finite and nonnegative.");
+  if (!std::isfinite(contact.dieTemp))
+    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.25f, 1.0f), "Tool temperature must be finite in °C.");
+  ImGui::TextDisabled("Initial temperatures are defined in Initial Conditions for a part or node set.");
+  ImGui::TextDisabled("Robin heat transfer is not integrated in the Picard solver yet.");
   ImGui::BeginDisabled(!contact.unilateralContact);
   ImGui::InputDouble("Max Penetration Ratio", &contact.maxPenetRatio, 0.01, 0.1, "%.4f");
   ImGui::EndDisabled();

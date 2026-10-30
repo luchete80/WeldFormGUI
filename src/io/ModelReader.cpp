@@ -128,6 +128,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
     contactProps.contactActivationRampWidth = 0.001;
     contactProps.unilateralDiagnosticLevel = 0;
     contactProps.unilateralDiagnosticTrackedPoints = 8;
+    contactProps.dieTemp = 20.0;
     if (j.contains("Contact") && j["Contact"].is_array() && !j["Contact"].empty()) {
         const auto &contact = j["Contact"][0];
         ContactProperties &props = contactProps;
@@ -148,6 +149,7 @@ bool ModelReader::readFromFile(const std::string& fname) {
         props.gapPenaltyScale = contact.value("gapPenaltyScale", props.gapPenaltyScale);
         props.heatCondCoeff = contact.value("heatCondCoeff", props.heatCondCoeff);
         props.heatConductance = contact.value("heatConductance", props.heatConductance);
+        props.dieTemp = contact.value("dieTemp", props.dieTemp);
         props.maxAccel = contact.value("maxAccel", props.maxAccel);
         props.maxPenetRatio = contact.value("maxPenetRatio", props.maxPenetRatio);
         props.penaltyFactor = contact.value("penaltyFactor", props.penaltyFactor);

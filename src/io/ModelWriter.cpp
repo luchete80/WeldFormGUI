@@ -7,6 +7,7 @@
 #include <iomanip> //setw
 #include <filesystem>
 #include <system_error>
+#include <cmath>
 #include "Material.h"
 #include "Section.h"
 #include "Geom.h"
@@ -44,6 +45,22 @@ ModelWriter::ModelWriter(Model& model) : m_model(model) {}
 
 bool ModelWriter::writeToFile(std::string fname){
   namespace fs = std::filesystem;
+  const ContactProperties& thermalContact = m_model.contactProps();
+  if (!std::isfinite(thermalContact.heatCondCoeff) || thermalContact.heatCondCoeff < 0.0) {
+    std::cerr << "ERROR: surface heat conductance h must be finite and nonnegative (W/(m² K))." << std::endl;
+    return false;
+  }
+  if (!std::isfinite(thermalContact.dieTemp)) {
+    std::cerr << "ERROR: constant tool temperature must be finite (°C)." << std::endl;
+    return false;
+  }
+  for (int i = 0; i < m_model.getICCount(); ++i) {
+    InitialCondition* ic = m_model.getIC(i);
+    if (ic != nullptr && ic->getType() == TempIC && !std::isfinite(ic->getValueX())) {
+      std::cerr << "ERROR: initial temperature " << i << " must be finite (°C)." << std::endl;
+      return false;
+    }
+  }
   if (!isContactActivationRampConfigurationValid(m_model.contactProps())) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
     return false;
@@ -191,6 +208,7 @@ bool ModelWriter::writeToFile(std::string fname){
     {"gapPenaltyScale", m_model.contactProps().gapPenaltyScale},
     {"heatCondCoeff", m_model.contactProps().heatCondCoeff},
     {"heatConductance", m_model.contactProps().heatConductance},
+    {"dieTemp", m_model.contactProps().dieTemp},
     {"maxAccel", m_model.contactProps().maxAccel},
     {"maxPenetRatio", m_model.contactProps().maxPenetRatio},
     {"penaltyFactor", m_model.contactProps().penaltyFactor},

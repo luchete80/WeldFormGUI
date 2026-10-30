@@ -259,6 +259,9 @@ void readContact(const json& root, Model* model)
   ContactProperties& props = model->contactProps();
   props.frictionModel = "shear";
   props.coulombCoefficient = 0.3;
+  props.heatCondCoeff = 0.0;
+  props.heatConductance = false;
+  props.dieTemp = 20.0;
   props.contactActivationRamp = false;
   props.contactActivationRampWidth = 0.001;
   props.unilateralDiagnosticLevel = 0;
@@ -282,7 +285,8 @@ void readContact(const json& root, Model* model)
       contact.value("frictionRegularizationVelocity", props.frictionRegularizationVelocity);
   props.gapPenaltyScale = contact.value("gapPenaltyScale", props.gapPenaltyScale);
   props.heatCondCoeff = contact.value("heatCondCoeff", props.heatCondCoeff);
-  props.heatConductance = contact.value("heatConductance", props.heatConductance);
+  props.heatConductance = contact.value("heatConductance", props.heatCondCoeff > 0.0);
+  props.dieTemp = contact.value("dieTemp", props.dieTemp);
   props.maxAccel = contact.value("maxAccel", props.maxAccel);
   props.maxPenetRatio = contact.value("maxPenetRatio", props.maxPenetRatio);
   props.penaltyFactor = contact.value("penaltyFactor", props.penaltyFactor);
@@ -771,20 +775,36 @@ void readInitialConditions(const json& root, Model* model)
   if (model == nullptr || !root.contains("InitialConditions") || !root["InitialConditions"].is_array())
     return;
 
+  // This importer exposes part-targeted ICs; map a targetless legacy scalar to
+  // the first deformable part, matching the engine's DomainBlocks[0] route.
+  int defaultDeformableTarget = -1;
+  for (int partIndex = 0; partIndex < model->getPartCount(); ++partIndex) {
+    Part* part = model->getPart(partIndex);
+    if (part != nullptr && part->getType() == Elastic) {
+      defaultDeformableTarget = part->getId();
+      break;
+    }
+  }
+  if (defaultDeformableTarget < 0 && model->getPartCount() > 0 && model->getPart(0) != nullptr)
+    defaultDeformableTarget = model->getPart(0)->getId();
+
   for (const json& ic_json : root["InitialConditions"]) {
     if (ic_json.contains("Temp") && ic_json.is_object()) {
-      InitialCondition* ic = new InitialCondition(TempIC, ApplyToPart, 0,
+      InitialCondition* ic = new InitialCondition(TempIC, ApplyToPart, defaultDeformableTarget,
                                                   make_double3(ic_json["Temp"].get<double>(), 0.0, 0.0));
       model->addInitialCondition(ic);
       continue;
     }
 
+    const std::string type = ic_json.value("type", std::string("Velocity"));
     const bool target_set = ic_json.contains("setId");
-    const int target_id = target_set ? ic_json.value("setId", -1) : ic_json.value("zoneId", -1);
+    const bool has_zone_target = ic_json.contains("zoneId");
+    const int target_id = target_set ? ic_json.value("setId", -1)
+        : (has_zone_target ? ic_json.value("zoneId", -1)
+                           : (type == "Temperature" ? defaultDeformableTarget : -1));
     if (target_id < 0)
       continue;
 
-    const std::string type = ic_json.value("type", std::string("Velocity"));
     const BCType ic_type = (type == "Temperature") ? TempIC : VelocityIC;
     double3 value = make_double3(0.0, 0.0, 0.0);
     if (ic_type == TempIC && ic_json.contains("value")) {

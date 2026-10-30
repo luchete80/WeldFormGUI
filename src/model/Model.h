@@ -60,6 +60,7 @@ struct ContactProperties {
   double gapPenaltyScale = 2.0;
   double heatCondCoeff = 0.5;
   bool heatConductance = false;
+  double dieTemp = 20.0;
   double maxAccel = 100000.0;
   double maxPenetRatio = 0.05;
   double penaltyFactor = 5000.0;

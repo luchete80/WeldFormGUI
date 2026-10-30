@@ -31,6 +31,27 @@ namespace fs = std::filesystem;
 
 Step* activeStep(Model* model);
 
+bool validateThermalInputValues(Model* model) {
+  if (model == nullptr) return false;
+  const ContactProperties& contact = model->contactProps();
+  if (!std::isfinite(contact.heatCondCoeff) || contact.heatCondCoeff < 0.0) {
+    std::cerr << "ERROR: surface heat conductance h must be finite and nonnegative (W/(m² K))." << std::endl;
+    return false;
+  }
+  if (!std::isfinite(contact.dieTemp)) {
+    std::cerr << "ERROR: constant tool temperature must be finite (°C)." << std::endl;
+    return false;
+  }
+  for (int i = 0; i < model->getICCount(); ++i) {
+    InitialCondition* ic = model->getIC(i);
+    if (ic != nullptr && ic->getType() == TempIC && !std::isfinite(ic->getValueX())) {
+      std::cerr << "ERROR: initial temperature " << i << " must be finite (°C)." << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
 bool validateInitialStateHistoryForInput(Model* model, bool implicitWriter)
 {
   if (model == nullptr) return false;
@@ -583,6 +604,7 @@ bool InputWriter::writeToFile(std::string fname) {
     std::cerr << "ERROR: null model in InputWriter" << std::endl;
     return false;
   }
+  if (!validateThermalInputValues(m_model)) return false;
   Step *step = activeStep(m_model);
   if (step != nullptr && step->isImplicit())
     return writeImplicitToFile(fname);
@@ -676,6 +698,7 @@ bool InputWriter::writeToFile(std::string fname) {
   cont["gapPenaltyScale"] = contact.gapPenaltyScale;
   cont["heatCondCoeff"] = contact.heatCondCoeff;
   cont["heatConductance"] = contact.heatConductance;
+  cont["dieTemp"] = contact.dieTemp;
   cont["maxAccel"] = contact.maxAccel;
   cont["maxPenetRatio"] = contact.maxPenetRatio;
   cont["penaltyFactor"] = contact.penaltyFactor;
@@ -735,6 +758,7 @@ bool InputWriter::writeToFile(std::string fname) {
       }
       json block;
       block["type"] = "File";
+      block["zoneId"] = part->getId();
       block["fileName"] = relativeMesh;
       block["scale"] = {1, 1, 1};
       m_json["DomainBlocks"].push_back(block);
@@ -827,6 +851,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     std::cerr << "ERROR: null model in InputWriter" << std::endl;
     return false;
   }
+  if (!validateThermalInputValues(m_model)) return false;
   if (!validateInitialStateHistoryForInput(m_model, true)) return false;
   if (!isContactActivationRampConfigurationValid(m_model->contactProps())) {
     std::cerr << "ERROR: contactActivationRampWidth must be finite and greater than zero when contactActivationRamp is enabled." << std::endl;
@@ -1024,6 +1049,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     {"gapPenaltyScale", contact.gapPenaltyScale},
     {"heatCondCoeff", contact.heatCondCoeff},
     {"heatConductance", contact.heatConductance},
+    {"dieTemp", contact.dieTemp},
     {"maxAccel", contact.maxAccel},
     {"maxPenetRatio", contact.maxPenetRatio},
     {"penaltyFactor", contact.penaltyFactor},
@@ -1093,6 +1119,7 @@ bool InputWriter::writeImplicitToFile(std::string fname) {
     if (part->getType() == Elastic) {
       json block = {
         {"type", "File"},
+        {"zoneId", part->getId()},
         {"fileName", relative_mesh},
         {"scale", {1, 1, 1}}
       };

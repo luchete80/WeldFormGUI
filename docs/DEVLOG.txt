@@ -348,3 +348,5 @@
 20261016 - Connected v1 pl_strain sidecars to the 3D MINI3D rigid-viscoplastic input path; strict readers verify relative BDF identity, SHA-256, raw Tet4 cards and exact EID coverage before attaching buffered values, while explicit/J2/2D/restart combinations are rejected.
 20261016 - Added topology snapshots for imported initial-state meshes; rigid transforms and ID renumbering preserve element history, while connectivity/entity edits invalidate it and mesh replacement/remeshing requires explicit history discard. Added topology/transform source tests; runtime remains unverified.
 20261016 - Accepted point 12 by source inspection. Build, test execution, and Engine runtime validation remain pending.
+20261030 - Added contact conductance h and constant tool temperature editing, persistence, export validation, and DomainBlocks zoneId; added finite Celsius IC input validation and clarified that Robin Picard remains unconnected.
+20261030 - Legacy targetless Temperature input loads onto the first deformable part, matching the engine's current DomainBlocks[0] support.
